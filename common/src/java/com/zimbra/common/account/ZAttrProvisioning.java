@@ -144,6 +144,24 @@ public class ZAttrProvisioning {
         public boolean isMANUAL() { return this == MANUAL;}
     }
 
+    public static enum BackupBlobsCompressType {
+        zip("zip"),
+        zipStore("zipStore"),
+        noZip("noZip");
+        private String mValue;
+        private BackupBlobsCompressType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static BackupBlobsCompressType fromString(String s) throws ServiceException {
+            for (BackupBlobsCompressType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isZip() { return this == zip;}
+        public boolean isZipStore() { return this == zipStore;}
+        public boolean isNoZip() { return this == noZip;}
+    }
+
     public static enum BackupMode {
         Standard("Standard"),
         Auto_Grouped("Auto-Grouped");
@@ -3989,6 +4007,47 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupAutoGroupedThrottled = "zimbraBackupAutoGroupedThrottled";
 
     /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4013)
+    public static final String A_zimbraBackupBlobsCompressType = "zimbraBackupBlobsCompressType";
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4018)
+    public static final String A_zimbraBackupCrontabConfig = "zimbraBackupCrontabConfig";
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=9014)
+    public static final String A_zimbraBackupEnabled = "zimbraBackupEnabled";
+
+    /**
      * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
      * to allow a full or auto-grouped backup to start; 0 = no minimum is
      * enforced. Examples: 25%, 10GB
@@ -4003,6 +4062,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=512)
     public static final String A_zimbraBackupMode = "zimbraBackupMode";
+
+    /**
+     * If true, --accounts option will be set to useBackupConfig on
+     * zmschedulebackup command. Enables global,cos,domain,account level
+     * backup. If false, --accounts option will be set to all accounts on
+     * zmschedulebackup command. Backups all accounts.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4017)
+    public static final String A_zimbraBackupObjectLevelEnabled = "zimbraBackupObjectLevelEnabled";
 
     /**
      * Backup report email recipients
@@ -4021,6 +4091,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=461)
     public static final String A_zimbraBackupReportEmailSubjectPrefix = "zimbraBackupReportEmailSubjectPrefix";
+
+    /**
+     * The number of days backups will be kept. Backup Scheduler deletes
+     * backups older than the set value.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4012)
+    public static final String A_zimbraBackupRetentionDays = "zimbraBackupRetentionDays";
 
     /**
      * if true, do not backup blobs (HSM or not) during a full backup
@@ -4046,6 +4125,45 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1003)
     public static final String A_zimbraBackupSkipSearchIndex = "zimbraBackupSkipSearchIndex";
+
+    /**
+     * The day of the week on which the full backup starts. When a day is
+     * select their relative value is set on the crontab. Default starts from
+     * Saturday 0-7 or names allowed (Sun, Wed), with both 0 and 7
+     * representing Sunday. Monday to Saturday (1-6)
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4016)
+    public static final String A_zimbraBackupStartDay = "zimbraBackupStartDay";
+
+    /**
+     * Starts backup each day at this time. This attribute is used to set
+     * hours and minutes on the crontab.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4011)
+    public static final String A_zimbraBackupStartTime = "zimbraBackupStartTime";
+
+    /**
+     * If true, the full backup runs synchronously. If false, full backup
+     * runs in a separate thread and the soap call returns with the backup
+     * label.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4014)
+    public static final String A_zimbraBackupSyncEnabled = "zimbraBackupSyncEnabled";
+
+    /**
+     * If true, will synchronize dumpster enabled accounts with backup
+     * eligible accounts from zimbraBackupEnabled list.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4010)
+    public static final String A_zimbraBackupSyncUsersEnabled = "zimbraBackupSyncUsersEnabled";
 
     /**
      * Default backup target path
@@ -7901,6 +8019,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGCMUrl = "zimbraGCMUrl";
 
     /**
+     * If true, enables backup globally and if there is pre-configured backup
+     * schedule the crontab will get that schedule.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4009)
+    public static final String A_zimbraGlobalBackupEnabled = "zimbraGlobalBackupEnabled";
+
+    /**
      * Object classes added on the global config entry. Unlike other
      * zimbra***ExtraObjectClass attributes, object classes specified in this
      * attributes will not be automatically added to the global config entry.
@@ -9393,6 +9520,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=613)
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
+
+    /**
+     * If true, sends an email report to the admin user. Admins can disable
+     * the email notification by setting it to FALSE.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4015)
+    public static final String A_zimbraMailReportEnabled = "zimbraMailReportEnabled";
 
     /**
      * Deprecated since: 8.7.8. deprecated in favor of
