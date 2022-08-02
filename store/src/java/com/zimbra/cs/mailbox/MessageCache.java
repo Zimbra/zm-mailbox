@@ -127,7 +127,7 @@ public class MessageCache {
             synchronized (sCache) {
                 CacheNode node = sCache.remove(digest);
                 if (node != null) {
-                    sLog.debug("Purged digest %s from the message cache.", digest);
+                    sLog.error("Purged digest %s from the message cache.", digest);
                     sDataSize -= node.size;
                 }
             }
