@@ -75,7 +75,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_ACCOUNT = "acc";
     private static final String O_NS = "ns";
     private static final String O_URL = "url";
-    private static final String openIO = "OPENIO";
+    private static final String OPENIO = "OPENIO";
 
     private static final String NOT_ALLOWED_INTERNAL = " is not allowed for internal storetype";
     private static final String NOT_ALLOWED_EXTERNAL = " is not allowed for external storetype";
@@ -152,7 +152,7 @@ public final class VolumeCLI extends SoapCLI {
         volumePrefix = cl.getOptionValue(O_VP);
         storageType = cl.getOptionValue(O_STP);
         bucketId = cl.getOptionValue(O_BID);
-        if(!Strings.isNullOrEmpty(storageType) && storageType.equals(openIO)) {
+        if(OPENIO.equals(storageType)) {
             url = cl.getOptionValue(O_URL);
             proxyPort = cl.getOptionValue(O_PP);
             accountPort = cl.getOptionValue(O_AP);
@@ -372,17 +372,19 @@ public final class VolumeCLI extends SoapCLI {
             if (!Strings.isNullOrEmpty(compressThreshold)) {
                 throw new ParseException(A_COMPRESS_THRESHOLD + NOT_ALLOWED_EXTERNAL);
             }
-            if (!Strings.isNullOrEmpty(url)) {
-                throw new ParseException(A_URL + NOT_ALLOWED_EXTERNAL);
-            }
-            if (!Strings.isNullOrEmpty(nameSpace)) {
-                throw new ParseException(A_NAME_SPACE + NOT_ALLOWED_EXTERNAL);
-            }
-            if (!Strings.isNullOrEmpty(proxyPort)) {
-                throw new ParseException(A_PROXY_PORT + NOT_ALLOWED_EXTERNAL);
-            }
-            if (!Strings.isNullOrEmpty(accountPort)) {
-                throw new ParseException(A_ACCOUNT_PORT + NOT_ALLOWED_EXTERNAL);
+            if(OPENIO.equals(storageType)) {
+                if (!Strings.isNullOrEmpty(url)) {
+                    throw new ParseException(A_URL + NOT_ALLOWED_EXTERNAL);
+                }
+                if (!Strings.isNullOrEmpty(nameSpace)) {
+                    throw new ParseException(A_NAME_SPACE + NOT_ALLOWED_EXTERNAL);
+                }
+                if (!Strings.isNullOrEmpty(proxyPort)) {
+                    throw new ParseException(A_PROXY_PORT + NOT_ALLOWED_EXTERNAL);
+                }
+                if (!Strings.isNullOrEmpty(accountPort)) {
+                    throw new ParseException(A_ACCOUNT_PORT + NOT_ALLOWED_EXTERNAL);
+                }
             }
         } else {
             throw new ParseException(INVALID_STORE_TYPE);
@@ -427,7 +429,7 @@ public final class VolumeCLI extends SoapCLI {
             }
             volumeInfo.setRootPath(path);
         } else if (Volume.StoreType.EXTERNAL.name().equals(storeType)) {
-            if(storageType.equalsIgnoreCase(openIO)) {
+            if(storageType.equalsIgnoreCase(OPENIO)) {
                 VolumeExternalOpenIOInfo volumeExternalOpenIOInfo = new VolumeExternalOpenIOInfo();
                 if (!Strings.isNullOrEmpty(storageType)) {
                     volumeExternalOpenIOInfo.setStorageType(storageType);
