@@ -107,7 +107,7 @@ public abstract class DocumentHandler {
 
     public void postProxy(Element request, Element response, Map<String, Object> context) throws ServiceException {}
 
-    public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException, JSONException;
+    public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;
 
 
     /** Returns the {@link ZimbraSoapContext} object encapsulating the
