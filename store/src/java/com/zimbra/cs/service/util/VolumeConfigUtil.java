@@ -162,7 +162,7 @@ public class VolumeConfigUtil {
                 }
 
                 // validate namespace is empty or not
-                if (StringUtil.isNullOrEmpty(volInfoRequest.getVolumeExternalOpenIOInfo().getNamespace())) {
+                if (StringUtil.isNullOrEmpty(volInfoRequest.getVolumeExternalOpenIOInfo().getNameSpace())) {
                     throw VolumeServiceException.INVALID_REQUEST("Name Space can't be null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
                 }
             } else {

@@ -245,5 +245,4 @@ public final class VolumeInfo {
     public void setVolumeExternalOpenIOInfo(VolumeExternalOpenIOInfo volumeExternalOpenIOInfo) {
         this.volumeExternalOpenIOInfo = volumeExternalOpenIOInfo;
     }
-
 }

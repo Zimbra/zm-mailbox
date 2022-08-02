@@ -46,7 +46,7 @@ public class VolumeExternalOpenIOInfo extends BaseExternalVolume {
      * @zm-api-field-description Specifies OpenIO namespace
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_NAMESPACE /* namespace */, required=false)
-    private String namespace;
+    private String nameSpace;
 
     /**
      * @zm-api-field-description Specifies OpenIO proxy port
@@ -76,12 +76,12 @@ public class VolumeExternalOpenIOInfo extends BaseExternalVolume {
         this.account = account;
     }
 
-    public String getNamespace() {
-        return namespace;
+    public String getNameSpace() {
+        return nameSpace;
     }
 
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
+    public void setNameSpace(String nameSpace) {
+        this.nameSpace = nameSpace;
     }
 
     public Integer getProxyPort() {
@@ -108,10 +108,9 @@ public class VolumeExternalOpenIOInfo extends BaseExternalVolume {
         volExtInfoObj.put(AdminConstants.A_VOLUME_STORAGE_TYPE, volExtOpenIOInfo.getStorageType());
         volExtInfoObj.put(AdminConstants.A_VOLUME_URL, String.valueOf(volExtOpenIOInfo.getUrl()));
         volExtInfoObj.put(AdminConstants.A_VOLUME_ACCOUNT, String.valueOf(volExtOpenIOInfo.getAccount()));
-        volExtInfoObj.put(AdminConstants.A_VOLUME_NAMESPACE, String.valueOf(volExtOpenIOInfo.getNamespace()));
+        volExtInfoObj.put(AdminConstants.A_VOLUME_NAMESPACE, String.valueOf(volExtOpenIOInfo.getNameSpace()));
         volExtInfoObj.put(AdminConstants.A_VOLUME_PROXY_PORT, String.valueOf(volExtOpenIOInfo.getProxyPort()));
         volExtInfoObj.put(AdminConstants.A_VOLUME_ACCOUNT_PORT, String.valueOf(volExtOpenIOInfo.getAccountPort()));
-
         return volExtInfoObj;
     }
 
@@ -119,12 +118,10 @@ public class VolumeExternalOpenIOInfo extends BaseExternalVolume {
         VolumeExternalOpenIOInfo volExtOpenIOInfo = new VolumeExternalOpenIOInfo();
         volExtOpenIOInfo.setUrl(properties.getString(AdminConstants.A_VOLUME_URL));
         volExtOpenIOInfo.setAccount(properties.getString(AdminConstants.A_VOLUME_ACCOUNT));
-        volExtOpenIOInfo.setNamespace(properties.getString(AdminConstants.A_VOLUME_NAMESPACE));
+        volExtOpenIOInfo.setNameSpace(properties.getString(AdminConstants.A_VOLUME_NAMESPACE));
         volExtOpenIOInfo.setAccountPort(Integer.parseInt(properties.getString(AdminConstants.A_VOLUME_ACCOUNT_PORT)));
         volExtOpenIOInfo.setProxyPort(Integer.parseInt(properties.getString(AdminConstants.A_VOLUME_PROXY_PORT)));
         volExtOpenIOInfo.setStorageType(properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE));
-
         return volExtOpenIOInfo;
     }
-
 }

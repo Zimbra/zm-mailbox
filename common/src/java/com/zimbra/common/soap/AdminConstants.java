@@ -1308,11 +1308,11 @@ public final class AdminConstants {
     public static final String A_VOLUME_STORE_MANAGER_CLASS = "storeManagerClass";
     public static final String A_VOLUME_URL = "url";
     public static final String A_VOLUME_ACCOUNT = "account";
-    public static final String A_VOLUME_NAMESPACE = "namespace";
+    public static final String A_VOLUME_NAMESPACE = "nameSpace";
     public static final String A_VOLUME_PROXY_PORT= "proxyPort";
     public static final String A_VOLUME_ACCOUNT_PORT = "accountPort";
     public static final String A_VOLUME_S3 = "S3";
-    public static final String A_VOLUME_OPEN_IO = "OpenIO";
+    public static final String A_VOLUME_OPEN_IO = "OPENIO";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
