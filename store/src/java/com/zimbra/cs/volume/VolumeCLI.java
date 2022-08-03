@@ -83,7 +83,6 @@ public final class VolumeCLI extends SoapCLI {
     private static final String H_STORAGE_TYPE = "Name of the store provider (S3, ObjectStore)";
     private static final String H_BUCKET_ID = "S3 Bucket ID";
     private static final String H_VOLUME_PREFIX = "Volume Preifx";
-    private static final String H_STORE_MANAGER_CLASS = "Optional parameter to specify non-default store manager class path";
 
     private static final String A_ID = "id";
     private static final String A_TYPE = "type";
@@ -114,7 +113,6 @@ public final class VolumeCLI extends SoapCLI {
     private String volumePrefix;
     private String storageType;
     private String bucketId;
-    private String storeManagerClass;
 
     private void setArgs(CommandLine cl) throws ServiceException, ParseException, IOException {
         auth = getZAuthToken(cl);
@@ -129,7 +127,6 @@ public final class VolumeCLI extends SoapCLI {
         volumePrefix = cl.getOptionValue(O_VP);
         storageType = cl.getOptionValue(O_STP);
         bucketId = cl.getOptionValue(O_BID);
-        storeManagerClass = cl.getOptionValue(O_SMC);
     }
 
     public static void main(String[] args) {
@@ -289,9 +286,6 @@ public final class VolumeCLI extends SoapCLI {
         vol.setName(name);
         vol.setCompressBlobs(compress != null ? Boolean.parseBoolean(compress) : false);
         vol.setCompressionThreshold(compressThreshold != null ? Long.parseLong(compressThreshold) : 4096L);
-        if (!Strings.isNullOrEmpty(storeManagerClass)) {
-            vol.setStoreManagerClass(storeManagerClass);
-        }
         validateAddCommand(vol);
         CreateVolumeRequest req = new CreateVolumeRequest(vol);
         auth();
@@ -425,7 +419,6 @@ public final class VolumeCLI extends SoapCLI {
         options.addOption(new Option(O_VP, A_VOLUME_PREFIX, true, H_VOLUME_PREFIX));
         options.addOption(new Option(O_STP, A_STORAGE_TYPE, true, H_STORAGE_TYPE));
         options.addOption(new Option(O_BID, A_BUCKET_ID, true, H_BUCKET_ID));
-        options.addOption(new Option(O_SMC, A_STORE_MANAGER_CLASS, true, H_STORE_MANAGER_CLASS));
     }
 
     @Override
@@ -461,7 +454,6 @@ public final class VolumeCLI extends SoapCLI {
         printOpt(O_VP, 0);
         printOpt(O_STP, 0);
         printOpt(O_BID, 0);
-        printOpt(O_SMC, 0);
     }
 
     private void printOpt(String optStr, int leftPad) {
