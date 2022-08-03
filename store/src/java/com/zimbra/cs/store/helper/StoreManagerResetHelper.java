@@ -55,30 +55,33 @@ public class StoreManagerResetHelper {
         if (!Provisioning.getInstance().getLocalServer().isSMRuntimeSwitchEnabled()) {
             return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.NO_OPERATION, "StoreManager runtime switch not enabled, enabled SMRunTimeSwitchEnabled ldap attribute");
         }
+
         if (StringUtil.isNullOrEmpty(storeManagerClass)) {
             String message = "storeManagerClass is empty: ";
             ZimbraLog.store.error(message);
             return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.FAIL, message);
         }
-        if (LC.zimbra_class_store.value().equals(storeManagerClass)) {
-            String message = "store_manager class is same as set zimbra_class_store: "+ LC.zimbra_class_store.value();
-            ZimbraLog.store.warn(message);
-            return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.NO_OPERATION, message);
-        }
+
         // if class not exist then throw exception
         if (!ClassHelper.isClassExist(storeManagerClass)) {
             throw ServiceException.OPERATION_DENIED(" store manager class " + storeManagerClass + " not found on classPath");
         }
 
-        // update LC attribute
-        try {
-            LocalConfig localConfig = new LocalConfig(null);
-            localConfig.set(LC.zimbra_class_store.key(), storeManagerClass);
-            localConfig.save();
-            LC.reload();
-        } catch (DocumentException | ConfigException | IOException e) {
-            ZimbraLog.store.error("Error while updating LC.zimbra_class_store to StoreManager: %s", storeManagerClass, e);
-            return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.FAIL, "not able to update LC.zimbra_class_store with new StoreManager:" + storeManagerClass);
+        // update it, in case it is different
+        if (!LC.zimbra_class_store.value().equals(storeManagerClass)) {
+            // update LC attribute
+            try {
+                LocalConfig localConfig = new LocalConfig(null);
+                localConfig.set(LC.zimbra_class_store.key(), storeManagerClass);
+                localConfig.save();
+                LC.reload();
+            } catch (DocumentException | ConfigException | IOException e) {
+                ZimbraLog.store.error("Error while updating LC.zimbra_class_store to StoreManager: %s", storeManagerClass, e);
+                return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.FAIL, "not able to update LC.zimbra_class_store with new StoreManager:" + storeManagerClass);
+            }
+        } else {
+            String message = "store_manager class is same as set zimbra_class_store: "+ LC.zimbra_class_store.value();
+            ZimbraLog.store.trace(message);
         }
 
         try {

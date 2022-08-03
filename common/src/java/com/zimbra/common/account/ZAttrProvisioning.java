@@ -16593,17 +16593,17 @@ public class ZAttrProvisioning {
     /**
      * Zimbra multiple reader StoreManagers enabled
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4008)
+    @ZAttr(id=4021)
     public static final String A_zimbraSMMultiReaderEnabled = "zimbraSMMultiReaderEnabled";
 
     /**
      * Zimbra StoreManager runtime switching enabled
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4009)
+    @ZAttr(id=4022)
     public static final String A_zimbraSMRuntimeSwitchEnabled = "zimbraSMRuntimeSwitchEnabled";
 
     /**

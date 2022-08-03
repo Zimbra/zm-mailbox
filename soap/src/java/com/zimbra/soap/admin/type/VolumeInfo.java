@@ -113,7 +113,7 @@ public final class VolumeInfo {
     private short storeType = 1;
 
     @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_MANAGER_CLASS /* storeManagerClass*/, required=false)
-    private String storeManagerClass = LC.zimbra_class_store.value();
+    private String storeManagerClass;
 
     /**
      * @zm-api-field-description Volume external information for S3
