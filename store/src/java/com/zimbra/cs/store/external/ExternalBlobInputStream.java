@@ -85,7 +85,7 @@ public class ExternalBlobInputStream extends BlobInputStream {
             return file;
         } else {
             ZimbraLog.store.debug("blob file no longer on disk, fetching from remote store");
-            ExternalStoreManager sm = (ExternalStoreManager) StoreManager.getInstance();
+            ExternalStoreManager sm = (ExternalStoreManager) StoreManager.getReaderSMInstance(locator);
             Blob blob = sm.getLocalBlob(mbox, locator, false);
             return blob.getFile();
         }
