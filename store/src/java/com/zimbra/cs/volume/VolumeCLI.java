@@ -17,14 +17,12 @@
 package com.zimbra.cs.volume;
 
 import java.io.IOException;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.http.HttpException;
-
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -62,20 +60,20 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_P = "p";
     private static final String O_C = "c";
     private static final String O_CT = "ct";
-    
+
     /** attributes for external storetype **/
     private static final String O_ST = "st";
     private static final String O_VP = "vp";
     private static final String O_STP = "stp";
     private static final String O_BID = "bid";
-    
+
     /** attributes for store type OpenIO **/
     private static final String O_AP = "ap";
     private static final String O_PP = "pp";
     private static final String O_ACCOUNT = "acc";
     private static final String O_NS = "ns";
     private static final String O_URL = "url";
-    private static final String openIO = "OPENIO";
+    private static final String OPENIO = "OPENIO";
 
     private static final String NOT_ALLOWED_INTERNAL = " is not allowed for internal storetype";
     private static final String NOT_ALLOWED_EXTERNAL = " is not allowed for external storetype";
@@ -86,10 +84,9 @@ public final class VolumeCLI extends SoapCLI {
     private static final String NOT_ALLOWED_ID = "id cannot be specified when adding a volume";
 
     private static final String H_STORE_TYPE = "Store type: internal or external";
-    private static final String H_STORAGE_TYPE = "Name of the store provider (S3, ObjectStore, OpenIO)";
+    private static final String H_STORAGE_TYPE = "Name of the store provider (S3, ObjectStore, OPENIO)";
     private static final String H_BUCKET_ID = "S3 Bucket ID";
     private static final String H_VOLUME_PREFIX = "Volume Preifx";
-    
     private static final String H_URL = "URL of OpenIO";
     private static final String H_PROXY_PORT = "Proxy port";
     private static final String H_ACCOUNT_PORT = "Account port";
@@ -114,7 +111,6 @@ public final class VolumeCLI extends SoapCLI {
     private static final String A_NAME_SPACE = "nameSpace";
     private static final String A_ACCOUNT = "account";
 
-
     private VolumeCLI() throws ServiceException {
         super();
         setupCommandLineOptions();
@@ -138,7 +134,6 @@ public final class VolumeCLI extends SoapCLI {
     private String accountPort;
     private String nameSpace;
     private String account;
-
 
     private void setArgs(CommandLine cl) throws ServiceException, ParseException, IOException {
         auth = getZAuthToken(cl);
@@ -304,7 +299,6 @@ public final class VolumeCLI extends SoapCLI {
                 .elementToJaxb(getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(getVolumeRequest)));
         Volume.StoreType enumStoreType = (1 == getVolumeResponse.getVolume().getStoreType()) ? Volume.StoreType.INTERNAL
                 : Volume.StoreType.EXTERNAL;
-
         VolumeInfo vol = new VolumeInfo();
         validateEditCommand(vol, enumStoreType);
         ModifyVolumeRequest req = new ModifyVolumeRequest(Short.parseShort(id), vol);
@@ -374,6 +368,9 @@ public final class VolumeCLI extends SoapCLI {
             if (!Strings.isNullOrEmpty(url)) {
                 throw new ParseException(A_URL + NOT_ALLOWED_EXTERNAL);
             }
+            if (!Strings.isNullOrEmpty(account)) {
+                throw new ParseException(A_ACCOUNT + NOT_ALLOWED_EXTERNAL);
+            }
             if (!Strings.isNullOrEmpty(nameSpace)) {
                 throw new ParseException(A_NAME_SPACE + NOT_ALLOWED_EXTERNAL);
             }
@@ -426,7 +423,7 @@ public final class VolumeCLI extends SoapCLI {
             }
             volumeInfo.setRootPath(path);
         } else if (Volume.StoreType.EXTERNAL.name().equals(storeType)) {
-            if(storageType.equalsIgnoreCase(openIO)) {
+            if (OPENIO.equalsIgnoreCase(storageType)) {
                 VolumeExternalOpenIOInfo volumeExternalOpenIOInfo = new VolumeExternalOpenIOInfo();
                 if (!Strings.isNullOrEmpty(storageType)) {
                     volumeExternalOpenIOInfo.setStorageType(storageType);
