@@ -9380,7 +9380,7 @@ TODO: delete them permanently from here
 <desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
 </attr>
 
-<attr id="2117" name="zimbraNetworkModulesNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0" deprecatedSince="9.1.0">
+<attr id="2117" name="zimbraNetworkModulesNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0" deprecatedSince="10.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable zimbra network new generation modules.</desc>
   <deprecateDesc>Deprecated and defaulted to false</deprecateDesc>
@@ -9779,7 +9779,7 @@ TODO: delete them permanently from here
   <deprecateDesc>deprecated with attribute zimbraFeatureModernDesktopEnabled</deprecateDesc>
 </attr>
 
-<attr id="3081" name="zimbraPasswordBlockCommonEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="3081" name="zimbraPasswordBlockCommonEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not blocking common passwords is enabled</desc>
 </attr>
@@ -9802,12 +9802,12 @@ TODO: delete them permanently from here
     <desc>Account Suspension reason. It describes the actual cause for account suspension if any and it must be updated with account status.</desc>
 </attr>
 
-<attr id="3084" name="zimbraFeaturePowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited,domainAdminModifiable" optionalIn="account,cos" since="9.1.0">
+<attr id="3084" name="zimbraFeaturePowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited,domainAdminModifiable" optionalIn="account,cos" since="10.0.0">
     <defaultCOSValue>TRUE</defaultCOSValue>
     <desc>Whether Powerpaste Feature is enabled or not</desc>
 </attr>
 
-<attr id="3085" name="zimbraPrefPowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited" optionalIn="account,cos" since="9.1.0">
+<attr id="3085" name="zimbraPrefPowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited" optionalIn="account,cos" since="10.0.0">
     <defaultCOSValue>TRUE</defaultCOSValue>
     <desc>Whether Powerpaste preference is enabled by user or admin</desc>
 </attr>
@@ -9831,13 +9831,13 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to use Web Client feature</desc>
 </attr>
-<attr id="3089" name="zimbraMobileAllowedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="9.1.0">
+<attr id="3089" name="zimbraMobileAllowedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="10.0.0">
     <desc>Allowed mobile device list for ActiveSync/ABQ</desc>
 </attr>
-<attr id="3090" name="zimbraMobileBlockedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="9.1.0">
+<attr id="3090" name="zimbraMobileBlockedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="10.0.0">
     <desc>Blocked mobile device list for ActiveSync/ABQ</desc>
 </attr>
-<attr id="3091" name="zimbraFileUploadBlockedFileTypes" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="3091" name="zimbraFileUploadBlockedFileTypes" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>asd</defaultCOSValue>
   <defaultCOSValue>bat</defaultCOSValue>
   <defaultCOSValue>chm</defaultCOSValue>
@@ -9870,12 +9870,12 @@ TODO: delete them permanently from here
   <desc>Commonly blocked file types for uploading</desc>
  </attr>
 
- <attr id="3092" name="zimbraFeatureFileTypeUploadRestrictionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+ <attr id="3092" name="zimbraFeatureFileTypeUploadRestrictionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Enable/Disable blocked file types set in zimbraFileUploadBlockedFileTypes for uploading</desc>
  </attr>
 
-<attr id="3093" name="zimbraFeatureZulipChatEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="3093" name="zimbraFeatureZulipChatEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether or not zulip chat is enabled.
         If false at domain level, feature not available at domain, cos &amp; account.
@@ -9883,57 +9883,57 @@ TODO: delete them permanently from here
         If true at domain &amp; cos and false at account, feature not available at account.
   </desc>
 </attr>
-<attr id="3094" name="zimbraZulipChatDomainId" type="string" cardinality="single" optionalIn="domain" flags="domainInfo" since="9.1.0">
+<attr id="3094" name="zimbraZulipChatDomainId" type="string" cardinality="single" optionalIn="domain" flags="domainInfo" since="10.0.0">
   <desc>Zulip chat domain ID</desc>
 </attr>
-<attr id="3095" name="zimbraZulipJwtSecret" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+<attr id="3095" name="zimbraZulipJwtSecret" type="string" cardinality="single" optionalIn="globalConfig" since="10.0.0">
   <globalConfigValue>SECRET</globalConfigValue>
   <desc>Zulip JWT secret</desc>
 </attr>
-<attr id="3096" name="zimbraZulipBaseHost" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0" requiresRestart="mailbox">
+<attr id="3096" name="zimbraZulipBaseHost" type="string" cardinality="single" optionalIn="globalConfig" since="10.0.0" requiresRestart="mailbox">
   <desc>Zulip server base host.
         Requires server restart if updating from empty value.
   </desc>
 </attr>
-<attr id="3097" name="zimbraFeatureDocumentEditingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="3097" name="zimbraFeatureDocumentEditingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether or not document editing feature is enabled within briefcase</desc>
 </attr>
-<attr id="3098" name="zimbraDocumentServerHost" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+<attr id="3098" name="zimbraDocumentServerHost" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.0.0">
   <desc>Host server where the onlyoffice is hosted</desc>
 </attr>
-<attr id="3099" name="zimbraDocumentEditingCallbackPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="9.1.0">
+<attr id="3099" name="zimbraDocumentEditingCallbackPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="10.0.0">
   <globalConfigValue>7074</globalConfigValue>
   <desc>Zimbra port on which document editing can request document</desc>
 </attr>
-<attr id="3100" name="zimbraDocumentEditingJwtSecret" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+<attr id="3100" name="zimbraDocumentEditingJwtSecret" type="string" cardinality="single" optionalIn="globalConfig" since="10.0.0">
   <desc>Document editing JWT secret</desc>
 </attr>
-<attr id="3101" name="zimbraDocumentRecentlyViewedEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="3101" name="zimbraDocumentRecentlyViewedEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether or not to log document accessed time</desc>
 </attr>
-<attr id="4000" name="zimbraMailAttachmentMaxSize" type="long" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="4000" name="zimbraMailAttachmentMaxSize" type="long" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>Maximum size in bytes for e-mail attachment.</desc>
 </attr>
-<attr id="4001" name="zimbraMobileShareMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="4001" name="zimbraMobileShareMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to permit syncing shared mail folders</desc>
 </attr>
-<attr id="4002" name="zimbraMobileShareCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="4002" name="zimbraMobileShareCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to permit syncing shared calendar folders</desc>
 </attr>
-<attr id="4006" name="zimbraFeatureSafeUnsubscribeFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="4006" name="zimbraFeatureSafeUnsubscribeFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Creates unsubscribe system folder</desc>
  </attr>
- <attr id="4007" name="zimbraPrefCalenderScaling" type="enum" value="10,15,30" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+ <attr id="4007" name="zimbraPrefCalenderScaling" type="enum" value="10,15,30" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>30</defaultCOSValue>
   <desc>Default calendar resolution preference</desc>
 </attr>
-<attr id="4008" name="zimbraActiveSyncVersion" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="9.1.0">
+<attr id="4008" name="zimbraActiveSyncVersion" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="10.0.0">
   <desc>Sets the active sync version at the user level to override zimbra_activesync_versions on local config.
       Add multi-value attribute as android:14.1/iphone:16.1/ipod:16.0.
       If set as android:14.1, the android device will be connected over the 14.1 version.
@@ -9943,27 +9943,27 @@ TODO: delete them permanently from here
   </desc>
 </attr>    
 
-<attr id="4007" name="zimbraGlobalBackupEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+<attr id="4009" name="zimbraGlobalBackupEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="10.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>If true, enables backup globally and if there is pre-configured backup schedule the crontab will get that schedule.</desc>
 </attr>
 
-<attr id="4008" name="zimbraBackupSyncUsersEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+<attr id="4010" name="zimbraBackupSyncUsersEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="10.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>If true, will synchronize dumpster enabled accounts with backup eligible accounts from zimbraBackupEnabled list.</desc>
 </attr>
 
-<attr id="4009" name="zimbraBackupStartTime" type="string" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+<attr id="4011" name="zimbraBackupStartTime" type="string" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.0.0">
   <globalConfigValue>01:00</globalConfigValue>
   <desc>Starts backup each day at this time. This attribute is used to set hours and minutes on the crontab.</desc>
 </attr>
 
-<attr id="4010" name="zimbraBackupRetentionDays" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+<attr id="4012" name="zimbraBackupRetentionDays" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.0.0">
   <globalConfigValue>8</globalConfigValue>
   <desc>The number of days backups will be kept. Backup Scheduler deletes backups older than the set value.</desc>
 </attr>
 
-<attr id="4011" name="zimbraBackupBlobsCompressType" type="enum" value="zip,zipStore,noZip" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+<attr id="4013" name="zimbraBackupBlobsCompressType" type="enum" value="zip,zipStore,noZip" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.0.0">
   <globalConfigValue>zip</globalConfigValue>
   <desc>Blobs inside a backup are compressed by default in zip format.
         zip - blobs are backed up into zip files with compression (default).
@@ -9972,19 +9972,19 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="4012" name="zimbraBackupSyncEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+<attr id="4014" name="zimbraBackupSyncEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>If true, the full backup runs synchronously.
         If false, full backup runs in a separate thread and the soap call returns with the backup label.
   </desc>
 </attr>
 
-<attr id="4013" name="zimbraMailReportEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+<attr id="4015" name="zimbraMailReportEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>If true, sends an email report to the admin user. Admins can disable the email notification by setting it to FALSE.</desc>
 </attr>
 
-<attr id="4014" name="zimbraBackupStartDay" type="string" max="32" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+<attr id="4016" name="zimbraBackupStartDay" type="string" max="32" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.0.0">
   <globalConfigValue>6</globalConfigValue>
   <desc>The day of the week on which the full backup starts.
         When a day is select their relative value is set on the crontab. Default starts from Saturday
@@ -9992,14 +9992,14 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="4015" name="zimbraBackupObjectLevelEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+<attr id="4017" name="zimbraBackupObjectLevelEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>If true, --accounts option will be set to useBackupConfig on zmschedulebackup command. Enables global,cos,domain,account level backup.
         If false, --accounts option will be set to all accounts on zmschedulebackup command. Backups all accounts.
   </desc>
 </attr>
 
-<attr id="4016" name="zimbraBackupCrontabConfig" type="string"  cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+<attr id="4018" name="zimbraBackupCrontabConfig" type="string"  cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="10.0.0">
   <globalConfigValue>f '0 1 * * 6'</globalConfigValue>
   <desc>Configures crontab schedule. Full, incremental and delete cron schedules can be set using this attribute.
         The entire backup can be scheduled as f '0 1 * * 6' i '0 1 * * 0-5'  d 7d '0 0 * * *'.
@@ -10009,7 +10009,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="9014" name="zimbraBackupEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountCosDomainInherited,domainInherited" since="9.1.0">
+<attr id="9014" name="zimbraBackupEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountCosDomainInherited,domainInherited" since="10.0.0">
   <desc>Whether or not account is eligible for backup
         If true on cos level then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
         If unset on cos level but true on domain level then backup domains account.
