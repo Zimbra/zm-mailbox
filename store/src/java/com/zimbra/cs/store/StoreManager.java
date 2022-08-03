@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -29,6 +29,7 @@ import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.store.helper.ClassHelper;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.volume.VolumeManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +40,13 @@ public abstract class StoreManager {
     private static StoreManager sInstance;
 
     private static String currentZimbraClassStore = LC.zimbra_class_store.value();
+
+    /**
+     * Current Volume Id
+     */
+    private static short currentVolumeId;
     private static Integer diskStreamingThreshold;
+
 
     public static StoreManager getInstance () {
         if(ImapDaemon.isRunningImapInsideMailboxd()) {
@@ -69,6 +76,7 @@ public abstract class StoreManager {
                     if (!StringUtil.isNullOrEmpty(className)) {
                         sInstance = (StoreManager) ClassHelper.getZimbraClassInstanceBy(className);
                         currentZimbraClassStore = className;
+                        currentVolumeId = VolumeManager.getInstance().getCurrentMessageVolume().getId();
                         ZimbraLog.store.debug("currentZimbraClassStore set to: %s", className);
                     } else {
                         sInstance = new FileBlobStore();
@@ -126,14 +134,7 @@ public abstract class StoreManager {
     }
 
     /**
-     * In order to support multiple stores of different types, sometimes it required to write multiple store managers as well.
-     * Imagine a case where blobs were written to respective volume using storeManager1(aware of R/W operations)
-     * And months later, primary volume changed and storeManager2 introduced to work with new volume(storeManager2 awareR/W with new volume)
-     * Here, system should support older blobs which are in inbox where storeManager1 know how to read and
-     * storeManager2 aware of how to write/read new blobs in new volume.
-     * Now in this heterogeneous situation, there can be multiple reader(for reading older blobs from multiple old primary volumes
-     * and secondary volumes) and single writer(for writing and reading current primary volume)
-     * Following method returns respective reader StoreManager instance based on locator.
+     * Get StoreManager instance from locator, in case locator have that information
      * @param locator
      * @return
      */
@@ -142,24 +143,48 @@ public abstract class StoreManager {
             boolean multiReaderSMEnabled = Provisioning.getInstance().getLocalServer().isSMMultiReaderEnabled();
             if (multiReaderSMEnabled && !StringUtil.isNullOrEmpty(locator)) {
                 Optional<Short> volumeId = MailItemHelper.findMyVolumeId(locator);
-                // can check this against current primary vol.if its same then return singleton instance, but need to consider db hit
                 if (volumeId.isPresent()) {
-                    ZimbraLog.store.trace("Volume for locator: %s volumeId: %s", locator, volumeId.get());
-                    StoreManager storeManager = CacheEnabledStoreManagerProvider.getStoreManagerForVolume(volumeId.get(), false);
-                    if (storeManager != null) {
-                        ZimbraLog.store.debug("StoreManager for %s Volume: %s ", storeManager.getClass().getSimpleName(), volumeId.get());
-                        return storeManager;
-                    }
-                    ZimbraLog.store.debug("not able to load reader store manager for volumeId: %s", volumeId);
+                    return getReaderSMInstance(volumeId.get());
                 }
             }
-        } catch (Exception e) {
+        } catch (ServiceException e) {
             ZimbraLog.store.error("Error while loading StoreManager for locator %s", locator, e);
         }
         ZimbraLog.store.info("Fallback: master StoreManager will be used for reading");
         return getInstance();
     }
 
+
+    /**
+     * In order to support multiple stores of different types, sometimes it required to write multiple store managers as well.
+     * Imagine a case where blobs were written to respective volume using storeManager1(aware of R/W operations)
+     * And months later, primary volume changed and storeManager2 introduced to work with new volume(storeManager2 awareR/W with new volume)
+     * Here, system should support older blobs which are in inbox where storeManager1 know how to read and
+     * storeManager2 aware of how to write/read new blobs in new volume.
+     * Now in this heterogeneous situation, there can be multiple reader(for reading older blobs from multiple old primary volumes
+     * and secondary volumes) and single writer(for writing and reading current primary volume)
+     * Following method returns respective reader StoreManager instance based on locator.
+     * @param volumeId
+     * @return
+     */
+    public static StoreManager getReaderSMInstance(short volumeId) {
+        try {
+            // can check this against current primary vol.if its same then return singleton instance, but need to consider db hit
+            if (currentVolumeId != volumeId) {
+                StoreManager storeManager = CacheEnabledStoreManagerProvider.getStoreManagerForVolume(volumeId, false);
+                if (storeManager != null) {
+                    ZimbraLog.store.trace("StoreManager for %s Volume: %s ", storeManager.getClass().getSimpleName(), volumeId);
+                    return storeManager;
+                }
+            } else {
+                ZimbraLog.store.debug("current(%s) and input(%s) volume ids are same, returning default StoreManager", currentVolumeId, volumeId);
+            }
+        } catch(Exception e){
+            ZimbraLog.store.error("Error while loading StoreManager for volumeId %s", volumeId, e);
+        }
+        ZimbraLog.store.trace("Fallback: master StoreManager will be used for reading");
+        return getInstance();
+    }
 
     public static int getDiskStreamingThreshold() throws ServiceException {
         if (diskStreamingThreshold == null)

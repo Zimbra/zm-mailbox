@@ -186,7 +186,11 @@ public class VolumeConfigUtil {
      * @param volInfoRequest
      * @param storeType
      */
-    private static void setDefaultStoreManager(VolumeInfo volInfoRequest, Short storeType) {
+    private static void setDefaultStoreManager(VolumeInfo volInfoRequest, Short storeType) throws ServiceException {
+        if (Volume.StoreType.EXTERNAL.getStoreType() == storeType.intValue() && !ClassHelper.isClassExist(DEFAULT_EXTERNAL_STORE_MANAGER)) {
+            throw VolumeServiceException.UNSUPPORTED_CONFIG("StoreManager for external volumes not available in this version");
+        }
+        // set default StoreManager
         if (Volume.StoreType.EXTERNAL.getStoreType() == storeType.intValue()) {
             volInfoRequest.setStoreManagerClass(DEFAULT_EXTERNAL_STORE_MANAGER);
         } else {
