@@ -8043,9 +8043,9 @@ public class ZAttrProvisioning {
     /**
      * Global level external store config
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4006)
+    @ZAttr(id=4019)
     public static final String A_zimbraGlobalExternalStoreConfig = "zimbraGlobalExternalStoreConfig";
 
     /**
@@ -15959,9 +15959,9 @@ public class ZAttrProvisioning {
     /**
      * Server level external store config
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4007)
+    @ZAttr(id=4020)
     public static final String A_zimbraServerExternalStoreConfig = "zimbraServerExternalStoreConfig";
 
     /**
