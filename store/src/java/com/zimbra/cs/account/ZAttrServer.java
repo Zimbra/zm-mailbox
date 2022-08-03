@@ -2978,9 +2978,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraBackupBlobsCompressType, or ZAttrProvisioning.BackupBlobsCompressType.zip if unset and/or has invalid value
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4011)
+    @ZAttr(id=4013)
     public ZAttrProvisioning.BackupBlobsCompressType getBackupBlobsCompressType() {
         try { String v = getAttr(Provisioning.A_zimbraBackupBlobsCompressType, true, true); return v == null ? ZAttrProvisioning.BackupBlobsCompressType.zip : ZAttrProvisioning.BackupBlobsCompressType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.BackupBlobsCompressType.zip; }
     }
@@ -2995,9 +2995,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraBackupBlobsCompressType, or "zip" if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4011)
+    @ZAttr(id=4013)
     public String getBackupBlobsCompressTypeAsString() {
         return getAttr(Provisioning.A_zimbraBackupBlobsCompressType, "zip", true);
     }
@@ -3013,9 +3013,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupBlobsCompressType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4011)
+    @ZAttr(id=4013)
     public void setBackupBlobsCompressType(ZAttrProvisioning.BackupBlobsCompressType zimbraBackupBlobsCompressType) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, zimbraBackupBlobsCompressType.toString());
@@ -3034,9 +3034,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4011)
+    @ZAttr(id=4013)
     public Map<String,Object> setBackupBlobsCompressType(ZAttrProvisioning.BackupBlobsCompressType zimbraBackupBlobsCompressType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, zimbraBackupBlobsCompressType.toString());
@@ -3054,9 +3054,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupBlobsCompressType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4011)
+    @ZAttr(id=4013)
     public void setBackupBlobsCompressTypeAsString(String zimbraBackupBlobsCompressType) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, zimbraBackupBlobsCompressType);
@@ -3075,9 +3075,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4011)
+    @ZAttr(id=4013)
     public Map<String,Object> setBackupBlobsCompressTypeAsString(String zimbraBackupBlobsCompressType, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, zimbraBackupBlobsCompressType);
@@ -3094,9 +3094,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4011)
+    @ZAttr(id=4013)
     public void unsetBackupBlobsCompressType() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, "");
@@ -3114,9 +3114,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4011)
+    @ZAttr(id=4013)
     public Map<String,Object> unsetBackupBlobsCompressType(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, "");
@@ -3136,9 +3136,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraBackupCrontabConfig, or empty array if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public String[] getBackupCrontabConfig() {
         String[] value = getMultiAttr(Provisioning.A_zimbraBackupCrontabConfig, true, true); return value.length > 0 ? value : new String[] {"f '0 1 * * 6'"};
     }
@@ -3157,9 +3157,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupCrontabConfig new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public void setBackupCrontabConfig(String[] zimbraBackupCrontabConfig) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
@@ -3181,9 +3181,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public Map<String,Object> setBackupCrontabConfig(String[] zimbraBackupCrontabConfig, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
@@ -3204,9 +3204,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupCrontabConfig new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public void addBackupCrontabConfig(String zimbraBackupCrontabConfig) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
@@ -3228,9 +3228,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public Map<String,Object> addBackupCrontabConfig(String zimbraBackupCrontabConfig, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
@@ -3251,9 +3251,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupCrontabConfig existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public void removeBackupCrontabConfig(String zimbraBackupCrontabConfig) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
@@ -3275,9 +3275,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public Map<String,Object> removeBackupCrontabConfig(String zimbraBackupCrontabConfig, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
@@ -3297,9 +3297,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public void unsetBackupCrontabConfig() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupCrontabConfig, "");
@@ -3320,9 +3320,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public Map<String,Object> unsetBackupCrontabConfig(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupCrontabConfig, "");
@@ -3534,9 +3534,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraBackupObjectLevelEnabled, or false if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4015)
+    @ZAttr(id=4017)
     public boolean isBackupObjectLevelEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraBackupObjectLevelEnabled, false, true);
     }
@@ -3550,9 +3550,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupObjectLevelEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4015)
+    @ZAttr(id=4017)
     public void setBackupObjectLevelEnabled(boolean zimbraBackupObjectLevelEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupObjectLevelEnabled, zimbraBackupObjectLevelEnabled ? TRUE : FALSE);
@@ -3569,9 +3569,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4015)
+    @ZAttr(id=4017)
     public Map<String,Object> setBackupObjectLevelEnabled(boolean zimbraBackupObjectLevelEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupObjectLevelEnabled, zimbraBackupObjectLevelEnabled ? TRUE : FALSE);
@@ -3586,9 +3586,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4015)
+    @ZAttr(id=4017)
     public void unsetBackupObjectLevelEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupObjectLevelEnabled, "");
@@ -3604,9 +3604,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4015)
+    @ZAttr(id=4017)
     public Map<String,Object> unsetBackupObjectLevelEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupObjectLevelEnabled, "");
@@ -3859,9 +3859,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraBackupRetentionDays, or 8 if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4010)
+    @ZAttr(id=4012)
     public int getBackupRetentionDays() {
         return getIntAttr(Provisioning.A_zimbraBackupRetentionDays, 8, true);
     }
@@ -3873,9 +3873,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupRetentionDays new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4010)
+    @ZAttr(id=4012)
     public void setBackupRetentionDays(int zimbraBackupRetentionDays) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupRetentionDays, Integer.toString(zimbraBackupRetentionDays));
@@ -3890,9 +3890,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4010)
+    @ZAttr(id=4012)
     public Map<String,Object> setBackupRetentionDays(int zimbraBackupRetentionDays, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupRetentionDays, Integer.toString(zimbraBackupRetentionDays));
@@ -3905,9 +3905,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4010)
+    @ZAttr(id=4012)
     public void unsetBackupRetentionDays() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupRetentionDays, "");
@@ -3921,9 +3921,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4010)
+    @ZAttr(id=4012)
     public Map<String,Object> unsetBackupRetentionDays(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupRetentionDays, "");
@@ -4159,9 +4159,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraBackupStartDay, or "6" if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4014)
+    @ZAttr(id=4016)
     public String getBackupStartDay() {
         return getAttr(Provisioning.A_zimbraBackupStartDay, "6", true);
     }
@@ -4175,9 +4175,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupStartDay new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4014)
+    @ZAttr(id=4016)
     public void setBackupStartDay(String zimbraBackupStartDay) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupStartDay, zimbraBackupStartDay);
@@ -4194,9 +4194,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4014)
+    @ZAttr(id=4016)
     public Map<String,Object> setBackupStartDay(String zimbraBackupStartDay, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupStartDay, zimbraBackupStartDay);
@@ -4211,9 +4211,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4014)
+    @ZAttr(id=4016)
     public void unsetBackupStartDay() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupStartDay, "");
@@ -4229,9 +4229,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4014)
+    @ZAttr(id=4016)
     public Map<String,Object> unsetBackupStartDay(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupStartDay, "");
@@ -4244,9 +4244,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraBackupStartTime, or "01:00" if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4009)
+    @ZAttr(id=4011)
     public String getBackupStartTime() {
         return getAttr(Provisioning.A_zimbraBackupStartTime, "01:00", true);
     }
@@ -4258,9 +4258,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupStartTime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4009)
+    @ZAttr(id=4011)
     public void setBackupStartTime(String zimbraBackupStartTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupStartTime, zimbraBackupStartTime);
@@ -4275,9 +4275,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4009)
+    @ZAttr(id=4011)
     public Map<String,Object> setBackupStartTime(String zimbraBackupStartTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupStartTime, zimbraBackupStartTime);
@@ -4290,9 +4290,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4009)
+    @ZAttr(id=4011)
     public void unsetBackupStartTime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupStartTime, "");
@@ -4306,9 +4306,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4009)
+    @ZAttr(id=4011)
     public Map<String,Object> unsetBackupStartTime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupStartTime, "");
@@ -4322,9 +4322,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraBackupSyncEnabled, or false if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4012)
+    @ZAttr(id=4014)
     public boolean isBackupSyncEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraBackupSyncEnabled, false, true);
     }
@@ -4337,9 +4337,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraBackupSyncEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4012)
+    @ZAttr(id=4014)
     public void setBackupSyncEnabled(boolean zimbraBackupSyncEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupSyncEnabled, zimbraBackupSyncEnabled ? TRUE : FALSE);
@@ -4355,9 +4355,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4012)
+    @ZAttr(id=4014)
     public Map<String,Object> setBackupSyncEnabled(boolean zimbraBackupSyncEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupSyncEnabled, zimbraBackupSyncEnabled ? TRUE : FALSE);
@@ -4371,9 +4371,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4012)
+    @ZAttr(id=4014)
     public void unsetBackupSyncEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupSyncEnabled, "");
@@ -4388,9 +4388,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4012)
+    @ZAttr(id=4014)
     public Map<String,Object> unsetBackupSyncEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupSyncEnabled, "");
@@ -9148,7 +9148,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraDocumentEditingCallbackPort, or 7074 if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3099)
     public int getDocumentEditingCallbackPort() {
@@ -9160,7 +9160,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraDocumentEditingCallbackPort, or "7074" if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3099)
     public String getDocumentEditingCallbackPortAsString() {
@@ -9173,7 +9173,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraDocumentEditingCallbackPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3099)
     public void setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
@@ -9189,7 +9189,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3099)
     public Map<String,Object> setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
@@ -9204,7 +9204,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraDocumentEditingCallbackPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3099)
     public void setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
@@ -9220,7 +9220,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3099)
     public Map<String,Object> setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
@@ -9234,7 +9234,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3099)
     public void unsetDocumentEditingCallbackPort() throws com.zimbra.common.service.ServiceException {
@@ -9249,7 +9249,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3099)
     public Map<String,Object> unsetDocumentEditingCallbackPort(Map<String,Object> attrs) {
@@ -9263,7 +9263,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraDocumentServerHost, or null if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3098)
     public String getDocumentServerHost() {
@@ -9276,7 +9276,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraDocumentServerHost new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3098)
     public void setDocumentServerHost(String zimbraDocumentServerHost) throws com.zimbra.common.service.ServiceException {
@@ -9292,7 +9292,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3098)
     public Map<String,Object> setDocumentServerHost(String zimbraDocumentServerHost, Map<String,Object> attrs) {
@@ -9306,7 +9306,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3098)
     public void unsetDocumentServerHost() throws com.zimbra.common.service.ServiceException {
@@ -9321,7 +9321,7 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3098)
     public Map<String,Object> unsetDocumentServerHost(Map<String,Object> attrs) {
@@ -18433,9 +18433,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMailReportEnabled, or true if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4013)
+    @ZAttr(id=4015)
     public boolean isMailReportEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraMailReportEnabled, true, true);
     }
@@ -18447,9 +18447,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param zimbraMailReportEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4013)
+    @ZAttr(id=4015)
     public void setMailReportEnabled(boolean zimbraMailReportEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailReportEnabled, zimbraMailReportEnabled ? TRUE : FALSE);
@@ -18464,9 +18464,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4013)
+    @ZAttr(id=4015)
     public Map<String,Object> setMailReportEnabled(boolean zimbraMailReportEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailReportEnabled, zimbraMailReportEnabled ? TRUE : FALSE);
@@ -18479,9 +18479,9 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4013)
+    @ZAttr(id=4015)
     public void unsetMailReportEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailReportEnabled, "");
@@ -18495,9 +18495,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4013)
+    @ZAttr(id=4015)
     public Map<String,Object> unsetMailReportEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailReportEnabled, "");
@@ -36735,8 +36735,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @return zimbraNetworkModulesNGEnabled, or false if unset
      *
@@ -36748,8 +36748,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36764,8 +36764,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36781,8 +36781,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36796,8 +36796,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
