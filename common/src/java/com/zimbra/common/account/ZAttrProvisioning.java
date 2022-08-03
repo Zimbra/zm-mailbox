@@ -3018,7 +3018,7 @@ public class ZAttrProvisioning {
      * agent/device Id/device type default zimbra_activesync_versions on the
      * local config will be used.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public static final String A_zimbraActiveSyncVersion = "zimbraActiveSyncVersion";
@@ -4012,9 +4012,9 @@ public class ZAttrProvisioning {
      * zipStore - blobs are backed up into zip files without compression.
      * noZip - blobs are backed up as individual files rather in zip files.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4011)
+    @ZAttr(id=4013)
     public static final String A_zimbraBackupBlobsCompressType = "zimbraBackupBlobsCompressType";
 
     /**
@@ -4028,9 +4028,9 @@ public class ZAttrProvisioning {
      * *&#039; can be passed if we are setting only the delete-backup
      * schedule. (d - delete).
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4016)
+    @ZAttr(id=4018)
     public static final String A_zimbraBackupCrontabConfig = "zimbraBackupCrontabConfig";
 
     /**
@@ -4042,7 +4042,7 @@ public class ZAttrProvisioning {
      * level , unset on domain level but zimbraDomainDefaultCOSId is set to
      * cos then accounts for that domain will be backed up.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=9014)
     public static final String A_zimbraBackupEnabled = "zimbraBackupEnabled";
@@ -4069,9 +4069,9 @@ public class ZAttrProvisioning {
      * backup. If false, --accounts option will be set to all accounts on
      * zmschedulebackup command. Backups all accounts.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4015)
+    @ZAttr(id=4017)
     public static final String A_zimbraBackupObjectLevelEnabled = "zimbraBackupObjectLevelEnabled";
 
     /**
@@ -4096,9 +4096,9 @@ public class ZAttrProvisioning {
      * The number of days backups will be kept. Backup Scheduler deletes
      * backups older than the set value.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4010)
+    @ZAttr(id=4012)
     public static final String A_zimbraBackupRetentionDays = "zimbraBackupRetentionDays";
 
     /**
@@ -4132,18 +4132,18 @@ public class ZAttrProvisioning {
      * Saturday 0-7 or names allowed (Sun, Wed), with both 0 and 7
      * representing Sunday. Monday to Saturday (1-6)
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4014)
+    @ZAttr(id=4016)
     public static final String A_zimbraBackupStartDay = "zimbraBackupStartDay";
 
     /**
      * Starts backup each day at this time. This attribute is used to set
      * hours and minutes on the crontab.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4009)
+    @ZAttr(id=4011)
     public static final String A_zimbraBackupStartTime = "zimbraBackupStartTime";
 
     /**
@@ -4151,18 +4151,18 @@ public class ZAttrProvisioning {
      * runs in a separate thread and the soap call returns with the backup
      * label.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4012)
+    @ZAttr(id=4014)
     public static final String A_zimbraBackupSyncEnabled = "zimbraBackupSyncEnabled";
 
     /**
      * If true, will synchronize dumpster enabled accounts with backup
      * eligible accounts from zimbraBackupEnabled list.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4008)
+    @ZAttr(id=4010)
     public static final String A_zimbraBackupSyncUsersEnabled = "zimbraBackupSyncUsersEnabled";
 
     /**
@@ -5843,7 +5843,7 @@ public class ZAttrProvisioning {
     /**
      * Zimbra port on which document editing can request document
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3099)
     public static final String A_zimbraDocumentEditingCallbackPort = "zimbraDocumentEditingCallbackPort";
@@ -5851,7 +5851,7 @@ public class ZAttrProvisioning {
     /**
      * Document editing JWT secret
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3100)
     public static final String A_zimbraDocumentEditingJwtSecret = "zimbraDocumentEditingJwtSecret";
@@ -5859,7 +5859,7 @@ public class ZAttrProvisioning {
     /**
      * Whether or not to log document accessed time
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3101)
     public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
@@ -5867,7 +5867,7 @@ public class ZAttrProvisioning {
     /**
      * Host server where the onlyoffice is hosted
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3098)
     public static final String A_zimbraDocumentServerHost = "zimbraDocumentServerHost";
@@ -6657,7 +6657,7 @@ public class ZAttrProvisioning {
     /**
      * Whether or not document editing feature is enabled within briefcase
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3097)
     public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
@@ -6690,7 +6690,7 @@ public class ZAttrProvisioning {
      * Enable/Disable blocked file types set in
      * zimbraFileUploadBlockedFileTypes for uploading
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3092)
     public static final String A_zimbraFeatureFileTypeUploadRestrictionsEnabled = "zimbraFeatureFileTypeUploadRestrictionsEnabled";
@@ -7009,7 +7009,7 @@ public class ZAttrProvisioning {
     /**
      * Whether Powerpaste Feature is enabled or not
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3084)
     public static final String A_zimbraFeaturePowerPasteEnabled = "zimbraFeaturePowerPasteEnabled";
@@ -7053,7 +7053,7 @@ public class ZAttrProvisioning {
     /**
      * Creates unsubscribe system folder
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4006)
     public static final String A_zimbraFeatureSafeUnsubscribeFolderEnabled = "zimbraFeatureSafeUnsubscribeFolderEnabled";
@@ -7270,7 +7270,7 @@ public class ZAttrProvisioning {
      * at domain &amp; cos and false at account, feature not available at
      * account.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3093)
     public static final String A_zimbraFeatureZulipChatEnabled = "zimbraFeatureZulipChatEnabled";
@@ -7418,7 +7418,7 @@ public class ZAttrProvisioning {
     /**
      * Commonly blocked file types for uploading
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3091)
     public static final String A_zimbraFileUploadBlockedFileTypes = "zimbraFileUploadBlockedFileTypes";
@@ -8022,9 +8022,9 @@ public class ZAttrProvisioning {
      * If true, enables backup globally and if there is pre-configured backup
      * schedule the crontab will get that schedule.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4007)
+    @ZAttr(id=4009)
     public static final String A_zimbraGlobalBackupEnabled = "zimbraGlobalBackupEnabled";
 
     /**
@@ -9060,7 +9060,7 @@ public class ZAttrProvisioning {
     /**
      * Maximum size in bytes for e-mail attachment.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4000)
     public static final String A_zimbraMailAttachmentMaxSize = "zimbraMailAttachmentMaxSize";
@@ -9525,9 +9525,9 @@ public class ZAttrProvisioning {
      * If true, sends an email report to the admin user. Admins can disable
      * the email notification by setting it to FALSE.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4013)
+    @ZAttr(id=4015)
     public static final String A_zimbraMailReportEnabled = "zimbraMailReportEnabled";
 
     /**
@@ -10034,7 +10034,7 @@ public class ZAttrProvisioning {
     /**
      * Allowed mobile device list for ActiveSync/ABQ
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public static final String A_zimbraMobileAllowedDevices = "zimbraMobileAllowedDevices";
@@ -10051,7 +10051,7 @@ public class ZAttrProvisioning {
     /**
      * Blocked mobile device list for ActiveSync/ABQ
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public static final String A_zimbraMobileBlockedDevices = "zimbraMobileBlockedDevices";
@@ -10700,7 +10700,7 @@ public class ZAttrProvisioning {
     /**
      * Whether to permit syncing shared calendar folders
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4002)
     public static final String A_zimbraMobileShareCalendarEnabled = "zimbraMobileShareCalendarEnabled";
@@ -10716,7 +10716,7 @@ public class ZAttrProvisioning {
     /**
      * Whether to permit syncing shared mail folders
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4001)
     public static final String A_zimbraMobileShareMailEnabled = "zimbraMobileShareMailEnabled";
@@ -12095,8 +12095,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkMobileNGEnabled = "zimbraNetworkMobileNGEnabled";
 
     /**
-     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @since ZCS 8.8.0
      */
@@ -12361,7 +12361,7 @@ public class ZAttrProvisioning {
     /**
      * whether or not blocking common passwords is enabled
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3081)
     public static final String A_zimbraPasswordBlockCommonEnabled = "zimbraPasswordBlockCommonEnabled";
@@ -13159,7 +13159,7 @@ public class ZAttrProvisioning {
     /**
      * Default calendar resolution preference
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4007)
     public static final String A_zimbraPrefCalenderScaling = "zimbraPrefCalenderScaling";
@@ -14169,7 +14169,7 @@ public class ZAttrProvisioning {
     /**
      * Whether Powerpaste preference is enabled by user or admin
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3085)
     public static final String A_zimbraPrefPowerPasteEnabled = "zimbraPrefPowerPasteEnabled";
@@ -17927,7 +17927,7 @@ public class ZAttrProvisioning {
      * Zulip server base host. Requires server restart if updating from empty
      * value.
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3096)
     public static final String A_zimbraZulipBaseHost = "zimbraZulipBaseHost";
@@ -17935,7 +17935,7 @@ public class ZAttrProvisioning {
     /**
      * Zulip chat domain ID
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3094)
     public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
@@ -17943,7 +17943,7 @@ public class ZAttrProvisioning {
     /**
      * Zulip JWT secret
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3095)
     public static final String A_zimbraZulipJwtSecret = "zimbraZulipJwtSecret";

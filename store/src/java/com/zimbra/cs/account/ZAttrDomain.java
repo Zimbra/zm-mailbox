@@ -310,7 +310,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraActiveSyncVersion, or empty array if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public String[] getActiveSyncVersion() {
@@ -331,7 +331,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraActiveSyncVersion new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public void setActiveSyncVersion(String[] zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
@@ -355,7 +355,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public Map<String,Object> setActiveSyncVersion(String[] zimbraActiveSyncVersion, Map<String,Object> attrs) {
@@ -378,7 +378,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraActiveSyncVersion new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public void addActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
@@ -402,7 +402,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public Map<String,Object> addActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
@@ -425,7 +425,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraActiveSyncVersion existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public void removeActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
@@ -449,7 +449,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public Map<String,Object> removeActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
@@ -471,7 +471,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public void unsetActiveSyncVersion() throws com.zimbra.common.service.ServiceException {
@@ -494,7 +494,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4008)
     public Map<String,Object> unsetActiveSyncVersion(Map<String,Object> attrs) {
@@ -4592,7 +4592,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraBackupEnabled, or false if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=9014)
     public boolean isBackupEnabled() {
@@ -4611,7 +4611,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraBackupEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=9014)
     public void setBackupEnabled(boolean zimbraBackupEnabled) throws com.zimbra.common.service.ServiceException {
@@ -4633,7 +4633,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=9014)
     public Map<String,Object> setBackupEnabled(boolean zimbraBackupEnabled, Map<String,Object> attrs) {
@@ -4653,7 +4653,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=9014)
     public void unsetBackupEnabled() throws com.zimbra.common.service.ServiceException {
@@ -4674,7 +4674,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=9014)
     public Map<String,Object> unsetBackupEnabled(Map<String,Object> attrs) {
@@ -10043,7 +10043,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraFeatureZulipChatEnabled, or false if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3093)
     public boolean isFeatureZulipChatEnabled() {
@@ -10060,7 +10060,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraFeatureZulipChatEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3093)
     public void setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled) throws com.zimbra.common.service.ServiceException {
@@ -10080,7 +10080,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3093)
     public Map<String,Object> setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled, Map<String,Object> attrs) {
@@ -10098,7 +10098,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3093)
     public void unsetFeatureZulipChatEnabled() throws com.zimbra.common.service.ServiceException {
@@ -10117,7 +10117,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3093)
     public Map<String,Object> unsetFeatureZulipChatEnabled(Map<String,Object> attrs) {
@@ -16720,7 +16720,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraMobileAllowedDevices, or empty array if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public String[] getMobileAllowedDevices() {
@@ -16733,7 +16733,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMobileAllowedDevices new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public void setMobileAllowedDevices(String[] zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
@@ -16749,7 +16749,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> setMobileAllowedDevices(String[] zimbraMobileAllowedDevices, Map<String,Object> attrs) {
@@ -16764,7 +16764,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMobileAllowedDevices new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public void addMobileAllowedDevices(String zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
@@ -16780,7 +16780,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> addMobileAllowedDevices(String zimbraMobileAllowedDevices, Map<String,Object> attrs) {
@@ -16795,7 +16795,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMobileAllowedDevices existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public void removeMobileAllowedDevices(String zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
@@ -16811,7 +16811,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> removeMobileAllowedDevices(String zimbraMobileAllowedDevices, Map<String,Object> attrs) {
@@ -16825,7 +16825,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public void unsetMobileAllowedDevices() throws com.zimbra.common.service.ServiceException {
@@ -16840,7 +16840,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> unsetMobileAllowedDevices(Map<String,Object> attrs) {
@@ -16854,7 +16854,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraMobileBlockedDevices, or empty array if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public String[] getMobileBlockedDevices() {
@@ -16867,7 +16867,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMobileBlockedDevices new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public void setMobileBlockedDevices(String[] zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
@@ -16883,7 +16883,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> setMobileBlockedDevices(String[] zimbraMobileBlockedDevices, Map<String,Object> attrs) {
@@ -16898,7 +16898,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMobileBlockedDevices new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public void addMobileBlockedDevices(String zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
@@ -16914,7 +16914,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> addMobileBlockedDevices(String zimbraMobileBlockedDevices, Map<String,Object> attrs) {
@@ -16929,7 +16929,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraMobileBlockedDevices existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public void removeMobileBlockedDevices(String zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
@@ -16945,7 +16945,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> removeMobileBlockedDevices(String zimbraMobileBlockedDevices, Map<String,Object> attrs) {
@@ -16959,7 +16959,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public void unsetMobileBlockedDevices() throws com.zimbra.common.service.ServiceException {
@@ -16974,7 +16974,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> unsetMobileBlockedDevices(Map<String,Object> attrs) {
@@ -25689,7 +25689,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraZulipChatDomainId, or null if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3094)
     public String getZulipChatDomainId() {
@@ -25702,7 +25702,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraZulipChatDomainId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3094)
     public void setZulipChatDomainId(String zimbraZulipChatDomainId) throws com.zimbra.common.service.ServiceException {
@@ -25718,7 +25718,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3094)
     public Map<String,Object> setZulipChatDomainId(String zimbraZulipChatDomainId, Map<String,Object> attrs) {
@@ -25732,7 +25732,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3094)
     public void unsetZulipChatDomainId() throws com.zimbra.common.service.ServiceException {
@@ -25747,7 +25747,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=3094)
     public Map<String,Object> unsetZulipChatDomainId(Map<String,Object> attrs) {
