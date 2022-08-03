@@ -20864,9 +20864,9 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraGlobalExternalStoreConfig, or null if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4006)
+    @ZAttr(id=4019)
     public String getGlobalExternalStoreConfig() {
         return getAttr(Provisioning.A_zimbraGlobalExternalStoreConfig, null, true);
     }
@@ -20877,9 +20877,9 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraGlobalExternalStoreConfig new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4006)
+    @ZAttr(id=4019)
     public void setGlobalExternalStoreConfig(String zimbraGlobalExternalStoreConfig) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGlobalExternalStoreConfig, zimbraGlobalExternalStoreConfig);
@@ -20893,9 +20893,9 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4006)
+    @ZAttr(id=4019)
     public Map<String,Object> setGlobalExternalStoreConfig(String zimbraGlobalExternalStoreConfig, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGlobalExternalStoreConfig, zimbraGlobalExternalStoreConfig);
@@ -20907,9 +20907,9 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4006)
+    @ZAttr(id=4019)
     public void unsetGlobalExternalStoreConfig() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGlobalExternalStoreConfig, "");
@@ -20922,9 +20922,9 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 10.0.0
      */
-    @ZAttr(id=4006)
+    @ZAttr(id=4019)
     public Map<String,Object> unsetGlobalExternalStoreConfig(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGlobalExternalStoreConfig, "");
