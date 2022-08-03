@@ -62,7 +62,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
    [<globalConfigValueUpgrade>{initial-value-in-global-config-for-upgrades}</globalConfigValueUpgrade>]*
    [<defaultCOSValue>{initial-value-in-default-cos}</defaultCOSValue>]*
    [<defaultCOSValueUpgrade>{initial-value-in-existing-cos-for-upgrades}</defaultCOSValueUpgrade>]*
-  
+
 </attr>
 
   name: name of attribute
@@ -85,7 +85,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                 part.
     emailp......valid email address. must have a "@" and personal part
                 is optional.
-    cs_emailp...comma-separated valid email addresses . each address must have a "@" 
+    cs_emailp...comma-separated valid email addresses . each address must have a "@"
                 and personal part is optional.
     id..........^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
     integer.....32 bit signed, min/max checked
@@ -133,7 +133,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     serverInherited........if not set on server, inherit from global config
     accountCosDomainInherited...if not set on account, inherit from COS,
                                 if not set on COS, inherit from domain
-    idn....................can contain Internationalized Domain Names (IDN). 
+    idn....................can contain Internationalized Domain Names (IDN).
                            For attributes that are either:
                                - of type email or emailp or cs_emailp, or
                                - has idn flag
@@ -165,17 +165,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                         memcached
                         nginxproxy
                         stats;
-   
+
   deprecatedSince:
     version since which the attribute had been deprecated.  Deprecated
     attributes are still generated into the schema.  This flag is only for
     documentation purpose so when someone (Zimbra employee or customer)
     looks at zimbra-attrs.xml or zimbra.schema they know those attributes
     are no longer used.
-    
+
   since:
     Version since which the attribute had been introduced.
-    For attributes that don't have "since" declared, it is assumed the attribute 
+    For attributes that don't have "since" declared, it is assumed the attribute
     was introduced since the very beginning.
     Required after(inclusive) oid 525.
 
@@ -360,12 +360,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     locked      - no login, mail delivery OK.
     maintenance - no login, no delivery(lmtp server returns 4.x.x Persistent Transient Failure).
     pending     - no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-                  Account behavior is like closed, except that when the status is being set to 
+                  Account behavior is like closed, except that when the status is being set to
                   pending, account addresses are not removed from distribution lists.
-                  The use case is for hosted.  New account creation based on invites 
-                  that are not completed until user accepts TOS on account creation confirmation page.  
+                  The use case is for hosted.  New account creation based on invites
+                  that are not completed until user accepts TOS on account creation confirmation page.
     closed      - no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-                  all addresses (account main email and all aliases) of the 
+                  all addresses (account main email and all aliases) of the
                   account are removed from all distribution lists.
   </desc>
 </attr>
@@ -789,7 +789,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="114" name="zimbraLastLogonTimestampFrequency" type="duration" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>7d</globalConfigValue>
-  <desc>how often the zimbraLastLogonTimestamp is updated.  
+  <desc>how often the zimbraLastLogonTimestamp is updated.
         if set to 0, updating zimbraLastLogonTimestamp is completely disabled
   </desc>
 </attr>
@@ -1957,9 +1957,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="364" name="zimbraAvailableSkin" type="string" max="80" cardinality="multi" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainAdminModifiable">
-  <desc>Skins available for this account.  
-        Fallback order is: 
-        1. the normal account/cos inheritance   
+  <desc>Skins available for this account.
+        Fallback order is:
+        1. the normal account/cos inheritance
         2. if not set on account/cos, use the value on the domain of the account
   </desc>
 </attr>
@@ -2802,20 +2802,20 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="535" name="zimbraDomainStatus" type="enum" value="active,maintenance,locked,closed,suspended,shutdown" callback="DomainStatus" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.0">
-  <desc>domain status.  enum values are akin to those of zimbraAccountStatus but the status affects all accounts on the domain.  
+  <desc>domain status.  enum values are akin to those of zimbraAccountStatus but the status affects all accounts on the domain.
         See table below for how zimbraDomainStatus affects account status.
-  
+
         active       - see zimbraAccountStatus
         maintenance  - see zimbraAccountStatus
-        locked       - see zimbraAccountStatus 
-        closed       - see zimbraAccountStatus 
-        suspended    - maintenance + no creating/deleting/modifying accounts/DLs under the domain.  
+        locked       - see zimbraAccountStatus
+        closed       - see zimbraAccountStatus
+        suspended    - maintenance + no creating/deleting/modifying accounts/DLs under the domain.
         shutdown     - suspended + cannot modify domain attrs + cannot delete the domain
-                       Indicating server is doing major and lengthy maintenance work on the domain, 
-                       e.g. renaming the domain and moving LDAP entries.  Modification and deletion 
-                       of the domain can only be done internally by the server when it is safe to release 
+                       Indicating server is doing major and lengthy maintenance work on the domain,
+                       e.g. renaming the domain and moving LDAP entries.  Modification and deletion
+                       of the domain can only be done internally by the server when it is safe to release
                        the domain, they cannot be done in admin console or zmprov.
-        
+
         How zimbraDomainStatus affects account behavior :
         -------------------------------------
         zimbraDomainStatus   account behavior
@@ -2823,12 +2823,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
         active               zimbraAccountStatus
         locked               zimbraAccountStatus if it is maintenance or pending or closed,
                              else locked
-        maintenance          zimbraAccountStatus if it is pending or closed, 
+        maintenance          zimbraAccountStatus if it is pending or closed,
                              else maintenance
-        suspended            zimbraAccountStatus if it is pending or closed, 
+        suspended            zimbraAccountStatus if it is pending or closed,
                              else maintenance
-        shutdown             zimbraAccountStatus if it is pending or closed, 
-                             else maintenance                     
+        shutdown             zimbraAccountStatus if it is pending or closed,
+                             else maintenance
         closed               closed
   </desc>
 </attr>
@@ -2836,7 +2836,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="536" name="zimbraDomainRenameInfo" type="string" max="1024" cardinality="single" optionalIn="domain" since="5.0.0">
   <desc>domain rename info/status</desc>
 </attr>
-    
+
 <attr id="537" name="zimbraPrefInboxUnreadLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>
@@ -3063,7 +3063,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="577" name="zimbraPrefCalendarReminderMobile" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
-  <defaultCOSValue>FALSE</defaultCOSValue>  
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>The mobile device (phone) the reminder goes to.</desc>
   <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
@@ -3095,9 +3095,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="583" name="zimbraGalLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.1">
   <globalConfigValue>1000</globalConfigValue>
-  <desc>LDAP page size for paged search control while accessing LDAP server for GAL.  
+  <desc>LDAP page size for paged search control while accessing LDAP server for GAL.
         This applies to both Zimbra and external LDAP servers.
-        A value of 0 means paging is not enabled. 
+        A value of 0 means paging is not enabled.
   </desc>
 </attr>
 
@@ -3142,7 +3142,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
         none: anonymous binding
         simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
         kerberos5: zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has to be set
-        
+
         if not set fallback to zimbraGalLdapAuthMech
   </desc>
 </attr>
@@ -3165,9 +3165,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="597" name="zimbraGalSyncLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited" since="5.0.2">
   <globalConfigValue>1000</globalConfigValue>
-  <desc>LDAP page size for paged search control while accessing LDAP server for GAL sync.  
+  <desc>LDAP page size for paged search control while accessing LDAP server for GAL sync.
         This applies to both Zimbra and external LDAP servers.
-        A value of 0 means paging is not enabled. 
+        A value of 0 means paging is not enabled.
         If not set fallback to zimbraGalLdapPageSize
   </desc>
 </attr>
@@ -3420,7 +3420,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="640" name="zimbraReverseProxySSLCiphers" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.5">
   <globalConfigValue>ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:TLS_AES_256_GCM_SHA384:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4</globalConfigValue>
-  <desc>permitted ciphers for reverse proxy. Ciphers are in the formats supported by OpenSSL 
+  <desc>permitted ciphers for reverse proxy. Ciphers are in the formats supported by OpenSSL
         e.g. ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;
         if not set, default ciphers permitted by nginx will apply
   </desc>
@@ -3430,7 +3430,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>only</globalConfigValue>
   <desc>on   - on the plain IMAP port, starttls is allowed
         off  - no starttls is offered on plain port
-        only - you have to use starttls before clear text login 
+        only - you have to use starttls before clear text login
   </desc>
 </attr>
 
@@ -3438,7 +3438,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>only</globalConfigValue>
   <desc>on   - on the plain POP3 port, starttls is allowed
         off  - no starttls is offered on plain port
-        only - you have to use starttls before clear text login 
+        only - you have to use starttls before clear text login
   </desc>
 </attr>
 
@@ -3753,7 +3753,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="710" name="zimbraZimletDomainAvailableZimlets" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited" callback="AvailableZimlets" since="5.0.10">
   <desc>
       List of Zimlets available to this domain.
-      Zimlets available to accounts in the domain is the union of account/cos attribute zimbraZimletAvailableZimlets and this attribute. 
+      Zimlets available to accounts in the domain is the union of account/cos attribute zimbraZimletAvailableZimlets and this attribute.
       See zimbraZimletAvailableZimlets for value format.
   </desc>
 </attr>
@@ -3918,7 +3918,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="742" name="zimbraServerId" type="id" cardinality="single" requiredIn="xmppComponent" since="6.0.0_BETA1">
   <desc>ZimbraID of the server that this component is running on</desc>
-</attr>  
+</attr>
 
 <attr id="743" name="zimbraAdminConsoleDNSCheckEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.10">
   <globalConfigValue>FALSE</globalConfigValue>
@@ -4044,11 +4044,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="764" name="zimbraMailRedirectSetEnvelopeSender" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA1">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>
-    If TRUE, the envelope sender of a message redirected by mail filters will be set to the users address.  
+    If TRUE, the envelope sender of a message redirected by mail filters will be set to the users address.
     If FALSE, the envelope sender will be set to the From address of the redirected message.
   </desc>
 </attr>
-    
+
 <attr id="765" name="zimbraPrefZimlets" type="string" cardinality="multi" optionalIn="account,cos" flags="domainAdminModifiable" since="6.0.0_BETA1">
   <desc>zimlets user wants to see in the UI</desc>
 </attr>
@@ -4127,9 +4127,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="779" name="zimbraReverseProxyUseExternalRoute" type="boolean" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
   <desc>
-      There is a deployment scenario for migrations where all of the customers users are pointed at the zimbra POP IMAP reverse proxy.  
+      There is a deployment scenario for migrations where all of the customers users are pointed at the zimbra POP IMAP reverse proxy.
       We then want their connections proxied back to the legacy system for not-yet-non-migrated users.
-      If this attribute is TRUE, reverse proxy lookup servlet should check to see if zimbraExternal* is set on the domain.  If so it is used.  
+      If this attribute is TRUE, reverse proxy lookup servlet should check to see if zimbraExternal* is set on the domain.  If so it is used.
       If not, lookup proceeds as usual.
   </desc>
 </attr>
@@ -4189,7 +4189,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>
     Whether to allow password sent to non-secured port when zimbraMailMode is mixed.
     If it set to TRUE the server will allow login with clear text AuthRequests and change password with clear text ChangePasswordRequest.
-    If it set to FALSE the server will return an error if an attempt is made to ChangePasswordRequest or AuthRequest.  
+    If it set to FALSE the server will return an error if an attempt is made to ChangePasswordRequest or AuthRequest.
   </desc>
 </attr>
 
@@ -4223,7 +4223,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="794" name="zimbraCalendarCalDavUseDistinctAppointmentAndToDoCollection" type="boolean" cardinality="single" optionalIn="globalConfig" since="5.0.12" deprecatedSince="8.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>
-    When set to TRUE, Calendar folders and Todo folders in Zimbra will be advertised as Calendar only and Todo only via CalDAV.  
+    When set to TRUE, Calendar folders and Todo folders in Zimbra will be advertised as Calendar only and Todo only via CalDAV.
     When set to FALSE, Calendar folders will be able to store both appointments and tasks, and Todo folders will not be advertised as CalDAV enabled.
   </desc>
   <deprecateDesc>Deprecated per bug 69886.</deprecateDesc>
@@ -4307,7 +4307,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="811" name="zimbraDistributionListSendShareMessageFromAddress" type="string" max="256" cardinality="single" optionalIn="distributionList,group" since="6.0.0_BETA1">
   <desc>
     Email address to put in from header for the share info email.
-    If not set, email address of the authenticated admin account will be used. 
+    If not set, email address of the authenticated admin account will be used.
   </desc>
 </attr>
 
@@ -4364,7 +4364,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>
     Whether to allow password sent to non-secured port from CalDAV clients.
     If it set to TRUE the server will allow access from CalDAV client to zimbraMailPort.
-    If it set to FALSE the server will return an error if a request is made from CalDAV client to zimbraMailPort.  
+    If it set to FALSE the server will return an error if a request is made from CalDAV client to zimbraMailPort.
   </desc>
 </attr>
 
@@ -4381,7 +4381,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="823" name="zimbraPrefReadReceiptsToAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="6.0.0_BETA1" deprecatedSince="6.0.8">
   <desc>
-    address to put in reply-to header of read receipt messages, 
+    address to put in reply-to header of read receipt messages,
     if it is not set, then the compose identities primary email address is used.
   </desc>
   <deprecateDesc>Deprecated per bug 46988.  This feature was never fully implemented.</deprecateDesc>
@@ -4576,7 +4576,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>set to true for delegated admin accounts</desc>
 </attr>
 
-<!-- 
+<!--
    ===============================================================================
    bug 32811: we need to skip oid 990 and 991, the next oid should start at 1000.
               Please talk to phoebe if you have any question.
@@ -4586,7 +4586,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1002" name="zimbraMailUseDirectBuffers" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.22">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>
-    Used to control whether Java NIO direct buffers are used. 
+    Used to control whether Java NIO direct buffers are used.
     Value is propagated to Jetty configuration.  In the future, other NIO pieces
     (IMAP/POP/LMTP) will also honor this.
   </desc>
@@ -4635,7 +4635,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1011" name="zimbraMaxMailItemsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA2">
   <defaultCOSValue>100</defaultCOSValue>
   <desc>
-      max number of messages/conversations per page, 
+      max number of messages/conversations per page,
       Web client (not server) verifies that zimbraPrefMailItemsPerPage should not exceed this attribute.
   </desc>
 </attr>
@@ -4643,7 +4643,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1012" name="zimbraMaxContactsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA2">
   <defaultCOSValue>100</defaultCOSValue>
   <desc>
-      max number of contacts per page, 
+      max number of contacts per page,
       Web client (not server) verifies that zimbraPrefContactsPerPage should not exceed this attribute.
   </desc>
 </attr>
@@ -4651,7 +4651,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1013" name="zimbraMaxVoiceItemsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA2">
   <defaultCOSValue>100</defaultCOSValue>
   <desc>
-      max number of voice items per page, 
+      max number of voice items per page,
       Web client (not server) verifies that zimbraPrefVoiceItemsPerPage should not exceed this attribute.
   </desc>
 </attr>
@@ -4719,14 +4719,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>
     In our web app, AJAX and standard html client, we have support for adding the HTTP
     client IP address as X-Originating-IP in an outbound message.  We also use
-    the HTTP client IP address in our logging.  
-    
-    In the case of standard client making connections to the SOAP layer, the JSP layer 
-    tells the SOAP layer in a http header what the remote HTTP client address is. 
-    In the case where nginx or some other proxy layer is fronting our webapps, the proxy 
-    tells the SOAP/JSP layers in a http header  what the real HTTP client s address is. 
-    
-    Our SOAP/JSP layers will trust the client/proxy only if the IP address of the client/proxy 
+    the HTTP client IP address in our logging.
+
+    In the case of standard client making connections to the SOAP layer, the JSP layer
+    tells the SOAP layer in a http header what the remote HTTP client address is.
+    In the case where nginx or some other proxy layer is fronting our webapps, the proxy
+    tells the SOAP/JSP layers in a http header  what the real HTTP client s address is.
+
+    Our SOAP/JSP layers will trust the client/proxy only if the IP address of the client/proxy
     is one of the IPs listed in this attribute.
   </desc>
 </attr>
@@ -4734,7 +4734,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1026" name="zimbraFreebusyPropagationRetryInterval" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
   <globalConfigValue>1m</globalConfigValue>
   <desc>
-      The interval to wait when the server encounters problems while 
+      The interval to wait when the server encounters problems while
       propagating Zimbra users free/busy information to external
       provider such as Exchange.
   </desc>
@@ -4759,7 +4759,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="1030" name="zimbraDataSourceFailingSince" type="gentime" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="5.0.17">
   <desc>
-    Timestamp of the first sync error for a data source.  
+    Timestamp of the first sync error for a data source.
     This value is unset after a successful sync.
   </desc>
 </attr>
@@ -4825,7 +4825,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to enable http debug handler on a server</desc>
 </attr>
-     
+
 <attr id="1044" name="zimbraAuthTokenValidityValue" type="integer" min="0" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="6.0.0_GA">
   <desc>if set, this value gets stored in the auth token and compared on every request. Changing it will invalidate all outstanding auth tokens. It also gets changed when an account password is changed.</desc>
 </attr>
@@ -4962,7 +4962,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="1072" name="zimbraPrefMailFoldersCheckedForNewMsgIndicator" type="string" max="1024" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.5">
   <desc>
-     a list of comma separated folder ids of all folders used to count for showing a new message indicator icon for the account, 
+     a list of comma separated folder ids of all folders used to count for showing a new message indicator icon for the account,
      useful in UIs managing multiple accounts: desktop and family mailboxes.
   </desc>
 </attr>
@@ -4992,8 +4992,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1077" name="zimbraSmtpRestrictEnvelopeFrom" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.5">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
-    If TRUE, the address for MAIL FROM in the SMTP session will always be set to 
-    the email address of the account.  If FALSE, the address will be the value of 
+    If TRUE, the address for MAIL FROM in the SMTP session will always be set to
+    the email address of the account.  If FALSE, the address will be the value of
     the Sender or From header in the outgoing message, in that order.
   </desc>
 </attr>
@@ -5094,7 +5094,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1094" name="zimbraAuthTokenValidityValueEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="6.0.7">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>
-    Whether auth token validity value checking should be performed during auth token validation.  
+    Whether auth token validity value checking should be performed during auth token validation.
     See description for zimbraAuthTokenValidityValue.
   </desc>
 </attr>
@@ -5112,7 +5112,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1097" name="zimbraMailEmptyFolderBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.8">
   <globalConfigValue>1000</globalConfigValue>
   <desc>
-    Maximum number of messages to delete during a single transaction when emptying a large folder. 
+    Maximum number of messages to delete during a single transaction when emptying a large folder.
   </desc>
 </attr>
 
@@ -5197,7 +5197,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1115" name="zimbraMilterBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mta" since="7.0.0">
   <desc>interface address on which milter server should listen; if not specified, binds to 127.0.0.1</desc>
 </attr>
-  
+
 <attr id="1116" name="zimbraMilterServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="7.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether milter server is enabled for a given server</desc>
@@ -5354,12 +5354,12 @@ TODO: delete them permanently from here
 
 <attr id="1145" name="zimbraGalSyncIgnoredAttributes"  type="string" max="256" cardinality="multi" optionalIn="galDataSource" since="6.0.10">
   <desc>
-    List of attributes that will be ignored when determining whether 
-    a GAL contact has been modified.  Any change in other attribute 
+    List of attributes that will be ignored when determining whether
+    a GAL contact has been modified.  Any change in other attribute
     values will make the contact "dirty" and the contact will show as
-    modified in the next GAL sync response.  By default modifyTimeStamp 
-    is always included in ignored attributes.  Then if the only change 
-    in GAL contact is modifyTimeStamp, the contact will not be shown as 
+    modified in the next GAL sync response.  By default modifyTimeStamp
+    is always included in ignored attributes.  Then if the only change
+    in GAL contact is modifyTimeStamp, the contact will not be shown as
     modified in the next GAL sync response from the client, thus
     minimizing the need to download the GAL contact again when none of the
     meaningful attributes have changed.
@@ -5505,8 +5505,8 @@ TODO: delete them permanently from here
 <attr id="1168" name="zimbraFeatureAntispamEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
-    whether or not to enable rerouting spam messages to Junk folder in ZCS, 
-    exposing Junk folder and actions in the web UI, and 
+    whether or not to enable rerouting spam messages to Junk folder in ZCS,
+    exposing Junk folder and actions in the web UI, and
     exposing Junk folder to IMAP clients.
   </desc>
 </attr>
@@ -5548,10 +5548,10 @@ TODO: delete them permanently from here
 <attr id="1176" name="zimbraSMIMELdapURL" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1"  since="7.1.0">
   <desc>
     LDAP URL(s) for public key lookup for S/MIME via external LDAP.  Multiple URLs for error fallback purpose can be separated by space.
-    
+
     All SMIME attributes are in the format of {config-name}:{value}.  A 'SMIME config' is a set of SMIME attribute values with the same {config-name}.
-    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig, 
-    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used. 
+    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig,
+    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used.
     SMIME configs on globalconfig will be used only when there is no SMIME config on the domain.
     SMIME attributes cannot be modified directly with zmprov md/mcf commands.  Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
   </desc>
@@ -5560,10 +5560,10 @@ TODO: delete them permanently from here
 <attr id="1177" name="zimbraSMIMELdapStartTlsEnabled" type="string" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     Whether to use startTLS for public key lookup for S/MIME via external LDAP.
-    
+
     All SMIME attributes are in the format of {config-name}:{value}.  A 'SMIME config' is a set of SMIME attribute values with the same {config-name}.
-    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig, 
-    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used. 
+    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig,
+    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used.
     SMIME configs on globalconfig will be used only when there is no SMIME config on the domain.
     SMIME attributes cannot be modified directly with zmprov md/mcf commands.  Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
   </desc>
@@ -5572,10 +5572,10 @@ TODO: delete them permanently from here
 <attr id="1178" name="zimbraSMIMELdapBindDn" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     LDAP bind DN for public key lookup for S/MIME via external LDAP.  Can be empty for anonymous bind.
-    
+
     All SMIME attributes are in the format of {config-name}:{value}.  A 'SMIME config' is a set of SMIME attribute values with the same {config-name}.
-    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig, 
-    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used. 
+    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig,
+    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used.
     SMIME configs on globalconfig will be used only when there is no SMIME config on the domain.
     SMIME attributes cannot be modified directly with zmprov md/mcf commands.  Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
   </desc>
@@ -5584,10 +5584,10 @@ TODO: delete them permanently from here
 <attr id="1179" name="zimbraSMIMELdapBindPassword" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     LDAP bind password for public key lookup for S/MIME via external LDAP.  Can be empty for anonymous bind.
-    
+
     All SMIME attributes are in the format of {config-name}:{value}.  A 'SMIME config' is a set of SMIME attribute values with the same {config-name}.
-    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig, 
-    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used. 
+    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig,
+    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used.
     SMIME configs on globalconfig will be used only when there is no SMIME config on the domain.
     SMIME attributes cannot be modified directly with zmprov md/mcf commands.  Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
   </desc>
@@ -5596,10 +5596,10 @@ TODO: delete them permanently from here
 <attr id="1180" name="zimbraSMIMELdapSearchBase"  type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     LDAP search base for public key lookup for S/MIME via external LDAP.
-  
+
     All SMIME attributes are in the format of {config-name}:{value}.  A 'SMIME config' is a set of SMIME attribute values with the same {config-name}.
-    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig, 
-    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used. 
+    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig,
+    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used.
     SMIME configs on globalconfig will be used only when there is no SMIME config on the domain.
     SMIME attributes cannot be modified directly with zmprov md/mcf commands.  Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
   </desc>
@@ -5612,10 +5612,10 @@ TODO: delete them permanently from here
     %n - search key with @ (or without, if no @ was specified)
     %u - with @ removed
     e.g. (mail=%n)
-    
+
     All SMIME attributes are in the format of {config-name}:{value}.  A 'SMIME config' is a set of SMIME attribute values with the same {config-name}.
-    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig, 
-    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used. 
+    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig,
+    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used.
     SMIME configs on globalconfig will be used only when there is no SMIME config on the domain.
     SMIME attributes cannot be modified directly with zmprov md/mcf commands.  Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
   </desc>
@@ -5624,10 +5624,10 @@ TODO: delete them permanently from here
 <attr id="1182" name="zimbraSMIMELdapAttribute" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.0">
   <desc>
     LDAP attribute(s) for public key lookup for S/MIME via external LDAP.  Multiple attributes can be separated by comma.
-  
+
     All SMIME attributes are in the format of {config-name}:{value}.  A 'SMIME config' is a set of SMIME attribute values with the same {config-name}.
-    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig, 
-    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used. 
+    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig,
+    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used.
     SMIME configs on globalconfig will be used only when there is no SMIME config on the domain.
     SMIME attributes cannot be modified directly with zmprov md/mcf commands.  Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
   </desc>
@@ -5673,10 +5673,10 @@ TODO: delete them permanently from here
   <desc>
     enable authentication via X.509 Client Certificate.
     Disabled: client authentication is disabled.
-    NeedClientAuth: client authentication is required during SSL handshake on the SSL mutual authentication port(see zimbraMailSSLClientCertPort). 
+    NeedClientAuth: client authentication is required during SSL handshake on the SSL mutual authentication port(see zimbraMailSSLClientCertPort).
         The SSL handshake will fail if the client does not present a certificate to authenticate.
-    WantClientAuth: client authentication is requested during SSL handshake on the SSL mutual authentication port(see zimbraMailSSLClientCertPort).  
-        The SSL handshake will still proceed if the client does not present a certificate to authenticate.  In the case when client does not send a 
+    WantClientAuth: client authentication is requested during SSL handshake on the SSL mutual authentication port(see zimbraMailSSLClientCertPort).
+        The SSL handshake will still proceed if the client does not present a certificate to authenticate.  In the case when client does not send a
         certificate, user will be redirected to the usual entry page of the requested webapp, where username/password is prompted.
   </desc>
 </attr>
@@ -5778,12 +5778,12 @@ TODO: delete them permanently from here
     If zimbraSMIMELdapSearchBase is set for a config, this attribute is ignored for the config.
     If not set, default for the config is FALSE.  In that case, if zimbraSMIMELdapSearchBase is not set,
     the search will default to the rootDSE.
-    
-    If multiple DNs are discovered, the ldap search will use them one by one until a hit is returned. 
-  
+
+    If multiple DNs are discovered, the ldap search will use them one by one until a hit is returned.
+
     All SMIME attributes are in the format of {config-name}:{value}.  A 'SMIME config' is a set of SMIME attribute values with the same {config-name}.
-    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig, 
-    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used. 
+    Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig,
+    they are not domain-inherited attributes.  During SMIME public key lookup, if there are any SMIME config on the domain of the account, they are used.
     SMIME configs on globalconfig will be used only when there is no SMIME config on the domain.
     SMIME attributes cannot be modified directly with zmprov md/mcf commands.  Use zmprov gcsc/gdsc/mcsc/mdsc/rcsc/rdsc command instead.
   </desc>
@@ -5830,44 +5830,44 @@ TODO: delete them permanently from here
   <desc>
     Map from a certificate field to a Zimbra account key that can uniquely identify a Zimbra account for client certificate authentication.
     Value is a comma-separated  list of mapping rules, each mapping maps a certificate field to a Zimbra account key.
-    Each is attempted in sequence until a unique account can be resolved.  
-    
-    e.g. a value can be: 
+    Each is attempted in sequence until a unique account can be resolved.
+
+    e.g. a value can be:
          SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
-    
+
     value:
         comma-separated mapping-rule
-    
+
     mapping-rule:
         {cert-field-to-zimbra-key-map} | {LDAP-filter}
-        
-    cert-field-to-zimbra-key-map:     
+
+    cert-field-to-zimbra-key-map:
         {certificate-field}={Zimbra-account-key}
-    
+
     certificate-field:
         SUBJECT_{an RDN attr, e.g. CN}: a RND in DN of Subject
         SUBJECT_DN:                   entire DN of Subject
-        SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka Principal Name) in otherName in subjectAltName extension 
-        SUBJECTALTNAME_RFC822NAME:    rfc822Name in subjectAltName extension 
-    
+        SUBJECTALTNAME_OTHERNAME_UPN: UPN(aka Principal Name) in otherName in subjectAltName extension
+        SUBJECTALTNAME_RFC822NAME:    rfc822Name in subjectAltName extension
+
     Zimbra-account-key:
         name:                   primary name or any of the aliases of an account
         zimbraId:               zimbraId of an account
-        zimbraForeignPrincipal: zimbraForeignPrincipal of an account.  
+        zimbraForeignPrincipal: zimbraForeignPrincipal of an account.
                                 The matching value on the zimbraForeignPrincipal must be prefixed with "cert {supported-certificate-filed}:"
                                 e.g. cert SUBJECTALTNAME_OTHERNAME_UPN:123456@mydomain
-                                
-    LDAP-filter: An LDAP filter template with placeholders to be substituted by certificate field values.  
-                 (objectClass=zimbraAccount) is internally ANDed with the supplied filter. 
+
+    LDAP-filter: An LDAP filter template with placeholders to be substituted by certificate field values.
+                 (objectClass=zimbraAccount) is internally ANDed with the supplied filter.
                  e.g. (|(uid=%{SUBJECT_CN})(mail=%{SUBJECTALTNAME_RFC822NAME}))
-                 
+
     Note: it is recommended not to use LDAP-filter rule, as it will trigger an LDAP search for each cert auth request.
-          LDAP-filter is disabled by default.  To enable it globally, set zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled 
-          on global config to TRUE.  If LDAP-filter is not enabled, all client certificate authentication will fail on domains 
+          LDAP-filter is disabled by default.  To enable it globally, set zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled
+          on global config to TRUE.  If LDAP-filter is not enabled, all client certificate authentication will fail on domains
           configured with LDAP-filter.
   </desc>
 </attr>
-  
+
 <attr id="1216" name="zimbraMailSSLClientCertPrincipalMapLdapFilterEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="7.1.2">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether to enable LDAP-filter in zimbraMailSSLClientCertPrincipalMap</desc>
@@ -5894,21 +5894,21 @@ TODO: delete them permanently from here
 <attr id="1221" name="zimbraAutoProvMode" type="enum" value="EAGER,LAZY,MANUAL" cardinality="multi" optionalIn="domain" since="8.0.0">
   <desc>
     Auto provision modes enabled.  Multiple modes can be enabled on a domain.
-    
-    EAGER: A server maintenance thread automatically polls the configured external auto provision 
-           LDAP source at a configured interval for entries due to be auto provisioned in Zimbra, 
-           and then auto creates the accounts in Zimbra directory. 
-    
-    LAZY: auto creates the Zimbra account when user first login via one of the external auth 
-          mechanisms enabled for auto provisioning.  Auth mechanisms enabled for auto provisioning 
+
+    EAGER: A server maintenance thread automatically polls the configured external auto provision
+           LDAP source at a configured interval for entries due to be auto provisioned in Zimbra,
+           and then auto creates the accounts in Zimbra directory.
+
+    LAZY: auto creates the Zimbra account when user first login via one of the external auth
+          mechanisms enabled for auto provisioning.  Auth mechanisms enabled for auto provisioning
           are configured in zimbraAutoProvAuthMech.
-          
-    MANUAL: admin to search from the configured external auto provision LDAP source and select an  
-            entry from the search result to create the corresponding Zimbra account for the 
+
+    MANUAL: admin to search from the configured external auto provision LDAP source and select an
+            entry from the search result to create the corresponding Zimbra account for the
             external entry.
-            
-    In all cases, localpart of the Zimbra account is mapped from an attribute on the external entry 
-    based on zimbraAutoProvAccountNameMap.  The Zimbra account is populated with attributes mapped 
+
+    In all cases, localpart of the Zimbra account is mapped from an attribute on the external entry
+    based on zimbraAutoProvAccountNameMap.  The Zimbra account is populated with attributes mapped
     from the external entry based on zimbraAutoProvAttrMap.
   </desc>
 </attr>
@@ -5918,9 +5918,9 @@ TODO: delete them permanently from here
      EAGER mode: N/A
       LAZY mode: required
     MANUAL mode: N/A
-    
-    Auth mechanisms enabled for auto provision in LAZY mode.  When a user authenticates via one of 
-    the external auth mechanisms enabled in this attribute, and when the user account does not yet 
+
+    Auth mechanisms enabled for auto provision in LAZY mode.  When a user authenticates via one of
+    the external auth mechanisms enabled in this attribute, and when the user account does not yet
     exist in Zimbra directory, an account entry will be automatically created in Zimbra directory.
   </desc>
 </attr>
@@ -5930,19 +5930,19 @@ TODO: delete them permanently from here
      EAGER mode: required
       LAZY mode: required
     MANUAL mode: required
-    
+
     LDAP URL of the external LDAP source for auto provision.
   </desc>
 </attr>
 
 <attr id="1224" name="zimbraAutoProvLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: optional 
-      LAZY mode: optional 
-    MANUAL mode: optional 
-    
+     EAGER mode: optional
+      LAZY mode: optional
+    MANUAL mode: optional
+
     Default is FALSE.
-    
+
     Whether to use startTLS when accessing the external LDAP server for auto provision.
   </desc>
 </attr>
@@ -5950,9 +5950,9 @@ TODO: delete them permanently from here
 <attr id="1225" name="zimbraAutoProvLdapAdminBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: required
-      LAZY mode: required (if using zimbraAutoProvLdapSearchFilter) 
+      LAZY mode: required (if using zimbraAutoProvLdapSearchFilter)
     MANUAL mode: required
-    
+
     LDAP search bind DN for auto provision.
   </desc>
 </attr>
@@ -5962,7 +5962,7 @@ TODO: delete them permanently from here
      EAGER mode: required
       LAZY mode: required
     MANUAL mode: required
-    
+
     LDAP search bind password for auto provision.
   </desc>
 </attr>
@@ -5970,10 +5970,10 @@ TODO: delete them permanently from here
 <attr id="1227" name="zimbraAutoProvLdapSearchBase" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: required
-      LAZY mode: required (if using zimbraAutoProvLdapSearchFilter), 
+      LAZY mode: required (if using zimbraAutoProvLdapSearchFilter),
     MANUAL mode: required
-    
-    LDAP search base for auto provision, used in conjunction with zimbraAutoProvLdapSearchFilter.  
+
+    LDAP search base for auto provision, used in conjunction with zimbraAutoProvLdapSearchFilter.
     If not set, LDAP root DSE will be used.
   </desc>
 </attr>
@@ -5981,107 +5981,107 @@ TODO: delete them permanently from here
 <attr id="1228" name="zimbraAutoProvLdapSearchFilter" type="string" max="256" cardinality="single" optionalIn="domain" callback="AutoProvLdapSearchFilter" since="8.0.0">
   <desc>
      EAGER mode: required
-      LAZY mode: optional (if not using zimbraAutoProvLdapBindDn) 
-    MANUAL mode: optional (if not using zimbraAutoProvLdapBindDn)  
-    
+      LAZY mode: optional (if not using zimbraAutoProvLdapBindDn)
+    MANUAL mode: optional (if not using zimbraAutoProvLdapBindDn)
+
     LDAP search filter template for account auto provisioning.
-    For LAZY and MANUAL modes, either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
+    For LAZY and MANUAL modes, either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn
     has to be set.  If both are set, zimbraAutoProvLdapSearchFilter will take precedence.
-    
-    Supported place holders: 
-    %n = username with @ (or without, if no @ was specified) 
-    %u = username with @ removed 
-    %d = domain as foo.com 
-    %D = domain as dc=foo,dc=com 
+
+    Supported place holders:
+    %n = username with @ (or without, if no @ was specified)
+    %u = username with @ removed
+    %d = domain as foo.com
+    %D = domain as dc=foo,dc=com
   </desc>
 </attr>
 
 <attr id="1229" name="zimbraAutoProvLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: required
-      LAZY mode: optional (if not using zimbraAutoProvLdapSearchFilter) 
-    MANUAL mode: optional (if not using zimbraAutoProvLdapSearchFilter) 
-    
+      LAZY mode: optional (if not using zimbraAutoProvLdapSearchFilter)
+    MANUAL mode: optional (if not using zimbraAutoProvLdapSearchFilter)
+
     LDAP external DN template for account auto provisioning.
-    For LAZY and MANUAL modes, either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
+    For LAZY and MANUAL modes, either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn
     has to be set.  If both are set, zimbraAutoProvLdapSearchFilter will take precedence.
-    
-    Supported place holders: 
-    %n = username with @ (or without, if no @ was specified) 
-    %u = username with @ removed 
-    %d = domain as foo.com 
-    %D = domain as dc=foo,dc=com 
+
+    Supported place holders:
+    %n = username with @ (or without, if no @ was specified)
+    %u = username with @ removed
+    %d = domain as foo.com
+    %D = domain as dc=foo,dc=com
   </desc>
 </attr>
 
 <attr id="1230" name="zimbraAutoProvAccountNameMap" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: optional 
-      LAZY mode: optional 
-    MANUAL mode: optional 
-    
+     EAGER mode: optional
+      LAZY mode: optional
+    MANUAL mode: optional
+
     Attribute name in the external directory that contains localpart of the account name.
-    If not specified, localpart of the account name is the principal user used to authenticated to 
+    If not specified, localpart of the account name is the principal user used to authenticated to
     Zimbra.
   </desc>
 </attr>
 
 <attr id="1231" name="zimbraAutoProvAttrMap" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: optional 
-      LAZY mode: optional 
-    MANUAL mode: optional  
-  
+     EAGER mode: optional
+      LAZY mode: optional
+    MANUAL mode: optional
+
     Attribute map for mapping attribute values from the external entry to Zimbra account attributes.
     Values are in the format of {external attribute}={zimbra attribute}.
     If not set, no attributes from the external directory will be populated in Zimbra directory.
-    
+
     Invalid mapping configuration will cause the account creation to fail.
     Examples of bad mapping:
         - invalid external attribute name.
         - invalid Zimbra attribute name.
         - external attribute has multiple values but the zimbra attribute is single-valued.
-        - syntax violation.  e.g. Value on the external attribute is a String but the Zimbra 
+        - syntax violation.  e.g. Value on the external attribute is a String but the Zimbra
           attribute is declared an integer.
   </desc>
 </attr>
 
 <attr id="1232" name="zimbraAutoProvNotificationFromAddress" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: optional 
-      LAZY mode: optional 
-    MANUAL mode: optional  
-    
-    Email address to put in the From header for the notification email to the newly created account. 
+     EAGER mode: optional
+      LAZY mode: optional
+    MANUAL mode: optional
+
+    Email address to put in the From header for the notification email to the newly created account.
     If not set, no notification email will sent to the newly created account.
   </desc>
 </attr>
 
 <attr id="1233" name="zimbraAutoProvListenerClass" type="string" max="1024" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: optional 
-      LAZY mode: optional 
-    MANUAL mode: optional 
-    
-    Class name of auto provision listener.  The class must implement the 
+     EAGER mode: optional
+      LAZY mode: optional
+    MANUAL mode: optional
+
+    Class name of auto provision listener.  The class must implement the
     com.zimbra.cs.account.Account.AutoProvisionListener interface.
-    The singleton listener instance is invoked after each account is auto created in Zimbra.  
-    Listener can be plugged in as a server extension to handle tasks like updating the account auto 
+    The singleton listener instance is invoked after each account is auto created in Zimbra.
+    Listener can be plugged in as a server extension to handle tasks like updating the account auto
     provision status in the external LDAP directory.
-    
-    At each eager provision interval, ZCS does an LDAP search based on the value configured 
-    in zimbraAutoProvLdapSearchFilter.  Returned entries from this search are candidates to 
-    be auto provisioned in this batch.   The zimbraAutoProvLdapSearchFilter should include 
-    an assertion that will only hit entries in the external directory that have not yet 
-    been provisioned in ZCS, otherwise it's likely the same entries will be repeated pulled 
-    in to ZCS.  After an account is auto provisioned in 
-    ZCS, com.zimbra.cs.account.Account.AutoProvisionListener.postCreate(Domain domain, Account acct, String externalDN) 
-    will be called by the auto provisioning framework.   Customer can implement the 
-    AutoProvisionListener interface in a ZCS server extension and get their 
-    AutoProvisionListener.postCreate() get called.   The implementation of customer's 
-    postCreate method can be, for example, setting an attribute in the external directory 
-    on the account just provisioned in ZCS.  The attribute can be included as a condition 
-    in the zimbraAutoProvLdapSearchFilter, so the entry won't be returned again by the 
+
+    At each eager provision interval, ZCS does an LDAP search based on the value configured
+    in zimbraAutoProvLdapSearchFilter.  Returned entries from this search are candidates to
+    be auto provisioned in this batch.   The zimbraAutoProvLdapSearchFilter should include
+    an assertion that will only hit entries in the external directory that have not yet
+    been provisioned in ZCS, otherwise it's likely the same entries will be repeated pulled
+    in to ZCS.  After an account is auto provisioned in
+    ZCS, com.zimbra.cs.account.Account.AutoProvisionListener.postCreate(Domain domain, Account acct, String externalDN)
+    will be called by the auto provisioning framework.   Customer can implement the
+    AutoProvisionListener interface in a ZCS server extension and get their
+    AutoProvisionListener.postCreate() get called.   The implementation of customer's
+    postCreate method can be, for example, setting an attribute in the external directory
+    on the account just provisioned in ZCS.  The attribute can be included as a condition
+    in the zimbraAutoProvLdapSearchFilter, so the entry won't be returned again by the
     LDAP search in the next interval.
   </desc>
 </attr>
@@ -6089,10 +6089,10 @@ TODO: delete them permanently from here
 <attr id="1234" name="zimbraAutoProvBatchSize" type="integer" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
   <globalConfigValue>20</globalConfigValue>
   <desc>
-     EAGER mode: required 
-      LAZY mode: N/A 
-    MANUAL mode: N/A  
-     
+     EAGER mode: required
+      LAZY mode: N/A
+    MANUAL mode: N/A
+
     Max number of accounts to process in each interval for EAGER auto provision.
   </desc>
 </attr>
@@ -6101,10 +6101,10 @@ TODO: delete them permanently from here
   <desc>
      EAGER mode: for Zimbra internal use only - do not change it.
       LAZY mode: N/A
-    MANUAL mode: N/A 
-    
-    Timestamp when the external domain is last polled for EAGER auto provision.  
-    The poll (LDAP search) for the next iteration will fetch external entries with create timestamp 
+    MANUAL mode: N/A
+
+    Timestamp when the external domain is last polled for EAGER auto provision.
+    The poll (LDAP search) for the next iteration will fetch external entries with create timestamp
     later than the timestamp recorded from the previous iteration.
   </desc>
 </attr>
@@ -6113,10 +6113,10 @@ TODO: delete them permanently from here
   <desc>
      EAGER mode: for Zimbra internal use only - do not change it.
       LAZY mode: N/A
-    MANUAL mode: N/A 
-    
-    For EAGER auto provision, a domain can be scheduled on multiple server.  To avoid conflict, only 
-    one server can perform provisioning for a domain at one time.  This attribute servers a lock 
+    MANUAL mode: N/A
+
+    For EAGER auto provision, a domain can be scheduled on multiple server.  To avoid conflict, only
+    one server can perform provisioning for a domain at one time.  This attribute servers a lock
     for the test-and-set LDAP operation to synchronize EAGER auto provision attempts between servers.
   </desc>
 </attr>
@@ -6125,10 +6125,10 @@ TODO: delete them permanently from here
   <desc>
      EAGER mode: required
       LAZY mode: N/A
-    MANUAL mode: N/A 
-    
-    Domain scheduled for eager auto provision on this server.  Scheduled domains must have EAGER 
-    mode enabled in zimbraAutoProvMode.  Multiple domains can be scheduled on a server for EAGER 
+    MANUAL mode: N/A
+
+    Domain scheduled for eager auto provision on this server.  Scheduled domains must have EAGER
+    mode enabled in zimbraAutoProvMode.  Multiple domains can be scheduled on a server for EAGER
     auto provision.  Also, a domain can be scheduled on multiple servers for EAGER auto provision.
   </desc>
 </attr>
@@ -6138,16 +6138,16 @@ TODO: delete them permanently from here
   <desc>
      EAGER mode: required
       LAZY mode: N/A
-    MANUAL mode: N/A 
-    
-    Interval between successive polling and provisioning accounts in EAGER mode.  
-    The actual interval may take longer since it can be affected by two other factors: 
-    zimbraAutoProvBatchSize and number of domains configured in zimbraAutoProvScheduledDomains.  
-    At each interval, the auto provision thread iterates through all domains in 
-    zimbraAutoProvScheduledDomains and auto creates up to domain.zimbraAutoProvBatchSize accounts.  
-    If that process takes longer than zimbraAutoProvPollingInterval then the next iteration will 
+    MANUAL mode: N/A
+
+    Interval between successive polling and provisioning accounts in EAGER mode.
+    The actual interval may take longer since it can be affected by two other factors:
+    zimbraAutoProvBatchSize and number of domains configured in zimbraAutoProvScheduledDomains.
+    At each interval, the auto provision thread iterates through all domains in
+    zimbraAutoProvScheduledDomains and auto creates up to domain.zimbraAutoProvBatchSize accounts.
+    If that process takes longer than zimbraAutoProvPollingInterval then the next iteration will
     start immediately instead of waiting for zimbraAutoProvPollingInterval amount of time.
-    
+
     If set to 0 when server starts up, the auto provision thread will not start.
     If changed from a non-0 value to 0 while server is running, the auto provision thread will be shutdown.
     If changed from 0 to a non-0 value while server is running, the auto provision thread will be started.
@@ -6216,8 +6216,8 @@ TODO: delete them permanently from here
 <attr id="1254" name="zimbraGlobalConfigExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="7.1.3">
   <desc>
     Object classes added on the global config entry.  Unlike other zimbra***ExtraObjectClass attributes, object classes specified
-    in this attributes will not be automatically added to the global config entry.  Extra object class on the global config entry 
-    must be added using "zmprov mcf +objectClass {object class}", then recorded in this attributes.  
+    in this attributes will not be automatically added to the global config entry.  Extra object class on the global config entry
+    must be added using "zmprov mcf +objectClass {object class}", then recorded in this attributes.
   </desc>
 </attr>
 
@@ -6499,7 +6499,7 @@ TODO: delete them permanently from here
 <attr id="1298" name="zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation" type="integer" min="-1" max="2" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
   <defaultCOSValue>2</defaultCOSValue>
   <desc>
-    whether the messaging application on the device can negotiate the encryption algorithm if a 
+    whether the messaging application on the device can negotiate the encryption algorithm if a
     recipient's certificate doesn't support the specified encryption algorithm;
     0 - BlockNegotiation
     1 - OnlyStrongAlgorithmNegotiation
@@ -7020,7 +7020,7 @@ TODO: delete them permanently from here
 <attr id="1391" name="zimbraZimletLoadSynchronously" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.2.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>
-    Whether to load zimlets synchronously in the web client.  
+    Whether to load zimlets synchronously in the web client.
     If set to TRUE, users are not allowed to use the core app before zimlets are loaded.
     If set to FALSE, zimlets are loaded in the background and users are allowed to use the core app before all zimlets finish loading.
   </desc>
@@ -7035,7 +7035,7 @@ TODO: delete them permanently from here
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>
     Keep only the tip revision in the main volume, and move all the old revisions to the secondary volume.
-    For document type mail items only, works independently of zimbraHsmPolicy.  
+    For document type mail items only, works independently of zimbraHsmPolicy.
   </desc>
 </attr>
 
@@ -7300,7 +7300,7 @@ TODO: delete them permanently from here
 <attr id="1450" name="zimbraDeviceCalendarSoftDeleteExcludePattern" type="cstring" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.5">
   <desc>
     Regex to be matched for preventing devices from soft deletion of out of range calendar items.
-    Suppose device is set to sync calendar item of 2 months range then server will ONLY send softdelete for out of range (expired) calendar items, if device id DOES NOT match to the regex provided. 
+    Suppose device is set to sync calendar item of 2 months range then server will ONLY send softdelete for out of range (expired) calendar items, if device id DOES NOT match to the regex provided.
    </desc>
 </attr>
 
@@ -8047,11 +8047,11 @@ TODO: delete them permanently from here
   <desc>Rules for governing the allocation of threads to various web contexts for the current thread pool. Sample value: /zimbra:min=10;max=40% or /zimbraAdmin:min=5</desc>
 </attr>
 
-<attr id="1594" name="zimbraReverseProxyAcceptMutex" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.5.0">   
-  <globalConfigValue>on</globalConfigValue> 
-  <desc>on - accept_mutex flag  'on' for the reverse proxy. This is default.    
-        off - accept_mutex flag  'off' for the reverse proxy. Turning it off will get much better distribution of client connections between workers.   
-  </desc>   
+<attr id="1594" name="zimbraReverseProxyAcceptMutex" type="enum" value="on,off" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="8.5.0">
+  <globalConfigValue>on</globalConfigValue>
+  <desc>on - accept_mutex flag  'on' for the reverse proxy. This is default.
+        off - accept_mutex flag  'off' for the reverse proxy. Turning it off will get much better distribution of client connections between workers.
+  </desc>
 </attr>
 
 <attr id="1595" name="zimbraReverseProxyUpstreamEwsServers" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.5.0">
@@ -8139,7 +8139,7 @@ TODO: delete them permanently from here
 
 <attr id="1613" name="zimbraInvalidLoginFilterMaxFailedLogin" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
   <globalConfigValue>10</globalConfigValue>
-  <desc>This attribute is used for failed authentication requests.This is a DOSFilter style check for repeated failed 
+  <desc>This attribute is used for failed authentication requests.This is a DOSFilter style check for repeated failed
         logins from IP, if set to 0 no check happens, else failed login is recorded. </desc>
 </attr>
 
@@ -8170,7 +8170,7 @@ TODO: delete them permanently from here
 
 <attr id="1618" name="zimbraInvalidLoginFilterMaxSizeOfFailedIpDb" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
   <globalConfigValue>7000</globalConfigValue>
-  <desc>This attribute is used for failed authentication requests. It indicates the max size of data structures that 
+  <desc>This attribute is used for failed authentication requests. It indicates the max size of data structures that
         holds the list of failed logins</desc>
 </attr>
 
@@ -8222,7 +8222,7 @@ TODO: delete them permanently from here
 <attr id="1628" name="zimbraCsrfTokenCheckEnabled" type="boolean"
   cardinality="single" optionalIn="globalConfig" since="8.5.0">
   <globalConfigValue>TRUE</globalConfigValue>
-  <desc>A flag to turn on or off CSRF token related check. When set to FALSE no CSRF check happens. When set to 
+  <desc>A flag to turn on or off CSRF token related check. When set to FALSE no CSRF check happens. When set to
         true both CSRF referer and CSRF token change is effective.
   </desc>
 </attr>
@@ -8264,8 +8264,8 @@ TODO: delete them permanently from here
 
 <attr id="1634" name="zimbraLogOutFromAllServers" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Flag to control how authtokens are invalidated in multi-server environment. 
-  If set to TRUE: when this account logs out on a server, the server will notify other servers that this account's authtoken has been invalidated. 
+  <desc>Flag to control how authtokens are invalidated in multi-server environment.
+  If set to TRUE: when this account logs out on a server, the server will notify other servers that this account's authtoken has been invalidated.
   If set to FALSE, an auth token may remain vallid on servers other than the account's home server after a user logs out for as long as an account object remains in Provisioning Cache.
   Set to TRUE for increased protection against Cookie Re-use attack. Default is FALSE to reduce network chatter.
   </desc>
@@ -8274,7 +8274,7 @@ TODO: delete them permanently from here
 <attr id="1635" name="zimbraAuthTokenNotificationInterval" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.5.0">
   <globalConfigValue>60000</globalConfigValue>
   <desc>This attribute is used to configure the interval with which servers will send a list of invalidated tokens to each other. When an account logs out of a server, the account's authtoken is added to a queue of invalidated tokens on the server.
-  Each server will send it's queue of invalidated tokens to all other servers with frequency configurable by this attribute. See zimbraLogOutFromAllServers for more info on configuring authtoken invalidation on Accounts and Classes of Service. 
+  Each server will send it's queue of invalidated tokens to all other servers with frequency configurable by this attribute. See zimbraLogOutFromAllServers for more info on configuring authtoken invalidation on Accounts and Classes of Service.
   Set to higher value to reduce network chatter. Set to lower value to decrease the window during which a stolen cookie may be reused to access an account.</desc>
 </attr>
 
@@ -8452,8 +8452,8 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1721" name="zimbraDomainAllowedIPs" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.7.0">
-  <desc>Client IP/IPRange whitelist for this domain (IPRange needs to be in CIDR notation e.g:192.168.1.0/24). 
-        If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>  
+  <desc>Client IP/IPRange whitelist for this domain (IPRange needs to be in CIDR notation e.g:192.168.1.0/24).
+        If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>
 </attr>
 
 <attr id="1759" name="zimbraMobileGatewayDefaultAppAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0">
@@ -9532,7 +9532,7 @@ TODO: delete them permanently from here
     to this proxy server after which login is rejected with an
     IMAP bye response. This counter is
     cumulative for all users that appear to the proxy to be logging in
-    from the same IP address and IMAP/IMAPS protocol.  
+    from the same IP address and IMAP/IMAPS protocol.
     If multiple users appear to the proxy
     to be logging in from the same IP address (usual with NATing),
     then each of the different users login will contribute to
@@ -9542,7 +9542,7 @@ TODO: delete them permanently from here
     Therefore, all IMAP users from the same IP will contribute to (and be affected by) this counter.
     If this value is set to 0, then the value of
     zimbraReverseProxyIPLoginLimit will be used to determine possible
-    throttling behavior for the IMAP protocol. 
+    throttling behavior for the IMAP protocol.
     </desc>
 </attr>
 
@@ -9929,10 +9929,19 @@ TODO: delete them permanently from here
   <defaultCOSValue>30</defaultCOSValue>
   <desc>Default calendar resolution preference</desc>
 </attr>
-<attr id="4005" name="zimbraGlobalExternalStoreConfig" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+<attr id="4005" name="zimbraActiveSyncVersion" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="9.1.0">
+  <desc>Sets the active sync version at the user level to override zimbra_activesync_versions on local config.
+      Add multi-value attribute as android:14.1/iphone:16.1/ipod:16.0.
+      If set as android:14.1, the android device will be connected over the 14.1 version.
+      If set as iphone:16.1, iPhone device will be connected over the 16.1 version.
+      If set as 14.1, all device types android/ios connecting to this account will use 14.1 version.
+      If the added values don't match the user agent/device Id/device type default zimbra_activesync_versions on the local config will be used.
+  </desc>
+</attr>
+<attr id="4006" name="zimbraGlobalExternalStoreConfig" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
   <desc>Global level external store config</desc>
 </attr>
-<attr id="4006" name="zimbraServerExternalStoreConfig" type="string" cardinality="single" optionalIn="server" since="9.1.0">
+<attr id="4007" name="zimbraServerExternalStoreConfig" type="string" cardinality="single" optionalIn="server" since="9.1.0">
   <desc>Server level external store config</desc>
 </attr>
 </attrs>

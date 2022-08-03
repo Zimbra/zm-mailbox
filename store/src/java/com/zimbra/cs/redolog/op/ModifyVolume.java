@@ -23,8 +23,11 @@ import com.google.common.base.MoreObjects;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
+import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class ModifyVolume extends RedoableOp {
 
@@ -111,9 +114,9 @@ public final class ModifyVolume extends RedoableOp {
                 .setFileGroupBits(fileGroupBits).setFileBits(fileBits)
                 .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold)
                 .setStoreType(Volume.StoreType.getStoreTypeBy(storeType)).build();
-        // volume.toJAXB().setVolumeExternalInfo(buildVolumeExternalInfo());
-        // ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
-        // extVolInfoHandler.addServerProperties(buildVolumeInfo(volume));
+        VolumeInfo volInfo = vol.toJAXB();;
+        ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+        extVolInfoHandler.modifyServerProperties(volInfo);
         mgr.update(vol, getUnloggedReplay());
     }
 }

@@ -78,6 +78,7 @@ public final class CreateVolume extends RedoableOp {
         compressionThreshold = volume.getCompressionThreshold();
         storeType = (short)(volume.getStoreType().getStoreType());
 
+        System.out.println("CreateVolume 1");
         // set external params
         try {
             setExternalStorageParams(volume);
@@ -86,6 +87,7 @@ public final class CreateVolume extends RedoableOp {
         } catch (ServiceException e) {
             ZimbraLog.misc.error("Failure while redoing CreateVolume Operation : ", e);
         }
+        System.out.println("CreateVolume 2");
     }
 
     public void setId(short id) {
@@ -151,11 +153,12 @@ public final class CreateVolume extends RedoableOp {
                     .setFileGroupBits(fileGroupBits).setFileBits(fileBits)
                     .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold)
                     .setStoreType(enumStoreType).build();
-
+            System.out.println("build 1");
             VolumeInfo volInfo = buildVolumeInfo(volume);
             ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
             extVolInfoHandler.addServerProperties(volInfo);
             mgr.create(volume, getUnloggedReplay());
+            System.out.println("build 2");
         } catch (VolumeServiceException e) {
             if (e.getCode() == VolumeServiceException.ALREADY_EXISTS) {
                 mLog.info("Volume already exists id=%d", id);
@@ -166,18 +169,22 @@ public final class CreateVolume extends RedoableOp {
     }
 
     private void setExternalStorageParams(Volume volume) throws JSONException, ServiceException {
+        System.out.println("setExternalStorageParams 1");
         // read backup file parameters
         ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
         JSONObject properties = extVolInfoHandler.readBackupServerProperties(volume.getId(), ExternalVolumeInfoHandler.PREV_FILE_PATH);
+        System.out.println("setExternalStorageParams 1.1");
         volumePrefix = properties.getString(AdminConstants.A_VOLUME_VOLUME_PREFIX);
         globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
         storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
         useInFrequentAccess = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS));
         useIntelligentTiering = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING));
         useInFrequentAccessThreshold = Integer.parseInt(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD));
+        System.out.println("setExternalStorageParams 2");
     }
 
     private VolumeExternalInfo buildVolumeExternalInfo() {
+        System.out.println("buildVolumeExternalInfo 1");
         VolumeExternalInfo volExtInfo = new VolumeExternalInfo();
         volExtInfo.setVolumePrefix(volumePrefix);
         volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
@@ -185,12 +192,15 @@ public final class CreateVolume extends RedoableOp {
         volExtInfo.setUseInFrequentAccess(useInFrequentAccess);
         volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
         volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
+        System.out.println("buildVolumeExternalInfo 2");
         return volExtInfo;
     }
 
     private VolumeInfo buildVolumeInfo(Volume volume) {
+        System.out.println("buildVolumeInfo 1");
         VolumeInfo volInfo = volume.toJAXB();
         volInfo.setVolumeExternalInfo(buildVolumeExternalInfo());
+        System.out.println("buildVolumeInfo 2");
         return volInfo;
     }
 }
