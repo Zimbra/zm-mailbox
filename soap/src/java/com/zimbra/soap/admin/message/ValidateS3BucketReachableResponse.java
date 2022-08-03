@@ -25,10 +25,10 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = AdminConstants.E_CREATE_S3_BUCKET_CONFIG_RESPONSE)
-public class CreateS3BucketConfigResponse extends AdminAttrsImpl {
+@XmlRootElement(name = AdminConstants.E_VALIDATE_S3_BUCKET_REACHABLE_RESPONSE)
+public class ValidateS3BucketReachableResponse extends AdminAttrsImpl {
 
-    public CreateS3BucketConfigResponse() {
+    public ValidateS3BucketReachableResponse() {
     }
 
-}
+} 
