@@ -17,15 +17,25 @@
 
 package com.zimbra.cs.redolog.op;
 
-import java.io.IOException;
-
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.cs.volume.VolumeServiceException;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
+import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.util.ExternalVolumeInfoHandler;
+
+import java.io.IOException;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public final class CreateVolume extends RedoableOp {
 
@@ -124,6 +134,9 @@ public final class CreateVolume extends RedoableOp {
                     .setFileGroupBits(fileGroupBits).setFileBits(fileBits)
                     .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold)
                     .setStoreType(enumStoreType).build();
+            VolumeInfo volInfo = ExternalVolumeInfoHandler.buildVolumeInfoFromBackupData(volume);
+            ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+            extVolInfoHandler.addServerProperties(volInfo);
             mgr.create(volume, getUnloggedReplay());
         } catch (VolumeServiceException e) {
             if (e.getCode() == VolumeServiceException.ALREADY_EXISTS) {
@@ -133,5 +146,4 @@ public final class CreateVolume extends RedoableOp {
             }
         }
     }
-
 }

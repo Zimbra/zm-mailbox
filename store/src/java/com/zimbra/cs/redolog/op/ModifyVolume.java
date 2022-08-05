@@ -23,8 +23,11 @@ import com.google.common.base.MoreObjects;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
+import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class ModifyVolume extends RedoableOp {
 
@@ -40,6 +43,8 @@ public final class ModifyVolume extends RedoableOp {
 
     private boolean compressBlobs;
     private long compressionThreshold;
+
+    private short storeType;
 
     public ModifyVolume() {
         super(MailboxOperation.ModifyVolume);
@@ -59,6 +64,8 @@ public final class ModifyVolume extends RedoableOp {
 
         compressBlobs = volume.isCompressBlobs();
         compressionThreshold = volume.getCompressionThreshold();
+
+        storeType = (short)(volume.getStoreType().getStoreType());
     }
 
     @Override
@@ -67,6 +74,7 @@ public final class ModifyVolume extends RedoableOp {
                 .add("mboxGroupBits", mboxGroupBits).add("mboxBits", mboxBits)
                 .add("fileGroupBits", fileGroupBits).add("fileBits", fileBits)
                 .add("compressBlobs", compressBlobs).add("compressionThrehold", compressionThreshold)
+                .add("storeType", storeType)
                 .toString();
     }
 
@@ -80,6 +88,7 @@ public final class ModifyVolume extends RedoableOp {
         out.writeShort(mboxBits);
         out.writeShort(fileGroupBits);
         out.writeShort(fileBits);
+        out.writeShort(storeType);
     }
 
     @Override
@@ -92,6 +101,7 @@ public final class ModifyVolume extends RedoableOp {
         mboxBits = in.readShort();
         fileGroupBits = in.readShort();
         fileBits = in.readShort();
+        storeType = in.readShort();
     }
 
     @Override
@@ -101,7 +111,11 @@ public final class ModifyVolume extends RedoableOp {
         Volume vol = Volume.builder().setId(id).setType(type).setName(name).setPath(rootPath, false)
                 .setMboxGroupBits(mboxGroupBits).setMboxBit(mboxBits)
                 .setFileGroupBits(fileGroupBits).setFileBits(fileBits)
-                .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold).build();
+                .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold)
+                .setStoreType(Volume.StoreType.getStoreTypeBy(storeType)).build();
+        VolumeInfo volInfo = vol.toJAXB();;
+        ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+        extVolInfoHandler.modifyServerProperties(volInfo);
         mgr.update(vol, getUnloggedReplay());
     }
 }
