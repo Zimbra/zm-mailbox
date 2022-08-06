@@ -255,5 +255,8 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(OctopusXmlConstants.GET_NOTIFICATIONS_REQUEST, new GetNotifications());
         dispatcher.registerHandler(OctopusXmlConstants.GET_DOCUMENT_SHARE_URL_REQUEST, new GetDocumentShareURL());
         dispatcher.registerHandler(OctopusXmlConstants.GET_SHARE_DETAILS_REQUEST, new GetShareDetails());
+
+        // File Shared With Me
+        dispatcher.registerHandler(MailConstants.FILE_SHARED_WITH_ME_REQUEST, new FileSharedWithMe());
     }
 }

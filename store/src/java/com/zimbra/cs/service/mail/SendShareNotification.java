@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -63,7 +63,9 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.FileSharedWithMeRequest;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
@@ -80,6 +82,7 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
     private static final String REVOKE = "revoke";
+    private static final String CREATE = "create";
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -114,9 +117,13 @@ public class SendShareNotification extends MailDocumentHandler {
                     sharesWithGroupGrantee.add(sid);
                 } else {
                     sendNotificationEmail(octxt, mbox, authAccount, account, sid, notes, action, null, null, reqItem);
+                    if (reqItem instanceof Document) {
+                        processDBFilesSharedWithMe(reqItem, action, octxt, sid.getGranteeId(), sid.getPath(),
+                                sid.getOwnerAcctId(), sid.getItemId(), sid.getItemUuid(), sid.getOwnerNotifName(),
+                                sid.getRights(), context);
+                    }
                 }
             }
-
             // send to group grantees
             sendNotificationEmailToGroupGrantees(octxt, mbox, authAccount, account,
                     sharesWithGroupGrantee, notes, action, reqItem);
@@ -745,5 +752,22 @@ public class SendShareNotification extends MailDocumentHandler {
         senderThread.start();
     }
 
-}
+    private void processDBFilesSharedWithMe(MailItem reqItem, Action action, OperationContext octxt, String granteeId,
+            String fileName, String ownerAccountId, int ownerFileId, String fileUUID, String fileOwnerName,
+            String rights, Map<String, Object> context) throws ServiceException {
 
+        Document docReqItem = (Document) reqItem;
+        FileSharedWithMeRequest req = new FileSharedWithMeRequest();
+        req.setAction(action == null ? CREATE : action.name());
+        req.setFileName(fileName);
+        req.setOwnerFileId(ownerFileId);
+        req.setFileUUID(fileUUID);
+        req.setFileOwnerName(fileOwnerName);
+        req.setRights(rights);
+        req.setContentType(docReqItem.getContentType());
+        req.setSize(docReqItem.getTotalSize());
+        Element request = JaxbUtil.jaxbToElement(req);
+        proxyRequest(request, context, granteeId);
+    }
+
+}

@@ -150,9 +150,9 @@ final class SearchResponse {
      * @throws ServiceException error
      */
     void add(ZimbraHit zimbraHit) throws ServiceException{
-		add(zimbraHit,false);
+        add(zimbraHit,false);
+    }
 
-	}
     /* We need to pass in a boolean signifying whether to expand the message or not (bug 75990)
     */
     void add(ZimbraHit hit, boolean expandMsg) throws ServiceException {

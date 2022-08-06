@@ -142,10 +142,13 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
@@ -180,6 +183,7 @@ import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
 import com.zimbra.cs.redolog.op.CreateChat;
 import com.zimbra.cs.redolog.op.CreateComment;
 import com.zimbra.cs.redolog.op.CreateContact;
+import com.zimbra.cs.redolog.op.CreateFileSharedWithMe;
 import com.zimbra.cs.redolog.op.CreateFolder;
 import com.zimbra.cs.redolog.op.CreateFolderPath;
 import com.zimbra.cs.redolog.op.CreateInvite;
@@ -308,8 +312,9 @@ public class Mailbox implements MailboxStore {
     public static final int ID_FOLDER_PROFILE = FolderConstants.ID_FOLDER_PROFILE; // 18;
 
     public static final int ID_FOLDER_UNSUBSCRIBE = FolderConstants.ID_FOLDER_UNSUBSCRIBE; // 19;
+    public static final int ID_FOLDER_FILE_SHARED_WITH_ME = FolderConstants.ID_FOLDER_FILE_SHARED_WITH_ME; // 20;
     //This id should be incremented if any new ID_FOLDER_* is added.
-    public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 19;
+    public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 20;
 
     public static final int EAS_BLOCKED_EMAIL_ID = 255;
     public static final int FIRST_USER_ID = 256;
@@ -2266,6 +2271,8 @@ public class Mailbox implements MailboxStore {
                             MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
             Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system,
                             MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
+            Folder.create(ID_FOLDER_FILE_SHARED_WITH_ME, UUIDUtil.generateUUID(), this, userRoot, "Files shared with me", system,
+                    MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
 
             if (this.getAccount().isFeatureSafeUnsubscribeFolderEnabled()) {
                 Folder.create(ID_FOLDER_UNSUBSCRIBE, UUIDUtil.generateUUID(), this, userRoot, "Unsubscribe", system,
@@ -9062,6 +9069,97 @@ public class Mailbox implements MailboxStore {
         }
 
         return getMountpointById(octxt, mountpointId);
+    }
+
+    public void createFileSharedWithMe(Mailbox mbox, OperationContext octxt, int folderId, String fileName,
+            String ownerAccountId, int ownerFileId, String remoteUuid, String fileOwnerName,
+            String contentType, long fileSize, String rights) throws ServiceException {
+
+        CreateFileSharedWithMe redoRecorder = new CreateFileSharedWithMe(mId, folderId, fileName, ownerAccountId,
+                ownerFileId, remoteUuid, fileOwnerName, contentType, rights);
+
+        boolean success = false;
+        try {
+            beginTransaction("createFileSharedWithMe", octxt, redoRecorder);
+            CreateFileSharedWithMe redoPlayer = (CreateFileSharedWithMe) currentChange().getRedoPlayer();
+
+            int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
+            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
+            UnderlyingData data = new UnderlyingData();
+            data.uuid = remoteUuid + ":" + ownerFileId;
+            data.id = mptId;
+            data.type = Type.DOCUMENT.toByte();
+            data.folderId = folderId;
+            data.date = mbox.getOperationTimestamp();
+            data.name = fileName;
+            data.setSubject(fileName);
+            data.size = fileSize;
+            data.metadata = encodeFileSharedMetadata(new Metadata(), fileOwnerName, ownerAccountId,
+                    ownerFileId, contentType, rights).toString();
+            data.contentChanged(mbox);
+            new DbMailItem(mbox).create(data);
+            Document doc = new Document(mbox, data);
+            doc.finishCreation(null);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void deleteFileSharedWithMe(Mailbox mbox, OperationContext octxt, String remoteUuid, int ownerFileId,
+            String ownerAccountId, String granteeAccountID) throws ServiceException {
+        CreateFileSharedWithMe redoRecorder = new CreateFileSharedWithMe(mId, remoteUuid);
+        boolean success = false;
+        try {
+            beginTransaction("deleteFileSharedWithMe", octxt, redoRecorder);
+            Document item = (Document) mbox.getItemByUuid(remoteUuid + ":" + ownerFileId, Type.DOCUMENT);
+            if (item.getOwnerAccountId().equals(ownerAccountId) && item.getAccountId().equals(granteeAccountID)) {
+                DbMailItem.delete(mbox, Collections.singletonList(item.getId()), false);
+                // update the folder item count and size accordingly
+                mbox.getFolderById(ID_FOLDER_FILE_SHARED_WITH_ME).updateSize(-1, -1, -item.getSize());
+                success = true;
+            } else {
+                throw ServiceException.PERM_DENIED("Revoke operation failed, Invalid request source");
+            }
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void updateFileSharedWithMe(Mailbox mbox, OperationContext octxt, String ownerAccountID, int ownerFileId,
+            String remoteUuid, String fileOwnerName, String contentType, String rights, String granteeAccountID)
+            throws ServiceException {
+        CreateFileSharedWithMe redoRecorder = new CreateFileSharedWithMe(mId, remoteUuid);
+        boolean success = false;
+        try {
+            beginTransaction("updateFileSharedWithMe", octxt, redoRecorder);
+            Document item = (Document) mbox.getItemByUuid(remoteUuid + ":" + ownerFileId, Type.DOCUMENT);
+            if (item.getOwnerAccountId().equals(ownerAccountID) && item.getAccountId().equals(granteeAccountID)) {
+                Metadata meta = new Metadata();
+                meta.put(Metadata.FN_CREATOR, fileOwnerName);
+                meta.put(Metadata.FN_MIME_TYPE, contentType);
+                meta.put(Metadata.FN_FILE_PERMISSION, rights);
+                meta.put(Metadata.FN_OWNER_ACCOUNT_ID, ownerAccountID);
+                meta.put(Metadata.FN_OWNER_FILE_ID, ownerFileId);
+                mbox.getItemCache().remove(item.getId());
+                new DbMailItem(mbox).update(item, meta);
+                success = true;
+            } else {
+                throw ServiceException.PERM_DENIED("Update operation failed, Invalid request source");
+            }
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    Metadata encodeFileSharedMetadata(Metadata meta, String creator, String ownerAccountId,
+            int ownerFileId, String contentType, String rights) {
+        meta.put(Metadata.FN_CREATOR, creator);
+        meta.put(Metadata.FN_MIME_TYPE, contentType);
+        meta.put(Metadata.FN_FILE_PERMISSION, rights);
+        meta.put(Metadata.FN_OWNER_ACCOUNT_ID, ownerAccountId);
+        meta.put(Metadata.FN_OWNER_FILE_ID, ownerFileId);
+        return meta;
     }
 
     public void enableSharedReminder(OperationContext octxt, int mountpointId, boolean enable) throws ServiceException {
