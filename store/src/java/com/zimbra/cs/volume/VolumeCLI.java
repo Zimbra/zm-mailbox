@@ -26,6 +26,7 @@ import org.apache.http.HttpException;
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.CliUtil;
@@ -103,8 +104,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String A_STORAGE_TYPE = "storageType";
     private static final String A_BUCKET_ID = "bucketId";
     private static final String A_VOLUME_PREFIX = "volumePrefix";
-    private static final String A_VOLUME_S3 = "S3";
-    
+
     private static final String A_URL = "url";
     private static final String A_PROXY_PORT = "proxyPort";
     private static final String A_ACCOUNT_PORT = "accountPort";
@@ -127,7 +127,7 @@ public final class VolumeCLI extends SoapCLI {
     private String volumePrefix;
     private String storageType;
     private String bucketId;
-    
+
     // openIO Attributes
     private String url;
     private String proxyPort;
@@ -256,27 +256,35 @@ public final class VolumeCLI extends SoapCLI {
         System.out.println("                        type: " + toTypeName(vol.getType()));
         System.out.println("                        path: " + vol.getRootPath());
         System.out.print("                  compressed: " + vol.isCompressBlobs());
-        
+
         if (vol.isCompressBlobs()) {
             System.out.println("\t                 threshold: " + vol.getCompressionThreshold() + " bytes");
         } else {
             System.out.println();
         }
         System.out.println("                     current: " + vol.isCurrent());
-        if(vol.getStoreType() == 2) {
-            VolumeExternalInfo volumeExternalInfo = vol.getVolumeExternalInfo();
-            if (A_VOLUME_S3.equals(volumeExternalInfo.getStorageType())) {
+        if (vol.getStoreType() == Volume.StoreType.EXTERNAL.getStoreType()) {
+            if (AdminConstants.A_VOLUME_S3.equals(extractStorageType(vol))) {
+                VolumeExternalInfo volumeExternalInfo = vol.getVolumeExternalInfo();
                 System.out.println("                      prefix: " + volumeExternalInfo.getVolumePrefix());
                 System.out.println(" globalBucketConfigurationId: " + volumeExternalInfo.getGlobalBucketConfigurationId());
                 System.out.println("                 storageType: " + volumeExternalInfo.getStorageType());
                 System.out.println("       useIntelligentTiering: " + volumeExternalInfo.isUseIntelligentTiering());
                 System.out.println("         useInFrequentAccess: " + volumeExternalInfo.isUseInFrequentAccess());
                 System.out.println("useInFrequentAccessThreshold: " + volumeExternalInfo.getUseInFrequentAccessThreshold());
+            } else if (AdminConstants.A_VOLUME_OPEN_IO.equals(extractStorageType(vol))) {
+                VolumeExternalOpenIOInfo volumeExternalOpenIOInfo = vol.getVolumeExternalOpenIOInfo();
+                System.out.println("                 storageType: " + volumeExternalOpenIOInfo.getStorageType());
+                System.out.println("                         url: " + volumeExternalOpenIOInfo.getUrl());
+                System.out.println("                     account: " + volumeExternalOpenIOInfo.getAccount());
+                System.out.println("                   nameSpace: " + volumeExternalOpenIOInfo.getNameSpace());
+                System.out.println("                   proxyPort: " + volumeExternalOpenIOInfo.getProxyPort());
+                System.out.println("                 accountPort: " + volumeExternalOpenIOInfo.getAccountPort());
             }
         }
         System.out.println();
     }
-    
+
     private void deleteVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (id == null) {
             throw new ParseException(A_ID + MISSING_ATTRS);
@@ -330,10 +338,10 @@ public final class VolumeCLI extends SoapCLI {
                 JaxbUtil.jaxbToElement(req)));
         System.out.println("Volume " + resp.getVolume().getId() + " is created");
     }
-    
+
     /**
      * This method validate the attributes in edit command.
-     * 
+     *
      * @param volumeInfo, volStoreType
      * @throws ParseException
      */
@@ -402,7 +410,7 @@ public final class VolumeCLI extends SoapCLI {
 
     /**
      * This method validate the attributes in add command.
-     * 
+     *
      * @param volumeInfo
      * @throws ParseException
      */
@@ -596,5 +604,18 @@ public final class VolumeCLI extends SoapCLI {
                 return "index";
         }
         return "Unrecognized type " + type;
+    }
+
+    /**
+     * Returns the storage type name for the given volume info type.
+     */
+    private String extractStorageType(VolumeInfo volInfo) {
+        String result = null;
+        if (null != volInfo.getVolumeExternalInfo()) {
+            result = volInfo.getVolumeExternalInfo().getStorageType();
+        } else if (null != volInfo.getVolumeExternalOpenIOInfo()) {
+            result = volInfo.getVolumeExternalOpenIOInfo().getStorageType();
+        }
+        return result;
     }
 }
