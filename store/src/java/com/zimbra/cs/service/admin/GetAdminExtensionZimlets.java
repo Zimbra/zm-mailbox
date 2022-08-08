@@ -52,55 +52,20 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
     }
 
 	private void doExtensionZimlets(ZimbraSoapContext zsc, Map<String, Object> context, Element response) throws ServiceException {
-
-        boolean mobileNGEnabled = true;
-        boolean networkAdminEnabled = true;
-        boolean networkNGEnabled  = true;
         
-        try {
-          networkNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkModulesNGEnabled();
-          mobileNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkMobileNGEnabled();
-          networkAdminEnabled = Provisioning.getInstance().getLocalServer().isNetworkAdminNGEnabled();
-              
-        } catch (ServiceException e) {
-          ZimbraLog.mailbox.warn("Exception while getting zimbraNetworkModulesNG related attributes.", e);
-        }
-		Iterator<Zimlet> zimlets = Provisioning.getInstance().listAllZimlets().iterator();
+        Iterator<Zimlet> zimlets = Provisioning.getInstance().listAllZimlets().iterator();
 		while (zimlets.hasNext()) {
 		    
 		    Zimlet z = (Zimlet) zimlets.next();
 		    
-		    if (!hasRightsToList(zsc, z, Admin.R_listZimlet, Admin.R_getZimlet))
-			    continue;
-			
-			if (z.isExtension()) {
-			    boolean include = true;
-                if ("com_zimbra_mobilesync".equals(z.getName()) && mobileNGEnabled && networkNGEnabled) {
-                    include = !mobileNGEnabled;
-                    if (!include) {
-                        ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkMobileNGEnabled is true.", z.getName());
-                    }
-                }
-                
-                if ("com_zimbra_hsm".equals(z.getName()) && networkNGEnabled) {
-                    include = !networkNGEnabled;
-                    if (!include) {
-                        ZimbraLog.mailbox.info("Disabled '%s'  as zimbraNetworNGEnabled is true.", z.getName());
-                    }
-                }
-                
-                if ("com_zimbra_backuprestore".equals(z.getName()) && networkNGEnabled) {
-                    include = !networkNGEnabled;
-                    if (!include) {
-                        ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkNGEnabled is true.", z.getName());
-                    }
-                }
-                if ("com_zimbra_delegatedadmin".equals(z.getName()) && networkAdminEnabled && networkNGEnabled) {
-                    include = !networkAdminEnabled;
-                    if (!include) {
-                        ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkAdminNGEnabled is true.", z.getName());
-                    }
-                    include = include && (AccessManager.getInstance() instanceof ACLAccessManager);
+		    if (!hasRightsToList(zsc, z, Admin.R_listZimlet, Admin.R_getZimlet)) {
+                continue;
+            }
+
+            if (z.isExtension()) {
+                boolean include = true;
+                if ("com_zimbra_delegatedadmin".equals(z.getName())) {
+                    include = (AccessManager.getInstance() instanceof ACLAccessManager);
                 }
 
                 if (include) {

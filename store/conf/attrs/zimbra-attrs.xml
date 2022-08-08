@@ -9386,9 +9386,10 @@ TODO: delete them permanently from here
   <deprecateDesc>Deprecated and defaulted to false</deprecateDesc>
 </attr>
 
-<attr id="2118" name="zimbraNetworkMobileNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0" >
+<attr id="2118" name="zimbraNetworkMobileNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0" deprecatedSince="10.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable zimbra network new generation mobile sync module.</desc>
+  <deprecateDesc>Deprecated and defaulted to false</deprecateDesc>
 </attr>
 
 <attr id="2119" name="zimbraNetworkAdminEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.2" deprecatedSince="8.8.5">
@@ -9451,9 +9452,10 @@ TODO: delete them permanently from here
   <desc>End-user email address verification status</desc>
 </attr>
 
-<attr id="2130" name="zimbraNetworkAdminNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.5" >
+<attr id="2130" name="zimbraNetworkAdminNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.5" deprecatedSince="10.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable zimbra network new generation admin module.</desc>
+  <deprecateDesc>Deprecated and defaulted to false</deprecateDesc>
 </attr>
 
 <attr id="2131" name="zimbraFeatureContactBackupEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.5">
