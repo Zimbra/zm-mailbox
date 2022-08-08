@@ -88,6 +88,11 @@ public final class LC {
      */
     @Supported
     public static final KnownKey zimbra_hybrid_blob_mover_enabled = KnownKey.newKey(true);
+    
+    // Timeout for HTTP(S) Head requests used to verify a successful connection to an S3 server.
+    @Supported
+    public static final KnownKey zimbra_s3_connection_request_timeout_ms = KnownKey.newKey(20000);
+
 
     @Supported
     public static final KnownKey zimbra_extension_directory = KnownKey.newKey("${zimbra_home}/lib/ext");
