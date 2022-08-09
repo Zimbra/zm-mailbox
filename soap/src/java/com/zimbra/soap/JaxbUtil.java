@@ -728,6 +728,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.SearchGalResponse.class,
             com.zimbra.soap.admin.message.SearchMultiMailboxRequest.class,
             com.zimbra.soap.admin.message.SearchMultiMailboxResponse.class,
+            com.zimbra.soap.admin.message.SendMdmNotificationEmailRequest.class,
+            com.zimbra.soap.admin.message.SendMdmNotificationEmailResponse.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeRequest.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeResponse.class,
             com.zimbra.soap.admin.message.SetLocalServerOnlineRequest.class,

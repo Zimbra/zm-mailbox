@@ -20,6 +20,7 @@ package com.zimbra.cs.account.soap;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,7 +32,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import com.zimbra.common.util.*;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
@@ -64,10 +68,8 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
-import com.zimbra.common.util.AccountLogger;
-import com.zimbra.common.util.Constants;
+import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.util.Log.Level;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -207,6 +209,8 @@ import com.zimbra.soap.admin.message.GetConfigRequest;
 import com.zimbra.soap.admin.message.GetConfigResponse;
 import com.zimbra.soap.admin.message.GetCosRequest;
 import com.zimbra.soap.admin.message.GetCosResponse;
+import com.zimbra.soap.admin.message.GetDeviceStatusRequest;
+import com.zimbra.soap.admin.message.GetDeviceStatusResponse;
 import com.zimbra.soap.admin.message.GetDistributionListMembershipRequest;
 import com.zimbra.soap.admin.message.GetDistributionListMembershipResponse;
 import com.zimbra.soap.admin.message.GetDistributionListRequest;
@@ -256,6 +260,8 @@ import com.zimbra.soap.admin.message.RenameUCServiceRequest;
 import com.zimbra.soap.admin.message.ResetAllLoggersRequest;
 import com.zimbra.soap.admin.message.SearchDirectoryRequest;
 import com.zimbra.soap.admin.message.SearchDirectoryResponse;
+import com.zimbra.soap.admin.message.SendMdmNotificationEmailRequest;
+import com.zimbra.soap.admin.message.SendMdmNotificationEmailResponse;
 import com.zimbra.soap.admin.message.SetLocalServerOnlineRequest;
 import com.zimbra.soap.admin.message.SetPasswordRequest;
 import com.zimbra.soap.admin.message.SetPasswordResponse;
@@ -310,6 +316,12 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.TargetBy;
+import java.nio.charset.Charset;
+import java.sql.Timestamp;
+
+import com.zimbra.soap.admin.type.DeviceStatusInfo;
+import com.zimbra.cs.rmgmt.RemoteManager;
+import com.zimbra.cs.rmgmt.RemoteResult;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -3224,5 +3236,48 @@ public class SoapProvisioning extends Provisioning {
     public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
+    
+    /**
+     *
+     * @param status reserved for future use if mail to send for different status to
+     *               be added
+     * @param timeInterval     accepts the time interval in which the mail has to be send
+     * @throws ServiceException if an error occurs while sending email for MDM
+     *                          notification mail
+     */
+    @Override
+    public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
+        StringBuilder devicesInfo = new StringBuilder()
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableOpen))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlDeviceTableHeader));
 
+        GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null, null, SyncAdminConstants.MDM_STATUS_SUSPENDED));
+        List<DeviceStatusInfo> statusOfDevices = resp.getDevices().stream()
+                .filter(devices -> DateTimeUtil.checkWithinTime(Timestamp.valueOf(devices.getUpdateTime()),
+                        Long.parseLong(timeInterval), TimeUnit.MINUTES))
+                .collect(Collectors.toList());
+        int j = 0;
+        for (int i = 0; i < statusOfDevices.size(); i++) {
+                devicesInfo.append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableRowOpen))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(j + 1)
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getFriendlyName())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getId())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getUserAgent())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getUpdateTime())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableRowClose));
+                j++;
+        }
+        if (j > 0) {
+            devicesInfo.append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableClose));
+            SendMdmNotificationEmailResponse sendMdmNotificationEmailResponse = invokeJaxb(new SendMdmNotificationEmailRequest(String.valueOf(devicesInfo), status));
+        }
+        return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailSuccess);
+    }
 }

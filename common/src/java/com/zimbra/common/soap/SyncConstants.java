@@ -72,8 +72,10 @@ public final class SyncConstants {
     public static final String E_DEVICE = "device";
     public static final String E_PROVISIONABLE = "provisionable";
     public static final String E_STATUS = "status";
+    public static final String E_FRIENDLY_NAME = "friendlyName";
     public static final String E_FIRST_REQ_RECEIVED = "firstReqReceived";
     public static final String E_LAST_POLICY_UPDATE = "lastPolicyUpdate";
+    public static final String E_USER_AGENT = "userAgent";
     public static final String E_REMOTE_WIPE_REQ_TIME = "remoteWipeReqTime";
     public static final String E_REMOTE_WIPE_ACK_TIME = "remoteWipeAckTime";
     public static final String E_RECOVERY_PASSWORD = "recoveryPassword";
@@ -81,6 +83,7 @@ public final class SyncConstants {
     public static final String E_LAST_UPDATED_BY = "lastUpdatedBy";
     public static final String E_FOLDER = "folder";
     public static final String E_SYNCSTATE = "syncState";
+    public static final String E_UPDATE_TIME = "updateTime";
     public static final String E_ITEMS = "item";
     public static final String E_MAILBOX = "mailbox";
     public static final String E_DEVICE_NAME = "deviceName";

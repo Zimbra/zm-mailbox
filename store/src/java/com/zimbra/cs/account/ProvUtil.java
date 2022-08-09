@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -308,7 +308,7 @@ public class ProvUtil implements HttpDebugListener {
                 "help on reverse proxy related commands"), RIGHT("help on right-related commands"), SEARCH(
                 "help on search-related commands"), SERVER("help on server-related commands"), ALWAYSONCLUSTER(
                 "help on alwaysOnCluster-related commands"), UCSERVICE("help on ucservice-related commands"), SHARE(
-                "help on share related commands"), HAB("help on HAB commands");
+                "help on share related commands"), HAB("help on HAB commands"), MOBILE("help on mobile devices management commands");
 
         private final String description;
 
@@ -875,7 +875,9 @@ public class ProvUtil implements HttpDebugListener {
         MODIFY_HAB_GROUP_SENIORITY("modifyHABGroupSeniority", "mhgs",
         "{habGrpId} {seniorityIndex} ", Category.HAB, 2, 2),
         GET_HAB_GROUP_MEMBERS("getHABGroupMembers", "ghgm", "{name@domain|id}",
-                Category.HAB, 1, 1);
+                Category.HAB, 1, 1),
+        SEND_MDM_EMAIL("sendMdmEmail", "smdme", "{type | quarantined | blocked} {time interval in minutes}",
+                Category.MOBILE, 2, 2);
 
         private String mName;
         private String mAlias;
@@ -1647,10 +1649,22 @@ public class ProvUtil implements HttpDebugListener {
         case GET_HAB_GROUP_MEMBERS:
             doGetHABGroupMembers(args);
             break;
+        case SEND_MDM_EMAIL:
+            doSendMdmEmail(args);
+            break;
         default:
             return false;
         }
         return true;
+    }
+
+    private void doSendMdmEmail(String[] args)  throws ServiceException {
+            if (args.length >= 3 && !StringUtil.isNullOrEmpty(args[1]) && !StringUtil.isNullOrEmpty(args[2])) {
+                prov.sendMdmEmail(args[1], args[2]);
+            } else {
+                throw ServiceException.FAILURE(String.format("Number of arguments passed i.e. %s. Status of device : %s. Time interval of email %s. ",
+                        ifPresent(args ,0), args.length , ifPresent(args ,1), ifPresent(args ,2)), null);
+            }
     }
 
     private void doAddMember(String[] args) throws ServiceException {
@@ -3749,6 +3763,13 @@ public class ProvUtil implements HttpDebugListener {
             return GranteeBy.id;
         }
         return GranteeBy.name;
+    }
+
+    private static String ifPresent(String[] array, int index){
+        if ((index >= 0) && (index < array.length)){
+            return array[index];
+        }
+        return "";
     }
 
     private void checkDeprecatedAttrs(Map<String, ? extends Object> attrs) throws ServiceException {

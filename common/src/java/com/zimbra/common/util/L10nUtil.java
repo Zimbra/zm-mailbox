@@ -272,7 +272,7 @@ public class L10nUtil {
 
         errorTitle,
         zipFile,
-        
+
         //sieve
         seiveRejectMDNSubject,
         seiveRejectMDNErrorMsg,
@@ -293,7 +293,20 @@ public class L10nUtil {
         //send password reset email for new users
         sendPasswordResetEmailSubject,
         sendPasswordResetEmailBodyText,
-        sendPasswordResetEmailBodyHtml
+        sendPasswordResetEmailBodyHtml,
+
+        // send mobile data management notification emails
+        sendMDMNotificationEmailBreakLine,
+        sendMDMNotificationEmailSuccess,
+        sendMDMNotificationEmailFailure,
+        sendMDMNotificationEmailHtmlTableRowOpen,
+        sendMDMNotificationEmailHtmlTableRowClose,
+        sendMDMNotificationEmailHtmlTableDataOpen,
+        sendMDMNotificationEmailHtmlTableDataClose,
+        sendMDMNotificationEmailHtmlTableOpen,
+        sendMDMNotificationEmailHtmlTableClose,
+        sendMDMNotificationEmailHtmlDeviceTableHeader,
+        sendMDMNotificationEmailNoDevicesFoundMsg
 
         // add other messages in the future...
     }
