@@ -335,9 +335,6 @@ public class GetInfo extends AccountDocumentHandler  {
                 // leave this a special case for now, until we have enough incidences to make it a pattern
                 value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ?
                         ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
-            } else if (Provisioning.A_zimbraFeatureZulipChatEnabled.equals(key)) {
-                value = AccountUtil.isZulipChatEnabled(acct) ?
-                        ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
             } else if (Provisioning.A_zimbraMailQuota.equals(key)) {
                 // setting effective quota value refer ZBUG-1869 
                 value = String.valueOf(AccountUtil.getEffectiveQuota(acct));
