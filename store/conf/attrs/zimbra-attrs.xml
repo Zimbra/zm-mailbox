@@ -9875,26 +9875,6 @@ TODO: delete them permanently from here
   <desc>Enable/Disable blocked file types set in zimbraFileUploadBlockedFileTypes for uploading</desc>
  </attr>
 
-<attr id="9017" name="zimbraFeatureZulipChatEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
-  <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>Whether or not zulip chat is enabled.
-        If false at domain level, feature not available at domain, cos &amp; account.
-        If true at domain and false at cos, feature not available at cos &amp; account.
-        If true at domain &amp; cos and false at account, feature not available at account.
-  </desc>
-</attr>
-<attr id="9018" name="zimbraZulipChatDomainId" type="string" cardinality="single" optionalIn="domain" flags="domainInfo" since="10.0.0">
-  <desc>Zulip chat domain ID</desc>
-</attr>
-<attr id="3095" name="zimbraZulipJwtSecret" type="string" cardinality="single" optionalIn="globalConfig" since="10.0.0">
-  <globalConfigValue>SECRET</globalConfigValue>
-  <desc>Zulip JWT secret</desc>
-</attr>
-<attr id="3096" name="zimbraZulipBaseHost" type="string" cardinality="single" optionalIn="globalConfig" since="10.0.0" requiresRestart="mailbox">
-  <desc>Zulip server base host.
-        Requires server restart if updating from empty value.
-  </desc>
-</attr>
 <attr id="9016" name="zimbraFeatureDocumentEditingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether or not document editing feature is enabled within briefcase</desc>

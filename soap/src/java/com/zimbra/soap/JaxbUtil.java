@@ -314,8 +314,6 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CreateHABGroupResponse.class,
             com.zimbra.soap.admin.message.CreateDomainRequest.class,
             com.zimbra.soap.admin.message.CreateDomainResponse.class,
-            com.zimbra.soap.admin.message.CreateZulipRealmRequest.class,
-            com.zimbra.soap.admin.message.CreateZulipRealmResponse.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountRequest.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountResponse.class,
             com.zimbra.soap.admin.message.CreateLDAPEntryRequest.class,
