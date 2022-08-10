@@ -19,6 +19,7 @@ package com.zimbra.cs.zimlet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -31,7 +32,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.ProtocolException;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
@@ -45,6 +48,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.protocol.HttpContext;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -84,7 +88,7 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String AUTH_BASIC = "basic";
 
 
-    private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
+    private static Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, auth.getAccountId(), auth);
 
@@ -97,7 +101,7 @@ public class ProxyServlet extends ZimbraServlet {
         return allowedDomains;
     }
 
-    protected boolean checkPermissionOnTarget(URL target, AuthToken auth) {
+    protected static boolean checkPermissionOnTarget(URL target, AuthToken auth) {
         String host = target.getHost().toLowerCase();
         ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: " + host);
         Set<String> domains;
@@ -188,6 +192,37 @@ public class ProxyServlet extends ZimbraServlet {
     }
 
     protected static final String DEFAULT_CTYPE = "text/xml";
+
+    protected static class RestrictiveRedirectStrategy extends DefaultRedirectStrategy {
+        private final AuthToken authToken;
+
+        protected RestrictiveRedirectStrategy(AuthToken authToken) {
+            this.authToken = authToken;
+        }
+
+        @Override
+        public boolean isRedirected(HttpRequest request, HttpResponse response, HttpContext context)
+        throws ProtocolException {
+            for (Header header : response.getHeaders("Location")) {
+                String location = header.getValue();
+                URL url = null;
+
+                try {
+                    url = new URL(location);
+                }
+                catch (MalformedURLException ex) {
+                    ZimbraLog.zimlet.info("refuse redirect to malformed location: " + location);
+                    return false;
+                }
+
+                if (!checkPermissionOnTarget(url, authToken)) {
+                    ZimbraLog.zimlet.info("refuse redirect to restricted location: " + location);
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
 
     protected void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
@@ -297,7 +332,7 @@ public class ProxyServlet extends ZimbraServlet {
             HttpResponse httpResp = null;
             try {
                 if (!(reqMethod.equalsIgnoreCase("POST") || reqMethod.equalsIgnoreCase("PUT"))) {
-                    clientBuilder.setRedirectStrategy(new DefaultRedirectStrategy());
+                    clientBuilder.setRedirectStrategy(new RestrictiveRedirectStrategy(authToken));
                 }
 
                 HttpClient client = clientBuilder.build();
@@ -353,7 +388,7 @@ public class ProxyServlet extends ZimbraServlet {
                     if (canProxyHeader(h.getName()))
                         resp.addHeader(h.getName(), h.getValue());
                 if (targetResponseBody != null)
-                	ByteUtil.copy(targetResponseBody, true, resp.getOutputStream(), true);
+                    ByteUtil.copy(targetResponseBody, true, resp.getOutputStream(), true);
             }
         } finally {
             if (method != null)
