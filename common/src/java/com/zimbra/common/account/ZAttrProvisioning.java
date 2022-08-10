@@ -5861,7 +5861,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.0.0
      */
-    @ZAttr(id=3101)
+    @ZAttr(id=9015)
     public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
 
     /**
@@ -6659,7 +6659,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.0.0
      */
-    @ZAttr(id=3097)
+    @ZAttr(id=9016)
     public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
 
     /**
@@ -7272,7 +7272,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.0.0
      */
-    @ZAttr(id=3093)
+    @ZAttr(id=9017)
     public static final String A_zimbraFeatureZulipChatEnabled = "zimbraFeatureZulipChatEnabled";
 
     /**
@@ -17969,7 +17969,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.0.0
      */
-    @ZAttr(id=3094)
+    @ZAttr(id=9018)
     public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
 
     /**
