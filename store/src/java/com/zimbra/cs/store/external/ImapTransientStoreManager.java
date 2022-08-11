@@ -26,6 +26,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.store.StoreManagerRegistrar;
 
 /**
  * Simple ExternalStoreManager implementation that is intended for use in storing
@@ -37,7 +38,6 @@ import com.zimbra.cs.mailbox.Mailbox;
  *
  */
 public class ImapTransientStoreManager extends ExternalStoreManager {
-
     protected File baseDirectory;
 
     @Override
@@ -85,5 +85,4 @@ public class ImapTransientStoreManager extends ExternalStoreManager {
             return File.createTempFile(mbox.getAccountId(), ".msg", baseDirectory);
         }
     }
-
 }

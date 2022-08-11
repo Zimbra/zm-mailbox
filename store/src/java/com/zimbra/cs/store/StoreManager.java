@@ -28,21 +28,20 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.store.helper.ClassHelper;
+import com.zimbra.cs.store.StoreManagerRegistrar;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.volume.VolumeManager;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
-import java.util.List;
+
 
 public abstract class StoreManager {
 
     private static StoreManager sInstance;
 
     private static String currentZimbraClassStore = LC.zimbra_class_store.value();
-
-    private static List<String> smList;
 
     /**
      * Current Volume Id
@@ -535,17 +534,5 @@ public abstract class StoreManager {
      */
     public IncomingBlob newIncomingBlob(String id, Object ctxt) throws IOException, ServiceException {
         return new BufferingIncomingBlob(id, getBlobBuilder(), ctxt);
-    }
-
-    public static void registerStoreManager(StoreManager storeManager) {
-        String smName = storeManager.getClass().getSimpleName();
-    }
-
-    public static void addToSMList(String smName) {
-        smList.add(smName);
-    }
-
-    public static List<String> getSMList() {
-        return smList;
     }
 }

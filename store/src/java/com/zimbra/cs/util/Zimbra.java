@@ -63,6 +63,11 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.StoreManagerRegistrar;
+import com.zimbra.cs.store.file.FileBlobStore;
+import com.zimbra.cs.store.triton.TritonBlobStoreManager;
+import com.zimbra.cs.store.external.ImapTransientStoreManager;
+import com.zimbra.cs.store.external.ExternalStoreManager;
 import com.zimbra.cs.zookeeper.CuratorManager;
 import com.zimbra.znative.Util;
 
@@ -270,6 +275,10 @@ public final class Zimbra {
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
         }
+        StoreManagerRegistrar.registerStoreManager(FileBlobStore.class);
+        StoreManagerRegistrar.registerStoreManager(ExternalStoreManager.class);
+        StoreManagerRegistrar.registerStoreManager(TritonBlobStoreManager.class);
+        StoreManagerRegistrar.registerStoreManager(ImapTransientStoreManager.class);
 
         MailboxManager.getInstance();
 

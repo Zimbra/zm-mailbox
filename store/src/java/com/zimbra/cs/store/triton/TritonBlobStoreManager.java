@@ -51,6 +51,7 @@ import com.zimbra.cs.store.external.ExternalResumableIncomingBlob;
 import com.zimbra.cs.store.external.ExternalResumableUpload;
 import com.zimbra.cs.store.external.ExternalUploadedBlob;
 import com.zimbra.cs.store.external.SisStore;
+import com.zimbra.cs.store.StoreManagerRegistrar;
 
 /**
  * StoreManager implementation which uses the TDS Blob API for storing and retrieving blobs
