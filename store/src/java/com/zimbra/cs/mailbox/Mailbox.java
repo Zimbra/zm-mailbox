@@ -9999,7 +9999,11 @@ public class Mailbox implements MailboxStore {
                 if (deletes.blobs != null) {
                     // delete any blobs associated with items deleted from db/index
                     for (MailboxBlob blob : deletes.blobs) {
-                        StoreManager sm = StoreManager.getReaderSMInstance(blob.getLocator());
+                        StoreManager sm = StoreManager.getInstance();
+                        // if blob is not null then pull respective SM instance
+                        if (blob != null) {
+                            sm = StoreManager.getReaderSMInstance(blob.getLocator());
+                        }
                         sm.quietDelete(blob);
                     }
                 }
