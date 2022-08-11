@@ -539,9 +539,10 @@ public abstract class StoreManager {
 
     public static void registerStoreManager(StoreManager storeManager) {
         String smName = storeManager.getClass().getSimpleName();
+        addToSMList(smName);
     }
 
-    public static void addToSMList(String smName) {
+    private static void addToSMList(String smName) {
         smList.add(smName);
     }
 
