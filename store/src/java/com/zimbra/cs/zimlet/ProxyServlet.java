@@ -29,6 +29,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
@@ -203,23 +204,33 @@ public class ProxyServlet extends ZimbraServlet {
         @Override
         public boolean isRedirected(HttpRequest request, HttpResponse response, HttpContext context)
         throws ProtocolException {
-            for (Header header : response.getHeaders("Location")) {
-                String location = header.getValue();
-                URL url = null;
-
-                try {
-                    url = new URL(location);
-                }
-                catch (MalformedURLException ex) {
-                    ZimbraLog.zimlet.info("refuse redirect to malformed location: " + location);
-                    return false;
-                }
-
-                if (!checkPermissionOnTarget(url, authToken)) {
-                    ZimbraLog.zimlet.info("refuse redirect to restricted location: " + location);
-                    return false;
-                }
+            Header header = response.getFirstHeader("Location");
+            if (header == null) {
+                return false;
             }
+
+            String location = header.getValue();
+
+            if (StringUtils.isEmpty(location)) {
+                ZimbraLog.zimlet.info("refuse redirect to empty location");
+                return false;
+            }
+
+            URL url = null;
+
+            try {
+                url = new URL(location);
+            } catch (MalformedURLException ex) {
+                // Malformed locations include relative ones.
+                ZimbraLog.zimlet.info("refuse redirect to malformed location: " + location);
+                return false;
+            }
+
+            if (!checkPermissionOnTarget(url, authToken)) {
+                ZimbraLog.zimlet.info("refuse redirect to restricted location: " + location);
+                return false;
+            }
+
             return true;
         }
     }
