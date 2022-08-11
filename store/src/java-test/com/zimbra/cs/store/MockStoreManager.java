@@ -276,7 +276,7 @@ public final class MockStoreManager extends StoreManager {
 
         @Override
         public String getLocator() {
-            return "0";
+            return "1";
         }
     }
 

@@ -35,7 +35,7 @@
   <dependency org="commons-pool" name="commons-pool" rev="1.6"/>
   <dependency org="commons-dbcp" name="commons-dbcp" rev="1.4"/>
   <dependency org="commons-codec" name="commons-codec" rev="1.7"/>
-  <dependency org="commons-io" name="commons-io" rev="1.4"/>
+  <dependency org="commons-io" name="commons-io" rev="2.11.0"/>
   <dependency org="com.ibm.icu" name="icu4j" rev="4.8.1.1"/>
   <dependency org="oauth" name="oauth" rev="1.4"/>
   <dependency org="zimbra" name="zm-ews-stub" rev="4.0"/>
