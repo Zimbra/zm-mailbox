@@ -198,6 +198,8 @@ public final class AdminConstants {
     public static final String E_DELETE_VOLUME_RESPONSE = "DeleteVolumeResponse";
     public static final String E_GET_ALL_VOLUMES_REQUEST = "GetAllVolumesRequest";
     public static final String E_GET_ALL_VOLUMES_RESPONSE = "GetAllVolumesResponse";
+    public static final String E_GET_ALL_STORE_MANAGERS_REQUEST = "GetAllStoreManagersRequest";
+    public static final String E_GET_ALL_STORE_MANAGERS_RESPONSE = "GetAllStoreManagersResponse";
     public static final String E_GET_CURRENT_VOLUMES_REQUEST = "GetCurrentVolumesRequest";
     public static final String E_GET_CURRENT_VOLUMES_RESPONSE = "GetCurrentVolumesResponse";
     public static final String E_SET_CURRENT_VOLUME_REQUEST = "SetCurrentVolumeRequest";
@@ -536,11 +538,11 @@ public final class AdminConstants {
     // Skins
     public static final String E_GET_ALL_SKINS_REQUEST = "GetAllSkinsRequest";
     public static final String E_GET_ALL_SKINS_RESPONSE = "GetAllSkinsResponse";
-    
+
     // Sending Emails
     public static final String E_SEND_MDM_NOTIFICATION_EMAIL_REQUEST = "SendMdmNotificationEmailRequest";
     public static final String E_SEND_MDM_NOTIFICATION_EMAIL_RESPONSE = "SendMdmNotificationEmailResponse";
-    
+
     // Active Sync
     public static final QName SEND_MDM_NOTIFICATION_EMAIL_REQUEST = QName.get(E_SEND_MDM_NOTIFICATION_EMAIL_REQUEST, NAMESPACE);
     public static final QName SEND_MDM_NOTIFICATION_EMAIL_RESPONSE = QName.get(E_SEND_MDM_NOTIFICATION_EMAIL_RESPONSE, NAMESPACE);
@@ -1176,6 +1178,7 @@ public final class AdminConstants {
     public static final String E_NI = "ni";
     public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volume";
+    public static final String E_STORE_MANAGER = "storeManager";
     public static final String E_VOLUME_EXT = "volumeExternalInfo";
     public static final String E_VOLUME_OPENIO_EXT = "volumeExternalOpenIoInfo";
     public static final String E_STORE_MANAGER_RUNTIME_SWITCH_RESULT = "storeManagerRuntimeSwitchResult";
