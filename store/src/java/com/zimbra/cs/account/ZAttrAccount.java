@@ -15327,13 +15327,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * Enable/Disable blocked file types set in
      * zimbraFileUploadBlockedFileTypes for uploading
      *
-     * @return zimbraFeatureFileTypeUploadRestrictionsEnabled, or true if unset
+     * @return zimbraFeatureFileTypeUploadRestrictionsEnabled, or false if unset
      *
      * @since ZCS 10.0.0
      */
     @ZAttr(id=3092)
     public boolean isFeatureFileTypeUploadRestrictionsEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureFileTypeUploadRestrictionsEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureFileTypeUploadRestrictionsEnabled, false, true);
     }
 
     /**
