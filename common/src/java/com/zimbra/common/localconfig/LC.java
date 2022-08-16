@@ -1431,6 +1431,9 @@ public final class LC {
     // owasp handler
     public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(true);
 
+    // file content type blacklist
+    public static final KnownKey zimbra_file_content_type_blacklist = KnownKey.newKey("application/x-ms*");
+
     public static final KnownKey enable_delegated_admin_ldap_access = KnownKey.newKey(true);
 
     // OAuth2 Social
