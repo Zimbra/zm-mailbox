@@ -4599,12 +4599,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="1004" name="zimbraBackupSkipBlobs" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>if true, do not backup blobs (HSM or not) during a full backup</desc>
+  <desc>if true, do not backup blobs (SM or not) during a full backup</desc>
 </attr>
 
 <attr id="1005" name="zimbraBackupSkipHsmBlobs" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>if true, do not backup blobs on secondary (HSM) volumes during a full backup</desc>
+  <desc>if true, do not backup blobs on secondary (SM) volumes during a full backup</desc>
 </attr>
 
 <attr id="1006" name="zimbraMailboxMoveSkipSearchIndex" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
@@ -4614,12 +4614,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="1007" name="zimbraMailboxMoveSkipBlobs" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>if true, exclude blobs (HSM or not) from mailbox move</desc>
+  <desc>if true, exclude blobs (SM or not) from mailbox move</desc>
 </attr>
 
 <attr id="1008" name="zimbraMailboxMoveSkipHsmBlobs" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>if true, exclude blobs on secondary (HSM) volumes from mailbox move</desc>
+  <desc>if true, exclude blobs on secondary (SM) volumes from mailbox move</desc>
 </attr>
 
 <attr id="1009" name="zimbraRedoLogCrashRecoveryLookbackSec" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="6.0.0_BETA2">
@@ -4710,7 +4710,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>message,document:before:-30days</globalConfigValue>
   <desc>
     The policy that determines which mail items get moved to secondary storage during
-    HSM.  Each value specifies a comma-separated list of item types and the search
+    SM.  Each value specifies a comma-separated list of item types and the search
     query used to select items to move.  See the spec for &lt;SearchRequest&gt; for the
     complete list of item types and query.txt for the search query spec.</desc>
 </attr>
@@ -6617,7 +6617,7 @@ TODO: delete them permanently from here
 
 <attr id="1316" name="zimbraHsmBatchSize" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="7.2.1">
   <globalConfigValue>10000</globalConfigValue>
-  <desc>Maximum number of items to move during a single HSM operation.  If the limit is exceeded, the HSM operation is repeated until all qualifying items are moved.</desc>
+  <desc>Maximum number of items to move during a single SM operation.  If the limit is exceeded, the SM operation is repeated until all qualifying items are moved.</desc>
 </attr>
 
 <attr id="1317" name="zimbraPrefOutOfOfficeExternalReply" type="string" max="8192" cardinality="single" optionalIn="account" since="8.0.0">

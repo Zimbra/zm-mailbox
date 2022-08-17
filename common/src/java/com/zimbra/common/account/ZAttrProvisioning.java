@@ -4102,7 +4102,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupRetentionDays = "zimbraBackupRetentionDays";
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @since ZCS 6.0.0_BETA2
      */
@@ -4110,7 +4110,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupSkipBlobs = "zimbraBackupSkipBlobs";
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @since ZCS 6.0.0_BETA2
@@ -8129,8 +8129,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHsmAge = "zimbraHsmAge";
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @since ZCS 7.2.1
@@ -8150,9 +8150,9 @@ public class ZAttrProvisioning {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @since ZCS 6.0.0_BETA2
@@ -9134,7 +9134,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailboxMoveFailedCleanupTaskInterval = "zimbraMailboxMoveFailedCleanupTaskInterval";
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @since ZCS 6.0.0_BETA2
      */
@@ -9142,7 +9142,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailboxMoveSkipBlobs = "zimbraMailboxMoveSkipBlobs";
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @since ZCS 6.0.0_BETA2
      */
