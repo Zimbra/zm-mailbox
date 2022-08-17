@@ -57,6 +57,7 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         ArrayList<String> tags = new ArrayList<String>();
         // in tags array we can add multiple tags, so for each tag write start &
         // end with a & separator like(<!--&-->)
+        html = html.replaceAll("<!-->","-->");
         tags.add("<!--&-->");
         String formattedHtml = "";
         for (String str : tags) {
