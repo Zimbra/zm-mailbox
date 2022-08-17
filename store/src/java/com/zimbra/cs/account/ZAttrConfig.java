@@ -6068,7 +6068,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @return zimbraBackupSkipBlobs, or false if unset
      *
@@ -6080,7 +6080,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @param zimbraBackupSkipBlobs new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6095,7 +6095,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @param zimbraBackupSkipBlobs new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6111,7 +6111,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -6125,7 +6125,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -6140,7 +6140,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @return zimbraBackupSkipHsmBlobs, or false if unset
@@ -6153,7 +6153,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @param zimbraBackupSkipHsmBlobs new value
@@ -6169,7 +6169,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @param zimbraBackupSkipHsmBlobs new value
@@ -6186,7 +6186,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6201,7 +6201,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -21460,8 +21460,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @return zimbraHsmBatchSize, or 10000 if unset
@@ -21474,8 +21474,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @param zimbraHsmBatchSize new value
@@ -21491,8 +21491,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @param zimbraHsmBatchSize new value
@@ -21509,8 +21509,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21525,8 +21525,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -21625,9 +21625,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @return zimbraHsmPolicy, or empty array if unset
@@ -21641,9 +21641,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy new value
@@ -21660,9 +21660,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy new value
@@ -21680,9 +21680,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy new to add to existing values
@@ -21699,9 +21699,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy new to add to existing values
@@ -21719,9 +21719,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy existing value to remove
@@ -21738,9 +21738,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy existing value to remove
@@ -21758,9 +21758,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21776,9 +21776,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -31338,7 +31338,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @return zimbraMailboxMoveSkipBlobs, or false if unset
      *
@@ -31350,7 +31350,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @param zimbraMailboxMoveSkipBlobs new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31365,7 +31365,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @param zimbraMailboxMoveSkipBlobs new value
      * @param attrs existing map to populate, or null to create a new map
@@ -31381,7 +31381,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -31395,7 +31395,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -31410,7 +31410,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @return zimbraMailboxMoveSkipHsmBlobs, or false if unset
      *
@@ -31422,7 +31422,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @param zimbraMailboxMoveSkipHsmBlobs new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31437,7 +31437,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @param zimbraMailboxMoveSkipHsmBlobs new value
      * @param attrs existing map to populate, or null to create a new map
@@ -31453,7 +31453,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -31467,7 +31467,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
