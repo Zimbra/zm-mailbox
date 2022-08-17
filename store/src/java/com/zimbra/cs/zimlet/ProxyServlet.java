@@ -88,6 +88,9 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String AUTH_PARAM = "auth";
     private static final String AUTH_BASIC = "basic";
 
+    private static boolean isRedirectStatus(int status) {
+        return status / 100 == 3; // 3xx Redirect
+    }
 
     private static Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -124,6 +127,37 @@ public class ProxyServlet extends ZimbraServlet {
             }
         }
         return false;
+    }
+
+    protected static boolean shouldFollowRedirectLocation(Header locationHeader, AuthToken authToken) {
+        if (locationHeader == null) {
+            ZimbraLog.zimlet.debug("refuse proxy redirect to missing location");
+            return false;
+        }
+
+        String location = locationHeader.getValue();
+
+        if (StringUtils.isEmpty(location)) {
+            ZimbraLog.zimlet.warn("refuse proxy redirect to empty location");
+            return false;
+        }
+
+        URL url = null;
+
+        try {
+            url = new URL(location);
+        } catch (MalformedURLException ex) {
+            // Malformed locations include relative ones.
+            ZimbraLog.zimlet.warn("refuse proxy redirect to malformed location: " + location);
+            return false;
+        }
+
+        if (!checkPermissionOnTarget(url, authToken)) {
+            ZimbraLog.zimlet.warn("refuse proxy redirect to restricted location: " + location);
+            return false;
+        }
+
+        return true;
     }
 
     protected boolean canProxyHeader(String header) {
@@ -204,34 +238,7 @@ public class ProxyServlet extends ZimbraServlet {
         @Override
         public boolean isRedirected(HttpRequest request, HttpResponse response, HttpContext context)
         throws ProtocolException {
-            Header header = response.getFirstHeader("Location");
-            if (header == null) {
-                return false;
-            }
-
-            String location = header.getValue();
-
-            if (StringUtils.isEmpty(location)) {
-                ZimbraLog.zimlet.info("refuse redirect to empty location");
-                return false;
-            }
-
-            URL url = null;
-
-            try {
-                url = new URL(location);
-            } catch (MalformedURLException ex) {
-                // Malformed locations include relative ones.
-                ZimbraLog.zimlet.info("refuse redirect to malformed location: " + location);
-                return false;
-            }
-
-            if (!checkPermissionOnTarget(url, authToken)) {
-                ZimbraLog.zimlet.info("refuse redirect to restricted location: " + location);
-                return false;
-            }
-
-            return true;
+            return shouldFollowRedirectLocation(response.getFirstHeader("Location"), authToken);
         }
     }
 
@@ -354,7 +361,12 @@ public class ProxyServlet extends ZimbraServlet {
                 return;
             }
 
-            int status = httpResp.getStatusLine() == null ? HttpServletResponse.SC_INTERNAL_SERVER_ERROR :httpResp.getStatusLine().getStatusCode();
+            int status = httpResp.getStatusLine() == null ? HttpServletResponse.SC_INTERNAL_SERVER_ERROR : httpResp.getStatusLine().getStatusCode();
+
+            if (isRedirectStatus(status) && !shouldFollowRedirectLocation(httpResp.getFirstHeader("Location"), authToken)) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
 
             // workaround for Alexa Thumbnails paid web service, which doesn't bother to return a content-type line
             Header ctHeader = httpResp.getFirstHeader("Content-Type");
