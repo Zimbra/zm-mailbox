@@ -48,10 +48,12 @@ public class CollectLDAPConfigZimbra extends ZimbraServlet {
 			AuthToken authToken = getAdminAuthTokenFromCookie(req, resp);
             if (authToken == null) {
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
 
             if(!authToken.isAdmin()) {
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
 			//find the LDAP master
 			Provisioning prov = Provisioning.getInstance();
