@@ -54,6 +54,12 @@ public class VolumeConfigUtil {
      */
     private static final String DEFAULT_EXTERNAL_STORE_MANAGER = "com.zimbra.storemanagers.store.GenericStoreManager";
 
+    // standard regex for validation of an url
+    public static String URL_REGEX = "^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$";
+
+    // name must start with a letter. It can contain word characters, dashes
+    public static String NAME_REGEX = "^[a-zA-Z0-9][\\w-]{1,62}$";
+
     /**
      * Validate the create volume request parameters
      *
@@ -94,6 +100,25 @@ public class VolumeConfigUtil {
             throw VolumeServiceException.INVALID_REQUEST("Volume Name can't be missing, empty or null", VolumeServiceException.BAD_VOLUME_NAME);
         }
 
+        // validate mgbits should be greater than 0
+        if (volInfoRequest.getMgbits() < 0) {
+            throw VolumeServiceException.INVALID_REQUEST("mgbits can't be negative number", VolumeServiceException.BAD_VOLUME_MGBITS);
+        }
+
+        // validate mbits should be greater than 0
+        if (volInfoRequest.getMbits() < 0) {
+            throw VolumeServiceException.INVALID_REQUEST("mbits can't be negative number", VolumeServiceException.BAD_VOLUME_MBITS);
+        }
+
+        // validate fgbits should be greater than 0
+        if (volInfoRequest.getFgbits() < 0) {
+            throw VolumeServiceException.INVALID_REQUEST("fgbits can't be negative number", VolumeServiceException.BAD_VOLUME_FGBITS);
+        }
+
+        // validate fbits should be greater than 0
+        if (volInfoRequest.getFbits() < 0) {
+            throw VolumeServiceException.INVALID_REQUEST("fbits can't be negative number", VolumeServiceException.BAD_VOLUME_FBITS);
+        }
         // validate type
         Short type = volInfoRequest.getType();
         if (1 != type.intValue() && 2 != type.intValue() && 10 != type.intValue()) {
@@ -155,27 +180,42 @@ public class VolumeConfigUtil {
             } else if (AdminConstants.A_VOLUME_OPEN_IO.equalsIgnoreCase(storageTypeOpenIO)) {
                 // validate proxy port as positive
                 if (volInfoRequest.getVolumeExternalOpenIOInfo().getProxyPort() <= 0) {
-                    throw VolumeServiceException.INVALID_REQUEST("Proxy port can't be negative number or null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
+                    throw VolumeServiceException.INVALID_REQUEST("Proxy port can't be negative number or 0", VolumeServiceException.BAD_VOLUME_PROXY_PORT);
                 }
 
                 // validate account port as positive
                 if (volInfoRequest.getVolumeExternalOpenIOInfo().getAccountPort() <= 0) {
-                    throw VolumeServiceException.INVALID_REQUEST("Account port can't be negative number or null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
+                    throw VolumeServiceException.INVALID_REQUEST("Account port can't be negative number or 0", VolumeServiceException.BAD_VOLUME_ACCOUNT_PORT);
                 }
 
                 // validate url is empty or not
                 if (StringUtil.isNullOrEmpty(volInfoRequest.getVolumeExternalOpenIOInfo().getUrl())) {
-                    throw VolumeServiceException.INVALID_REQUEST("Url can't be null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
+                    throw VolumeServiceException.INVALID_REQUEST("Url can't be null", VolumeServiceException.BAD_VOLUME_URL);
+                }
+
+                // validate format of url
+                if (!volInfoRequest.getVolumeExternalOpenIOInfo().getUrl().matches(URL_REGEX)) {
+                    throw VolumeServiceException.INVALID_REQUEST("Url format is incorrect", VolumeServiceException.BAD_VOLUME_URL);
                 }
 
                 // validate account is empty or not
                 if (StringUtil.isNullOrEmpty(volInfoRequest.getVolumeExternalOpenIOInfo().getAccount())) {
-                    throw VolumeServiceException.INVALID_REQUEST("Account can't be null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
+                    throw VolumeServiceException.INVALID_REQUEST("Account can't be null", VolumeServiceException.BAD_VOLUME_ACCOUNT);
+                }
+
+                // validate format of account name
+                if (!volInfoRequest.getVolumeExternalOpenIOInfo().getAccount().matches(NAME_REGEX)) {
+                    throw VolumeServiceException.INVALID_REQUEST("AccountName format is incorrect. Account name must start with a letter. It can contain word characters, dashes", VolumeServiceException.BAD_VOLUME_NAME_FORMAT);
                 }
 
                 // validate namespace is empty or not
                 if (StringUtil.isNullOrEmpty(volInfoRequest.getVolumeExternalOpenIOInfo().getNameSpace())) {
-                    throw VolumeServiceException.INVALID_REQUEST("Name Space can't be null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
+                    throw VolumeServiceException.INVALID_REQUEST("Name Space can't be null", VolumeServiceException.BAD_VOLUME_NAME_SPACE);
+                }
+
+                // validate format of namespace
+                if (!volInfoRequest.getVolumeExternalOpenIOInfo().getNameSpace().matches(NAME_REGEX)) {
+                    throw VolumeServiceException.INVALID_REQUEST("NameSpace format is incorrect. Name Space must start with a letter. It can contain word characters, dashes", VolumeServiceException.BAD_VOLUME_NAME_FORMAT);
                 }
             } else {
                 throw VolumeServiceException.INVALID_REQUEST("Volume Storage Type can be only S3 or OpenIO",

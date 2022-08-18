@@ -270,7 +270,11 @@ public final class VolumeManager {
                 }
                 return vol;
             } else {
-                throw VolumeServiceException.NO_SUCH_VOLUME(id);
+                if (id == 0) {
+                    throw VolumeServiceException.EMPTY_NULL_VOLUME();
+                } else {
+                    throw VolumeServiceException.NO_SUCH_VOLUME(id);
+                }
             }
         } finally {
             conn.closeQuietly();

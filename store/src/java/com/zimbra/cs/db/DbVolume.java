@@ -197,7 +197,11 @@ public final class DbVolume {
             if (rs.next()) {
                 return constructVolume(rs);
             } else {
-                throw VolumeServiceException.NO_SUCH_VOLUME(id);
+                if (id == 0) {
+                    throw VolumeServiceException.EMPTY_NULL_VOLUME();
+                } else {
+                    throw VolumeServiceException.NO_SUCH_VOLUME(id);
+                }
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting volume entry: " + id, e);
