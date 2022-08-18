@@ -1310,8 +1310,8 @@ public final class AdminConstants {
     public static final String A_VOLUME_VOLUME_PREFIX = "volumePrefix";
     public static final String A_VOLUME_STORE_PROVIDER = "storeProvider";
     public static final String A_VOLUME_GLB_BUCKET_CONFIG_ID = "globalBucketConfigId";
-    public static final String A_VOLUME_USE_IN_FREQ_ACCESS = "useInFrequentAccess";
-    public static final String A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD = "useInFrequentAccessThreshold";
+    public static final String A_VOLUME_USE_IN_FREQ_ACCESS = "useInfrequentAccess";
+    public static final String A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD = "useInfrequentAccessThreshold";
     public static final String A_VOLUME_USE_INTELLIGENT_TIERING = "useIntelligentTiering";
     public static final String A_VOLUME_URL = "url";
     public static final String A_VOLUME_ACCOUNT = "account";
