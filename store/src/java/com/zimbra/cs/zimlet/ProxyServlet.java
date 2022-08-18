@@ -88,7 +88,7 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String AUTH_PARAM = "auth";
     private static final String AUTH_BASIC = "basic";
 
-    private static boolean isRedirectStatus(int status) {
+    protected static boolean isRedirectStatus(int status) {
         return status / 100 == 3; // 3xx Redirect
     }
 

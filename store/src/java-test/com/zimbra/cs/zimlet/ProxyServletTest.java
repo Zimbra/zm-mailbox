@@ -57,6 +57,16 @@ public class ProxyServletTest {
         Provisioning.setInstance(prov);
     }
 
+	@Test
+	public void testRedirectStatus() {
+		assertFalse(ProxyServlet.isRedirectStatus(200));
+		assertTrue(ProxyServlet.isRedirectStatus(300));
+		assertTrue(ProxyServlet.isRedirectStatus(301));
+		assertTrue(ProxyServlet.isRedirectStatus(302));
+		assertFalse(ProxyServlet.isRedirectStatus(400));
+		assertFalse(ProxyServlet.isRedirectStatus(500));
+	}
+
     @Test
     public void testNonWhitelistedDomainRejected() throws ProtocolException {
         assertFalse(isLocationRedirectable("http://fazigu.org"));
