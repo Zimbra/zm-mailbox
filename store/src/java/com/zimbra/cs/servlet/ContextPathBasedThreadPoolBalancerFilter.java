@@ -165,14 +165,14 @@ public class ContextPathBasedThreadPoolBalancerFilter implements Filter {
             // Enforce max count
             if (rules.max != null) {
                 if (activeRequestsCount > rules.max) {
-                    ZimbraLog.misc.info("Suspending for %dms because context path %s is at %d configured max threads", suspendMs, getLoggableContextPath(contextPath), activeRequestsCount);
+                    ZimbraLog.misc.error("Suspending for %dms because context path %s is at %d configured max threads", suspendMs, getLoggableContextPath(contextPath), activeRequestsCount);
                     return true;
                 }
             }
             // Enforce max %
             if (rules.maxPercent != null) {
                 if (100 * activeRequestsCount / queuedThreadPool.getMaxThreads() > rules.maxPercent) {
-                    ZimbraLog.misc.info("Suspending for %dms because context path %s is at %d threads (%d configured max percentage of thread pool size)", suspendMs, getLoggableContextPath(contextPath), activeRequestsCount, rules.maxPercent);
+                    ZimbraLog.misc.error("Suspending for %dms because context path %s is at %d threads (%d configured max percentage of thread pool size)", suspendMs, getLoggableContextPath(contextPath), activeRequestsCount, rules.maxPercent);
                     return true;
                 }
             }
