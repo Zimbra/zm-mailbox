@@ -338,6 +338,9 @@ public class GetInfo extends AccountDocumentHandler  {
             } else if (Provisioning.A_zimbraMailQuota.equals(key)) {
                 // setting effective quota value refer ZBUG-1869 
                 value = String.valueOf(AccountUtil.getEffectiveQuota(acct));
+            } else if (Provisioning.A_zimbraFeatureDocumentEditingEnabled.equals(key)) { 
+                value = AccountUtil.isDocumentEditingEnabled(acct) ? 
+                        ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
             } else {
                 value = attrsMap.get(key);
 

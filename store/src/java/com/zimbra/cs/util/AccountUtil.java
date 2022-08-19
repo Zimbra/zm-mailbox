@@ -905,7 +905,63 @@ public class AccountUtil {
         }
         return null;
     }
-    
+
+    public static boolean isZulipChatEnabled(Account account) {
+        boolean isEnabled = false;
+        if (account == null) {
+            return isEnabled;
+        }
+        isEnabled = account.isFeatureZulipChatEnabled();
+
+        if (isEnabled) {
+            Provisioning prov = Provisioning.getInstance();
+            try {
+                Domain domain = prov.getDomainById(account.getDomainId());
+                if (domain != null && !Boolean.valueOf(domain.getAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, ProvisioningConstants.TRUE))) {
+                    ZimbraLog.account.debug("Zulip: chat is disabled on domain, won't be available for user '%s'", account.getName());
+                    isEnabled = false;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.account.debug(String.format("Zulip: failed to get zulip chat enabled status on domain '%s' for user '%s'. "
+                        + "User account level zulip chat enabled status will be used.", account.getDomainName(), account.getName()), e);
+            }
+        }
+        return isEnabled;
+    }
+
+    /**
+     * Document editing feature will be enabled iff Document editing server host is set ie value of 
+     * ldap attribute zimbraDocumentServerHost must be set otherwise feature will be disabled 
+     * even if it is enabled at account level.
+     * @param account
+     * @return true if feature is enabled otherwise false
+     */
+    public static boolean isDocumentEditingEnabled(Account account) {
+        boolean isEnabled = false;
+        if (account == null) {
+            return isEnabled;
+        }
+        isEnabled = account.isFeatureDocumentEditingEnabled();
+        if (isEnabled) {
+            Provisioning prov = Provisioning.getInstance();
+            try {
+                Server server = prov.getServer(account);
+                if (server == null) {
+                    ZimbraLog.account.warn("no server associated with acccount " + account.getName());
+                    isEnabled = false;
+                } else {
+                    String value = server.getDocumentServerHost();
+                    if (!StringUtil.isNullOrEmpty(value)) {
+                        isEnabled = true;
+                    }
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.account.debug(String.format("Document editing server host not set, editing feature will be disabled for user '%s'. ", account.getName()), e);
+            }
+        }
+        return isEnabled;
+    }
+
     /**
      * If acctName doesn't have domain name in it then 1st Account object to be fetched using provided acctName
      * If acctName is null then will try to fetch it from fully qualified email address.
