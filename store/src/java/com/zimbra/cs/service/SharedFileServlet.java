@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.util.AccountUtil;
 
 @SuppressWarnings("serial")
 public class SharedFileServlet extends UserServlet {
@@ -146,7 +147,7 @@ public class SharedFileServlet extends UserServlet {
         boolean zimbraFeatureDocumentEditingEnabled = false;
         Account account  = context.targetAccount;
         if (account != null) {
-            zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
+            zimbraFeatureDocumentEditingEnabled = AccountUtil.isDocumentEditingEnabled(account);
             log.debug("Document editing account = %s, enabled = %s ", account.getName(), zimbraFeatureDocumentEditingEnabled);
         }
         log.debug("Document supported for editing = %s" , isAllowedDocType(item));
