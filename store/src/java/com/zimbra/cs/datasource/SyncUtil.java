@@ -16,20 +16,32 @@
  */
 package com.zimbra.cs.datasource;
 
-import com.zimbra.cs.mailclient.imap.Flags;
-import com.zimbra.cs.mailclient.imap.CAtom;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.Flags;
+import com.zimbra.cs.util.JMSession;
 
-import javax.mail.internet.MimeMessage;
+import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public final class SyncUtil {
     private static final Flags EMPTY_FLAGS = new Flags();
@@ -121,4 +133,66 @@ public final class SyncUtil {
         return log;
     }
 
+    public static boolean sendReportEmail(String subject, String text, String[] toStrs) {
+        String fromStr;
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Server server = prov.getLocalServer();
+            if (toStrs == null || toStrs.length == 0) {
+                return false;
+            }
+            fromStr = server.getAttr(Provisioning.A_zimbraBackupReportEmailSender);
+            if (fromStr == null) {
+                fromStr = "root@" + server.getName();
+            }
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
+        }
+        Exception error = null;
+        MimeMessage mm = null;
+        try {
+            mm = new ZMimeMessage(JMSession.getSmtpSession());
+        } catch (MessagingException e) {
+            ZimbraLog.mailbox.warn("Unable to send notification report email", e);
+            return false;
+        }
+        InternetAddress from = null, to = null;
+        try {
+            List<Address> toList = new ArrayList<Address>(toStrs.length);
+            for (String addrStr : toStrs) {
+                try {
+                    if (addrStr != null && addrStr.length() > 0) {
+                        Address addr = new JavaMailInternetAddress(addrStr);
+                        toList.add(addr);
+                    }
+                } catch (MessagingException mex) {
+                    ZimbraLog.mailbox.warn("Ignoring invalid notification recipient address \"" + addrStr + "\"");
+                }
+            }
+            if (toList.size() == 0) {
+                ZimbraLog.mailbox.warn("Skipping email notification because no valid recipient address was found");
+                return false;
+            }
+            Address[] rcpts = new Address[toList.size()];
+            toList.toArray(rcpts);
+            mm.setRecipients(javax.mail.Message.RecipientType.TO, rcpts);
+            ZimbraLog.mailbox.debug("Sending notification report email");
+            from = new JavaMailInternetAddress(fromStr);
+            mm.setFrom(from);
+            mm.setSubject(subject);
+            mm.setContent(text, "text/html");
+            mm.setSentDate(new Date());
+            mm.saveChanges();
+            Transport.send(mm);
+        } catch (MessagingException mex) {
+            error = new MailSender.SafeMessagingException(mex);
+        }
+
+        if (error != null) {
+            ZimbraLog.mailbox.warn("Unable to send notification report email to " + toStrs.toString() +
+                            ", subject = " + subject,
+                    error);
+        }
+        return true;
+    }
 }

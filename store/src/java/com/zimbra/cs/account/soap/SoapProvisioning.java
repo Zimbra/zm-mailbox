@@ -17,29 +17,6 @@
 
 package com.zimbra.cs.account.soap;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import com.zimbra.common.util.*;
-import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
-import org.apache.http.concurrent.FutureCallback;
-
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -69,7 +46,12 @@ import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.soap.SyncAdminConstants;
+import com.zimbra.common.util.AccountLogger;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateTimeUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log.Level;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -102,6 +84,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.soap.JaxbUtil;
@@ -115,7 +98,6 @@ import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
-import com.zimbra.soap.account.message.ResetPasswordRequest;
 import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.AddAccountAliasRequest;
@@ -260,8 +242,6 @@ import com.zimbra.soap.admin.message.RenameUCServiceRequest;
 import com.zimbra.soap.admin.message.ResetAllLoggersRequest;
 import com.zimbra.soap.admin.message.SearchDirectoryRequest;
 import com.zimbra.soap.admin.message.SearchDirectoryResponse;
-import com.zimbra.soap.admin.message.SendMdmNotificationEmailRequest;
-import com.zimbra.soap.admin.message.SendMdmNotificationEmailResponse;
 import com.zimbra.soap.admin.message.SetLocalServerOnlineRequest;
 import com.zimbra.soap.admin.message.SetPasswordRequest;
 import com.zimbra.soap.admin.message.SetPasswordResponse;
@@ -290,6 +270,7 @@ import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DLInfo;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.admin.type.DeviceStatusInfo;
 import com.zimbra.soap.admin.type.DistributionListInfo;
 import com.zimbra.soap.admin.type.DistributionListMembershipInfo;
 import com.zimbra.soap.admin.type.DistributionListSelector;
@@ -316,13 +297,27 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.TargetBy;
-import java.nio.charset.Charset;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.concurrent.FutureCallback;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Timestamp;
-
-import com.zimbra.soap.admin.type.DeviceStatusInfo;
-import com.zimbra.cs.rmgmt.RemoteManager;
-import com.zimbra.cs.rmgmt.RemoteResult;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 public class SoapProvisioning extends Provisioning {
 
     public static class Options {
@@ -3248,6 +3243,9 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
         StringBuilder devicesInfo = new StringBuilder()
+                .append(LC.zimbra_mobile_mdm_notification_email_body.value())
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlOpen))
                 .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
                 .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
                 .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableOpen))
@@ -3275,9 +3273,11 @@ public class SoapProvisioning extends Provisioning {
                 j++;
         }
         if (j > 0) {
-            devicesInfo.append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableClose));
-            SendMdmNotificationEmailResponse sendMdmNotificationEmailResponse = invokeJaxb(new SendMdmNotificationEmailRequest(String.valueOf(devicesInfo), status));
+            devicesInfo.append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableClose))
+            .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlClose));
+            SyncUtil.sendReportEmail(LC.zimbra_mobile_mdm_notification_email_subject.value(), String.valueOf(devicesInfo),new String[]{LC.zimbra_mobile_mdm_notification_email_to.value()});
         }
+
         return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailSuccess);
     }
 }

@@ -16,15 +16,15 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @zm-service-description		The Admin Service includes commands for server, account
@@ -310,9 +310,6 @@ public class AdminService implements DocumentService {
 
         // ContactBackup API
         dispatcher.registerHandler(AdminConstants.CONTACT_BACKUP_REQUEST, new ContactBackup());
-        // EmailSend API
-        dispatcher.registerHandler(AdminConstants.SEND_MDM_NOTIFICATION_EMAIL_REQUEST, new SendMdmNotificationEmail());
-
     }
 
     /**
