@@ -16,13 +16,6 @@
  */
 package com.zimbra.cs.volume;
 
-import java.io.IOException;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.http.HttpException;
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -45,6 +38,14 @@ import com.zimbra.soap.admin.message.SetCurrentVolumeRequest;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.http.HttpException;
+
+import java.io.IOException;
 
 public final class VolumeCLI extends SoapCLI {
 
@@ -70,6 +71,12 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_STP = "stp";
     private static final String O_BID = "bid";
 
+    private static final String O_UFA = "ufa";
+
+    private static final String O_UFAT = "ufat";
+
+    private static final String O_UIT = "uit";
+
     /** attributes for store type OpenIO **/
     private static final String O_AP = "ap";
     private static final String O_PP = "pp";
@@ -89,13 +96,16 @@ public final class VolumeCLI extends SoapCLI {
     private static final String H_STORE_TYPE = "Store type: internal or external";
     private static final String H_STORAGE_TYPE = "Name of the store provider (S3, ObjectStore, OPENIO)";
     private static final String H_BUCKET_ID = "S3 Bucket ID";
-    private static final String H_VOLUME_PREFIX = "Volume Preifx";
+    private static final String H_VOLUME_PREFIX = "Volume Prefix";
     private static final String H_URL = "URL of OpenIO";
     private static final String H_PROXY_PORT = "Proxy port";
     private static final String H_ACCOUNT_PORT = "Account port";
     private static final String H_ACCOUNT = "Name of account";
     private static final String H_NAME_SPACE = "Namespace";
     private static final String H_STORE_MANAGER_CLASS = "Optional parameter to specify non-default store manager class path";
+    private static final String H_USE_INFREQUENT_ACCESS_THRESHOLD = "Use Infrequent access storage class blob size threshold";
+    private static final String H_USE_INFREQUENT_ACCESS = "Use Infrequent access storage class - AWS only";
+    private static final String H_USE_INTELLIGENT_TIERING = "Use Intelligent tiering storage class - AWS only";
     private static final String A_ID = "id";
     private static final String A_TYPE = "type";
     private static final String A_PATH = "path";
@@ -108,12 +118,17 @@ public final class VolumeCLI extends SoapCLI {
     private static final String A_STORAGE_TYPE = "storageType";
     private static final String A_BUCKET_ID = "bucketId";
     private static final String A_VOLUME_PREFIX = "volumePrefix";
+    private static final String A_USE_IN_FRE_ACCESS_THRESHOLD = "useInFrequentAccThr";
+
+
 
     private static final String A_URL = "url";
     private static final String A_PROXY_PORT = "proxyPort";
     private static final String A_ACCOUNT_PORT = "accountPort";
     private static final String A_NAME_SPACE = "nameSpace";
     private static final String A_ACCOUNT = "account";
+    
+    public static final int DEFAULT_USE_INFREQUENT_ACCESS_THRESHOLD = 65536;
 
     private VolumeCLI() throws ServiceException {
         super();
@@ -139,6 +154,10 @@ public final class VolumeCLI extends SoapCLI {
     private String nameSpace;
     private String account;
     private String storeManagerClass;
+    
+    private String useInfrequentAccess;
+    private String useInfrequentAccessThreshold;
+    private String useIntelligentTiering;
 
     private void setArgs(CommandLine cl) throws ServiceException, ParseException, IOException {
         auth = getZAuthToken(cl);
@@ -159,6 +178,9 @@ public final class VolumeCLI extends SoapCLI {
         nameSpace = cl.getOptionValue(O_NS);
         account = cl.getOptionValue(O_ACCOUNT);
         storeManagerClass = cl.getOptionValue(O_SMC);
+        useInfrequentAccess = cl.getOptionValue(O_UFA);
+        useInfrequentAccessThreshold = cl.getOptionValue(O_UFAT);
+        useIntelligentTiering = cl.getOptionValue(O_UIT);
     }
 
     public static void main(String[] args) {
@@ -261,7 +283,7 @@ public final class VolumeCLI extends SoapCLI {
         System.out.println("                        name: " + vol.getName());
         System.out.println("                        type: " + toTypeName(vol.getType()));
         System.out.println("                        path: " + vol.getRootPath());
-        System.out.print("                  compressed: " + vol.isCompressBlobs());
+        System.out.println("                  compressed: " + vol.isCompressBlobs());
 
         if (vol.isCompressBlobs()) {
             System.out.println("\t                 threshold: " + vol.getCompressionThreshold() + " bytes");
@@ -269,6 +291,7 @@ public final class VolumeCLI extends SoapCLI {
             System.out.println();
         }
         System.out.println("                     current: " + vol.isCurrent());
+        System.out.println("           storeManagerClass: " + vol.getStoreManagerClass());
         if (vol.getStoreType() == Volume.StoreType.EXTERNAL.getStoreType()) {
             if (AdminConstants.A_VOLUME_S3.equals(extractStorageType(vol))) {
                 VolumeExternalInfo volumeExternalInfo = vol.getVolumeExternalInfo();
@@ -482,12 +505,31 @@ public final class VolumeCLI extends SoapCLI {
                 if (!Strings.isNullOrEmpty(volumePrefix)) {
                     volumeExternalInfo.setVolumePrefix(volumePrefix);
                 }
+                if (!Strings.isNullOrEmpty(useInfrequentAccess)
+                        && validateBoolean(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, useInfrequentAccess)) {
+                    volumeExternalInfo.setUseInFrequentAccess(Boolean.parseBoolean(useInfrequentAccess));
+                }
+                if (!Strings.isNullOrEmpty(useIntelligentTiering)
+                        && validateBoolean(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, useIntelligentTiering)) {
+                    volumeExternalInfo.setUseIntelligentTiering(Boolean.parseBoolean(useIntelligentTiering));
+                }
+                if (!Strings.isNullOrEmpty(useInfrequentAccessThreshold)) {
+                    volumeExternalInfo.setUseInFrequentAccessThreshold(Integer.parseInt(useInfrequentAccessThreshold));
+                }
                 volumeInfo.setVolumeExternalInfo(volumeExternalInfo);
             }
             volumeInfo.setStoreType((short) Volume.StoreType.EXTERNAL.getStoreType());
         } else {
             throw new ParseException(INVALID_STORE_TYPE);
         }
+    }
+    
+    private boolean validateBoolean(String param, String value) throws ParseException {
+        if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+            return true;
+        } 
+        throw new ParseException("invalid value of "+param);
+        
     }
 
     @Override
@@ -521,6 +563,9 @@ public final class VolumeCLI extends SoapCLI {
         options.addOption(new Option(O_VP, A_VOLUME_PREFIX, true, H_VOLUME_PREFIX));
         options.addOption(new Option(O_STP, A_STORAGE_TYPE, true, H_STORAGE_TYPE));
         options.addOption(new Option(O_BID, A_BUCKET_ID, true, H_BUCKET_ID));
+        options.addOption(new Option(O_UFA, AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, true, H_USE_INFREQUENT_ACCESS));
+        options.addOption(new Option(O_UFAT, A_USE_IN_FRE_ACCESS_THRESHOLD, true, H_USE_INFREQUENT_ACCESS_THRESHOLD));
+        options.addOption(new Option(O_UIT, AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, true, H_USE_INTELLIGENT_TIERING));
         //OpenIO
         options.addOption(new Option(O_AP, A_ACCOUNT_PORT, true, H_ACCOUNT_PORT));
         options.addOption(new Option(O_PP, A_PROXY_PORT, true, H_PROXY_PORT));
@@ -564,6 +609,9 @@ public final class VolumeCLI extends SoapCLI {
         printOpt(O_VP, 0);
         printOpt(O_STP, 0);
         printOpt(O_BID, 0);
+        printOpt(O_UIT, 0);
+        printOpt(O_UFA, 0);
+        printOpt(O_UFAT, 0);
 
         printOpt(O_PP, 0);
         printOpt(O_AP, 0);

@@ -18,30 +18,28 @@
 package com.zimbra.cs.service.util;
 
 import com.zimbra.client.ZMailbox;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.store.helper.ClassHelper;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.helper.ClassHelper;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.cs.volume.VolumeServiceException;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.DeleteVolumeRequest;
-import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.GetAllVolumesRequest;
 import com.zimbra.soap.admin.message.GetAllVolumesResponse;
 import com.zimbra.soap.admin.message.GetVolumeRequest;
 import com.zimbra.soap.admin.message.GetVolumeResponse;
+import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.util.ExternalVolumeInfoHandler;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class VolumeConfigUtil {
 
@@ -137,17 +135,22 @@ public class VolumeConfigUtil {
             }
 
             if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(storageTypeS3)) {
-                // validate use in frequent access threshold
-                int useInFrequentAccessThreshold = volInfoRequest.getVolumeExternalInfo().getUseInFrequentAccessThreshold();
-                if (useInFrequentAccessThreshold < 0) {
-                    throw VolumeServiceException.INVALID_REQUEST("Volume UseInFrequentAccessThreshold can't be negative number", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
-                }
-
                 // validate global bucket id
                 String globalS3BucketId = volInfoRequest.getVolumeExternalInfo().getGlobalBucketConfigurationId();
                 if (!extVolInfoHandler.validateGlobalBucketID(globalS3BucketId)) {
                     throw VolumeServiceException.INVALID_REQUEST("Volume GlobalBucketID provided is incorrect, missing or empty", VolumeServiceException.BAD_VOLUME_GLOBAL_BUCKET_ID);
                 }
+
+                // validating storage classes parameters
+                if (volInfoRequest.getVolumeExternalInfo().isUseInFrequentAccess() && volInfoRequest.getVolumeExternalInfo().isUseIntelligentTiering()) {
+                    throw VolumeServiceException.INVALID_REQUEST("Either InFrequentAccess or IntelligentTiering can be enabled at time", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS);
+                }
+
+                int useInFrequentAccessThreshold = volInfoRequest.getVolumeExternalInfo().getUseInFrequentAccessThreshold();
+                if (useInFrequentAccessThreshold < 0) {
+                    throw VolumeServiceException.INVALID_REQUEST("Volume UseInFrequentAccessThreshold can't be negative number", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
+                }
+
                 // no validation for volume prefix as of now
             } else if (AdminConstants.A_VOLUME_OPEN_IO.equalsIgnoreCase(storageTypeOpenIO)) {
                 // validate proxy port as positive
