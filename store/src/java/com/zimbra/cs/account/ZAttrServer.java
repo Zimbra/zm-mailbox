@@ -36591,7 +36591,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @return zimbraNetworkAdminNGEnabled, or false if unset
      *
@@ -36603,7 +36604,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @param zimbraNetworkAdminNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36618,7 +36620,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @param zimbraNetworkAdminNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36634,7 +36637,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36648,7 +36652,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -36663,7 +36668,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @return zimbraNetworkMobileNGEnabled, or false if unset
      *
@@ -36675,7 +36682,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @param zimbraNetworkMobileNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36690,7 +36699,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @param zimbraNetworkMobileNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36706,7 +36717,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36720,7 +36733,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

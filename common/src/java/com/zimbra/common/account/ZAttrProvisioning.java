@@ -12081,7 +12081,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkAdminEnabled = "zimbraNetworkAdminEnabled";
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @since ZCS 8.8.5
      */
@@ -12095,7 +12096,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkLicense = "zimbraNetworkLicense";
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @since ZCS 8.8.0
      */
