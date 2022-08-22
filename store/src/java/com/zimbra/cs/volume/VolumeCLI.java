@@ -64,7 +64,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_CT = "ct";
 
     private static final String O_SMC = "smc";
-    
+
     /** attributes for external storetype **/
     private static final String O_ST = "st";
     private static final String O_VP = "vp";
@@ -127,7 +127,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String A_ACCOUNT_PORT = "accountPort";
     private static final String A_NAME_SPACE = "nameSpace";
     private static final String A_ACCOUNT = "account";
-    
+
     public static final int DEFAULT_USE_INFREQUENT_ACCESS_THRESHOLD = 65536;
 
     private VolumeCLI() throws ServiceException {
@@ -154,7 +154,7 @@ public final class VolumeCLI extends SoapCLI {
     private String nameSpace;
     private String account;
     private String storeManagerClass;
-    
+
     private String useInfrequentAccess;
     private String useInfrequentAccessThreshold;
     private String useIntelligentTiering;
@@ -283,8 +283,7 @@ public final class VolumeCLI extends SoapCLI {
         System.out.println("                        name: " + vol.getName());
         System.out.println("                        type: " + toTypeName(vol.getType()));
         System.out.println("                        path: " + vol.getRootPath());
-        System.out.println("                  compressed: " + vol.isCompressBlobs());
-
+        System.out.print("                  compressed: " + vol.isCompressBlobs());
         if (vol.isCompressBlobs()) {
             System.out.println("\t                 threshold: " + vol.getCompressionThreshold() + " bytes");
         } else {
@@ -523,13 +522,12 @@ public final class VolumeCLI extends SoapCLI {
             throw new ParseException(INVALID_STORE_TYPE);
         }
     }
-    
+
     private boolean validateBoolean(String param, String value) throws ParseException {
         if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
             return true;
-        } 
-        throw new ParseException("invalid value of "+param);
-        
+        }
+        throw new ParseException("invalid value of " + param);
     }
 
     @Override
