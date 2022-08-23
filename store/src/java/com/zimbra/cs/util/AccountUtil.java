@@ -906,29 +906,6 @@ public class AccountUtil {
         return null;
     }
 
-    public static boolean isZulipChatEnabled(Account account) {
-        boolean isEnabled = false;
-        if (account == null) {
-            return isEnabled;
-        }
-        isEnabled = account.isFeatureZulipChatEnabled();
-
-        if (isEnabled) {
-            Provisioning prov = Provisioning.getInstance();
-            try {
-                Domain domain = prov.getDomainById(account.getDomainId());
-                if (domain != null && !Boolean.valueOf(domain.getAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, ProvisioningConstants.TRUE))) {
-                    ZimbraLog.account.debug("Zulip: chat is disabled on domain, won't be available for user '%s'", account.getName());
-                    isEnabled = false;
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.account.debug(String.format("Zulip: failed to get zulip chat enabled status on domain '%s' for user '%s'. "
-                        + "User account level zulip chat enabled status will be used.", account.getDomainName(), account.getName()), e);
-            }
-        }
-        return isEnabled;
-    }
-
     /**
      * Document editing feature will be enabled iff Document editing server host is set ie value of 
      * ldap attribute zimbraDocumentServerHost must be set otherwise feature will be disabled 
