@@ -20,6 +20,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Provisioning;
@@ -138,6 +139,15 @@ public final class SyncUtil {
         try {
             Provisioning prov = Provisioning.getInstance();
             Server server = prov.getLocalServer();
+            StringBuilder listOfEmail = new StringBuilder();
+            if ((toStrs.length == 0) || (toStrs.length == 1 && StringUtil.isNullOrEmpty(toStrs[0]))) {
+                toStrs = new String[prov.getAllAdminAccounts().size()];
+                for (int i = 0; i < toStrs.length; i++) {
+                    toStrs[i] = String.valueOf(prov.getAllAdminAccounts().get(i).getName());
+                    listOfEmail.append(toStrs[i]).append(System.getProperty("line.separator"));
+                }
+                ZimbraLog.mailbox.debug("Notification email with subject %s will be sent to %s ", subject, listOfEmail);
+            }
             if (toStrs == null || toStrs.length == 0) {
                 return false;
             }
