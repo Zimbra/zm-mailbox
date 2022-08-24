@@ -36,6 +36,7 @@ import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.StoreManagerRegistrar;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.znative.IO;
@@ -443,7 +444,7 @@ public final class FileBlobStore extends StoreManager {
      * specified by dest* parameters. Note this method is not part of the
      * StoreManager interface It is only to be used for FileBlobStore specific code
      * such as ExternalToInternal
-     * 
+     *
      * @param in
      * @param storeAsIs
      * @param mbox

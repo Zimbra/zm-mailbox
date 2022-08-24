@@ -28,12 +28,14 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.store.helper.ClassHelper;
+import com.zimbra.cs.store.StoreManagerRegistrar;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.volume.VolumeManager;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
+
 
 public abstract class StoreManager {
 

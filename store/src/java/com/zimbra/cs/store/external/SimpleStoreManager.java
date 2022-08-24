@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.store.StoreManagerRegistrar;
 
 /**
  * Example implementation of ExternalStoreManager which writes to a flat directory structure
@@ -40,8 +41,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  *
  */
 public class SimpleStoreManager extends ExternalStoreManager {
-
     String directory = null;
+
     @Override
     public void startup() throws IOException, ServiceException {
         super.startup();
