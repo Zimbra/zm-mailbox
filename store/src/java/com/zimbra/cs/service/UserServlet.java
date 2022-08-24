@@ -902,6 +902,19 @@ public class UserServlet extends ZimbraServlet {
 
         if (context.formatter == null) {
             context.formatter = FormatterFactory.mFormatters.get(context.format);
+            // check if its native formatter, and if onlyoffice formatter is available
+            if (context.formatter.getType().equals(FormatType.HTML_CONVERTED)) {
+                try {
+                    Provisioning prov = Provisioning.getInstance();
+                    Server server = prov.getServer(context.getAuthAccount());
+                    if (!StringUtil.isNullOrEmpty(server.getDocumentServerHost())) {
+                        context.formatter = FormatterFactory.mFormatters.get(FormatType.HTML_ONLYOFFICE);
+                    }
+                } catch (ServiceException e) {
+                    log.debug("Service Exception caught while resolving the formatter, default will be used.", e.getMessage());
+                }
+            }
+
             if (context.formatter == null) {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
                         L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
