@@ -100,4 +100,6 @@ public final class HsmConstants {
     public static final String A_SM_SCHEDULE_POLICY_ENABLED_INVALID = "Only boolean value allowed in smSchedulePolicyEnabled";
     public static final String A_TRUE = "true";
     public static final String A_FALSE = "false";
+
+    public static final String LICENSE_HSM_ENABLE = "HierarchicalStorageManagementEnabled";
 }
