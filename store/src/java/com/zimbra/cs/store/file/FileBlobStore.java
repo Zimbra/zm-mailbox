@@ -28,6 +28,7 @@ import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.BlobInputStream;
@@ -36,6 +37,7 @@ import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.external.ExternalBlob;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.znative.IO;
@@ -221,7 +223,17 @@ public final class FileBlobStore extends StoreManager {
 
         ensureParentDirExists(dest);
 
-        short srcVolumeId = ((VolumeBlob) src).getVolumeId();
+        short srcVolumeId;
+        /*
+         In order to support multiple StoreManagers, sometime may need to copy ExternalBlobs(mostly secondary)
+         to FileStore blobs. Following is to get coping item's correct volume id.
+         */
+        if(src instanceof ExternalBlob) {
+            srcVolumeId = MailItemHelper.findMyVolumeId(((ExternalBlob) src).getLocator()).get();
+        } else {
+            srcVolumeId = ((VolumeBlob) src).getVolumeId();
+        }
+
         if (srcVolumeId == destVolumeId) {
             try {
                 IO.link(srcPath, destPath);

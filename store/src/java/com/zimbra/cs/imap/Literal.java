@@ -21,6 +21,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.store.external.ExternalBlob;
 
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
@@ -109,7 +110,12 @@ abstract class Literal {
         @Override public void cleanup() {
             buf = null;
             if (blob != null) {
-                StoreManager.getInstance().quietDelete(blob);
+                if (blob instanceof ExternalBlob) {
+                    String locator = ((ExternalBlob)blob).getLocator();
+                    StoreManager.getReaderSMInstance(locator).quietDelete(blob);
+                } else {
+                    StoreManager.getInstance().quietDelete(blob);
+                }
                 blob = null;
             }
         }
