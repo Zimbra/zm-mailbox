@@ -148,7 +148,6 @@ public class FileUploadServlet extends ZimbraServlet {
         Upload(String acctId, FileItem attachment, String filename) throws ServiceException {
             assert(attachment != null); // TODO: Remove null checks in mainline.
 
-
             String localServer = Provisioning.getInstance().getLocalServer().getId();
             accountId = acctId;
             time      = System.currentTimeMillis();
@@ -159,79 +158,46 @@ public class FileUploadServlet extends ZimbraServlet {
             MimeType mimeType = null;
             if (file == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
-            } else if (acct.isFeatureFileTypeUploadRestrictionsEnabled()) {
+            } else {
                 mimeType = getMimeType(file);
                 contentType = mimeType.toString();
-                extension = filename == null ? "" : FilenameUtils.getExtension(filename).trim();
-                String [] blockedFileTypes = null;
-                blockedFileTypes = acct.getFileUploadBlockedFileTypes();
-                List<String> blockedExtensionList = new ArrayList<>(Arrays.asList(blockedFileTypes));
-                if (blockedExtensionList.size() > 0) {
-                    if (blockedExtensionList.stream().anyMatch(extension::equalsIgnoreCase)) {
-                        throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
-                                String.format("Blocked attachment during uploading %s filetype ", extension), null);
-                    }
 
-                    if (blockedExtensionList.stream().anyMatch((blockedContentType) -> {
-                        if (blockedContentType.contains("/")) {
-                            Pattern p = Pattern.compile(blockedContentType);
-                            Matcher m = p.matcher(contentType);
-                            return m.find();
-                        } else {
-                            return false;
-                        }
-                    })) {
-                        throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
-                                String.format("Blocked attachment during uploading %s content-type ", contentType), null);
-                    } else {
-                        mLog.debug("Start - Using Tika library for retrieving the extension.");
-                        String fileExtension = getExtension(mimeType);
-                        mLog.debug("End - Using Tika library for retrieving the extension.");
-                        if (blockedExtensionList.stream().anyMatch(fileExtension::equalsIgnoreCase)) {
+                if (acct.isFeatureFileTypeUploadRestrictionsEnabled()) {
+                    mimeType = getMimeType(file);
+                    contentType = mimeType.toString();
+                    extension = filename == null ? "" : FilenameUtils.getExtension(filename).trim();
+                    String [] blockedFileTypes = null;
+                    blockedFileTypes = acct.getFileUploadBlockedFileTypes();
+                    List<String> blockedExtensionList = new ArrayList<>(Arrays.asList(blockedFileTypes));
+                    if (blockedExtensionList.size() > 0) {
+                        if (blockedExtensionList.stream().anyMatch(extension::equalsIgnoreCase)) {
                             throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
-                                    String.format("Blocked attachment during uploading %s filetype ", fileExtension), null);
+                                    String.format("Blocked attachment during uploading %s filetype ", extension), null);
                         }
+
+                        if (blockedExtensionList.stream().anyMatch((blockedContentType) -> {
+                            if (blockedContentType.contains("/")) {
+                                Pattern p = Pattern.compile(blockedContentType);
+                                Matcher m = p.matcher(contentType);
+                                return m.find();
+                            } else {
+                                return false;
+                            }
+                        })) {
+                            throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
+                                    String.format("Blocked attachment during uploading %s content-type ", contentType), null);
+                        } else {
+                            mLog.debug("Start - Using Tika library for retrieving the extension.");
+                            String fileExtension = getExtension(mimeType);
+                            mLog.debug("End - Using Tika library for retrieving the extension.");
+                            if (blockedExtensionList.stream().anyMatch(fileExtension::equalsIgnoreCase)) {
+                                throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
+                                        String.format("Blocked attachment during uploading %s filetype ", fileExtension), null);
+                            }
+                        }
+                        mLog.debug(String.format("End - Using Tika library, time taken for [ %s ] - [ %d ] milliseconds.",
+                                filename, (System.currentTimeMillis() - time)));
                     }
-                    mLog.debug(String.format("End - Using Tika library, time taken for [ %s ] - [ %d ] milliseconds.",
-                            filename, (System.currentTimeMillis() - time)));
-                }
-            } else {
-                // use content based detection.  we can't use magic based
-                // detection alone because it defaults to application/xml
-                // when it sees xml magic <?xml.  that's incompatible
-                // with WebDAV handlers as the content type needs to be
-                // text/xml instead.
-
-                //1. detect by magic
-                try {
-                    contentType = MimeDetect.getMimeDetect().detect(file.getInputStream());
-                } catch (Exception e) {
-                    contentType = null;
-                }
-
-                // 2. detect by file extension
-                if (contentType == null) {
-                    contentType = MimeDetect.getMimeDetect().detect(name);
-                }
-
-                // 3. special-case text/xml to avoid detection
-                if (contentType == null && file.getContentType() != null) {
-                    if (file.getContentType().equals("text/xml"))
-                        contentType = file.getContentType();
-                }
-
-                // 4. try the browser-specified content type
-                if (contentType == null || contentType.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
-                    contentType = file.getContentType();
-                }
-
-                // 5. when all else fails, use application/octet-stream
-                if (contentType == null) {
-                    contentType = file.getContentType();
-                }
-
-                if (contentType == null) {
-                    contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
                 }
             }
         }
