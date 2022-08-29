@@ -64,7 +64,7 @@ public class CacheEnabledStoreManagerProvider {
         String className = volume.getStoreManagerClass();
         StoreManager storeManager = null;
         try {
-            ZimbraLog.store.error("loading Store Manager: %s for %s", className, volumeId);
+            ZimbraLog.store.debug("loading Store Manager: %s for %s", className, volumeId);
             storeManager = (StoreManager) ClassHelper.getZimbraClassInstanceBy(className);
             ZimbraLog.store.debug("StoreManager loaded, starting up");
             storeManager.startup();
