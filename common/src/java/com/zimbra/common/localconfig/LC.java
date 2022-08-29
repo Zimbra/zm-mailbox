@@ -1514,6 +1514,10 @@ public final class LC {
     // Connection timeout for OpenIO external storage
     public static final KnownKey zimbra_sm_openio_connection_request_timeout_ms = KnownKey.newKey(20000);
 
+    // Storage Management
+    public final static KnownKey zimbra_sm_blob_mover_parallelism_level = KnownKey.newKey(5);
+    public final static KnownKey zimbra_s3_connection_request_timeout_ms = KnownKey.newKey(20000);
+    
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
