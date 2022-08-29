@@ -64,15 +64,19 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             String start = tagArr[0];
             String end = tagArr[1];
             String[] arrOfStr = html.split(start);
-            for (String strAfterSplit : arrOfStr) {
-                 if (!strAfterSplit.equals("") && strAfterSplit.contains(end)) {
-                     formattedHtml = formattedHtml + start + strAfterSplit;
-                 } else {
-                     formattedHtml = formattedHtml + strAfterSplit;
-                 }
+            //ZCS-12002 ( failed test case for testBug64974 )
+            //if the html doesn't containing start then skipping other operations
+            if (arrOfStr.length > 1) {
+                for (String strAfterSplit : arrOfStr) {
+                    if (!strAfterSplit.equals("") && strAfterSplit.contains(end)) {
+                        formattedHtml = formattedHtml + start + strAfterSplit;
+                    } else {
+                        formattedHtml = formattedHtml + strAfterSplit;
+                    }
+               }
+               html = formattedHtml;
+               formattedHtml = "";
             }
-            html = formattedHtml;
-            formattedHtml = "";
         }
         return html;
     }
