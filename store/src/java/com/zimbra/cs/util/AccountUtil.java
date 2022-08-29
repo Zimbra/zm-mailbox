@@ -922,10 +922,10 @@ public class AccountUtil {
         if (isEnabled) {
             Provisioning prov = Provisioning.getInstance();
             try {
+                isEnabled = false;
                 Server server = prov.getServer(account);
                 if (server == null) {
                     ZimbraLog.account.warn("no server associated with acccount " + account.getName());
-                    isEnabled = false;
                 } else {
                     String value = server.getDocumentServerHost();
                     if (!StringUtil.isNullOrEmpty(value)) {
