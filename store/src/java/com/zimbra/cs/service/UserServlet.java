@@ -907,7 +907,7 @@ public class UserServlet extends ZimbraServlet {
                 try {
                     Provisioning prov = Provisioning.getInstance();
                     Server server = prov.getServer(context.getAuthAccount());
-                    if (!StringUtil.isNullOrEmpty(server.getDocumentServerHost())) {
+                    if (server != null && !StringUtil.isNullOrEmpty(server.getDocumentServerHost())) {
                         context.formatter = FormatterFactory.mFormatters.get(FormatType.HTML_ONLYOFFICE);
                     }
                 } catch (ServiceException e) {
