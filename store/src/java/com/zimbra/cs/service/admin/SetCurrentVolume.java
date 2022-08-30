@@ -19,6 +19,7 @@ package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -49,12 +50,16 @@ public final class SetCurrentVolume extends AdminDocumentHandler {
         short volId = req.getId() > 0 ? req.getId() : Volume.ID_NONE;
         VolumeManager.getInstance().setCurrentVolume(req.getType(), volId);
         SetCurrentVolumeResponse response = new SetCurrentVolumeResponse();
-        Volume volume = VolumeManager.getInstance().getVolume(volId);
-        // if its primary volume then
-        if (Volume.TYPE_MESSAGE == volume.getType()) {
-            // set current store manager
-            StoreManagerRuntimeSwitchResult runtimeSwitchResult = StoreManagerResetHelper.setNewStoreManager(volume.getStoreManagerClass());
-            response.setRuntimeSwitchResult(runtimeSwitchResult);
+        if (volId != Volume.ID_NONE) {
+            Volume volume = VolumeManager.getInstance().getVolume(volId);
+            // if its primary volume then
+            if (Volume.TYPE_MESSAGE == volume.getType()) {
+                // set current store manager
+                StoreManagerRuntimeSwitchResult runtimeSwitchResult = StoreManagerResetHelper.setNewStoreManager(volume.getStoreManagerClass());
+                response.setRuntimeSwitchResult(runtimeSwitchResult);
+            }
+        } else {
+            ZimbraLog.store.debug("setcurrent volId=%d", volId);
         }
         return response;
     }
