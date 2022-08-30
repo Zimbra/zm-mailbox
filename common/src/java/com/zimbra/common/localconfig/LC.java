@@ -1510,6 +1510,10 @@ public final class LC {
     public static final KnownKey zimbra_mobile_mdm_notification_email_body = KnownKey.newKey("Following is the list of new quarantined devices ");
     public static final KnownKey zimbra_mobile_mdm_notification_email_subject = KnownKey.newKey("List of new quarantined devices");
     public static final KnownKey zimbra_mobile_mdm_notification_email_to = KnownKey.newKey("");
+
+    // Connection timeout for OpenIO external storage
+    public static final KnownKey zimbra_sm_openio_connection_request_timeout_ms = KnownKey.newKey(20000);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
