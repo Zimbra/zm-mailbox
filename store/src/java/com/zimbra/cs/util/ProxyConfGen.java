@@ -2053,7 +2053,6 @@ public class ProxyConfGen
     private static String mWorkingDir = "/opt/zimbra";
     private static String mTemplateDir = mWorkingDir + "/conf/nginx/templates";
     private static String mConfDir = mWorkingDir + "/conf";
-    private static String mResolverfile = mConfDir + "/nginx/resolvers.conf";
     private static String mIncDir = "nginx/includes";
     private static String mDomainSSLDir = mConfDir + File.separator + "domaincerts";
     private static String mSSLCrtExt = ".crt";
