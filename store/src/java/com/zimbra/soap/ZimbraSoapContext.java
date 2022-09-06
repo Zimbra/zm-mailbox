@@ -34,6 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
@@ -526,9 +527,9 @@ public final class ZimbraSoapContext {
             return;
         }
 
-        if ((handler != null) && handler instanceof DelegatableRequest
+        if (((handler != null) && handler instanceof DelegatableRequest
                 && MailConstants.FILE_SHARED_WITH_ME_REQUEST.equals(requestName)
-                && ((DelegatableRequest) handler).isDelegatable()) {
+                && ((DelegatableRequest) handler).isDelegatable()) || (OctopusXmlConstants.GET_DOCUMENT_SHARE_URL_REQUEST.equals(requestName))) {
             return;
         }
 
