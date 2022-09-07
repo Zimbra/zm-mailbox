@@ -41,7 +41,7 @@ public class GetAllZimlets extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
 		List<Zimlet> zimlets = prov.listAllZimlets();
-		
+		zimlets.removeIf(x -> AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(x.getName()));
 		AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
 
 	    Element response = zsc.createElement(AdminConstants.GET_ALL_ZIMLETS_RESPONSE);
