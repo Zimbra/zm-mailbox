@@ -195,7 +195,7 @@ public class ZimletUtil {
         if (domain != null) {
             String[] domainZimlets = domain.getMultiAttr(Provisioning.A_zimbraZimletDomainAvailableZimlets);
             for (String zimletWithPrefix : domainZimlets) {
-                if (isNotZextrasZimlet(zimletWithPrefix)) {
+                if (!isZextrasZimlet(zimletWithPrefix)) {
                     availZimlets.put(zimletWithPrefix);
                 }
             }
@@ -203,7 +203,7 @@ public class ZimletUtil {
 
         String[] acctCosZimlets = acct.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
         for (String zimletWithPrefix : acctCosZimlets) {
-            if (isNotZextrasZimlet(zimletWithPrefix)) {
+            if (!isZextrasZimlet(zimletWithPrefix)) {
                 availZimlets.put(zimletWithPrefix);
             }
         }
@@ -220,22 +220,20 @@ public class ZimletUtil {
      * @param zimletName
      * @return boolean
      */
-    private static boolean isNotZextrasZimlet(String zimletName) {
-        if (StringUtil.isNullOrEmpty(zimletName) || zimletName.length() == 1) {
-            return false;
-        }
+    private static boolean isZextrasZimlet(String zimletName) {
+        if (!StringUtil.isNullOrEmpty(zimletName) && zimletName.length() > 1) {
+            char prefix = zimletName.charAt(0);
+            Presence presence = Presence.fromPrefix(prefix);
 
-        char prefix = zimletName.charAt(0);
-        Presence presence = Presence.fromPrefix(prefix);
+            if (presence != null) {
+                zimletName = zimletName.substring(1);
+            }
 
-        if (presence != null) {
-            zimletName = zimletName.substring(1);
+            if (AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(zimletName)) {
+                return true;
+            }
         }
-
-        if (AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(zimletName)) {
-            return false;
-        }
-        return true;
+        return false;
     }
 
     public static ZimletPresence getAvailableZimlets(Cos cos) throws ServiceException {
@@ -243,7 +241,7 @@ public class ZimletUtil {
 
         String[] acctCosZimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
         for (String zimletWithPrefix : acctCosZimlets) {
-            if (isNotZextrasZimlet(zimletWithPrefix)) {
+            if (!isZextrasZimlet(zimletWithPrefix)) {
                 availZimlets.put(zimletWithPrefix);
             }
         }
@@ -473,7 +471,7 @@ public class ZimletUtil {
                     continue;
                 }
                 try {
-                    if (isNotZextrasZimlet(zimletNames[i])) {
+                    if (!isZextrasZimlet(zimletNames[i])) {
                         zimlets.put(zimletNames[i], new ZimletFile(zimletRootDir, zimletNames[i]));
                     }
                 } catch (Exception e) {
