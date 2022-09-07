@@ -53,7 +53,7 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 	private void doExtensionZimlets(ZimbraSoapContext zsc, Map<String, Object> context, Element response) throws ServiceException {
         
         List<Zimlet> zimletsList = Provisioning.getInstance().listAllZimlets();
-        zimletsList.removeIf(x -> AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(x.getName()));
+        zimletsList.removeIf(zimlet -> AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(zimlet.getName()));
         Iterator<Zimlet> zimlets = zimletsList.iterator();
 		while (zimlets.hasNext()) {
 		    

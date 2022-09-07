@@ -375,7 +375,7 @@ public class GetInfo extends AccountDocumentHandler  {
 
             ZimletPresence userZimlets = ZimletUtil.getUserZimlets(acct);
             List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(userZimlets.getZimletNamesAsArray());
-            zimletList.removeIf(x -> AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(x.getName()));
+            zimletList.removeIf(zimlet -> AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(zimlet.getName()));
             int priority = 0;
             for (Zimlet z : zimletList) {
                 if (z.isEnabled() && !z.isExtension()) {
