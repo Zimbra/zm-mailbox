@@ -212,23 +212,17 @@ public class ZimletUtil {
     }
     
     private static boolean isNotZextrasZimlet(String zimletName) {
-        if(StringUtil.isNullOrEmpty(zimletName) || zimletName.length() == 1) {
+        if (StringUtil.isNullOrEmpty(zimletName) || zimletName.length() == 1) {
             return false;
         }
-        
+
         char prefix = zimletName.charAt(0);
         Presence presence = Presence.fromPrefix(prefix);
-        
-        ZimbraLog.account.info("zimletName before: %s ", zimletName);
+
         if (presence != null) {
             zimletName = zimletName.substring(1);
         }
-        ZimbraLog.account.info("zimletName after: %s ", zimletName);
-        
-        /* if (zimletName.startsWith("+") || zimletName.startsWith("-") || zimletName.startsWith("!")) {
-            zimletName = zimletName.substring(1);
-        } */
-        
+
         if (AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(zimletName)) {
             return false;
         }
