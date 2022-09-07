@@ -195,7 +195,7 @@ public class ZimletUtil {
         if (domain != null) {
             String[] domainZimlets = domain.getMultiAttr(Provisioning.A_zimbraZimletDomainAvailableZimlets);
             for (String zimletWithPrefix : domainZimlets) {
-                if(isNotZextrasZimlet(zimletWithPrefix)) {
+                if (isNotZextrasZimlet(zimletWithPrefix)) {
                     availZimlets.put(zimletWithPrefix);
                 }
             }
@@ -203,7 +203,7 @@ public class ZimletUtil {
 
         String[] acctCosZimlets = acct.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
         for (String zimletWithPrefix : acctCosZimlets) {
-            if(isNotZextrasZimlet(zimletWithPrefix)) {
+            if (isNotZextrasZimlet(zimletWithPrefix)) {
                 availZimlets.put(zimletWithPrefix);
             }
         }
@@ -211,6 +211,15 @@ public class ZimletUtil {
         return availZimlets;
     }
     
+    /**
+     * this method is also check whether zimletName is having prefix like +,- and !
+     * and this method is used to find out whether zimletName is related to remove
+     * ZEXTRAS list or not if zimletName is not in remove ZEXTRAS list then it
+     * returns true else it returns false
+     *
+     * @param zimletName
+     * @return boolean
+     */
     private static boolean isNotZextrasZimlet(String zimletName) {
         if (StringUtil.isNullOrEmpty(zimletName) || zimletName.length() == 1) {
             return false;
@@ -234,7 +243,7 @@ public class ZimletUtil {
 
         String[] acctCosZimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
         for (String zimletWithPrefix : acctCosZimlets) {
-            if(isNotZextrasZimlet(zimletWithPrefix)) {
+            if (isNotZextrasZimlet(zimletWithPrefix)) {
                 availZimlets.put(zimletWithPrefix);
             }
         }
@@ -464,7 +473,7 @@ public class ZimletUtil {
                     continue;
                 }
                 try {
-                    if(isNotZextrasZimlet(zimletNames[i])) {
+                    if (isNotZextrasZimlet(zimletNames[i])) {
                         zimlets.put(zimletNames[i], new ZimletFile(zimletRootDir, zimletNames[i]));
                     }
                 } catch (Exception e) {
