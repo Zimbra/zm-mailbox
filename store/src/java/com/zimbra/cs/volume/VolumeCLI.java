@@ -25,6 +25,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
+import com.zimbra.cs.volume.VolumeCLIConstants;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
@@ -48,87 +49,6 @@ import org.apache.http.HttpException;
 import java.io.IOException;
 
 public final class VolumeCLI extends SoapCLI {
-
-    private static final String O_A = "a";
-    private static final String O_D = "d";
-    private static final String O_L = "l";
-    private static final String O_E = "e";
-    private static final String O_DC = "dc";
-    private static final String O_SC = "sc";
-    private static final String O_TS = "ts";
-    private static final String O_ID = "id";
-    private static final String O_T = "t";
-    private static final String O_N = "n";
-    private static final String O_P = "p";
-    private static final String O_C = "c";
-    private static final String O_CT = "ct";
-
-    private static final String O_SMC = "smc";
-
-    /** attributes for external storetype **/
-    private static final String O_ST = "st";
-    private static final String O_VP = "vp";
-    private static final String O_STP = "stp";
-    private static final String O_BID = "bid";
-
-    private static final String O_UFA = "ufa";
-
-    private static final String O_UFAT = "ufat";
-
-    private static final String O_UIT = "uit";
-
-    /** attributes for store type OpenIO **/
-    private static final String O_AP = "ap";
-    private static final String O_PP = "pp";
-    private static final String O_ACCOUNT = "acc";
-    private static final String O_NS = "ns";
-    private static final String O_URL = "url";
-    private static final String OPENIO = "OPENIO";
-
-    private static final String NOT_ALLOWED_INTERNAL = " is not allowed for internal storetype";
-    private static final String NOT_ALLOWED_EXTERNAL = " is not allowed for external storetype";
-    private static final String NOT_ALLOWED = " is not allowed for edit";
-    private static final String INVALID_STORE_TYPE = "invalid storetype";
-    private static final String HELP_EXTERNAL_NAME = "  only name can be edited for external store volumes ";
-    private static final String MISSING_ATTRS = " is missing";
-    private static final String NOT_ALLOWED_ID = "id cannot be specified when adding a volume";
-
-    private static final String H_STORE_TYPE = "Store type: internal or external";
-    private static final String H_STORAGE_TYPE = "Name of the store provider (S3, ObjectStore, OPENIO)";
-    private static final String H_BUCKET_ID = "S3 Bucket ID";
-    private static final String H_VOLUME_PREFIX = "Volume Prefix";
-    private static final String H_URL = "URL of OpenIO";
-    private static final String H_PROXY_PORT = "Proxy port";
-    private static final String H_ACCOUNT_PORT = "Account port";
-    private static final String H_ACCOUNT = "Name of account";
-    private static final String H_NAME_SPACE = "Namespace";
-    private static final String H_STORE_MANAGER_CLASS = "Optional parameter to specify non-default store manager class path";
-    private static final String H_USE_INFREQUENT_ACCESS_THRESHOLD = "Use Infrequent access storage class blob size threshold";
-    private static final String H_USE_INFREQUENT_ACCESS = "Use Infrequent access storage class - AWS only";
-    private static final String H_USE_INTELLIGENT_TIERING = "Use Intelligent tiering storage class - AWS only";
-    private static final String A_ID = "id";
-    private static final String A_TYPE = "type";
-    private static final String A_PATH = "path";
-    private static final String A_NAME = "name";
-    private static final String A_COMPRESS = "compress";
-    private static final String A_COMPRESS_THRESHOLD = "compressThreshold";
-    private static final String A_STORE_TYPE = "storeType";
-
-    private static final String A_STORE_MANAGER_CLASS = "storeManagerClass";
-    private static final String A_STORAGE_TYPE = "storageType";
-    private static final String A_BUCKET_ID = "bucketId";
-    private static final String A_VOLUME_PREFIX = "volumePrefix";
-    private static final String A_USE_IN_FRE_ACCESS_THRESHOLD = "useInFrequentAccThr";
-
-
-
-    private static final String A_URL = "url";
-    private static final String A_PROXY_PORT = "proxyPort";
-    private static final String A_ACCOUNT_PORT = "accountPort";
-    private static final String A_NAME_SPACE = "nameSpace";
-    private static final String A_ACCOUNT = "account";
-
-    public static final int DEFAULT_USE_INFREQUENT_ACCESS_THRESHOLD = 65536;
 
     private VolumeCLI() throws ServiceException {
         super();
@@ -161,31 +81,31 @@ public final class VolumeCLI extends SoapCLI {
 
     private void setArgs(CommandLine cl) throws ServiceException, ParseException, IOException {
         auth = getZAuthToken(cl);
-        id = cl.getOptionValue(O_ID);
-        type = cl.getOptionValue(O_T);
-        name = cl.getOptionValue(O_N);
-        path = cl.getOptionValue(O_P);
-        compress = cl.getOptionValue(O_C);
-        compressThreshold = cl.getOptionValue(O_CT);
-        storeType = cl.getOptionValue(O_ST);
+        id = cl.getOptionValue(VolumeCLIConstants.O_ID);
+        type = cl.getOptionValue(VolumeCLIConstants.O_T);
+        name = cl.getOptionValue(VolumeCLIConstants.O_N);
+        path = cl.getOptionValue(VolumeCLIConstants.O_P);
+        compress = cl.getOptionValue(VolumeCLIConstants.O_C);
+        compressThreshold = cl.getOptionValue(VolumeCLIConstants.O_CT);
+        storeType = cl.getOptionValue(VolumeCLIConstants.O_ST);
         storeType = storeType == null ? null : storeType.toUpperCase();
-        volumePrefix = cl.getOptionValue(O_VP);
-        storageType = cl.getOptionValue(O_STP);
-        bucketId = cl.getOptionValue(O_BID);
-        url = cl.getOptionValue(O_URL);
-        proxyPort = cl.getOptionValue(O_PP);
-        accountPort = cl.getOptionValue(O_AP);
-        nameSpace = cl.getOptionValue(O_NS);
-        account = cl.getOptionValue(O_ACCOUNT);
-        storeManagerClass = cl.getOptionValue(O_SMC);
-        useInfrequentAccess = cl.getOptionValue(O_UFA);
-        useInfrequentAccessThreshold = cl.getOptionValue(O_UFAT);
-        useIntelligentTiering = cl.getOptionValue(O_UIT);
+        volumePrefix = cl.getOptionValue(VolumeCLIConstants.O_VP);
+        storageType = cl.getOptionValue(VolumeCLIConstants.O_STP);
+        bucketId = cl.getOptionValue(VolumeCLIConstants.O_GBID);
+        url = cl.getOptionValue(VolumeCLIConstants.O_URL);
+        proxyPort = cl.getOptionValue(VolumeCLIConstants.O_PP);
+        accountPort = cl.getOptionValue(VolumeCLIConstants.O_AP);
+        nameSpace = cl.getOptionValue(VolumeCLIConstants.O_NS);
+        account = cl.getOptionValue(VolumeCLIConstants.O_ACC);
+        storeManagerClass = cl.getOptionValue(VolumeCLIConstants.O_SMC);
+        useInfrequentAccess = cl.getOptionValue(VolumeCLIConstants.O_UFA);
+        useInfrequentAccessThreshold = cl.getOptionValue(VolumeCLIConstants.O_UFAT);
+        useIntelligentTiering = cl.getOptionValue(VolumeCLIConstants.O_UIT);
     }
 
     public static void main(String[] args) {
         CliUtil.toolSetup();
-        SoapTransport.setDefaultUserAgent("zmvolume", BuildInfo.VERSION);
+        SoapTransport.setDefaultUserAgent(VolumeCLIConstants.STR_MAIN_CMD_NAME, BuildInfo.VERSION);
         VolumeCLI util = null;
         try {
             util = new VolumeCLI();
@@ -200,22 +120,22 @@ public final class VolumeCLI extends SoapCLI {
             }
             util.setArgs(cl);
 
-            if (cl.hasOption(O_A)) {
+            if (cl.hasOption(VolumeCLIConstants.O_A)) {
                 util.addVolume();
-            } else if (cl.hasOption(O_D)) {
+            } else if (cl.hasOption(VolumeCLIConstants.O_D)) {
                 util.deleteVolume();
-            } else if (cl.hasOption(O_L)) {
+            } else if (cl.hasOption(VolumeCLIConstants.O_L)) {
                 util.getVolume();
-            } else if (cl.hasOption(O_E)) {
+            } else if (cl.hasOption(VolumeCLIConstants.O_E)) {
                 util.editVolume();
-            } else if (cl.hasOption(O_DC)) {
+            } else if (cl.hasOption(VolumeCLIConstants.O_DC)) {
                 util.getCurrentVolumes();
-            } else if (cl.hasOption(O_SC)) {
+            } else if (cl.hasOption(VolumeCLIConstants.O_SC)) {
                 util.setCurrentVolume();
-            } else if (cl.hasOption(O_TS)) {
+            } else if (cl.hasOption(VolumeCLIConstants.O_TS)) {
                 util.unsetCurrentSecondaryMessageVolume();
             } else {
-                throw new ParseException("No action (-a,-d,-l,-e,-dc,-sc,-ts) is specified");
+                throw new ParseException(VolumeCLIConstants.STR_ERR_NO_ACTION);
             }
             System.exit(0);
         } catch (ParseException e) {
@@ -228,7 +148,7 @@ public final class VolumeCLI extends SoapCLI {
 
     private void setCurrentVolume() throws ParseException, SoapFaultException, IOException, ServiceException, NumberFormatException, HttpException {
         if (id == null) {
-            throw new ParseException(A_ID + MISSING_ATTRS);
+            throw new ParseException(AdminConstants.A_ID + VolumeCLIConstants.MISSING_ATTRS);
         }
 
         auth(auth);
@@ -315,7 +235,7 @@ public final class VolumeCLI extends SoapCLI {
 
     private void deleteVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (id == null) {
-            throw new ParseException(A_ID + MISSING_ATTRS);
+            throw new ParseException(AdminConstants.A_ID + VolumeCLIConstants.MISSING_ATTRS);
         }
 
         DeleteVolumeRequest req = new DeleteVolumeRequest(Short.parseShort(id));
@@ -326,7 +246,7 @@ public final class VolumeCLI extends SoapCLI {
 
     private void editVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (Strings.isNullOrEmpty(id)) {
-            throw new ParseException(A_ID + MISSING_ATTRS);
+            throw new ParseException(AdminConstants.A_ID + VolumeCLIConstants.MISSING_ATTRS);
         }
 
         GetVolumeRequest getVolumeRequest = new GetVolumeRequest(Short.parseShort(id));
@@ -348,13 +268,13 @@ public final class VolumeCLI extends SoapCLI {
 
     private void addVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (id != null) {
-            throw new ParseException(NOT_ALLOWED_ID);
+            throw new ParseException(VolumeCLIConstants.NOT_ALLOWED_ID);
         }
         if (Strings.isNullOrEmpty(type)) {
-            throw new ParseException(A_TYPE + MISSING_ATTRS);
+            throw new ParseException(AdminConstants.A_TYPE + VolumeCLIConstants.MISSING_ATTRS);
         }
         if (Strings.isNullOrEmpty(name)) {
-            throw new ParseException(A_NAME + MISSING_ATTRS);
+            throw new ParseException(AdminConstants.A_NAME + VolumeCLIConstants.MISSING_ATTRS);
         }
 
         VolumeInfo vol = new VolumeInfo();
@@ -379,7 +299,6 @@ public final class VolumeCLI extends SoapCLI {
      * @param volumeInfo, volStoreType
      * @throws ParseException
      */
-    
     private void validateEditCommand(VolumeInfo volumeInfo, Volume.StoreType volStoreType) throws ParseException {
         if (volStoreType.equals(Volume.StoreType.INTERNAL)) {
             if (!Strings.isNullOrEmpty(type)) {
@@ -400,49 +319,49 @@ public final class VolumeCLI extends SoapCLI {
             }
         } else if (volStoreType.equals(Volume.StoreType.EXTERNAL)) {
             if (!Strings.isNullOrEmpty(type)) {
-                throw new ParseException(A_TYPE + NOT_ALLOWED_EXTERNAL);
+                throw new ParseException(AdminConstants.A_TYPE + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
             if (!Strings.isNullOrEmpty(path)) {
-                throw new ParseException(A_PATH + NOT_ALLOWED_EXTERNAL);
+                throw new ParseException(AdminConstants.A_PATH + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
             if (!Strings.isNullOrEmpty(compress)) {
-                throw new ParseException(A_COMPRESS + NOT_ALLOWED_EXTERNAL);
+                throw new ParseException(AdminConstants.A_VOLUME_COMPRESS_BLOBS + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
             if (!Strings.isNullOrEmpty(compressThreshold)) {
-                throw new ParseException(A_COMPRESS_THRESHOLD + NOT_ALLOWED_EXTERNAL);
+                throw new ParseException(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
             if (!Strings.isNullOrEmpty(url)) {
-                throw new ParseException(A_URL + NOT_ALLOWED_EXTERNAL);
+                throw new ParseException(AdminConstants.A_VOLUME_URL + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
             if (!Strings.isNullOrEmpty(account)) {
-                throw new ParseException(A_ACCOUNT + NOT_ALLOWED_EXTERNAL);
+                throw new ParseException(AdminConstants.A_ACCOUNT + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
             if (!Strings.isNullOrEmpty(nameSpace)) {
-                throw new ParseException(A_NAME_SPACE + NOT_ALLOWED_EXTERNAL);
+                throw new ParseException(AdminConstants.A_VOLUME_NAME_SPACE + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
             if (!Strings.isNullOrEmpty(proxyPort)) {
-                throw new ParseException(A_PROXY_PORT + NOT_ALLOWED_EXTERNAL);
+                throw new ParseException(AdminConstants.A_VOLUME_PROXY_PORT + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
             if (!Strings.isNullOrEmpty(accountPort)) {
-                throw new ParseException(A_ACCOUNT_PORT + NOT_ALLOWED_EXTERNAL);
+                throw new ParseException(AdminConstants.A_VOLUME_ACCOUNT_PORT + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
         } else {
-            throw new ParseException(INVALID_STORE_TYPE);
+            throw new ParseException(VolumeCLIConstants.INVALID_STORE_TYPE);
         }
         if (!Strings.isNullOrEmpty(name)) {
             volumeInfo.setName(name);
         }
         if (!Strings.isNullOrEmpty(storeType)) {
-            throw new ParseException(A_STORE_TYPE + NOT_ALLOWED);
+            throw new ParseException(AdminConstants.A_VOLUME_STORE_TYPE + VolumeCLIConstants.NOT_ALLOWED);
         }
         if (!Strings.isNullOrEmpty(storageType)) {
-            throw new ParseException(A_STORAGE_TYPE + NOT_ALLOWED);
+            throw new ParseException(AdminConstants.A_VOLUME_STORAGE_TYPE + VolumeCLIConstants.NOT_ALLOWED);
         }
         if (!Strings.isNullOrEmpty(bucketId)) {
-            throw new ParseException(A_BUCKET_ID + NOT_ALLOWED);
+            throw new ParseException(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID + VolumeCLIConstants.NOT_ALLOWED);
         }
         if (!Strings.isNullOrEmpty(volumePrefix)) {
-            throw new ParseException(A_VOLUME_PREFIX + NOT_ALLOWED);
+            throw new ParseException(AdminConstants.A_VOLUME_VOLUME_PREFIX + VolumeCLIConstants.NOT_ALLOWED);
         }
     }
 
@@ -452,24 +371,23 @@ public final class VolumeCLI extends SoapCLI {
      * @param volumeInfo
      * @throws ParseException
      */
-
     private void validateAddCommand(VolumeInfo volumeInfo) throws ParseException {
         if (Strings.isNullOrEmpty(storeType) || Volume.StoreType.INTERNAL.name().equals(storeType)) {
             if (!Strings.isNullOrEmpty(storageType)) {
-                throw new ParseException(A_STORAGE_TYPE + NOT_ALLOWED_INTERNAL);
+                throw new ParseException(AdminConstants.A_VOLUME_STORAGE_TYPE + VolumeCLIConstants.NOT_ALLOWED_INTERNAL);
             }
             if (!Strings.isNullOrEmpty(bucketId)) {
-                throw new ParseException(A_BUCKET_ID + NOT_ALLOWED_INTERNAL);
+                throw new ParseException(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID + VolumeCLIConstants.NOT_ALLOWED_INTERNAL);
             }
             if (!Strings.isNullOrEmpty(volumePrefix)) {
-                throw new ParseException(A_VOLUME_PREFIX + NOT_ALLOWED_INTERNAL);
+                throw new ParseException(AdminConstants.A_VOLUME_VOLUME_PREFIX + VolumeCLIConstants.NOT_ALLOWED_INTERNAL);
             }
             if (Strings.isNullOrEmpty(path)) {
-                throw new ParseException(A_PATH + MISSING_ATTRS);
+                throw new ParseException(AdminConstants.A_PATH + VolumeCLIConstants.MISSING_ATTRS);
             }
             volumeInfo.setRootPath(path);
         } else if (Volume.StoreType.EXTERNAL.name().equals(storeType)) {
-            if (OPENIO.equalsIgnoreCase(storageType)) {
+            if (VolumeCLIConstants.OPENIO.equalsIgnoreCase(storageType)) {
                 VolumeExternalOpenIOInfo volumeExternalOpenIOInfo = new VolumeExternalOpenIOInfo();
                 if (!Strings.isNullOrEmpty(storageType)) {
                     volumeExternalOpenIOInfo.setStorageType(storageType);
@@ -477,27 +395,27 @@ public final class VolumeCLI extends SoapCLI {
                 if (!Strings.isNullOrEmpty(url)) {
                     volumeExternalOpenIOInfo.setUrl(url);
                 } else {
-                    throw new ParseException(A_URL + MISSING_ATTRS);
+                    throw new ParseException(AdminConstants.A_VOLUME_URL + VolumeCLIConstants.MISSING_ATTRS);
                 }
                 if (!Strings.isNullOrEmpty(nameSpace)) {
                     volumeExternalOpenIOInfo.setNameSpace(nameSpace);
                 } else {
-                    throw new ParseException(A_NAME_SPACE + MISSING_ATTRS);
+                    throw new ParseException(AdminConstants.A_VOLUME_NAME_SPACE + VolumeCLIConstants.MISSING_ATTRS);
                 }
                 if (!Strings.isNullOrEmpty(proxyPort)) {
                     volumeExternalOpenIOInfo.setProxyPort(Integer.parseInt(proxyPort));
                 } else {
-                    throw new ParseException(A_PROXY_PORT + MISSING_ATTRS);
+                    throw new ParseException(AdminConstants.A_VOLUME_PROXY_PORT + VolumeCLIConstants.MISSING_ATTRS);
                 }
                 if (!Strings.isNullOrEmpty(accountPort)) {
                     volumeExternalOpenIOInfo.setAccountPort(Integer.parseInt(accountPort));
                 } else {
-                    throw new ParseException(A_ACCOUNT_PORT + MISSING_ATTRS);
+                    throw new ParseException(AdminConstants.A_VOLUME_ACCOUNT_PORT + VolumeCLIConstants.MISSING_ATTRS);
                 }
                 if (!Strings.isNullOrEmpty(account)) {
                     volumeExternalOpenIOInfo.setAccount(account);
                 } else {
-                    throw new ParseException(A_ACCOUNT + MISSING_ATTRS);
+                    throw new ParseException(AdminConstants.A_ACCOUNT + VolumeCLIConstants.MISSING_ATTRS);
                 }
                 volumeInfo.setVolumeExternalOpenIOInfo(volumeExternalOpenIOInfo);
             } else {
@@ -526,7 +444,7 @@ public final class VolumeCLI extends SoapCLI {
             }
             volumeInfo.setStoreType((short) Volume.StoreType.EXTERNAL.getStoreType());
         } else {
-            throw new ParseException(INVALID_STORE_TYPE);
+            throw new ParseException(VolumeCLIConstants.INVALID_STORE_TYPE);
         }
     }
 
@@ -539,7 +457,7 @@ public final class VolumeCLI extends SoapCLI {
 
     @Override
     protected String getCommandUsage() {
-        return "zmvolume {-a | -d | -l | -e | -dc | -sc } <options>";
+        return "Usage: " + VolumeCLIConstants.STR_MAIN_CMD_NAME + VolumeCLIConstants.STR_SPACE + VolumeCLIConstants.STR_MAIN_CLI_ARGS + " <options>";
     }
 
     @Override
@@ -547,38 +465,40 @@ public final class VolumeCLI extends SoapCLI {
         super.setupCommandLineOptions();
         Options options = getOptions();
         OptionGroup og = new OptionGroup();
-        og.addOption(new Option(O_A, "add", false, "Adds a volume."));
-        og.addOption(new Option(O_D, "delete", false, "Deletes a volume."));
-        og.addOption(new Option(O_L, "list", false, "Lists volumes."));
-        og.addOption(new Option(O_E, "edit", false, "Edits a volume."));
-        og.addOption(new Option(O_DC, "displayCurrent", false, "Displays the current volumes."));
-        og.addOption(new Option(O_SC, "setCurrent", false, "Sets the current volume."));
-        og.addOption(new Option(O_TS, "turnOffSecondary", false, "Turns off the current secondary message volume"));
+        og.addOption(new Option(VolumeCLIConstants.O_A,  VolumeCLIConstants.H_OPT_ADD,            false, VolumeCLIConstants.H_DESC_VOL_ADD));
+        og.addOption(new Option(VolumeCLIConstants.O_D,  VolumeCLIConstants.H_OPT_DEL,            false, VolumeCLIConstants.H_DESC_VOL_DEL));
+        og.addOption(new Option(VolumeCLIConstants.O_L,  VolumeCLIConstants.H_OPT_LIST,           false, VolumeCLIConstants.H_DESC_VOL_LST));
+        og.addOption(new Option(VolumeCLIConstants.O_E,  VolumeCLIConstants.H_OPT_EDIT,           false, VolumeCLIConstants.H_DESC_VOL_EDIT));
+        og.addOption(new Option(VolumeCLIConstants.O_DC, VolumeCLIConstants.H_OPT_DISP_CURR,      false, VolumeCLIConstants.H_DESC_VOL_DISP_CURR));
+        og.addOption(new Option(VolumeCLIConstants.O_SC, VolumeCLIConstants.H_OPT_SET_CURR,       false, VolumeCLIConstants.H_DESC_VOL_SET_CURR));
+        og.addOption(new Option(VolumeCLIConstants.O_TS, VolumeCLIConstants.H_OPT_TURN_OFF_SDRY,  false, VolumeCLIConstants.H_DESC_VOL_OFF_CURR));
         og.setRequired(true);
         options.addOptionGroup(og);
-        options.addOption(O_ID, "id", true, "Volume ID");
-        options.addOption(O_T, "type", true, "Volume type (primaryMessage, secondaryMessage, or index)");
-        options.addOption(O_N, "name", true, "volume name");
-        options.addOption(O_P, "path", true, "Root path");
-        options.addOption(O_C, "compress", true, "Compress blobs; \"true\" or \"false\"");
-        options.addOption(O_CT, "compressionThreshold", true, "Compression threshold; default 4KB");
+
+        options.addOption(VolumeCLIConstants.O_ID, AdminConstants.A_ID,                            true, VolumeCLIConstants.H_DESC_VOL_ID);
+        options.addOption(VolumeCLIConstants.O_T,  AdminConstants.A_TYPE,                          true, VolumeCLIConstants.H_DESC_VOL_TYPE_PSI);
+        options.addOption(VolumeCLIConstants.O_N,  AdminConstants.A_NAME,                          true, VolumeCLIConstants.H_DESC_VOL_NAME);
+        options.addOption(VolumeCLIConstants.O_P,  AdminConstants.A_PATH,                          true, VolumeCLIConstants.H_DESC_VOL_RP);
+        options.addOption(VolumeCLIConstants.O_C,  AdminConstants.A_VOLUME_COMPRESS_BLOBS,         true, VolumeCLIConstants.H_DESC_VOL_CB);
+        options.addOption(VolumeCLIConstants.O_CT, AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD,  true, VolumeCLIConstants.H_DESC_VOL_CT);
+
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
-        options.addOption(new Option(O_ST, A_STORE_TYPE, true, H_STORE_TYPE));
-        options.addOption(new Option(O_VP, A_VOLUME_PREFIX, true, H_VOLUME_PREFIX));
-        options.addOption(new Option(O_STP, A_STORAGE_TYPE, true, H_STORAGE_TYPE));
-        options.addOption(new Option(O_BID, A_BUCKET_ID, true, H_BUCKET_ID));
-        options.addOption(new Option(O_UFA, AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, true, H_USE_INFREQUENT_ACCESS));
-        options.addOption(new Option(O_UFAT, A_USE_IN_FRE_ACCESS_THRESHOLD, true, H_USE_INFREQUENT_ACCESS_THRESHOLD));
-        options.addOption(new Option(O_UIT, AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, true, H_USE_INTELLIGENT_TIERING));
-        //OpenIO
-        options.addOption(new Option(O_AP, A_ACCOUNT_PORT, true, H_ACCOUNT_PORT));
-        options.addOption(new Option(O_PP, A_PROXY_PORT, true, H_PROXY_PORT));
-        options.addOption(new Option(O_URL, A_URL, true, H_URL));
-        options.addOption(new Option(O_NS, A_NAME_SPACE, true, H_NAME_SPACE));
-        options.addOption(new Option(O_ACCOUNT, A_ACCOUNT, true, H_ACCOUNT));
+        options.addOption(new Option(VolumeCLIConstants.O_ST,    AdminConstants.A_VOLUME_STORE_TYPE,                   true, VolumeCLIConstants.H_DESC_VOL_ST));
+        options.addOption(new Option(VolumeCLIConstants.O_VP,    AdminConstants.A_VOLUME_VOLUME_PREFIX,                true, VolumeCLIConstants.H_DESC_VOL_PRE));
+        options.addOption(new Option(VolumeCLIConstants.O_STP,   AdminConstants.A_VOLUME_STORAGE_TYPE,                 true, VolumeCLIConstants.H_DESC_VOL_STP));
+        options.addOption(new Option(VolumeCLIConstants.O_GBID,  AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID,         true, VolumeCLIConstants.H_DESC_VOL_BKT_ID));
+        options.addOption(new Option(VolumeCLIConstants.O_UFA,   AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS,           true, VolumeCLIConstants.H_DESC_VOL_AWS_UFA));
+        options.addOption(new Option(VolumeCLIConstants.O_UFAT,  AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD, true, VolumeCLIConstants.H_DESC_VOL_AWS_UFAT));
+        options.addOption(new Option(VolumeCLIConstants.O_UIT,   AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING,      true, VolumeCLIConstants.H_DESC_VOL_AWS_UIT));
+        options.addOption(new Option(VolumeCLIConstants.O_SMC,   AdminConstants.A_VOLUME_STORE_MANAGER_CLASS,          true, VolumeCLIConstants.H_DESC_VOL_SMC));
 
-        options.addOption(new Option(O_SMC, A_STORE_MANAGER_CLASS, true, H_STORE_MANAGER_CLASS));
+        // OpenIO
+        options.addOption(new Option(VolumeCLIConstants.O_AP,  AdminConstants.A_VOLUME_ACCOUNT_PORT, true, VolumeCLIConstants.H_DESC_VOL_AP));
+        options.addOption(new Option(VolumeCLIConstants.O_PP,  AdminConstants.A_VOLUME_PROXY_PORT,   true, VolumeCLIConstants.H_DESC_VOL_PP));
+        options.addOption(new Option(VolumeCLIConstants.O_URL, AdminConstants.A_VOLUME_URL,          true, VolumeCLIConstants.H_DESC_VOL_URL));
+        options.addOption(new Option(VolumeCLIConstants.O_NS,  AdminConstants.A_VOLUME_NAME_SPACE,   true, VolumeCLIConstants.H_DESC_VOL_NS));
+        options.addOption(new Option(VolumeCLIConstants.O_ACC, AdminConstants.A_ACCOUNT,             true, VolumeCLIConstants.H_DESC_VOL_ACC));
     }
 
     @Override
@@ -586,59 +506,114 @@ public final class VolumeCLI extends SoapCLI {
         if (e != null) {
             System.err.println("Error parsing command line arguments: " + e.getMessage());
         }
+        printLineWithLeftPad(getCommandUsage(), 0);
 
-        System.err.println(getCommandUsage());
-        printOpt(O_A, 0);
-        printOpt(O_N, 2);
-        System.err.println(HELP_EXTERNAL_NAME);
-        printOpt(O_T, 2);
-        printOpt(O_P, 2);
-        printOpt(O_C, 2);
-        printOpt(O_CT, 2);
-        printOpt(O_E, 0);
-        printOpt(O_ID, 2);
-        System.err.println("  any of the options listed under -a can also be specified " );
-        System.err.println("  to have its value modified.");
-        printOpt(O_D, 0);
-        printOpt(O_ID, 2);
-        printOpt(O_L, 0);
-        printOpt(O_ID, 2);
-        System.err.println("  -id is optional.");
-        printOpt(O_DC, 0);
-        printOpt(O_SC, 0);
-        printOpt(O_ID, 2);
-        printOpt(O_TS, 0);
-        printOpt(SoapCLI.O_AUTHTOKEN, 0);
-        printOpt(SoapCLI.O_AUTHTOKENFILE, 0);
-        printOpt(O_ST, 0);
-        printOpt(O_VP, 0);
-        printOpt(O_STP, 0);
-        printOpt(O_BID, 0);
-        printOpt(O_UIT, 0);
-        printOpt(O_UFA, 0);
-        printOpt(O_UFAT, 0);
+        printLineWithLeftPad(VolumeCLIConstants.STR_EMPTY, 0);
+        printLineWithLeftPad(VolumeCLIConstants.H_TLE_INT_VOL_ADD, 0);
+        printOptWithDesc(VolumeCLIConstants.O_A,   4, VolumeCLIConstants.H_DESC_VOL_ADD,        false);
+        printOptWithDesc(VolumeCLIConstants.O_N,   8, VolumeCLIConstants.H_DESC_VOL_NAME,       true);
+        printOptWithDesc(VolumeCLIConstants.O_T,   8, VolumeCLIConstants.H_DESC_VOL_TYPE_PSI,   true);
+        printOptWithDesc(VolumeCLIConstants.O_P,   8, VolumeCLIConstants.H_DESC_VOL_RP,         true);
+        printOptWithDesc(VolumeCLIConstants.O_ST,  8, VolumeCLIConstants.H_DESC_VOL_STI,        false);
+        printOptWithDesc(VolumeCLIConstants.O_C,   8, VolumeCLIConstants.H_DESC_VOL_CB,         false);
+        printOptWithDesc(VolumeCLIConstants.O_CT,  8, VolumeCLIConstants.H_DESC_VOL_CT,         false);
+        printOptWithDesc(VolumeCLIConstants.O_SMC, 8, VolumeCLIConstants.H_DESC_VOL_SMC,        false);
+        printLineWithLeftPad(VolumeCLIConstants.H_EXP_INT_VOL_ADD, 4);
 
-        printOpt(O_PP, 0);
-        printOpt(O_AP, 0);
-        printOpt(O_ACCOUNT, 0);
-        printOpt(O_URL, 0);
-        printOpt(O_NS, 0);
+        printLineWithLeftPad(VolumeCLIConstants.STR_EMPTY, 0);
+        printLineWithLeftPad(VolumeCLIConstants.H_TLE_EXT_S3_VOL_ADD, 0);
+        printOptWithDesc(VolumeCLIConstants.O_A,     4, VolumeCLIConstants.H_DESC_VOL_ADD,        false);
+        printOptWithDesc(VolumeCLIConstants.O_N,     8, VolumeCLIConstants.H_DESC_VOL_NAME,       true);
+        printOptWithDesc(VolumeCLIConstants.O_T,     8, VolumeCLIConstants.H_DESC_VOL_TYPE_PS,    true);
+        printOptWithDesc(VolumeCLIConstants.O_ST,    8, VolumeCLIConstants.H_DESC_VOL_STE,        true);
+        printOptWithDesc(VolumeCLIConstants.O_STP,   8, VolumeCLIConstants.H_DESC_VOL_STP_S3,     true);
+        printOptWithDesc(VolumeCLIConstants.O_GBID,  8, VolumeCLIConstants.H_DESC_VOL_BKT_ID,     true);
+        printOptWithDesc(VolumeCLIConstants.O_P,     8, VolumeCLIConstants.H_DESC_VOL_RP,         true);
+        printOptWithDesc(VolumeCLIConstants.O_VP,    8, VolumeCLIConstants.H_DESC_VOL_PRE,        true);
+        printOptWithDesc(VolumeCLIConstants.O_UIT,   8, VolumeCLIConstants.H_DESC_VOL_AWS_UIT,    false);
+        printOptWithDesc(VolumeCLIConstants.O_UFA,   8, VolumeCLIConstants.H_DESC_VOL_AWS_UFA,    false);
+        printOptWithDesc(VolumeCLIConstants.O_UFAT,  8, VolumeCLIConstants.H_DESC_VOL_AWS_UFAT,   false);
+        printOptWithDesc(VolumeCLIConstants.O_SMC,   8, VolumeCLIConstants.H_DESC_VOL_SMC,        false);
+        printLineWithLeftPad(VolumeCLIConstants.H_NOTE_EXT_S3_VOL_ADD, 4);
+        printLineWithLeftPad(VolumeCLIConstants.H_EXP_EXT_S3_VOL_ADD, 4);
 
-        printOpt(O_SMC, 0);
+        printLineWithLeftPad(VolumeCLIConstants.STR_EMPTY, 0);
+        printLineWithLeftPad(VolumeCLIConstants.H_TLE_EXT_OI_VOL_ADD, 0);
+        printOptWithDesc(VolumeCLIConstants.O_A,   4,  VolumeCLIConstants.H_DESC_VOL_ADD,       false);
+        printOptWithDesc(VolumeCLIConstants.O_N,   8,  VolumeCLIConstants.H_DESC_VOL_NAME,      true);
+        printOptWithDesc(VolumeCLIConstants.O_T,   8,  VolumeCLIConstants.H_DESC_VOL_TYPE_PS,   true);
+        printOptWithDesc(VolumeCLIConstants.O_ST,  8,  VolumeCLIConstants.H_DESC_VOL_STE,       true);
+        printOptWithDesc(VolumeCLIConstants.O_STP, 8,  VolumeCLIConstants.H_DESC_VOL_STP_OI,    true);
+        printOptWithDesc(VolumeCLIConstants.O_PP,  8,  VolumeCLIConstants.H_DESC_VOL_PP,        true);
+        printOptWithDesc(VolumeCLIConstants.O_AP,  8,  VolumeCLIConstants.H_DESC_VOL_AP,        true);
+        printOptWithDesc(VolumeCLIConstants.O_ACC, 8,  VolumeCLIConstants.H_DESC_VOL_ACC,       true);
+        printOptWithDesc(VolumeCLIConstants.O_URL, 8,  VolumeCLIConstants.H_DESC_VOL_URL,       true);
+        printOptWithDesc(VolumeCLIConstants.O_NS,  8,  VolumeCLIConstants.H_DESC_VOL_NS,        true);
+        printOptWithDesc(VolumeCLIConstants.O_P,   8,  VolumeCLIConstants.H_DESC_VOL_RP,        true);
+        printOptWithDesc(VolumeCLIConstants.O_VP,  8,  VolumeCLIConstants.H_DESC_VOL_PRE,       true);
+        printOptWithDesc(VolumeCLIConstants.O_SMC, 8,  VolumeCLIConstants.H_DESC_VOL_SMC,       false);
+        printLineWithLeftPad(VolumeCLIConstants.H_NOTE_EXT_OI_VOL_ADD, 4);
+        printLineWithLeftPad(VolumeCLIConstants.H_EXP_EXT_OI_VOL_ADD, 4);
+
+        printLineWithLeftPad(VolumeCLIConstants.STR_EMPTY, 0);
+        printLineWithLeftPad(VolumeCLIConstants.H_TLE_INT_VOL_EDIT, 0);
+        printOptWithDesc(VolumeCLIConstants.O_E,   4,  VolumeCLIConstants.H_DESC_VOL_EDIT,      false);
+        printOptWithDesc(VolumeCLIConstants.O_ID,  8,  VolumeCLIConstants.H_DESC_VOL_ID,        true);
+        printOptWithDesc(VolumeCLIConstants.O_N,   8,  VolumeCLIConstants.H_DESC_VOL_NAME,      false);
+        printOptWithDesc(VolumeCLIConstants.O_T,   8,  VolumeCLIConstants.H_DESC_VOL_TYPE_PSI,  false);
+        printOptWithDesc(VolumeCLIConstants.O_P,   8,  VolumeCLIConstants.H_DESC_VOL_RP,        false);
+        printOptWithDesc(VolumeCLIConstants.O_C,   8,  VolumeCLIConstants.H_DESC_VOL_CB,        false);
+        printOptWithDesc(VolumeCLIConstants.O_CT,  8,  VolumeCLIConstants.H_DESC_VOL_CT,        false);
+        printLineWithLeftPad(VolumeCLIConstants.H_EXP_INT_VOL_EDIT, 4);
+
+        printLineWithLeftPad(VolumeCLIConstants.STR_EMPTY, 0);
+        printLineWithLeftPad(VolumeCLIConstants.H_TLE_EXT_VOL_EDIT, 0);
+        printOptWithDesc(VolumeCLIConstants.O_E,   4,  VolumeCLIConstants.H_DESC_VOL_EDIT,      false);
+        printOptWithDesc(VolumeCLIConstants.O_ID,  8,  VolumeCLIConstants.H_DESC_VOL_ID,        true);
+        printOptWithDesc(VolumeCLIConstants.O_N,   8,  VolumeCLIConstants.H_DESC_VOL_NAME,      true);
+        printLineWithLeftPad(VolumeCLIConstants.H_NOTE_EXT_VOL_EDIT, 4);
+        printLineWithLeftPad(VolumeCLIConstants.H_EXP_EXT_VOL_EDIT, 4);
+
+        printLineWithLeftPad(VolumeCLIConstants.STR_EMPTY, 0);
+        printLineWithLeftPad(VolumeCLIConstants.H_TLE_VOL_DEL, 0);
+        printOptWithDesc(VolumeCLIConstants.O_D,   4,  VolumeCLIConstants.H_DESC_VOL_DEL,       false);
+        printOptWithDesc(VolumeCLIConstants.O_ID,  8,  VolumeCLIConstants.H_DESC_VOL_ID,        true);
+        printLineWithLeftPad(VolumeCLIConstants.H_EXP_VOL_DEL, 4);
+
+        printLineWithLeftPad(VolumeCLIConstants.STR_EMPTY, 0);
+        printLineWithLeftPad(VolumeCLIConstants.H_TLE_OTHER_VOL_OPTS, 0);
+        printOptWithDesc(VolumeCLIConstants.O_L,   4,  VolumeCLIConstants.H_DESC_VOL_LST,       false);
+        printOptWithDesc(VolumeCLIConstants.O_ID,  8,  VolumeCLIConstants.H_DESC_VOL_ID,        false);
+        printOptWithDesc(VolumeCLIConstants.O_DC,  4,  VolumeCLIConstants.H_DESC_VOL_DISP_CURR, false);
+        printOptWithDesc(VolumeCLIConstants.O_SC,  4,  VolumeCLIConstants.H_DESC_VOL_SET_CURR,  false);
+        printOptWithDesc(VolumeCLIConstants.O_ID,  8,  VolumeCLIConstants.H_DESC_VOL_ID,        true);
+        printOptWithDesc(VolumeCLIConstants.O_TS,  4,  VolumeCLIConstants.H_DESC_VOL_OFF_CURR,  false);
+        printLineWithLeftPad(VolumeCLIConstants.STR_EMPTY, 0);
     }
 
-    private void printOpt(String optStr, int leftPad) {
+    private void printOptWithDesc(String optStr, int leftPad, String desc, boolean isRequired) {
         Options options = getOptions();
         Option opt = options.getOption(optStr);
         StringBuilder buf = new StringBuilder();
         buf.append(Strings.repeat(" ", leftPad));
         buf.append('-').append(opt.getOpt()).append(",--").append(opt.getLongOpt());
         if (opt.hasArg()) {
-            buf.append(" <arg>");
+            if (isRequired) {
+                buf.append(" <required arg>");
+            } else {
+                buf.append(" <optional arg>");
+            }
         }
-        buf.append(Strings.repeat(" ", 35 - buf.length()));
-        buf.append(opt.getDescription());
-        System.err.println(buf.toString());
+        buf.append(Strings.repeat(VolumeCLIConstants.STR_SPACE, VolumeCLIConstants.INT_ALIGN_LEFT - buf.length()));
+        buf.append(desc);
+        System.out.println(buf.toString());
+    }
+
+    private void printLineWithLeftPad(String line, int leftPad) {
+        StringBuilder buf = new StringBuilder();
+        buf.append(Strings.repeat(VolumeCLIConstants.STR_SPACE, leftPad));
+        buf.append(line);
+        System.out.println(buf.toString());
     }
 
     /**
