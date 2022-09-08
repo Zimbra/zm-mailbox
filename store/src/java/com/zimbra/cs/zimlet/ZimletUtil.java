@@ -195,16 +195,45 @@ public class ZimletUtil {
         if (domain != null) {
             String[] domainZimlets = domain.getMultiAttr(Provisioning.A_zimbraZimletDomainAvailableZimlets);
             for (String zimletWithPrefix : domainZimlets) {
-                availZimlets.put(zimletWithPrefix);
+                if (!isZextrasZimlet(zimletWithPrefix)) {
+                    availZimlets.put(zimletWithPrefix);
+                }
             }
         }
 
         String[] acctCosZimlets = acct.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
         for (String zimletWithPrefix : acctCosZimlets) {
-            availZimlets.put(zimletWithPrefix);
+            if (!isZextrasZimlet(zimletWithPrefix)) {
+                availZimlets.put(zimletWithPrefix);
+            }
         }
 
         return availZimlets;
+    }
+    
+    /**
+     * this method is also check whether zimletName is having prefix like +,- and !
+     * and this method is used to find out whether zimletName is related to remove
+     * ZEXTRAS list or not if zimletName is not in remove ZEXTRAS list then it
+     * returns true else it returns false
+     *
+     * @param zimletName
+     * @return boolean
+     */
+    private static boolean isZextrasZimlet(String zimletName) {
+        if (!StringUtil.isNullOrEmpty(zimletName) && zimletName.length() > 1) {
+            char prefix = zimletName.charAt(0);
+            Presence presence = Presence.fromPrefix(prefix);
+
+            if (presence != null) {
+                zimletName = zimletName.substring(1);
+            }
+
+            if (AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(zimletName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static ZimletPresence getAvailableZimlets(Cos cos) throws ServiceException {
@@ -212,7 +241,9 @@ public class ZimletUtil {
 
         String[] acctCosZimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
         for (String zimletWithPrefix : acctCosZimlets) {
-            availZimlets.put(zimletWithPrefix);
+            if (!isZextrasZimlet(zimletWithPrefix)) {
+                availZimlets.put(zimletWithPrefix);
+            }
         }
 
         return availZimlets;
@@ -440,7 +471,9 @@ public class ZimletUtil {
                     continue;
                 }
                 try {
-                    zimlets.put(zimletNames[i], new ZimletFile(zimletRootDir, zimletNames[i]));
+                    if (!isZextrasZimlet(zimletNames[i])) {
+                        zimlets.put(zimletNames[i], new ZimletFile(zimletRootDir, zimletNames[i]));
+                    }
                 } catch (Exception e) {
                     ZimbraLog.zimlet.warn("error loading zimlet "+zimletNames[i], e);
                 }
