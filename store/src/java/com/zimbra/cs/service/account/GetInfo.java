@@ -37,6 +37,7 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.StringUtil;
@@ -374,6 +375,7 @@ public class GetInfo extends AccountDocumentHandler  {
 
             ZimletPresence userZimlets = ZimletUtil.getUserZimlets(acct);
             List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(userZimlets.getZimletNamesAsArray());
+            zimletList.removeIf(zimlet -> AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(zimlet.getName()));
             int priority = 0;
             for (Zimlet z : zimletList) {
                 if (z.isEnabled() && !z.isExtension()) {
