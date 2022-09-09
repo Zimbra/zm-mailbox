@@ -45,6 +45,8 @@ public final class BackupConstants {
     public static final String E_GET_MAILBOX_VERSION_RESPONSE = "GetMailboxVersionResponse";
     public static final String E_GET_MAILBOX_VOLUMES_REQUEST = "GetMailboxVolumesRequest";
     public static final String E_GET_MAILBOX_VOLUMES_RESPONSE = "GetMailboxVolumesResponse";
+    public static final String E_GET_MAILBOX_CURRENT_VOLUMES_REQUEST = "GetMailboxCurrentVolumesRequest";
+    public static final String E_GET_MAILBOX_CURRENT_VOLUMES_RESPONSE = "GetMailboxCurrentVolumesResponse";
     public static final String E_UNLOAD_MAILBOX_REQUEST = "UnloadMailboxRequest";
     public static final String E_UNLOAD_MAILBOX_RESPONSE = "UnloadMailboxResponse";
     public static final String E_RELOAD_ACCOUNT_REQUEST = "ReloadAccountRequest";
@@ -82,6 +84,8 @@ public final class BackupConstants {
     public static final QName GET_MAILBOX_VERSION_RESPONSE = QName.get(E_GET_MAILBOX_VERSION_RESPONSE, NAMESPACE);
     public static final QName GET_MAILBOX_VOLUMES_REQUEST = QName.get(E_GET_MAILBOX_VOLUMES_REQUEST, NAMESPACE);
     public static final QName GET_MAILBOX_VOLUMES_RESPONSE = QName.get(E_GET_MAILBOX_VOLUMES_RESPONSE, NAMESPACE);
+    public static final QName GET_MAILBOX_CURRENT_VOLUMES_REQUEST = QName.get(E_GET_MAILBOX_CURRENT_VOLUMES_REQUEST, NAMESPACE);
+    public static final QName GET_MAILBOX_CURRENT_VOLUMES_RESPONSE = QName.get(E_GET_MAILBOX_CURRENT_VOLUMES_RESPONSE, NAMESPACE);
     public static final QName UNLOAD_MAILBOX_REQUEST = QName.get(E_UNLOAD_MAILBOX_REQUEST, NAMESPACE);
     public static final QName UNLOAD_MAILBOX_RESPONSE = QName.get(E_UNLOAD_MAILBOX_RESPONSE, NAMESPACE);
     public static final QName RELOAD_ACCOUNT_REQUEST = QName.get(E_RELOAD_ACCOUNT_REQUEST, NAMESPACE);
