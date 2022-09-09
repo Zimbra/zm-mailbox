@@ -22,12 +22,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.MailboxBlob.MailboxBlobInfo;
 import com.zimbra.cs.store.file.BlobReference;
 import com.zimbra.cs.store.file.FileBlobStore;
@@ -71,7 +73,14 @@ public final class DbVolumeBlobs {
     }
 
     public static void addBlobReference(DbConnection conn, MailboxBlobInfo info) throws ServiceException {
-        short volId = Short.valueOf(info.locator);
+        String locator = info.locator;
+        if (locator.indexOf(MailItemHelper.VOL_ID_LOCATOR_SEPARATOR) != -1) {
+            Optional<Short> volumeIdOptional = MailItemHelper.findMyVolumeId(locator);
+            if (volumeIdOptional.isPresent()) {
+                locator = String.valueOf(volumeIdOptional.get());
+            }
+        }
+        short volId = Short.valueOf(locator);
         String path = FileBlobStore.getBlobPath(info.mailboxId, info.itemId, info.revision, volId);
         PreparedStatement stmt = null;
         try {
