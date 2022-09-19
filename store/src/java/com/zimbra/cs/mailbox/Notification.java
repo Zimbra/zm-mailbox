@@ -578,6 +578,7 @@ public class Notification implements LmtpCallback {
             out.setFrom(address);
             address = new JavaMailInternetAddress(destination);
             out.setRecipient(javax.mail.Message.RecipientType.TO, address);
+            out.setSentDate(new Date());
 
             String charset = getCharset(account, subject);
             out.setSubject(subject, charset);
