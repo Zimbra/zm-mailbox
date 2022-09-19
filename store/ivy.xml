@@ -48,7 +48,7 @@
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z"/>
   <!--Build uses the custom version 20190610.1z of owasp lib.
   Not updating custom version here as the version 20190610.1 is only used for compilation.-->
-  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190610.4z"/>
+  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190610.5z"/>
   <dependency org="org.ehcache" name="ehcache" rev="3.1.2"/>
   <dependency org="ant-1.7.0-ziputil-patched" name="ant-1.7.0-ziputil-patched" rev="1.0"/>
   <dependency org="org.eclipse.jetty" name="jetty-continuation" rev="9.4.18.v20190429"/>
