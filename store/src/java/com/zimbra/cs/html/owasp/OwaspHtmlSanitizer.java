@@ -18,14 +18,20 @@ package com.zimbra.cs.html.owasp;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.owasp.html.Handler;
 import org.owasp.html.HtmlSanitizer;
 import org.owasp.html.HtmlSanitizer.Policy;
-import org.owasp.html.HtmlStreamRenderer;
+import org.owasp.html.ExtensibleHtmlStreamRenderer;
 import org.owasp.html.PolicyFactory;
+
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.html.owasp.policies.StyleTagReceiver;
 
 /*
@@ -39,41 +45,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
 
     public OwaspHtmlSanitizer(String html, boolean neuterImages, String vHost) {
         // fix to check open tags & remove
-        this.html = checkUnbalancedTags(html);
+        this.html = html;
         this.neuterImages = neuterImages;
         this.vHost = vHost;
-    }
-    
-    /** 
-     * A method to check & remove unbalanced tags which may have started, not ended
-     * 
-     * @return the Formatted Html after removing unbalanced tags
-     */
-    private String checkUnbalancedTags(String html) {
-        if (StringUtil.isNullOrEmpty(html)) {
-            return html;
-        }
-        ArrayList<String> tags = new ArrayList<String>();
-        // in tags array we can add multiple tags, so for each tag write start &
-        // end with a & separator like(<!--&-->)
-        tags.add("<!--&-->");
-        String formattedHtml = "";
-        for (String str : tags) {
-            String tagArr[] = str.split("&");
-            String start = tagArr[0];
-            String end = tagArr[1];
-            String[] arrOfStr = html.split(start);
-            for (String strAfterSplit : arrOfStr) {
-                 if (!strAfterSplit.equals("") && strAfterSplit.contains(end)) {
-                     formattedHtml = formattedHtml + start + strAfterSplit;
-                 } else {
-                     formattedHtml = formattedHtml + strAfterSplit;
-                 }
-            }
-            html = formattedHtml;
-            formattedHtml = "";
-        }
-        return html;
     }
 
     private PolicyFactory POLICY_DEFINITION;
@@ -98,16 +72,19 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         }
         // create the builder into which the sanitized email will be written
         final StringBuilder htmlBuilder = new StringBuilder(html.length());
-        // create the renderer that will write the sanitized HTML to the builder
-        final HtmlStreamRenderer renderer = HtmlStreamRenderer.create(htmlBuilder,
-            Handler.PROPAGATE,
-            // log errors resulting from exceptionally bizarre inputs
-            new Handler<String>() {
 
-                public void handle(final String x) {
-                    throw new AssertionError(x);
-                }
-            });
+        boolean zimbraStrictUnclosedCommentTag = LC.zimbra_strict_unclosed_comment_tag.booleanValue();
+        Set<String> zimbraSkipTagsWithUnclosedCdata = getSkipTagsUnclosedCdata();
+        // create the renderer that will write the sanitized HTML to the builder
+        final ExtensibleHtmlStreamRenderer renderer = ExtensibleHtmlStreamRenderer.create(htmlBuilder,
+                Handler.PROPAGATE,
+                // log errors resulting from exceptionally bizarre inputs
+                new Handler<String>() {
+
+            public void handle(final String x) {
+                throw new AssertionError(x);
+            }
+        }, zimbraStrictUnclosedCommentTag, zimbraSkipTagsWithUnclosedCdata);
         // create a thread-specific policy
         instantiatePolicy();
         final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));
@@ -123,4 +100,14 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         return sanitize();
     }
 
+    protected Set<String> getSkipTagsUnclosedCdata() {
+        Set<String> zimbraSkipTagsWithUnclosedCdata = new HashSet<>();
+        try {
+            zimbraSkipTagsWithUnclosedCdata = new HashSet<>(
+                    Arrays.asList(LC.zimbra_skip_tags_with_unclosed_cdata.value().toString().split(",")));
+        } catch (NullPointerException ex) {
+            ZimbraLog.mailbox.warn("Issue getting local config value of zimbra_skip_tags_with_unclosed_cdata ", ex);
+        }
+        return zimbraSkipTagsWithUnclosedCdata;
+    }
 }
