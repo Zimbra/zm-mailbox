@@ -83,7 +83,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
@@ -313,7 +312,7 @@ public class FeedManager {
     throws ServiceException, HttpException, IOException {
         assert !Strings.isNullOrEmpty(url);
 
-        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
         HttpProxyUtil.configureProxy(clientBuilder);
 
         // cannot set connection timeout because it'll affect all HttpClients associated with the conn mgr.

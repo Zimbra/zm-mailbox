@@ -52,6 +52,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZSharedFolder;
@@ -62,6 +63,7 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ACLGrant;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
@@ -100,6 +102,7 @@ import com.zimbra.cs.imap.ImapSessionManager.FolderDetails;
 import com.zimbra.cs.imap.ImapSessionManager.InitialFolderValues;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -1689,12 +1692,13 @@ public abstract class ImapHandler {
 
             // instantiate the ImapCredentials object...
             startSession(acct, enabledHack, tag, mechanism);
-
+            AuthListener.invokeOnSuccess(acct);
         } catch (AccountServiceException.AuthFailedServiceException afe) {
             setCredentials(null);
 
             ZimbraLog.imap.info(afe.getMessage() + " (" + afe.getReason() + ')');
             sendNO(tag, command + " failed");
+            AuthListener.invokeOnException(afe);
             return true;
         } catch (ServiceException e) {
             setCredentials(null);
@@ -1717,7 +1721,7 @@ public abstract class ImapHandler {
     throws ServiceException, IOException {
         String command = mechanism != null ? "AUTHENTICATE" : "LOGIN";
         // make sure we can actually login via IMAP on this host
-        if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
+        if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false) || !account.isPrefImapEnabled()) {
             sendNO(tag, "account does not have IMAP access enabled");
             return null;
         }
@@ -2150,17 +2154,19 @@ public abstract class ImapHandler {
 
         boolean selectRecursive = (selectOptions & SELECT_RECURSIVE) != 0;
 
+        int paginationSize = LC.zimbra_imap_folder_pagination_size.intValue();
+        boolean imapFolderPaginationEnabled = LC.zimbra_imap_folder_pagination_enabled.booleanValue();
         Map<ImapPath, Object> ownerMatches = new TreeMap<ImapPath, Object>();
         Map<ImapPath, Object> mountMatches = new TreeMap<ImapPath, Object>();
+        Map<ImapPath, ItemId> ownerPaths = new HashMap<ImapPath, ItemId>();
+        Map<ImapPath, ItemId> mountPaths = new HashMap<ImapPath, ItemId>();
+        Set<ImapPath> ownerSelected = new HashSet<ImapPath>();
+        Set<ImapPath> mountSelected = new HashSet<ImapPath>();
+        List<Pattern> patterns = new ArrayList<Pattern>(mailboxNames.size());
         try {
             if (returnSubscribed) {
                 remoteSubscriptions = credentials.listSubscriptions();
             }
-            Map<ImapPath, ItemId> ownerPaths = new HashMap<ImapPath, ItemId>();
-            Map<ImapPath, ItemId> mountPaths = new HashMap<ImapPath, ItemId>();
-            Set<ImapPath> ownerSelected = new HashSet<ImapPath>();
-            Set<ImapPath> mountSelected = new HashSet<ImapPath>();
-            List<Pattern> patterns = new ArrayList<Pattern>(mailboxNames.size());
 
             for (String mailboxName : mailboxNames) {
                 // RFC 5258 3: "In particular, if an extended LIST command has multiple mailbox
@@ -2210,7 +2216,7 @@ public abstract class ImapHandler {
                 patterns.add(pattern);
 
                 // get the set of *all* folders; we'll iterate over it below to find matches
-                accumulatePaths(patternPath.getOwnerImapMailboxStore(), owner, null, ownerPaths, mountPaths, false);
+                accumulatePaths(patternPath.getOwnerImapMailboxStore(), owner, null, ownerPaths, mountPaths, false, acct);
 
                 // get the set of owner folders matching the selection criteria (either all folders or subscribed folders)
                 if (selectSubscribed) {
@@ -2227,41 +2233,99 @@ public abstract class ImapHandler {
                 }
             }
 
-            // return only the selected folders (and perhaps their parents) matching the pattern
-            // for owner folders
-            populateFoldersList(ownerPaths, ownerSelected, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
-            // for shared(mounted) folders
-            populateFoldersList(mountPaths, mountSelected, mountMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, true);
+            if (!imapFolderPaginationEnabled) {
+                ZimbraLog.imap.info("Imap folder pagination not enabled");
+                ZimbraLog.imap.info("Total folder count - %s", ownerSelected.size());
+                // return only the selected folders (and perhaps their parents) matching the pattern
+                // for owner folders
+                populateFoldersList(ownerPaths, ownerSelected, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
+                // for shared(mounted) folders
+                populateFoldersList(mountPaths, mountSelected, mountMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, true);
+                // send owners list first
+                if (!ownerMatches.isEmpty()) {
+                    for (Object match : ownerMatches.values()) {
+                        if (match instanceof String[]) {
+                            for (String response : (String[]) match) {
+                                sendUntagged(response);
+                            }
+                        } else {
+                            sendUntagged((String) match);
+                        }
+                    }
+                }
+                // send shared(mounted) folders list
+                if (!mountMatches.isEmpty()) {
+                    for (Object match : mountMatches.values()) {
+                        if (match instanceof String[]) {
+                            for (String response : (String[]) match) {
+                                sendUntagged(response);
+                            }
+                        } else {
+                            sendUntagged((String) match);
+                        }
+                    }
+                }
+                ownerMatches = null;
+                ownerSelected = null;
+                mountMatches = null;
+                mountSelected = null;
+            } else {
+                ZimbraLog.imap.info("Imap folder pagination is enabled");
+                ZimbraLog.imap.info("Total folder count - %s is greater than folder pagination size - %s", ownerSelected.size(), paginationSize);
+                // send owners list first
+                Iterable<List<ImapPath>> ownerLists = Iterables.partition(ownerSelected, paginationSize);
+                for (List<ImapPath> listChunk: ownerLists) {
+                    Set<ImapPath> ownerSelectedChunk = new HashSet<ImapPath>();
+                    ownerSelectedChunk.addAll(listChunk);
+                    populateFoldersList(ownerPaths, ownerSelectedChunk, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
+
+                    if (!ownerMatches.isEmpty()) {
+                        for (Object match : ownerMatches.values()) {
+                            if (match instanceof String[]) {
+                                for (String response : (String[]) match) {
+                                    sendUntagged(response);
+                                }
+                            } else {
+                                sendUntagged((String) match);
+                            }
+                        }
+                    }
+                    ownerMatches = null;
+                    ownerMatches = new TreeMap<ImapPath, Object>();
+                }
+                ownerLists = null;
+                ownerMatches = null;
+                ownerSelected = null;
+
+                // send shared(mounted) folders list
+                Iterable<List<ImapPath>> sharedLists = Iterables.partition(mountSelected, paginationSize);
+                for (List<ImapPath> listChunk: sharedLists) {
+                    Set<ImapPath> mountSelectedChunk = new HashSet<ImapPath>();
+                    mountSelectedChunk.addAll(listChunk);
+                    populateFoldersList(mountPaths, mountSelectedChunk, mountMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, true);
+
+                    if (!mountMatches.isEmpty()) {
+                        for (Object match : mountMatches.values()) {
+                            if (match instanceof String[]) {
+                                for (String response : (String[]) match) {
+                                    sendUntagged(response);
+                                }
+                            } else {
+                                sendUntagged((String) match);
+                            }
+                        }
+                    }
+                    mountMatches = null;
+                    mountMatches = new TreeMap<ImapPath, Object>();
+                }
+                sharedLists = null;
+                mountMatches = null;
+                mountSelected = null;
+            }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return canContinue(e);
-        }
-
-        // send owners list first
-        if (!ownerMatches.isEmpty()) {
-            for (Object match : ownerMatches.values()) {
-                if (match instanceof String[]) {
-                    for (String response : (String[]) match) {
-                        sendUntagged(response);
-                    }
-                } else {
-                    sendUntagged((String) match);
-                }
-            }
-        }
-
-        // send shared(mounted) folders list
-        if (!mountMatches.isEmpty()) {
-            for (Object match : mountMatches.values()) {
-                if (match instanceof String[]) {
-                    for (String response : (String[]) match) {
-                        sendUntagged(response);
-                    }
-                } else {
-                    sendUntagged((String) match);
-                }
-            }
         }
 
         sendNotifications(true, false);
@@ -2373,12 +2437,16 @@ public abstract class ImapHandler {
     }
 
     private void accumulatePaths(ImapMailboxStore imapStore, String owner, ImapPath relativeTo,
-            Map<ImapPath, ItemId> paths, Map<ImapPath, ItemId> mountPaths, boolean isMountPath) throws ServiceException {
+            Map<ImapPath, ItemId> paths, Map<ImapPath, ItemId> mountPaths, boolean isMountPath, Account acct) throws ServiceException {
         Collection<FolderStore> visibleFolders = imapStore.getVisibleFolders(getContext(), credentials,
                 owner, relativeTo);
         // TODO - This probably needs to be the setting for the server for IMAP session's main mailbox
         boolean isMailFolders =  Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
         for (FolderStore folderStore : visibleFolders) {
+            if (!acct.isFeatureSafeUnsubscribeFolderEnabled() && folderStore.getFolderIdAsString().equals(Integer.toString(FolderConstants.ID_FOLDER_UNSUBSCRIBE))) {
+                continue;
+            }
+
             //bug 6418 ..filter out folders which are contacts and chat for LIST command.
             //  chat has item type of message.  hence ignoring the chat folder by name.
             if (isMailFolders && (folderStore.isChatsFolder() || (folderStore.getName().equals ("Chats")))) {
@@ -2398,11 +2466,12 @@ public abstract class ImapHandler {
                     // IMAP datasource connections
                     continue;
                 }
-                //boolean alreadyTraversed = paths.put(path, path.asItemId()) != null;
+                if (folderStore instanceof MountpointStore) {
+                    isMountPath = true;
+                }
                 boolean alreadyTraversed = (!isMountPath) ? paths.put(path, path.asItemId()) != null : mountPaths.put(path, path.asItemId()) != null;
                 if (folderStore instanceof MountpointStore && !alreadyTraversed) {
-//                    mountPaths.put(path, path.asItemId());
-                    accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths, mountPaths, true);
+                    accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths, mountPaths, true, acct);
                 }
             }
         }

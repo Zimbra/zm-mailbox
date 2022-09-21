@@ -43,7 +43,7 @@ import com.zimbra.cs.service.admin.AdminAccessControl;
 public abstract class ExtensionHttpHandler {
 
     protected ZimbraExtension mExtension;
-    
+    protected int allowedPort;
     /**
      * The path under which the handler is registered for an extension.
      * @return
@@ -108,12 +108,24 @@ public abstract class ExtensionHttpHandler {
     }
 
     /**
+     * Processes HTTP PATCH requests.
+     * @param req
+     * @param resp
+     * @throws IOException
+     * @throws ServletException
+     */
+    public void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        throw new ServletException("HTTP PATCH requests are not supported");
+    }
+
+    /**
      * Called to initialize the handler. If initialization fails, the handler is not registered.
      * @param ext the extension to which this handler belongs
      * @throws ServiceException
      */
     public void init(ZimbraExtension ext) throws ServiceException {
         mExtension = ext;
+        allowedPort = 0;
     }
     
     /**
@@ -145,5 +157,13 @@ public abstract class ExtensionHttpHandler {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(authToken);
         aac.checkRight(target, needed);
         return aac;
+    }
+
+    public int getAllowedPort() {
+        return allowedPort;
+    }
+
+    public void setAllowedPort(int allowedPort) {
+        this.allowedPort = allowedPort;
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -169,6 +169,10 @@ public final class MailConstants {
     public static final String E_APPLY_OUTGOING_FILTER_RULES_RESPONSE = "ApplyOutgoingFilterRulesResponse";
     public static final String E_GET_APPT_SUMMARIES_REQUEST = "GetApptSummariesRequest";
     public static final String E_GET_APPOINTMENT_REQUEST = "GetAppointmentRequest";
+    public static final String E_GET_APPOINTMENT_IDS_IN_RANGE_REQUEST = "GetAppointmentIdsInRangeRequest";
+    public static final String E_GET_APPOINTMENT_IDS_IN_RANGE_RESPONSE = "GetAppointmentIdsInRangeResponse";
+    public static final String E_GET_APPOINTMENT_IDS_SINCE_REQUEST = "GetAppointmentIdsSinceRequest";
+    public static final String E_GET_APPOINTMENT_IDS_SINCE_RESPONSE = "GetAppointmentIdsSinceResponse";
     public static final String E_SET_APPOINTMENT_REQUEST = "SetAppointmentRequest";
     public static final String E_CREATE_APPOINTMENT_REQUEST = "CreateAppointmentRequest";
     public static final String E_CREATE_APPOINTMENT_EXCEPTION_REQUEST = "CreateAppointmentExceptionRequest";
@@ -298,6 +302,8 @@ public final class MailConstants {
     public static final String E_GET_IMAP_RECENT_CUTOFF_RESPONSE = "GetIMAPRecentCutoffResponse";
     public static final String E_IMAP_COPY_REQUEST = "IMAPCopyRequest";
     public static final String E_IMAP_COPY_RESPONSE = "IMAPCopyResponse";
+    public static final String E_FILE_SHARED_WITH_ME_REQUEST = "FileSharedWithMeRequest";
+    public static final String E_FILE_SHARED_WITH_ME_RESPONSE = "FileSharedWithMeResponse";
 
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
@@ -431,6 +437,10 @@ public final class MailConstants {
     // Calendar
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get(E_GET_APPT_SUMMARIES_REQUEST, NAMESPACE);
     public static final QName GET_APPOINTMENT_REQUEST = QName.get(E_GET_APPOINTMENT_REQUEST, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_IN_RANGE_REQUEST = QName.get(E_GET_APPOINTMENT_IDS_IN_RANGE_REQUEST, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_IN_RANGE_RESPONSE = QName.get(E_GET_APPOINTMENT_IDS_IN_RANGE_RESPONSE, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_SINCE_REQUEST = QName.get(E_GET_APPOINTMENT_IDS_SINCE_REQUEST, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_SINCE_RESPONSE = QName.get(E_GET_APPOINTMENT_IDS_SINCE_RESPONSE, NAMESPACE);
     public static final QName SET_APPOINTMENT_REQUEST = QName.get(E_SET_APPOINTMENT_REQUEST, NAMESPACE);
     public static final QName CREATE_APPOINTMENT_REQUEST = QName.get(E_CREATE_APPOINTMENT_REQUEST, NAMESPACE);
     public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get(E_CREATE_APPOINTMENT_EXCEPTION_REQUEST, NAMESPACE);
@@ -596,6 +606,10 @@ public final class MailConstants {
     public static final QName RECORD_IMAP_SESSION_RESPONSE = QName.get(E_RECORD_IMAP_SESSION_RESPONSE, NAMESPACE);
     public static final QName IMAP_COPY_REQUEST = QName.get(E_IMAP_COPY_REQUEST, NAMESPACE);
     public static final QName IMAP_COPY_RESPONSE = QName.get(E_IMAP_COPY_RESPONSE, NAMESPACE);
+
+    //File Shared With Me
+    public static final QName FILE_SHARED_WITH_ME_REQUEST = QName.get(E_FILE_SHARED_WITH_ME_REQUEST, NAMESPACE);
+    public static final QName FILE_SHARED_WITH_ME_RESPONSE = QName.get(E_FILE_SHARED_WITH_ME_RESPONSE, NAMESPACE);
 
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
@@ -767,6 +781,8 @@ public final class MailConstants {
     public static final String A_ID = "id";
     public static final String A_UUID = "uuid";
     public static final String A_IDS = "ids";
+    public static final String A_MODIFIED_IDS = "mids";
+    public static final String A_DELETED_IDS = "dids";
     public static final String A_CONV_ID = "cid";
     public static final String A_DRAFT_ID = "did";
     public static final String A_SEND_FROM_DRAFT = "sfd";
@@ -882,6 +898,7 @@ public final class MailConstants {
     public static final String A_NO_SAVE_TO_SENT = "noSave";
     public static final String A_FETCH_SAVED_MSG = "fetchSavedMsg";
     public static final String A_SEND_UID = "suid";
+    public static final String A_DELIVERY_RECEIPT_NOTIFICATION ="deliveryReport";
     public static final String A_FOR_ACCOUNT = "forAcct";
     public static final String A_AUTO_SEND_TIME = "autoSendTime";
 
@@ -958,6 +975,7 @@ public final class MailConstants {
 
     // calendar / appointment
     public static final String E_APPOINTMENT = "appt";
+    public static final String E_APPOINTMENT_DATA = "apptData";
     public static final String E_TASK = "task";
     public static final String E_INVITE = "inv";
     public static final String E_INVITE_COMPONENT = "comp";
@@ -1062,6 +1080,7 @@ public final class MailConstants {
     public static final String A_CAL_RECURRENCE_ID = "recurId";
     public static final String A_CAL_RECURRENCE_RANGE_TYPE = "rangeType";
     public static final String A_CAL_RECURRENCE_ID_Z = "ridZ";  // recurrence id in "Z" (UTC) timezone
+    public static final String A_CAL_LAST_SYNC = "lastSync";
     public static final String A_CAL_START_TIME = "s";
     public static final String A_CAL_END_TIME = "e";
     public static final String A_CAL_DURATION = "d";
@@ -1232,6 +1251,7 @@ public final class MailConstants {
 
     public static final String A_CREATOR = "cr";
     public static final String A_TYPE = "t";
+    public static final String A_NEW_DOC_TYPE = "type";
     public static final String E_WIKIWORD = "w";
     public static final String E_DOC = "doc";
     public static final String E_UPLOAD = "upload";

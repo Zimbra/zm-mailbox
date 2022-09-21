@@ -396,6 +396,15 @@ public class CollectAllEffectiveRights {
                 processedGroups.add(groupName);
             }
 
+            if (group.isDynamic()) {
+                DynamicGroup dg = (DynamicGroup)group;
+                if (dg.isMembershipDefinedByCustomURL()) {
+                    // cannot search members of dynamic group with custom memberURL, so do not process this group.
+                    ZimbraLog.acl.debug("Dynamic group with custom memberURL found '%s', ignoring further process on same.", dg.getName());
+                    continue;
+                }
+            }
+
             AllGroupMembers allMembers = getAllGroupMembers(group);
             GroupShape.shapeMembers(TargetType.account, accountShapes, allMembers);
             GroupShape.shapeMembers(TargetType.calresource, calendarResourceShapes, allMembers);

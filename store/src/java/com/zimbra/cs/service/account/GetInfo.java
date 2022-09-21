@@ -16,6 +16,11 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -29,9 +34,12 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -53,16 +61,17 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.mail.ModifyProfileImage;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zimlet.ZimletPresence;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
@@ -170,6 +179,8 @@ public class GetInfo extends AccountDocumentHandler  {
             Server server = prov.getLocalServer();
             if (server != null) {
                 response.addAttribute(AccountConstants.A_DOCUMENT_SIZE_LIMIT, server.getFileUploadMaxSize());
+                //For ZBUG-1280: checks if atleast one URL is present from zimbraSpellCheckURL.
+                response.addAttribute(AccountConstants.A_IS_SPELL_CHECK_AVAILABLE, isSpellCheckServiceAvailable(server));
             }
             Config config = prov.getConfig();
             if (config != null) {
@@ -254,6 +265,12 @@ public class GetInfo extends AccountDocumentHandler  {
         for (GetInfoExt extension : extensions) {
             extension.handle(zsc, response);
         }
+
+        // we do not have any ldap attrs to define whether pasteitcleaned service is installed and running
+        // so check if pasteitcleaned service is installed and running by checking the installed directory and connectivity
+        // if yes return pasteitcleanedEnabled = true else return pasteitcleanedEnabled = false
+        response.addAttribute("pasteitcleanedEnabled", checkIfPasteitcleanedInstalled(), Element.Disposition.CONTENT);
+
         return response;
     }
 
@@ -319,6 +336,12 @@ public class GetInfo extends AccountDocumentHandler  {
                 // leave this a special case for now, until we have enough incidences to make it a pattern
                 value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ?
                         ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
+            } else if (Provisioning.A_zimbraMailQuota.equals(key)) {
+                // setting effective quota value refer ZBUG-1869 
+                value = String.valueOf(AccountUtil.getEffectiveQuota(acct));
+            } else if (Provisioning.A_zimbraFeatureDocumentEditingEnabled.equals(key)) { 
+                value = AccountUtil.isDocumentEditingEnabled(acct) ? 
+                        ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
             } else {
                 value = attrsMap.get(key);
 
@@ -340,6 +363,9 @@ public class GetInfo extends AccountDocumentHandler  {
 
             ToXML.encodeAttr(response, key, value);
         }
+        // ZCS-10678: Include Local config change for zimbraPasswordAllowUsername in getinfo response
+        ToXML.encodeAttr(response, "zimbraPasswordAllowUsername",
+                Boolean.toString(LC.allow_username_within_password.booleanValue()).toUpperCase());
     }
 
     private static void doZimlets(Element response, Account acct) {
@@ -349,6 +375,7 @@ public class GetInfo extends AccountDocumentHandler  {
 
             ZimletPresence userZimlets = ZimletUtil.getUserZimlets(acct);
             List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(userZimlets.getZimletNamesAsArray());
+            zimletList.removeIf(zimlet -> AdminConstants.ZEXTRAS_PACKAGES_LIST.contains(zimlet.getName()));
             int priority = 0;
             for (Zimlet z : zimletList) {
                 if (z.isEnabled() && !z.isExtension()) {
@@ -460,5 +487,38 @@ public class GetInfo extends AccountDocumentHandler  {
 
     private void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
         DiscoverRights.discoverRights(account, rights, eRights, false);
+    }
+
+    /**
+     * This check is done for zbug-1280.
+     * checks and returns true when zimbraSpellCheckURL is non-empty on a server
+     * The spellcheck button is shown only when zimbraSpellCheckURL returns non-empty value.
+     */
+    public boolean isSpellCheckServiceAvailable(Server server) {
+        String[] urls = server.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
+        return !ArrayUtil.isEmpty(urls);
+    }
+
+    private boolean checkIfPasteitcleanedInstalled() {
+        String libLocation = "/opt/zimbra/common/lib/pasteitcleaned";
+        String extLoc = "/opt/zimbra/lib/ext/pasteitcleaned/zimbra-pasteitcleaned.jar";
+        HttpURLConnection connection = null;
+        try {
+            File lib = new File(libLocation);
+            File ext = new File(extLoc);
+            if (lib.exists() && lib.isDirectory() && lib.canRead()) {
+                if (ext.exists() && ext.isFile() && ext.canRead()) {
+                    connection = (HttpURLConnection) new URL("http://localhost:5000").openConnection();
+                    connection.setConnectTimeout(1000);
+                    connection.connect();
+                    return true;
+                }
+            }
+            ZimbraLog.account.debug("pasteitcleaned service is not installed or running");
+            return false;
+        } catch(InvalidPathException | SecurityException | IOException ex) {
+            ZimbraLog.account.info("exception occurred : %s", ex.getMessage());
+            return false;
+        }
     }
 }

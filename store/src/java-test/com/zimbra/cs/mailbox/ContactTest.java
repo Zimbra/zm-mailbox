@@ -268,7 +268,7 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Contact contact = mbox.createContact(null, new ParsedContact(attrs, Lists.newArrayList(textAttachment)), Mailbox.ID_FOLDER_CONTACTS, null);
 
-        ParsedContact pc = new ParsedContact(contact).modify(new ParsedContact.FieldDeltaList(), new ArrayList<Attachment>());
+        ParsedContact pc = new ParsedContact(contact).modify(new ParsedContact.FieldDeltaList(), new ArrayList<Attachment>(), "ownerId");
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), pc.getContentStream());
         MimePart mp = Mime.getMimePart(mm, "1");
         Assert.assertEquals("text/plain", mp.getContentType());
@@ -310,7 +310,7 @@ public final class ContactTest {
         Contact contact = mbox.createContact(null, new ParsedContact(attrs, Lists.newArrayList(attachment1)), Mailbox.ID_FOLDER_CONTACTS, null);
         Attachment attachment2 = new Attachment(attachData, "image/png", "image", "image2.png");
         try {
-            ParsedContact pc = new ParsedContact(contact).modify(new ParsedContact.FieldDeltaList(), Lists.newArrayList(attachment2));
+            ParsedContact pc = new ParsedContact(contact).modify(new ParsedContact.FieldDeltaList(), Lists.newArrayList(attachment2), "ownerId");
         } catch (ServiceException se) {
             Assert.assertEquals("check the INVALID_IMAGE exception", "mail.INVALID_IMAGE", se.getCode());
         }

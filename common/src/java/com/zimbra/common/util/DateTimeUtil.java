@@ -17,10 +17,12 @@
 
 package com.zimbra.common.util;
 
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 public class DateTimeUtil {
 
@@ -40,5 +42,9 @@ public class DateTimeUtil {
             cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
             cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
             cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH);
+    }
+
+    public static boolean checkWithinTime(Timestamp timestamp, long timegap, TimeUnit timeunit) {
+        return (System.currentTimeMillis() - timestamp.getTime()) <= timeunit.toMillis(timegap);
     }
 }

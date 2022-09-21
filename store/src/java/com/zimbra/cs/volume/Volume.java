@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -31,7 +31,7 @@ import com.zimbra.soap.admin.type.VolumeInfo;
 /**
  * Based on default settings, there are 256 directories. We write blobs for id's 0-4095 to directory 0, 4096-8191 to
  * directory 1, etc. After filling directory 255, we wrap around and write 1048576-1052671 to directory 0 and so on.
- *
+ * <p>
  * Number of dirs: 2 ^ groupBits (2 ^ 8 = 256 by default)
  * Number of files per dir before wraparound: 2 ^ bits (2 ^ 12 = 4096 by default)
  */
@@ -41,7 +41,7 @@ public final class Volume {
     public static final short ID_NONE = -2;
     public static final short ID_MAX = 255;
 
-    public static final short TYPE_MESSAGE =  1;
+    public static final short TYPE_MESSAGE = 1;
     public static final short TYPE_MESSAGE_SECONDARY = 2;
     public static final short TYPE_INDEX = 10;
 
@@ -65,7 +65,36 @@ public final class Volume {
     private boolean compressBlobs;
     private long compressionThreshold;
     private Metadata metadata;
-    
+
+    private StoreType storeType;
+
+    private String storeManagerClass;
+
+    public static enum StoreType {
+        INTERNAL(1),
+        EXTERNAL(2);
+
+        private final int storeType;
+
+        StoreType(final int storeType) {
+            this.storeType = storeType;
+        }
+
+        public int getStoreType() {
+            return storeType;
+        }
+
+        public static StoreType getStoreTypeBy(int value) {
+            switch (value) {
+                case 1:
+                    return INTERNAL;
+                case 2:
+                    return EXTERNAL;
+            }
+            return null;
+        }
+    }
+
     public static class VolumeMetadata {
         private int lastSyncDate;
         private int currentSyncDate;
@@ -88,37 +117,37 @@ public final class Volume {
             this.currentSyncDate = meta.getInt(FN_DATE_CURRENTSYNC, 0);
             this.groupId = meta.getInt(FN_LAST_GROUP_ID, 0);
         }
-        
+
         public VolumeMetadata(int lastSyncDate, int currentSyncDate, int groupId) {
             this.lastSyncDate = lastSyncDate;
             this.currentSyncDate = currentSyncDate;
             this.groupId = groupId;
         }
-        
+
         public int getLastSyncDate() {
             return lastSyncDate;
         }
-        
+
         public int getCurrentSyncDate() {
             return currentSyncDate;
         }
-        
+
         public int getGroupId() {
             return groupId;
         }
-        
+
         public void setLastSyncDate(int date) {
             this.lastSyncDate = date;
         }
-        
+
         public void setCurrentSyncDate(int date) {
             this.currentSyncDate = date;
         }
-        
+
         public void setGroupId(int id) {
             this.groupId = id;
         }
-        
+
         public String toString() {
             return serialize().toString();
         }
@@ -153,7 +182,8 @@ public final class Volume {
             volume.compressBlobs = copy.compressBlobs;
             volume.compressionThreshold = copy.compressionThreshold;
             volume.metadata = copy.metadata;
-            
+            volume.storeType = copy.storeType;
+            volume.storeManagerClass = copy.storeManagerClass;
         }
 
         public Builder setId(short id) {
@@ -210,9 +240,19 @@ public final class Volume {
             volume.compressionThreshold = value;
             return this;
         }
-        
+
         public Builder setMetadata(VolumeMetadata metadata) {
             volume.metadata = metadata.serialize();
+            return this;
+        }
+
+        public Builder setStoreType(StoreType storeType) {
+            volume.storeType = storeType;
+            return this;
+        }
+
+        public Builder setStoreManagerClass(String storageManagerClass) {
+            volume.storeManagerClass = storageManagerClass;
             return this;
         }
 
@@ -314,36 +354,37 @@ public final class Volume {
     public long getCompressionThreshold() {
         return compressionThreshold;
     }
-    
+
     public VolumeMetadata getMetadata() throws ServiceException {
         return new VolumeMetadata(metadata);
     }
 
+    public StoreType getStoreType() {
+        return storeType;
+    }
+
+    public String getStoreManagerClass() {
+        return storeManagerClass;
+    }
+
     public static String getAbsolutePath(String path) throws ServiceException {
         //return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + getConfiguredRootPath(path) : path;
-    	return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + path : path;
+        return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + path : path;
     }
-    
-    public static String getConfiguredServerID() throws ServiceException
-    {
+
+    public static String getConfiguredServerID() throws ServiceException {
         StringBuilder finalPath = new StringBuilder();
-        if (Zimbra.isAlwaysOn())
-        {
-        	String alwaysOnServerClusterId = Zimbra.getAlwaysOnClusterId();
-        	String localServerId = Provisioning.getInstance().getLocalServer().getId();
-        	if (alwaysOnServerClusterId != null)
-        	{
-        		finalPath.append(alwaysOnServerClusterId);
-        	}
-        	else
-        	{
-        		finalPath.append(localServerId);
-        	}
-        }
-        else
-        {
-        	String localServerId = Provisioning.getInstance().getLocalServer().getId();
-        	finalPath.append(localServerId);
+        if (Zimbra.isAlwaysOn()) {
+            String alwaysOnServerClusterId = Zimbra.getAlwaysOnClusterId();
+            String localServerId = Provisioning.getInstance().getLocalServer().getId();
+            if (alwaysOnServerClusterId != null) {
+                finalPath.append(alwaysOnServerClusterId);
+            } else {
+                finalPath.append(localServerId);
+            }
+        } else {
+            String localServerId = Provisioning.getInstance().getLocalServer().getId();
+            finalPath.append(localServerId);
         }
         return finalPath.toString();
     }
@@ -351,14 +392,15 @@ public final class Volume {
     private StringBuilder getMailboxDir(int mboxId, String subdir) throws ServiceException {
         StringBuilder result = new StringBuilder();
         int dir = (mboxId >> mboxBits) & mboxGroupBitmask;
-        
+
         result.append(rootPath).append(File.separator);
 
-        if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled())
-        	result.append(getConfiguredServerID()).append(File.separator);
+        if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled()) {
+            result.append(getConfiguredServerID()).append(File.separator);
+        }
 
         result.append(dir).append(File.separator).append(mboxId);
-        
+
         if (subdir != null) {
             result.append(File.separator).append(subdir);
         }
@@ -381,9 +423,9 @@ public final class Volume {
     /**
      * Make sure the path is an absolute path, and remove all "." and ".." from it. This is similar to
      * {@link File#getCanonicalPath()} except symbolic links are not resolved.
-     *
+     * <p>
      * If there are too many ".." in the path, navigating to parent directory stops at root.
-     *
+     * <p>
      * Supports UNIX absolute path, Windows absolute path with or without drive letter, and windows UNC share.
      *
      * @throws VolumeServiceException if path is not absolute
@@ -463,7 +505,9 @@ public final class Volume {
                 .add("id", id).add("type", type).add("name", name).add("path", rootPath)
                 .add("mboxGroupBits", mboxGroupBits).add("mboxBits", mboxBits)
                 .add("fileGroupBits", fileGroupBits).add("fileBits", fileBits)
-                .add("compressBlobs", compressBlobs).add("compressionThreshold",compressionThreshold)
+                .add("compressBlobs", compressBlobs).add("compressionThreshold", compressionThreshold)
+                .add("storeType", storeType)
+                .add("storeManagerClass", storeManagerClass)
                 .toString();
     }
 
@@ -480,6 +524,9 @@ public final class Volume {
         jaxb.setCompressBlobs(compressBlobs);
         jaxb.setCompressionThreshold(compressionThreshold);
         jaxb.setCurrent(VolumeManager.getInstance().isCurrent(this));
+        short value = (short)(this.getStoreType().getStoreType());
+        jaxb.setStoreType(value);
+        jaxb.setStoreManagerClass(storeManagerClass);
         return jaxb;
     }
 }

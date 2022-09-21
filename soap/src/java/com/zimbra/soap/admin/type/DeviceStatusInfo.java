@@ -171,6 +171,19 @@ public class DeviceStatusInfo {
     private String lastUsedDate;
 
     /**
+     * @zm-api-field-tag email-address
+     * @zm-api-field-description email-address of the linked account
+     */
+    @XmlElement(name=SyncConstants.E_EMAIL_ADDRESS /* emailAddress */, required=false)
+    private String emailAddress;
+
+    /**
+     * @zm-api-field-tag updateTime
+     * @zm-api-field-description status update timestamp of mobile devicet
+     */
+    @XmlElement(name=SyncConstants.E_UPDATE_TIME /* updateTime */, required=false)
+    private String timestamp;
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -238,6 +251,7 @@ public class DeviceStatusInfo {
     public Integer getRemoteWipeAckTime() { return remoteWipeAckTime; }
     public String getRecoveryPassword() { return recoveryPassword; }
     public String getLastUsedDate() { return lastUsedDate; }
+    public String getUpdateTime() { return timestamp; }
 
     public MoreObjects.ToStringHelper addToStringInfo(
                 MoreObjects.ToStringHelper helper) {
@@ -259,7 +273,8 @@ public class DeviceStatusInfo {
             .add("remoteWipeReqTime", remoteWipeReqTime)
             .add("remoteWipeAckTime", remoteWipeAckTime)
             .add("recoveryPassword", recoveryPassword)
-            .add("lastUsedDate", lastUsedDate);
+            .add("lastUsedDate", lastUsedDate)
+            .add("timestamp", timestamp);
     }
 
     @Override

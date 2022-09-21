@@ -386,7 +386,7 @@ public class ImapPath implements Comparable<ImapPath> {
             return imapFolderStore;
         }
         // for LIST *, LIST % and LIST %/% we do not need an instance of ImapFolderStore
-        if (mPath.indexOf("*") >= 0 || mPath.indexOf("%") >= 0) {
+        if ("*".equals(this.mPath) || "%".equals(this.mPath) || "%/%".equals(this.mPath)) {
             return null;
         }
         if (useReferent()) {

@@ -144,6 +144,24 @@ public class ZAttrProvisioning {
         public boolean isMANUAL() { return this == MANUAL;}
     }
 
+    public static enum BackupBlobsCompressType {
+        zip("zip"),
+        zipStore("zipStore"),
+        noZip("noZip");
+        private String mValue;
+        private BackupBlobsCompressType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static BackupBlobsCompressType fromString(String s) throws ServiceException {
+            for (BackupBlobsCompressType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isZip() { return this == zip;}
+        public boolean isZipStore() { return this == zipStore;}
+        public boolean isNoZip() { return this == noZip;}
+    }
+
     public static enum BackupMode {
         Standard("Standard"),
         Auto_Grouped("Auto-Grouped");
@@ -956,7 +974,7 @@ public class ZAttrProvisioning {
 
     public static enum MtaNotifyClasses {
         bounce("bounce"),
-        _bounce("2bounce"),
+        _2bounce("2bounce"),
         data("data"),
         delay("delay"),
         policy("policy"),
@@ -973,7 +991,7 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBounce() { return this == bounce;}
-        public boolean is_bounce() { return this == _bounce;}
+        public boolean is_2bounce() { return this == _2bounce;}
         public boolean isData() { return this == data;}
         public boolean isDelay() { return this == delay;}
         public boolean isPolicy() { return this == policy;}
@@ -1664,10 +1682,28 @@ public class ZAttrProvisioning {
         public boolean isYear() { return this == year;}
     }
 
+    public static enum PrefCalenderScaling {
+        _10("10"),
+        _15("15"),
+        _30("30");
+        private String mValue;
+        private PrefCalenderScaling(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefCalenderScaling fromString(String s) throws ServiceException {
+            for (PrefCalenderScaling value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean is_10() { return this == _10;}
+        public boolean is_15() { return this == _15;}
+        public boolean is_30() { return this == _30;}
+    }
+
     public static enum PrefClientType {
         standard("standard"),
         advanced("advanced"),
-        zimbrax("zimbrax");
+        modern("modern");
         private String mValue;
         private PrefClientType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1679,7 +1715,7 @@ public class ZAttrProvisioning {
         }
         public boolean isStandard() { return this == standard;}
         public boolean isAdvanced() { return this == advanced;}
-        public boolean isZimbrax() { return this == zimbrax;}
+        public boolean isModern() { return this == modern;}
     }
 
     public static enum PrefComposeDirection {
@@ -2921,6 +2957,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAccountStatus = "zimbraAccountStatus";
 
     /**
+     * Account Suspension reason. It describes the actual cause for account
+     * suspension if any and it must be updated with account status.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3078)
+    public static final String A_zimbraAccountSuspensionReason = "zimbraAccountSuspensionReason";
+
+    /**
      * Zimbra access control list
      *
      * @since ZCS 5.0.7
@@ -2961,6 +3006,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3002)
     public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public static final String A_zimbraActiveSyncVersion = "zimbraActiveSyncVersion";
 
     /**
      * filter to decide members of the address list using gal
@@ -3946,6 +4007,47 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupAutoGroupedThrottled = "zimbraBackupAutoGroupedThrottled";
 
     /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4013)
+    public static final String A_zimbraBackupBlobsCompressType = "zimbraBackupBlobsCompressType";
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public static final String A_zimbraBackupCrontabConfig = "zimbraBackupCrontabConfig";
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=9014)
+    public static final String A_zimbraBackupEnabled = "zimbraBackupEnabled";
+
+    /**
      * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
      * to allow a full or auto-grouped backup to start; 0 = no minimum is
      * enforced. Examples: 25%, 10GB
@@ -3960,6 +4062,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=512)
     public static final String A_zimbraBackupMode = "zimbraBackupMode";
+
+    /**
+     * If true, --accounts option will be set to useBackupConfig on
+     * zmschedulebackup command. Enables global,cos,domain,account level
+     * backup. If false, --accounts option will be set to all accounts on
+     * zmschedulebackup command. Backups all accounts.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4017)
+    public static final String A_zimbraBackupObjectLevelEnabled = "zimbraBackupObjectLevelEnabled";
 
     /**
      * Backup report email recipients
@@ -3980,7 +4093,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupReportEmailSubjectPrefix = "zimbraBackupReportEmailSubjectPrefix";
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * The number of days backups will be kept. Backup Scheduler deletes
+     * backups older than the set value.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4012)
+    public static final String A_zimbraBackupRetentionDays = "zimbraBackupRetentionDays";
+
+    /**
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @since ZCS 6.0.0_BETA2
      */
@@ -3988,7 +4110,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupSkipBlobs = "zimbraBackupSkipBlobs";
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @since ZCS 6.0.0_BETA2
@@ -4003,6 +4125,45 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1003)
     public static final String A_zimbraBackupSkipSearchIndex = "zimbraBackupSkipSearchIndex";
+
+    /**
+     * The day of the week on which the full backup starts. When a day is
+     * select their relative value is set on the crontab. Default starts from
+     * Saturday 0-7 or names allowed (Sun, Wed), with both 0 and 7
+     * representing Sunday. Monday to Saturday (1-6)
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4016)
+    public static final String A_zimbraBackupStartDay = "zimbraBackupStartDay";
+
+    /**
+     * Starts backup each day at this time. This attribute is used to set
+     * hours and minutes on the crontab.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4011)
+    public static final String A_zimbraBackupStartTime = "zimbraBackupStartTime";
+
+    /**
+     * If true, the full backup runs synchronously. If false, full backup
+     * runs in a separate thread and the soap call returns with the backup
+     * label.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4014)
+    public static final String A_zimbraBackupSyncEnabled = "zimbraBackupSyncEnabled";
+
+    /**
+     * If true, will synchronize dumpster enabled accounts with backup
+     * eligible accounts from zimbraBackupEnabled list.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4010)
+    public static final String A_zimbraBackupSyncUsersEnabled = "zimbraBackupSyncUsersEnabled";
 
     /**
      * Default backup target path
@@ -5680,6 +5841,38 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDNSUseUDP = "zimbraDNSUseUDP";
 
     /**
+     * Zimbra port on which document editing can request document
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3099)
+    public static final String A_zimbraDocumentEditingCallbackPort = "zimbraDocumentEditingCallbackPort";
+
+    /**
+     * Document editing JWT secret
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3100)
+    public static final String A_zimbraDocumentEditingJwtSecret = "zimbraDocumentEditingJwtSecret";
+
+    /**
+     * Whether or not to log document accessed time
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=9015)
+    public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3098)
+    public static final String A_zimbraDocumentServerHost = "zimbraDocumentServerHost";
+
+    /**
      * maximum amount of mail quota a domain admin can set on a user
      */
     @ZAttr(id=398)
@@ -6462,6 +6655,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureDistributionListFolderEnabled = "zimbraFeatureDistributionListFolderEnabled";
 
     /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=9016)
+    public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
+
+    /**
      * Whether to allow a user to access EWS service
      *
      * @since ZCS 8.5.0
@@ -6484,6 +6685,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1373)
     public static final String A_zimbraFeatureExternalFeedbackEnabled = "zimbraFeatureExternalFeedbackEnabled";
+
+    /**
+     * Enable/Disable blocked file types set in
+     * zimbraFileUploadBlockedFileTypes for uploading
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3092)
+    public static final String A_zimbraFeatureFileTypeUploadRestrictionsEnabled = "zimbraFeatureFileTypeUploadRestrictionsEnabled";
 
     /**
      * filter prefs enabled
@@ -6613,7 +6823,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMailForwardingEnabled = "zimbraFeatureMailForwardingEnabled";
 
     /**
-     * enable end-user mail forwarding defined in mail filters features
+     * enable end-user mail redirecting defined in mail filters features
      *
      * @since ZCS 5.0.10
      */
@@ -6797,6 +7007,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeaturePortalEnabled = "zimbraFeaturePortalEnabled";
 
     /**
+     * Whether Powerpaste Feature is enabled or not
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3084)
+    public static final String A_zimbraFeaturePowerPasteEnabled = "zimbraFeaturePowerPasteEnabled";
+
+    /**
      * whether priority inbox feature is enabled
      *
      * @since ZCS 8.0.0
@@ -6831,6 +7049,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2142)
     public static final String A_zimbraFeatureResetPasswordSuspensionTime = "zimbraFeatureResetPasswordSuspensionTime";
+
+    /**
+     * Creates unsubscribe system folder
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4006)
+    public static final String A_zimbraFeatureSafeUnsubscribeFolderEnabled = "zimbraFeatureSafeUnsubscribeFolderEnabled";
 
     /**
      * saved search feature
@@ -7005,6 +7231,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureVoiceUpsellURL = "zimbraFeatureVoiceUpsellURL";
 
     /**
+     * whether to use Web Client feature
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3088)
+    public static final String A_zimbraFeatureWebClientEnabled = "zimbraFeatureWebClientEnabled";
+
+    /**
      * admin setting to enable/disable the web client offline access feature
      *
      * @since ZCS 8.5.0
@@ -7170,13 +7404,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileShareLifetime = "zimbraFileShareLifetime";
 
     /**
-     * Maximum size in bytes for file uploads
+     * Commonly blocked file types for uploading
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3091)
+    public static final String A_zimbraFileUploadBlockedFileTypes = "zimbraFileUploadBlockedFileTypes";
+
+    /**
+     * Maximum size in bytes for file uploads.
      */
     @ZAttr(id=227)
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @since ZCS 8.0.0
      */
@@ -7763,6 +8007,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGCMUrl = "zimbraGCMUrl";
 
     /**
+     * If true, enables backup globally and if there is pre-configured backup
+     * schedule the crontab will get that schedule.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4009)
+    public static final String A_zimbraGlobalBackupEnabled = "zimbraGlobalBackupEnabled";
+
+    /**
      * Object classes added on the global config entry. Unlike other
      * zimbra***ExtraObjectClass attributes, object classes specified in this
      * attributes will not be automatically added to the global config entry.
@@ -7774,6 +8027,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1254)
     public static final String A_zimbraGlobalConfigExtraObjectClass = "zimbraGlobalConfigExtraObjectClass";
+
+    /**
+     * Global level external store config
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4019)
+    public static final String A_zimbraGlobalExternalStoreConfig = "zimbraGlobalExternalStoreConfig";
 
     /**
      * zimbraId of the main dynamic group for the dynamic group unit
@@ -7856,8 +8117,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHsmAge = "zimbraHsmAge";
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @since ZCS 7.2.1
@@ -7877,9 +8138,9 @@ public class ZAttrProvisioning {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @since ZCS 6.0.0_BETA2
@@ -8793,6 +9054,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAllowReceiveButNotSendWhenOverQuota = "zimbraMailAllowReceiveButNotSendWhenOverQuota";
 
     /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4000)
+    public static final String A_zimbraMailAttachmentMaxSize = "zimbraMailAttachmentMaxSize";
+
+    /**
      * interface address on which HTTP server should listen; if empty, binds
      * to all interfaces
      *
@@ -8853,7 +9122,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailboxMoveFailedCleanupTaskInterval = "zimbraMailboxMoveFailedCleanupTaskInterval";
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @since ZCS 6.0.0_BETA2
      */
@@ -8861,7 +9130,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailboxMoveSkipBlobs = "zimbraMailboxMoveSkipBlobs";
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @since ZCS 6.0.0_BETA2
      */
@@ -9247,6 +9516,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=613)
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
+
+    /**
+     * If true, sends an email report to the admin user. Admins can disable
+     * the email notification by setting it to FALSE.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4015)
+    public static final String A_zimbraMailReportEnabled = "zimbraMailReportEnabled";
 
     /**
      * Deprecated since: 8.7.8. deprecated in favor of
@@ -9750,6 +10028,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMimeType = "zimbraMimeType";
 
     /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public static final String A_zimbraMobileAllowedDevices = "zimbraMobileAllowedDevices";
+
+    /**
      * whether mobile sync should zip the skipped item and attach it to the
      * notification mail
      *
@@ -9757,6 +10043,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1423)
     public static final String A_zimbraMobileAttachSkippedItemEnabled = "zimbraMobileAttachSkippedItemEnabled";
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public static final String A_zimbraMobileBlockedDevices = "zimbraMobileBlockedDevices";
 
     /**
      * Whether to force devices using Active Sync 2.5
@@ -10400,12 +10694,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileSearchMimeSupportEnabled = "zimbraMobileSearchMimeSupportEnabled";
 
     /**
+     * Whether to permit syncing shared calendar folders
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4002)
+    public static final String A_zimbraMobileShareCalendarEnabled = "zimbraMobileShareCalendarEnabled";
+
+    /**
      * Whether to permit syncing shared contact folders
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1570)
     public static final String A_zimbraMobileShareContactEnabled = "zimbraMobileShareContactEnabled";
+
+    /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4001)
+    public static final String A_zimbraMobileShareMailEnabled = "zimbraMobileShareMailEnabled";
 
     /**
      * indicates whether the application can forward original email as RFC
@@ -11759,7 +12069,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkAdminEnabled = "zimbraNetworkAdminEnabled";
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @since ZCS 8.8.5
      */
@@ -11773,7 +12084,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkLicense = "zimbraNetworkLicense";
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @since ZCS 8.8.0
      */
@@ -11781,7 +12094,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkMobileNGEnabled = "zimbraNetworkMobileNGEnabled";
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @since ZCS 8.8.0
      */
@@ -12042,6 +12356,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1256)
     public static final String A_zimbraPasswordAllowedPunctuationChars = "zimbraPasswordAllowedPunctuationChars";
+
+    /**
+     * whether or not blocking common passwords is enabled
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3081)
+    public static final String A_zimbraPasswordBlockCommonEnabled = "zimbraPasswordBlockCommonEnabled";
 
     /**
      * registered change password listener name
@@ -12834,6 +13156,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarWorkingHours = "zimbraPrefCalendarWorkingHours";
 
     /**
+     * Default calendar resolution preference
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4007)
+    public static final String A_zimbraPrefCalenderScaling = "zimbraPrefCalenderScaling";
+
+    /**
      * If FALSE, chat features are disabled in the client and user presence
      * is shown as offline to all other users.
      *
@@ -13192,6 +13522,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=412)
     public static final String A_zimbraPrefIdentityName = "zimbraPrefIdentityName";
+
+    /**
+     * whether end user choose to use IMAP feature. If it is set to TRUE,
+     * IMAP feature is available only when zimbraImapEnabled is TRUE.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3086)
+    public static final String A_zimbraPrefImapEnabled = "zimbraPrefImapEnabled";
 
     /**
      * whether or not the IMAP server exports search folders
@@ -13810,12 +14149,29 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefPop3DownloadSince = "zimbraPrefPop3DownloadSince";
 
     /**
+     * whether end user choose to use POP3 feature. If it is set to TRUE,
+     * POP3 feature is available only when zimbraPop3Enabled is TRUE.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3087)
+    public static final String A_zimbraPrefPop3Enabled = "zimbraPrefPop3Enabled";
+
+    /**
      * whether or not to include spam messages in POP3 access
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1166)
     public static final String A_zimbraPrefPop3IncludeSpam = "zimbraPrefPop3IncludeSpam";
+
+    /**
+     * Whether Powerpaste preference is enabled by user or admin
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3085)
+    public static final String A_zimbraPrefPowerPasteEnabled = "zimbraPrefPowerPasteEnabled";
 
     /**
      * quick command encoded by the client
@@ -15592,6 +15948,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraScheduledTaskRetryPolicy = "zimbraScheduledTaskRetryPolicy";
 
     /**
+     * Server level external store config
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4020)
+    public static final String A_zimbraServerExternalStoreConfig = "zimbraServerExternalStoreConfig";
+
+    /**
      * Object classes to add when creating a zimbra server object.
      *
      * @since ZCS 6.0.0_BETA1
@@ -15662,6 +16026,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1605)
     public static final String A_zimbraServerVersionType = "zimbraServerVersionType";
+
+    /**
+     * Subscriber/service account number. Custom attribute for account
+     * identity.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3077)
+    public static final String A_zimbraServiceAccountNumber = "zimbraServiceAccountNumber";
 
     /**
      * services that are enabled on this server
@@ -16209,6 +16582,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSmimeUserCertificateExtensions = "zimbraSmimeUserCertificateExtensions";
 
     /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4021)
+    public static final String A_zimbraSMMultiReaderEnabled = "zimbraSMMultiReaderEnabled";
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4022)
+    public static final String A_zimbraSMRuntimeSwitchEnabled = "zimbraSMRuntimeSwitchEnabled";
+
+    /**
      * Whether to enable smtp debug trace
      *
      * @since ZCS 6.0.0_BETA1
@@ -16442,7 +16831,8 @@ public class ZAttrProvisioning {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      */
     @ZAttr(id=267)
     public static final String A_zimbraSpellCheckURL = "zimbraSpellCheckURL";

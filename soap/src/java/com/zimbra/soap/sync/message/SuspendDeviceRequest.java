@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -27,6 +27,7 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceId;
 
 /**
+ * @zm-api-command-deprecation-info Note: <b>SuspendDeviceRequest</b> is deprecated. Use zimbraAccount QuarantineDevice instead.
  * @zm-api-command-network-edition
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required false

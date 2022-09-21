@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -40,6 +40,7 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
@@ -50,6 +51,7 @@ import com.zimbra.cs.account.Provisioning.GroupMemberEmailAddrs;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -61,7 +63,9 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.FileSharedWithMeRequest;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
@@ -78,6 +82,7 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
     private static final String REVOKE = "revoke";
+    private static final String CREATE = "create";
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -93,6 +98,14 @@ public class SendShareNotification extends MailDocumentHandler {
         Element eNotes = request.getOptionalElement(MailConstants.E_NOTES);
         Action action = Action.fromString(request.getAttribute(MailConstants.A_ACTION, null));
         String notes = eNotes==null ? null : eNotes.getText();
+        SendShareNotificationRequest req = zsc.elementToJaxb(request);
+        MailItem reqItem = null;
+        // if item element present
+        // get the requested item in the mailbox
+        if (req.getItem() != null) {
+            ItemId iid = new ItemId(req.getItem().getId(), zsc);
+            reqItem = mbox.getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
+        }
 
         // send the messages
         try {
@@ -103,13 +116,17 @@ public class SendShareNotification extends MailDocumentHandler {
                 if (ACL.GRANTEE_GROUP == sid.getGranteeTypeCode()) {
                     sharesWithGroupGrantee.add(sid);
                 } else {
-                    sendNotificationEmail(octxt, mbox, authAccount, account, sid, notes, action, null, null);
+                    sendNotificationEmail(octxt, mbox, authAccount, account, sid, notes, action, null, null, reqItem);
+                    if (reqItem instanceof Document) {
+                        processDBFilesSharedWithMe(reqItem, action, octxt, sid.getGranteeId(), sid.getPath(),
+                                sid.getOwnerAcctId(), sid.getItemId(), sid.getItemUuid(), sid.getOwnerNotifName(),
+                                sid.getRights(), context);
+                    }
                 }
             }
-
             // send to group grantees
             sendNotificationEmailToGroupGrantees(octxt, mbox, authAccount, account,
-                    sharesWithGroupGrantee, notes, action);
+                    sharesWithGroupGrantee, notes, action, reqItem);
 
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(
@@ -261,16 +278,29 @@ public class SendShareNotification extends MailDocumentHandler {
             MailItem item,
             boolean revoke) throws ServiceException {
 
-        MatchingGrant matchingGrant;
+        MatchingGrant matchingGrant = null;
 
         Mountpoint mpt = item instanceof Mountpoint ? (Mountpoint) item : null;
 
-        // see if the share specified in the request is real
-        if (Provisioning.onLocalServer(ownerAcct)) {
-            matchingGrant = getMatchingGrantLocal(octxt, item, granteeType, granteeId, ownerAcct);
+        if (item instanceof Document) {
+            ZimbraLog.account.debug("Adding sharing information for document %s", item.getName());
+            Document doc = (Document) item;
+            ACL acl = doc.getEffectiveACL();
+            if (acl != null) {
+                for (ACL.Grant grant : acl.getGrants()) {
+                    if (grant.getGranteeType() == granteeType && grant.getGranteeId().equals(granteeId)) {
+                        matchingGrant =  new MatchingGrant(grant);
+                    }
+                }
+            }
         } else {
-            matchingGrant = getMatchingGrantRemote(zsc, context, granteeType, granteeId, ownerAcct,
-                    mpt == null ? item.getId() : mpt.getRemoteId());
+            // see if the share specified in the request is real
+            if (Provisioning.onLocalServer(ownerAcct)) {
+                matchingGrant = getMatchingGrantLocal(octxt, item, granteeType, granteeId, ownerAcct);
+            } else {
+                matchingGrant = getMatchingGrantRemote(zsc, context, granteeType, granteeId, ownerAcct,
+                        mpt == null ? item.getId() : mpt.getRemoteId());
+            }
         }
 
         if (!revoke && matchingGrant == null) {
@@ -541,8 +571,14 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
     protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount,
+            ShareInfoData sid, String notes, Action action, Collection<String> internalRecipients,
+            String externalRecipient) throws ServiceException, MessagingException {
+        return generateShareNotification(authAccount, ownerAccount, sid, notes, action, internalRecipients, externalRecipient, false);
+    }
+
+    protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount,
         ShareInfoData sid, String notes, Action action, Collection<String> internalRecipients,
-        String externalRecipient) throws ServiceException, MessagingException {
+        String externalRecipient, boolean notifyForDocument) throws ServiceException, MessagingException {
         Locale locale = authAccount.getLocale();
         String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset,
             MimeConstants.P_CHARSET_UTF8);
@@ -589,17 +625,18 @@ public class SendShareNotification extends MailDocumentHandler {
             extUserLoginUrl = AccountUtil.getExtUserLoginURL(owner);
         }
         String mimePartText = ShareInfo.NotificationSender.getMimePartText(sid, notes, locale,
-            action, extUserShareAcceptUrl, extUserLoginUrl);
+            action, extUserShareAcceptUrl, extUserLoginUrl, notifyForDocument);
         String mimePartHtml = ShareInfo.NotificationSender.getMimePartHtml(sid, notes, locale,
-            action, extUserShareAcceptUrl, extUserLoginUrl);
+            action, extUserShareAcceptUrl, extUserLoginUrl, notifyForDocument);
 
         String mimePartXml = null;
-        if (!goesToExternalAddr) {
+        if (!goesToExternalAddr && !notifyForDocument) {
             mimePartXml = ShareInfo.NotificationSender.genXmlPart(sid, notes, null, action);
         }
 
+        // if notifyForDocument = true, do not attach the xml mimepart.
         MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml,
-            mimePartXml);
+                notifyForDocument ? null : mimePartXml);
         MimeMessage mm = AccountUtil.generateMimeMessage(authAccount, ownerAccount, subject,
             charset, internalRecipients, externalRecipient, recipient, mmp);
         return mm;
@@ -611,16 +648,25 @@ public class SendShareNotification extends MailDocumentHandler {
     private void sendNotificationEmail(OperationContext octxt, Mailbox mbox,
             Account authAccount, Account ownerAccount,
             ShareInfoData sid, String notes, Action action,
-            Collection<String> internalRecipients, String externalRecipient)
+            Collection<String> internalRecipients, String externalRecipient, MailItem reqItem)
     throws ServiceException, MessagingException  {
-        MimeMessage mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
-                internalRecipients, externalRecipient);
+        ZimbraLog.account.debug("Item being Shared : %s ",reqItem);
+        MimeMessage mm = null;
+        if (reqItem instanceof Document) {
+            ZimbraLog.account.debug("Sending share notification to [ %s ] for document %s", sid.getGranteeName(), reqItem.getName());
+            mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
+                    internalRecipients, externalRecipient, true);
+        } else {
+            mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
+                    internalRecipients, externalRecipient);
+        }
         mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
     }
 
+
     private void sendNotificationEmailToGroupGrantees(OperationContext octxt, Mailbox mbox,
             Account authAccount, Account ownerAccount, Collection<ShareInfoData> sids,
-            String notes, Action action)
+            String notes, Action action, MailItem reqItem)
     throws ServiceException, MessagingException {
         Provisioning prov = Provisioning.getInstance();
 
@@ -645,12 +691,12 @@ public class SendShareNotification extends MailDocumentHandler {
             if (addrs.groupAddr() != null) {
                 // just send to the group's address, no treatment needed for recipients
                 sendNotificationEmail(octxt, mbox, authAccount, ownerAccount, sid,
-                        notes, action, null, null);
+                        notes, action, null, null, reqItem);
             } else {
                 // send one common notif email to all internal members,
                 if (addrs.internalAddrs() != null) {
                     sendNotificationEmail(octxt, mbox, authAccount, ownerAccount, sid,
-                            notes, action, addrs.internalAddrs(), null);
+                            notes, action, addrs.internalAddrs(), null, reqItem);
                 }
 
                 // send one personalized notif email to each external member
@@ -659,11 +705,11 @@ public class SendShareNotification extends MailDocumentHandler {
                     if (extMembers.size() <= DebugConfig.sendGroupShareNotificationSynchronouslyThreshold) {
                         // send synchronously
                         sendNotificationEmailToGroupExternalMembers(octxt, mbox,
-                                authAccount, ownerAccount, sid, notes, action, extMembers);
+                                authAccount, ownerAccount, sid, notes, action, extMembers, reqItem);
                     } else {
                         // send asynchronously in a separate thread to avoid holding up the request
                         sendNotificationEmailToGroupExternalMembersAsync(octxt, mbox,
-                                authAccount, ownerAccount, sid, notes, action, extMembers);
+                                authAccount, ownerAccount, sid, notes, action, extMembers, reqItem);
                     }
                 }
             }
@@ -673,11 +719,11 @@ public class SendShareNotification extends MailDocumentHandler {
     private void sendNotificationEmailToGroupExternalMembers(
             OperationContext octxt, Mailbox mbox,
             Account authAccount, Account ownerAccount, ShareInfoData sid,
-            String notes, Action action, Collection<String> extMembers) {
+            String notes, Action action, Collection<String> extMembers, MailItem reqItem) {
         for (String extMember : extMembers) {
             try {
                 sendNotificationEmail(octxt, mbox, authAccount, ownerAccount, sid,
-                        notes, action, null, extMember);
+                        notes, action, null, extMember, reqItem);
             } catch (ServiceException e) {
                 sLog.warn("Ignoring error while sending share notification to external group member " + extMember , e);
             } catch (MessagingException e) {
@@ -689,13 +735,13 @@ public class SendShareNotification extends MailDocumentHandler {
     private void sendNotificationEmailToGroupExternalMembersAsync(
             final OperationContext octxt, final Mailbox mbox,
             final Account authAccount, final Account ownerAccount, final ShareInfoData sid,
-            final String notes, final Action action, final Collection<String> extMembers) {
+            final String notes, final Action action, final Collection<String> extMembers, MailItem reqItem) {
         Runnable r = new Runnable() {
             @Override
             public void run() {
                 try {
                     sendNotificationEmailToGroupExternalMembers(octxt, mbox,
-                            authAccount, ownerAccount, sid, notes, action, extMembers);
+                            authAccount, ownerAccount, sid, notes, action, extMembers, reqItem);
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("OutOfMemoryError while sending share notification to external group members", e);
                 }
@@ -706,5 +752,22 @@ public class SendShareNotification extends MailDocumentHandler {
         senderThread.start();
     }
 
-}
+    private void processDBFilesSharedWithMe(MailItem reqItem, Action action, OperationContext octxt, String granteeId,
+            String fileName, String ownerAccountId, int ownerFileId, String fileUUID, String fileOwnerName,
+            String rights, Map<String, Object> context) throws ServiceException {
 
+        Document docReqItem = (Document) reqItem;
+        FileSharedWithMeRequest req = new FileSharedWithMeRequest();
+        req.setAction(action == null ? CREATE : action.name());
+        req.setFileName(fileName);
+        req.setOwnerFileId(ownerFileId);
+        req.setFileUUID(fileUUID);
+        req.setFileOwnerName(fileOwnerName);
+        req.setRights(rights);
+        req.setContentType(docReqItem.getContentType());
+        req.setSize(docReqItem.getTotalSize());
+        Element request = JaxbUtil.jaxbToElement(req);
+        proxyRequest(request, context, granteeId);
+    }
+
+}

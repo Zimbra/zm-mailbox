@@ -42,6 +42,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZThreadLocal;
 import com.zimbra.cs.util.ZTestWatchman;
+import org.owasp.html.Encoding;
 
 public class OwaspHtmlSanitizerTest {
 
@@ -233,7 +234,6 @@ public class OwaspHtmlSanitizerTest {
         result = new OwaspHtmlSanitizer(html, true, null).sanitize();
         // a tag removed
         Assert.assertEquals(result, "ClickMe");
-
     }
 
     @Test
@@ -306,7 +306,6 @@ public class OwaspHtmlSanitizerTest {
         html = "<a href=\"  javascript:alert('0');\">Click Me</a>";
         result = new OwaspHtmlSanitizer(html, true, null).sanitize();
         Assert.assertFalse(result.contains("javascript"));
-
     }
 
     /**
@@ -347,7 +346,6 @@ public class OwaspHtmlSanitizerTest {
     
     @Test
     public void testBug78902() throws Exception {
-
         String html = "<html><head></head><body><a target=\"_blank\" href=\"Neptune.gif\"></a></body></html>";
         String result = new OwaspHtmlSanitizer(html,true,null).sanitize();
         Assert.assertTrue(result
@@ -536,7 +534,6 @@ public class OwaspHtmlSanitizerTest {
         html = "<a href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgiSGVsbG8hIik7PC9zY3JpcHQ+\">Bug</a>";
         result = new OwaspHtmlSanitizer(html, true, null).sanitize();
         Assert.assertEquals(result, "Bug");
-
     }
 
     @Test
@@ -707,5 +704,59 @@ public class OwaspHtmlSanitizerTest {
         String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
         // check that the id and class attributes are not removed
         Assert.assertTrue(result.equals(html));
+    }
+
+    @Test
+    public void testBugTSS18004() throws Exception {
+        String malformedHtml = "<html><body><h1 style=\"background-color:powderblue\"  \" > This is a heading</h1></body></html>";
+        String result = new OwaspHtmlSanitizer(malformedHtml, true, null).sanitize();
+        System.out.println("RESULT: " + result);
+        String output = "<html><body><h1 style=\"background-color:powderblue\"> This is a heading</h1></body></html>";
+        // check that the extra double quotes are removed
+        Assert.assertTrue("Verification failed: Failed to remove extra double quotes.", output.equals(result.trim()));
+    }
+
+    @Test
+    public void testBugTSS18004_1() throws Exception {
+        String malformedHtml = "<html><body><h1 style=\"background-color:powderblue\"\"> This is a heading</h1></body></html>";
+        String result = new OwaspHtmlSanitizer(malformedHtml, true, null).sanitize();
+        String output = "<html><body><h1 style=\"background-color:powderblue\"> This is a heading</h1></body></html>";
+        // check that the extra double quotes are removed
+        Assert.assertTrue("Verification failed: Failed to remove extra double quotes.", output.equals(result.trim()));
+    }
+
+    @Test
+    public void testBugZCS10594() throws Exception {
+        String malformedHtml = "<html><head><style>.uegzbq{font-size:22px;}@media not all and (pointer:coarse){.8bsfb:hover{background-color:#056b27;}}.scem3j{font-size:25px;}</style></head><body><div class=\"uegzbq\">First Line</div><br><div class=\"scem3j\">Second Line</div></body></html>";
+        String result = new OwaspHtmlSanitizer(malformedHtml, true, null).sanitize();
+        String output = "<html><head><style>.uegzbq{font-size:22px;}@media not all and (pointer:coarse){.8bsfb:hover{background-color:#056b27;}}.scem3j{font-size:25px;}</style></head><body><div class=\"uegzbq\">First Line</div><br /><div class=\"scem3j\">Second Line</div></body></html>";
+        Assert.assertTrue("Verification failed: Failed to include media queries.", output.equals(result.trim()));
+    }
+
+    @Test
+    public void testBug1932ShouldReturnSameUrlAfterSanitizing_1() throws Exception {
+        String url = "https://google.com/?page=red.blue&num_ar=abcd123456&orgAcronyme=abc12";
+        String html = "<a href='"+url+"'>"+url+"</a>";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        //&num should not be converted to #
+        Assert.assertTrue(Encoding.decodeHtml(result).contains(url));
+    }
+
+    @Test
+    public void testBug1932ShouldReturnSameUrlAfterSanitizing_2() throws Exception {
+        String url = "https://google.com/?page=red.blue&numero_num=10&Integral_int=20";
+        String html = "<a href='"+url+"'>"+url+"</a>";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        //&numero and &Integral should not be converted to № and ∫
+        Assert.assertTrue(Encoding.decodeHtml(result).contains(url));
+    }
+
+    @Test
+    public void testBug1932ShouldReturnSameUrlAfterSanitizing_3() throws Exception {
+        String url = "https://google.com/?account=2&order_id=125";
+        String html = "<a href='"+url+"'>"+url+"</a>";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        //&order should not be converted to ℴ
+        Assert.assertTrue(Encoding.decodeHtml(result).contains(url));
     }
 }

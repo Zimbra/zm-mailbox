@@ -298,7 +298,7 @@ public class ZimbraJWToken extends AuthToken {
                     }
                 }
             }
-            ZimbraCookie.addHttpOnlyCookie(resp, ZimbraCookie.COOKIE_ZM_JWT, finalValue, ZimbraCookie.PATH_ROOT, -1, true);
+            ZimbraCookie.addHttpOnlyCookie(resp, ZimbraCookie.COOKIE_ZM_JWT, finalValue, ZimbraCookie.PATH_ROOT, -1, true, this.isIgnoreSameSite());
         }
     }
 

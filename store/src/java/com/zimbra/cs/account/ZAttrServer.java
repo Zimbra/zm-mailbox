@@ -2969,6 +2969,367 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * <p>Valid values: [zip, zipStore, noZip]
+     *
+     * @return zimbraBackupBlobsCompressType, or ZAttrProvisioning.BackupBlobsCompressType.zip if unset and/or has invalid value
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4013)
+    public ZAttrProvisioning.BackupBlobsCompressType getBackupBlobsCompressType() {
+        try { String v = getAttr(Provisioning.A_zimbraBackupBlobsCompressType, true, true); return v == null ? ZAttrProvisioning.BackupBlobsCompressType.zip : ZAttrProvisioning.BackupBlobsCompressType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.BackupBlobsCompressType.zip; }
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * <p>Valid values: [zip, zipStore, noZip]
+     *
+     * @return zimbraBackupBlobsCompressType, or "zip" if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4013)
+    public String getBackupBlobsCompressTypeAsString() {
+        return getAttr(Provisioning.A_zimbraBackupBlobsCompressType, "zip", true);
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * <p>Valid values: [zip, zipStore, noZip]
+     *
+     * @param zimbraBackupBlobsCompressType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4013)
+    public void setBackupBlobsCompressType(ZAttrProvisioning.BackupBlobsCompressType zimbraBackupBlobsCompressType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, zimbraBackupBlobsCompressType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * <p>Valid values: [zip, zipStore, noZip]
+     *
+     * @param zimbraBackupBlobsCompressType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4013)
+    public Map<String,Object> setBackupBlobsCompressType(ZAttrProvisioning.BackupBlobsCompressType zimbraBackupBlobsCompressType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, zimbraBackupBlobsCompressType.toString());
+        return attrs;
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * <p>Valid values: [zip, zipStore, noZip]
+     *
+     * @param zimbraBackupBlobsCompressType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4013)
+    public void setBackupBlobsCompressTypeAsString(String zimbraBackupBlobsCompressType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, zimbraBackupBlobsCompressType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * <p>Valid values: [zip, zipStore, noZip]
+     *
+     * @param zimbraBackupBlobsCompressType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4013)
+    public Map<String,Object> setBackupBlobsCompressTypeAsString(String zimbraBackupBlobsCompressType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, zimbraBackupBlobsCompressType);
+        return attrs;
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * <p>Valid values: [zip, zipStore, noZip]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4013)
+    public void unsetBackupBlobsCompressType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in zip format. zip -
+     * blobs are backed up into zip files with compression (default).
+     * zipStore - blobs are backed up into zip files without compression.
+     * noZip - blobs are backed up as individual files rather in zip files.
+     *
+     * <p>Valid values: [zip, zipStore, noZip]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4013)
+    public Map<String,Object> unsetBackupBlobsCompressType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupBlobsCompressType, "");
+        return attrs;
+    }
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @return zimbraBackupCrontabConfig, or empty array if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public String[] getBackupCrontabConfig() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraBackupCrontabConfig, true, true); return value.length > 0 ? value : new String[] {"f '0 1 * * 6'"};
+    }
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @param zimbraBackupCrontabConfig new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public void setBackupCrontabConfig(String[] zimbraBackupCrontabConfig) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @param zimbraBackupCrontabConfig new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public Map<String,Object> setBackupCrontabConfig(String[] zimbraBackupCrontabConfig, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
+        return attrs;
+    }
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @param zimbraBackupCrontabConfig new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public void addBackupCrontabConfig(String zimbraBackupCrontabConfig) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @param zimbraBackupCrontabConfig new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public Map<String,Object> addBackupCrontabConfig(String zimbraBackupCrontabConfig, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
+        return attrs;
+    }
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @param zimbraBackupCrontabConfig existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public void removeBackupCrontabConfig(String zimbraBackupCrontabConfig) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @param zimbraBackupCrontabConfig existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public Map<String,Object> removeBackupCrontabConfig(String zimbraBackupCrontabConfig, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraBackupCrontabConfig, zimbraBackupCrontabConfig);
+        return attrs;
+    }
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public void unsetBackupCrontabConfig() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupCrontabConfig, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures crontab schedule. Full, incremental and delete cron
+     * schedules can be set using this attribute. The entire backup can be
+     * scheduled as f &#039;0 1 * * 6&#039; i &#039;0 1 * * 0-5&#039; d 7d
+     * &#039;0 0 * * *&#039;. f &#039;0 1 * * 6&#039; can be passed if we are
+     * setting only the full-backup schedule. (f - full-backup) i &#039;0 1 *
+     * * 0-5&#039; can be passed if we are setting only the
+     * incremental-backup schedule. (i - incremental) d 7d &#039;0 0 * *
+     * *&#039; can be passed if we are setting only the delete-backup
+     * schedule. (d - delete).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4018)
+    public Map<String,Object> unsetBackupCrontabConfig(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupCrontabConfig, "");
+        return attrs;
+    }
+
+    /**
      * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
      * to allow a full or auto-grouped backup to start; 0 = no minimum is
      * enforced. Examples: 25%, 10GB
@@ -3055,11 +3416,11 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * <p>Valid values: [Standard, Auto-Grouped]
      *
-     * @return zimbraBackupMode, or ZAttrProvisioning.BackupMode.Standard if unset and/or has invalid value
+     * @return zimbraBackupMode, or ZAttrProvisioning.BackupMode.Auto_Grouped if unset and/or has invalid value
      */
     @ZAttr(id=512)
     public ZAttrProvisioning.BackupMode getBackupMode() {
-        try { String v = getAttr(Provisioning.A_zimbraBackupMode, true, true); return v == null ? ZAttrProvisioning.BackupMode.Standard : ZAttrProvisioning.BackupMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.BackupMode.Standard; }
+        try { String v = getAttr(Provisioning.A_zimbraBackupMode, true, true); return v == null ? ZAttrProvisioning.BackupMode.Auto_Grouped : ZAttrProvisioning.BackupMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.BackupMode.Auto_Grouped; }
     }
 
     /**
@@ -3067,11 +3428,11 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * <p>Valid values: [Standard, Auto-Grouped]
      *
-     * @return zimbraBackupMode, or "Standard" if unset
+     * @return zimbraBackupMode, or "Auto-Grouped" if unset
      */
     @ZAttr(id=512)
     public String getBackupModeAsString() {
-        return getAttr(Provisioning.A_zimbraBackupMode, "Standard", true);
+        return getAttr(Provisioning.A_zimbraBackupMode, "Auto-Grouped", true);
     }
 
     /**
@@ -3162,6 +3523,93 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetBackupMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupMode, "");
+        return attrs;
+    }
+
+    /**
+     * If true, --accounts option will be set to useBackupConfig on
+     * zmschedulebackup command. Enables global,cos,domain,account level
+     * backup. If false, --accounts option will be set to all accounts on
+     * zmschedulebackup command. Backups all accounts.
+     *
+     * @return zimbraBackupObjectLevelEnabled, or false if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4017)
+    public boolean isBackupObjectLevelEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupObjectLevelEnabled, false, true);
+    }
+
+    /**
+     * If true, --accounts option will be set to useBackupConfig on
+     * zmschedulebackup command. Enables global,cos,domain,account level
+     * backup. If false, --accounts option will be set to all accounts on
+     * zmschedulebackup command. Backups all accounts.
+     *
+     * @param zimbraBackupObjectLevelEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4017)
+    public void setBackupObjectLevelEnabled(boolean zimbraBackupObjectLevelEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupObjectLevelEnabled, zimbraBackupObjectLevelEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, --accounts option will be set to useBackupConfig on
+     * zmschedulebackup command. Enables global,cos,domain,account level
+     * backup. If false, --accounts option will be set to all accounts on
+     * zmschedulebackup command. Backups all accounts.
+     *
+     * @param zimbraBackupObjectLevelEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4017)
+    public Map<String,Object> setBackupObjectLevelEnabled(boolean zimbraBackupObjectLevelEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupObjectLevelEnabled, zimbraBackupObjectLevelEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * If true, --accounts option will be set to useBackupConfig on
+     * zmschedulebackup command. Enables global,cos,domain,account level
+     * backup. If false, --accounts option will be set to all accounts on
+     * zmschedulebackup command. Backups all accounts.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4017)
+    public void unsetBackupObjectLevelEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupObjectLevelEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, --accounts option will be set to useBackupConfig on
+     * zmschedulebackup command. Enables global,cos,domain,account level
+     * backup. If false, --accounts option will be set to all accounts on
+     * zmschedulebackup command. Backups all accounts.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4017)
+    public Map<String,Object> unsetBackupObjectLevelEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupObjectLevelEnabled, "");
         return attrs;
     }
 
@@ -3406,7 +3854,84 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * The number of days backups will be kept. Backup Scheduler deletes
+     * backups older than the set value.
+     *
+     * @return zimbraBackupRetentionDays, or 8 if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4012)
+    public int getBackupRetentionDays() {
+        return getIntAttr(Provisioning.A_zimbraBackupRetentionDays, 8, true);
+    }
+
+    /**
+     * The number of days backups will be kept. Backup Scheduler deletes
+     * backups older than the set value.
+     *
+     * @param zimbraBackupRetentionDays new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4012)
+    public void setBackupRetentionDays(int zimbraBackupRetentionDays) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupRetentionDays, Integer.toString(zimbraBackupRetentionDays));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The number of days backups will be kept. Backup Scheduler deletes
+     * backups older than the set value.
+     *
+     * @param zimbraBackupRetentionDays new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4012)
+    public Map<String,Object> setBackupRetentionDays(int zimbraBackupRetentionDays, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupRetentionDays, Integer.toString(zimbraBackupRetentionDays));
+        return attrs;
+    }
+
+    /**
+     * The number of days backups will be kept. Backup Scheduler deletes
+     * backups older than the set value.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4012)
+    public void unsetBackupRetentionDays() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupRetentionDays, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The number of days backups will be kept. Backup Scheduler deletes
+     * backups older than the set value.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4012)
+    public Map<String,Object> unsetBackupRetentionDays(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupRetentionDays, "");
+        return attrs;
+    }
+
+    /**
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @return zimbraBackupSkipBlobs, or false if unset
      *
@@ -3418,7 +3943,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @param zimbraBackupSkipBlobs new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3433,7 +3958,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @param zimbraBackupSkipBlobs new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3449,7 +3974,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3463,7 +3988,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs (HSM or not) during a full backup
+     * if true, do not backup blobs (SM or not) during a full backup
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3478,7 +4003,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @return zimbraBackupSkipHsmBlobs, or false if unset
@@ -3491,7 +4016,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @param zimbraBackupSkipHsmBlobs new value
@@ -3507,7 +4032,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @param zimbraBackupSkipHsmBlobs new value
@@ -3524,7 +4049,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3539,7 +4064,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, do not backup blobs on secondary (HSM) volumes during a full
+     * if true, do not backup blobs on secondary (SM) volumes during a full
      * backup
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -3623,6 +4148,252 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetBackupSkipSearchIndex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupSkipSearchIndex, "");
+        return attrs;
+    }
+
+    /**
+     * The day of the week on which the full backup starts. When a day is
+     * select their relative value is set on the crontab. Default starts from
+     * Saturday 0-7 or names allowed (Sun, Wed), with both 0 and 7
+     * representing Sunday. Monday to Saturday (1-6)
+     *
+     * @return zimbraBackupStartDay, or "6" if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4016)
+    public String getBackupStartDay() {
+        return getAttr(Provisioning.A_zimbraBackupStartDay, "6", true);
+    }
+
+    /**
+     * The day of the week on which the full backup starts. When a day is
+     * select their relative value is set on the crontab. Default starts from
+     * Saturday 0-7 or names allowed (Sun, Wed), with both 0 and 7
+     * representing Sunday. Monday to Saturday (1-6)
+     *
+     * @param zimbraBackupStartDay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4016)
+    public void setBackupStartDay(String zimbraBackupStartDay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupStartDay, zimbraBackupStartDay);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The day of the week on which the full backup starts. When a day is
+     * select their relative value is set on the crontab. Default starts from
+     * Saturday 0-7 or names allowed (Sun, Wed), with both 0 and 7
+     * representing Sunday. Monday to Saturday (1-6)
+     *
+     * @param zimbraBackupStartDay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4016)
+    public Map<String,Object> setBackupStartDay(String zimbraBackupStartDay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupStartDay, zimbraBackupStartDay);
+        return attrs;
+    }
+
+    /**
+     * The day of the week on which the full backup starts. When a day is
+     * select their relative value is set on the crontab. Default starts from
+     * Saturday 0-7 or names allowed (Sun, Wed), with both 0 and 7
+     * representing Sunday. Monday to Saturday (1-6)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4016)
+    public void unsetBackupStartDay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupStartDay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The day of the week on which the full backup starts. When a day is
+     * select their relative value is set on the crontab. Default starts from
+     * Saturday 0-7 or names allowed (Sun, Wed), with both 0 and 7
+     * representing Sunday. Monday to Saturday (1-6)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4016)
+    public Map<String,Object> unsetBackupStartDay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupStartDay, "");
+        return attrs;
+    }
+
+    /**
+     * Starts backup each day at this time. This attribute is used to set
+     * hours and minutes on the crontab.
+     *
+     * @return zimbraBackupStartTime, or "01:00" if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4011)
+    public String getBackupStartTime() {
+        return getAttr(Provisioning.A_zimbraBackupStartTime, "01:00", true);
+    }
+
+    /**
+     * Starts backup each day at this time. This attribute is used to set
+     * hours and minutes on the crontab.
+     *
+     * @param zimbraBackupStartTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4011)
+    public void setBackupStartTime(String zimbraBackupStartTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupStartTime, zimbraBackupStartTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Starts backup each day at this time. This attribute is used to set
+     * hours and minutes on the crontab.
+     *
+     * @param zimbraBackupStartTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4011)
+    public Map<String,Object> setBackupStartTime(String zimbraBackupStartTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupStartTime, zimbraBackupStartTime);
+        return attrs;
+    }
+
+    /**
+     * Starts backup each day at this time. This attribute is used to set
+     * hours and minutes on the crontab.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4011)
+    public void unsetBackupStartTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupStartTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Starts backup each day at this time. This attribute is used to set
+     * hours and minutes on the crontab.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4011)
+    public Map<String,Object> unsetBackupStartTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupStartTime, "");
+        return attrs;
+    }
+
+    /**
+     * If true, the full backup runs synchronously. If false, full backup
+     * runs in a separate thread and the soap call returns with the backup
+     * label.
+     *
+     * @return zimbraBackupSyncEnabled, or false if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4014)
+    public boolean isBackupSyncEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupSyncEnabled, false, true);
+    }
+
+    /**
+     * If true, the full backup runs synchronously. If false, full backup
+     * runs in a separate thread and the soap call returns with the backup
+     * label.
+     *
+     * @param zimbraBackupSyncEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4014)
+    public void setBackupSyncEnabled(boolean zimbraBackupSyncEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSyncEnabled, zimbraBackupSyncEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, the full backup runs synchronously. If false, full backup
+     * runs in a separate thread and the soap call returns with the backup
+     * label.
+     *
+     * @param zimbraBackupSyncEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4014)
+    public Map<String,Object> setBackupSyncEnabled(boolean zimbraBackupSyncEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSyncEnabled, zimbraBackupSyncEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * If true, the full backup runs synchronously. If false, full backup
+     * runs in a separate thread and the soap call returns with the backup
+     * label.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4014)
+    public void unsetBackupSyncEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSyncEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, the full backup runs synchronously. If false, full backup
+     * runs in a separate thread and the soap call returns with the backup
+     * label.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4014)
+    public Map<String,Object> unsetBackupSyncEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupSyncEnabled, "");
         return attrs;
     }
 
@@ -8369,6 +9140,197 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Zimbra port on which document editing can request document
+     *
+     * <p>Use getDocumentEditingCallbackPortAsString to access value as a string.
+     *
+     * @see #getDocumentEditingCallbackPortAsString()
+     *
+     * @return zimbraDocumentEditingCallbackPort, or 7074 if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3099)
+    public int getDocumentEditingCallbackPort() {
+        return getIntAttr(Provisioning.A_zimbraDocumentEditingCallbackPort, 7074, true);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @return zimbraDocumentEditingCallbackPort, or "7074" if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3099)
+    public String getDocumentEditingCallbackPortAsString() {
+        return getAttr(Provisioning.A_zimbraDocumentEditingCallbackPort, "7074", true);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param zimbraDocumentEditingCallbackPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3099)
+    public void setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, Integer.toString(zimbraDocumentEditingCallbackPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param zimbraDocumentEditingCallbackPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3099)
+    public Map<String,Object> setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, Integer.toString(zimbraDocumentEditingCallbackPort));
+        return attrs;
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param zimbraDocumentEditingCallbackPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3099)
+    public void setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, zimbraDocumentEditingCallbackPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param zimbraDocumentEditingCallbackPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3099)
+    public Map<String,Object> setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, zimbraDocumentEditingCallbackPort);
+        return attrs;
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3099)
+    public void unsetDocumentEditingCallbackPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3099)
+    public Map<String,Object> unsetDocumentEditingCallbackPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, "");
+        return attrs;
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @return zimbraDocumentServerHost, or null if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3098)
+    public String getDocumentServerHost() {
+        return getAttr(Provisioning.A_zimbraDocumentServerHost, null, true);
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @param zimbraDocumentServerHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3098)
+    public void setDocumentServerHost(String zimbraDocumentServerHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentServerHost, zimbraDocumentServerHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @param zimbraDocumentServerHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3098)
+    public Map<String,Object> setDocumentServerHost(String zimbraDocumentServerHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentServerHost, zimbraDocumentServerHost);
+        return attrs;
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3098)
+    public void unsetDocumentServerHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentServerHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3098)
+    public Map<String,Object> unsetDocumentServerHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentServerHost, "");
+        return attrs;
+    }
+
+    /**
      * EmptyFolderOpTimeout is the time in seconds for which empty folder
      * operation will wait for the current empty folder operation to complete
      *
@@ -9002,7 +9964,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @return zimbraFileUploadMaxSize, or 10485760 if unset
      */
@@ -9012,7 +9974,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @param zimbraFileUploadMaxSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9025,7 +9987,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @param zimbraFileUploadMaxSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9039,7 +10001,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -9051,7 +10013,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9288,8 +10250,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @return zimbraHsmBatchSize, or 10000 if unset
@@ -9302,8 +10264,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @param zimbraHsmBatchSize new value
@@ -9319,8 +10281,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @param zimbraHsmBatchSize new value
@@ -9337,8 +10299,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9353,8 +10315,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Maximum number of items to move during a single HSM operation. If the
-     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * Maximum number of items to move during a single SM operation. If the
+     * limit is exceeded, the SM operation is repeated until all qualifying
      * items are moved.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -9453,9 +10415,9 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @return zimbraHsmPolicy, or empty array if unset
@@ -9469,9 +10431,9 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy new value
@@ -9488,9 +10450,9 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy new value
@@ -9508,9 +10470,9 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy new to add to existing values
@@ -9527,9 +10489,9 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy new to add to existing values
@@ -9547,9 +10509,9 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy existing value to remove
@@ -9566,9 +10528,9 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param zimbraHsmPolicy existing value to remove
@@ -9586,9 +10548,9 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9604,9 +10566,9 @@ public abstract class ZAttrServer extends NamedEntry {
 
     /**
      * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * storage during SM. Each value specifies a comma-separated list of item
+     * types and the search query used to select items to move. See the spec
+     * for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -17466,6 +18428,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * If true, sends an email report to the admin user. Admins can disable
+     * the email notification by setting it to FALSE.
+     *
+     * @return zimbraMailReportEnabled, or true if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4015)
+    public boolean isMailReportEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMailReportEnabled, true, true);
+    }
+
+    /**
+     * If true, sends an email report to the admin user. Admins can disable
+     * the email notification by setting it to FALSE.
+     *
+     * @param zimbraMailReportEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4015)
+    public void setMailReportEnabled(boolean zimbraMailReportEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailReportEnabled, zimbraMailReportEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, sends an email report to the admin user. Admins can disable
+     * the email notification by setting it to FALSE.
+     *
+     * @param zimbraMailReportEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4015)
+    public Map<String,Object> setMailReportEnabled(boolean zimbraMailReportEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailReportEnabled, zimbraMailReportEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * If true, sends an email report to the admin user. Admins can disable
+     * the email notification by setting it to FALSE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4015)
+    public void unsetMailReportEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailReportEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, sends an email report to the admin user. Admins can disable
+     * the email notification by setting it to FALSE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4015)
+    public Map<String,Object> unsetMailReportEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailReportEnabled, "");
+        return attrs;
+    }
+
+    /**
      * interface address on which HTTPS server should listen; if empty, binds
      * to all interfaces
      *
@@ -19034,7 +20073,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @return zimbraMailboxMoveSkipBlobs, or false if unset
      *
@@ -19046,7 +20085,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @param zimbraMailboxMoveSkipBlobs new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19061,7 +20100,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @param zimbraMailboxMoveSkipBlobs new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19077,7 +20116,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19091,7 +20130,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs (HSM or not) from mailbox move
+     * if true, exclude blobs (SM or not) from mailbox move
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19106,7 +20145,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @return zimbraMailboxMoveSkipHsmBlobs, or false if unset
      *
@@ -19118,7 +20157,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @param zimbraMailboxMoveSkipHsmBlobs new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19133,7 +20172,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @param zimbraMailboxMoveSkipHsmBlobs new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19149,7 +20188,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19163,7 +20202,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * if true, exclude blobs on secondary (HSM) volumes from mailbox move
+     * if true, exclude blobs on secondary (SM) volumes from mailbox move
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35552,7 +36591,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @return zimbraNetworkAdminNGEnabled, or false if unset
      *
@@ -35564,7 +36604,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @param zimbraNetworkAdminNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35579,7 +36620,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @param zimbraNetworkAdminNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35595,7 +36637,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35609,7 +36652,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation admin module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation admin module.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35624,7 +36668,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @return zimbraNetworkMobileNGEnabled, or false if unset
      *
@@ -35636,7 +36682,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @param zimbraNetworkMobileNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35651,7 +36699,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @param zimbraNetworkMobileNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35667,7 +36717,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35681,7 +36733,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation mobile sync module.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation mobile sync
+     * module.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35696,19 +36750,21 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
-     * @return zimbraNetworkModulesNGEnabled, or true if unset
+     * @return zimbraNetworkModulesNGEnabled, or false if unset
      *
      * @since ZCS 8.8.0
      */
     @ZAttr(id=2117)
     public boolean isNetworkModulesNGEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraNetworkModulesNGEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraNetworkModulesNGEnabled, false, true);
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35723,7 +36779,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35739,7 +36796,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35753,7 +36811,8 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 10.0.0. Deprecated and defaulted to false. Orig
+     * desc: Whether to enable zimbra network new generation modules.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -43366,13 +44425,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP; if not set,
      * default ciphers permitted by nginx will apply
      *
-     * @return zimbraReverseProxySSLCiphers, or "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" if unset
+     * @return zimbraReverseProxySSLCiphers, or "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:TLS_AES_256_GCM_SHA384:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" if unset
      *
      * @since ZCS 5.0.5
      */
     @ZAttr(id=640)
     public String getReverseProxySSLCiphers() {
-        return getAttr(Provisioning.A_zimbraReverseProxySSLCiphers, "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4", true);
+        return getAttr(Provisioning.A_zimbraReverseProxySSLCiphers, "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128:AES256:TLS_AES_256_GCM_SHA384:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4", true);
     }
 
     /**
@@ -43456,7 +44515,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1653)
     public String[] getReverseProxySSLProtocols() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxySSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1.2"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxySSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1.2","TLSv1.3"};
     }
 
     /**
@@ -45936,6 +46995,150 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @return zimbraSMMultiReaderEnabled, or true if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4021)
+    public boolean isSMMultiReaderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSMMultiReaderEnabled, true, true);
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @param zimbraSMMultiReaderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4021)
+    public void setSMMultiReaderEnabled(boolean zimbraSMMultiReaderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, zimbraSMMultiReaderEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @param zimbraSMMultiReaderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4021)
+    public Map<String,Object> setSMMultiReaderEnabled(boolean zimbraSMMultiReaderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, zimbraSMMultiReaderEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4021)
+    public void unsetSMMultiReaderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4021)
+    public Map<String,Object> unsetSMMultiReaderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @return zimbraSMRuntimeSwitchEnabled, or true if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4022)
+    public boolean isSMRuntimeSwitchEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSMRuntimeSwitchEnabled, true, true);
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @param zimbraSMRuntimeSwitchEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4022)
+    public void setSMRuntimeSwitchEnabled(boolean zimbraSMRuntimeSwitchEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMRuntimeSwitchEnabled, zimbraSMRuntimeSwitchEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @param zimbraSMRuntimeSwitchEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4022)
+    public Map<String,Object> setSMRuntimeSwitchEnabled(boolean zimbraSMRuntimeSwitchEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMRuntimeSwitchEnabled, zimbraSMRuntimeSwitchEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4022)
+    public void unsetSMRuntimeSwitchEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMRuntimeSwitchEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4022)
+    public Map<String,Object> unsetSMRuntimeSwitchEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMRuntimeSwitchEnabled, "");
+        return attrs;
+    }
+
+    /**
      * SSL certificate
      *
      * @return zimbraSSLCertificate, or null if unset
@@ -46514,6 +47717,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetScheduledTaskNumThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraScheduledTaskNumThreads, "");
+        return attrs;
+    }
+
+    /**
+     * Server level external store config
+     *
+     * @return zimbraServerExternalStoreConfig, or null if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4020)
+    public String getServerExternalStoreConfig() {
+        return getAttr(Provisioning.A_zimbraServerExternalStoreConfig, null, true);
+    }
+
+    /**
+     * Server level external store config
+     *
+     * @param zimbraServerExternalStoreConfig new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4020)
+    public void setServerExternalStoreConfig(String zimbraServerExternalStoreConfig) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerExternalStoreConfig, zimbraServerExternalStoreConfig);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Server level external store config
+     *
+     * @param zimbraServerExternalStoreConfig new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4020)
+    public Map<String,Object> setServerExternalStoreConfig(String zimbraServerExternalStoreConfig, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerExternalStoreConfig, zimbraServerExternalStoreConfig);
+        return attrs;
+    }
+
+    /**
+     * Server level external store config
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4020)
+    public void unsetServerExternalStoreConfig() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerExternalStoreConfig, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Server level external store config
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4020)
+    public Map<String,Object> unsetServerExternalStoreConfig(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerExternalStoreConfig, "");
         return attrs;
     }
 
@@ -49313,7 +50588,8 @@ public abstract class ZAttrServer extends NamedEntry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @return zimbraSpellCheckURL, or empty array if unset
      */
@@ -49326,7 +50602,8 @@ public abstract class ZAttrServer extends NamedEntry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -49342,7 +50619,8 @@ public abstract class ZAttrServer extends NamedEntry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -49359,7 +50637,8 @@ public abstract class ZAttrServer extends NamedEntry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -49375,7 +50654,8 @@ public abstract class ZAttrServer extends NamedEntry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -49392,7 +50672,8 @@ public abstract class ZAttrServer extends NamedEntry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -49408,7 +50689,8 @@ public abstract class ZAttrServer extends NamedEntry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -49425,7 +50707,8 @@ public abstract class ZAttrServer extends NamedEntry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -49440,7 +50723,8 @@ public abstract class ZAttrServer extends NamedEntry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

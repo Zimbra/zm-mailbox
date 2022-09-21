@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
@@ -563,7 +564,7 @@ abstract class Pop3Handler {
             if (acct == null) {
                 throw new Pop3CmdException("LOGIN failed");
             }
-            if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false)) {
+            if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false) || !acct.isPrefPop3Enabled()) {
                 throw new Pop3CmdException("pop access not enabled for account");
             }
             accountId = acct.getId();
@@ -572,7 +573,7 @@ abstract class Pop3Handler {
             ZimbraLog.addAccountNameToContext(accountName);
             ZimbraLog.pop.info("user %s authenticated, mechanism=%s %s",
                     accountName, mechanism, startedTLS ? "[TLS]" : "");
-
+            AuthListener.invokeOnSuccess(acct);
             mailbox = new Pop3Mailbox(MailboxManager.getInstance().getMailboxByAccount(acct), acct, query);
             state = STATE_TRANSACTION;
             expire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / Constants.MILLIS_PER_DAY);
@@ -583,6 +584,7 @@ abstract class Pop3Handler {
             String code = e.getCode();
             if (code.equals(AccountServiceException.NO_SUCH_ACCOUNT) || code.equals(AccountServiceException.AUTH_FAILED)
                     || code.equals(AccountServiceException.TWO_FACTOR_AUTH_FAILED)) {
+                AuthListener.invokeOnException(e);
                 throw new Pop3CmdException("LOGIN failed");
             } else if (code.equals(AccountServiceException.CHANGE_PASSWORD)) {
                 throw new Pop3CmdException("your password has expired");

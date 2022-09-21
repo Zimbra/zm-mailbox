@@ -23,6 +23,8 @@ package com.zimbra.cs.service;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -37,6 +39,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -154,6 +157,8 @@ public class PreAuthServlet extends ZimbraServlet {
                         authToken = newZimbraAuthToken;
                         ZimbraLog.account.debug("Deregistered the one time preauth token and issuing new one to the user.");
                     }
+
+                    authToken.setCsrfTokenEnabled(true); // ZBUG-2662
                     // no need to redirect to the correct server, just send them off to do business
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
@@ -246,6 +251,7 @@ public class PreAuthServlet extends ZimbraServlet {
                     else
                         at = (expires ==  0) ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
 
+                    at.setCsrfTokenEnabled(true); // ZBUG-2662
                     setCookieAndRedirect(req, resp, at);
 
                 } else {
@@ -336,6 +342,35 @@ public class PreAuthServlet extends ZimbraServlet {
         authToken.encode(resp, isAdmin, secureCookie);
 
         String redirectURL = getOptionalParam(req, PARAM_REDIRECT_URL, null);
+        URL url = null;
+        try {
+            url = new URL(redirectURL);
+        } catch (MalformedURLException exp) {
+            ZimbraLog.account.debug(String.format("URL %s is a malformed URL", redirectURL), exp);
+        }
+
+        if (url != null) {
+            String protocol = url.getProtocol();
+            String host = url.getHost();
+            int port = url.getPort();
+            String protocolPattern = "^(http|https|ftp|file)://.*$";
+            if (redirectURL.matches(protocolPattern)) {
+                String replaceProtocol = String.format("%s://", protocol);
+                redirectURL = redirectURL.replace(replaceProtocol, "");
+            }
+            if (host != null) {
+                String strToReplace = null;
+                if (port == -1) {
+                    strToReplace = String.format("%s", host);
+                } else {
+                    strToReplace = String.format("%s:%d", host, port);
+                }
+                if (strToReplace != "") {
+                    redirectURL = redirectURL.replace(strToReplace, "");
+                }
+            }
+        }
+
         if (redirectURL != null) {
             resp.sendRedirect(redirectURL);
         } else {

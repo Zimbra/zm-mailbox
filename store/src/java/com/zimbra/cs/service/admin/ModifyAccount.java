@@ -26,9 +26,12 @@ import java.util.Map;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -42,9 +45,9 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.listeners.AccountListener;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ModifyAccountRequest;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -125,9 +128,157 @@ public class ModifyAccount extends AdminDocumentHandler {
             newServer = Provisioning.getInstance().getServerByName(newServerName);
             defendAgainstServerNameHarvesting(newServer, Key.ServerBy.name, newServerName, zsc, Admin.R_listServer);
         }
+        String oldStatus = account.getAccountStatus(prov);
+        boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
 
-        // pass in true to checkImmutable
-        prov.modifyAttrs(account, attrs, true);
+        String oldSuspendReason = account.getAccountSuspensionReason();
+        if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+            String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+            //clearing account suspension reason if new status is active and old status other than active.
+            if (!oldStatus.equals(AccountStatus.active.toString())
+                    && newStatus.equals(AccountStatus.active.toString())) {
+                attrs.put(Provisioning.A_zimbraAccountSuspensionReason, "");
+            }
+            if ((newStatus.equals(AccountStatus.locked.toString()) || newStatus.equals(AccountStatus.lockout.toString()))
+                    && attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason)) {
+                account.setAccountSuspensionReason((String) attrs.get(Provisioning.A_zimbraAccountSuspensionReason));
+            }
+            try {
+                AccountListener.invokeOnStatusChange(account, oldStatus, newStatus, zsc, rollbackOnFailure);
+            } catch (ServiceException se) {
+                ZimbraLog.account.error(se.getMessage());
+                account.setAccountStatus(AccountStatus.fromString(oldStatus));
+                if (!StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                    account.setAccountSuspensionReason(oldSuspendReason);
+                }
+                throw se;
+            }
+        }
+        if (!attrs.containsKey(Provisioning.A_zimbraAccountStatus) && attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason)) {
+            ZimbraLog.account.info("Account Modify request having suspension reason without account status, ignoring updation");
+            attrs.remove(Provisioning.A_zimbraAccountSuspensionReason);
+        }
+
+        if (attrs.containsKey(Provisioning.A_zimbraServiceAccountNumber)) {
+            String newServiceAcctNum = (String) attrs.get(Provisioning.A_zimbraServiceAccountNumber);
+            try {
+                AccountListener.invokeOnSANChange(account, newServiceAcctNum, zsc, rollbackOnFailure);
+            } catch (ServiceException se) {
+                ZimbraLog.account.error(se.getMessage());
+                if (rollbackOnFailure) {
+                    // roll back status change account listener updates, if within same request
+                    if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+                        String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+                        if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason) && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                            account.setAccountSuspensionReason(oldSuspendReason);
+                        }
+                        try {
+                            AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc, rollbackOnFailure);
+                        } catch (ServiceException sse) {
+                            ZimbraLog.account.error(se.getMessage());
+                            throw se;
+                        }
+                    }
+                } else {
+                    ZimbraLog.account.warn("No rollback on account listener for zimbra account SAN change failure, there may be inconsistency in account. %s", se.getMessage());
+                }
+                throw se;
+            }
+        }
+
+        if (attrs.containsKey(Provisioning.A_givenName) || attrs.containsKey(Provisioning.A_sn)) {
+            String firstName = (String) attrs.get(Provisioning.A_givenName);
+            String lastName = (String) attrs.get(Provisioning.A_sn);
+            try {
+                AccountListener.invokeOnNameChange(account, firstName, lastName, zsc, rollbackOnFailure);
+            } catch (ServiceException se) {
+                ZimbraLog.account.error(se.getMessage());
+                if (rollbackOnFailure) {
+                    // roll back status change account listener updates, if within same request
+                    if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+                        String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+                        if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason) && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                            account.setAccountSuspensionReason(oldSuspendReason);
+                        }
+                        try {
+                            AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc, rollbackOnFailure);
+                        } catch (ServiceException sse) {
+                            ZimbraLog.account.error(se.getMessage());
+                            throw se;
+                        }
+                    }
+                    // roll back SAN change account listener updates, if within same request
+                    if (attrs.containsKey(Provisioning.A_zimbraServiceAccountNumber)) {
+                        String oldSAN = account.getServiceAccountNumber();
+                        try {
+                            AccountListener.invokeOnSANChange(account, oldSAN, zsc, rollbackOnFailure);
+                        } catch (ServiceException sse) {
+                            ZimbraLog.account.error(se.getMessage());
+                            throw se;
+                        }
+                    }
+                } else {
+                    ZimbraLog.account.warn("No rollback on account listener for zimbra account status change failure, there may be inconsistency in account. %s", se.getMessage());
+                }
+                throw se;
+            }
+        }
+
+        try {
+            // pass in true to checkImmutable
+            prov.modifyAttrs(account, attrs, true);
+
+            // If request is for `zimbraTwoFactorAuthEnabled = FALSE` and both zimbraFeatureTwoFactorAuthAvailable and zimbraFeatureTwoFactorAuthRequired is set to TRUE
+            // for the user, clear all the trusted devices so that the user would re-setup 2FA in the next login after LDAP updation is successful.
+            if (attrs.containsKey(Provisioning.A_zimbraTwoFactorAuthEnabled)) {
+                String value = (String) attrs.get(Provisioning.A_zimbraTwoFactorAuthEnabled);
+                if (!StringUtil.isNullOrEmpty(value) && value.equalsIgnoreCase("false") && account.isFeatureTwoFactorAuthAvailable() && account.isFeatureTwoFactorAuthRequired()) {
+                    String []trustedDevices = account.getTwoFactorAuthTrustedDevices();
+                    if (trustedDevices != null && trustedDevices.length > 0) {
+                        for (String encoded : trustedDevices) {
+                            account.removeTwoFactorAuthTrustedDevices(encoded);
+                        }
+                    }
+                }
+            }
+
+            if (attrs.containsKey(Provisioning.A_zimbraIsAdminAccount) || attrs.containsKey(Provisioning.A_zimbraIsDelegatedAdminAccount)
+                    || attrs.containsKey(Provisioning.A_zimbraIsDomainAdminAccount)) {
+                AccountListener.invokeOnAdminPrivilegesUpdate(account);
+            }
+        } catch (ServiceException se) {
+            if (rollbackOnFailure) {
+                ZimbraLog.account.debug("Exception occured while modifying account in zimbra for %s, roll back listener updates.", account.getMail());
+                // roll back status change updates
+                if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+                    String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+                    ZimbraLog.account.debug("Listener rollback for account status change of from \"%s\" to \"%s\".", newStatus, oldStatus);
+                    if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason)
+                            && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                        account.setAccountSuspensionReason(oldSuspendReason);
+                    }
+                    try {
+                        AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc, rollbackOnFailure);
+                    } catch (ServiceException sse) {
+                        ZimbraLog.account.error(sse.getMessage());
+                        throw sse;
+                    }
+                }
+                // roll back name change updates
+                if (attrs.containsKey(Provisioning.A_givenName) || attrs.containsKey(Provisioning.A_sn)) {
+                    try {
+                        ZimbraLog.account.debug("Listener rollback for account name change. First name: %s Last name:  %s.", account.getGivenName(), account.getSn());
+                        AccountListener.invokeOnNameChange(account, account.getGivenName(), account.getSn(), zsc, rollbackOnFailure);
+                    } catch (ServiceException nse) {
+                        ZimbraLog.account.error(nse.getMessage());
+                        throw nse;
+                    }
+                }
+            } else {
+                ZimbraLog.account.warn("No rollback on account listener for zimbra modify account failure, there may be inconsistency in account. %s", se.getMessage());
+            }
+            throw se;
+        }
 
         // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
         // is changed, the cache object(he one we are holding on to) would'd been

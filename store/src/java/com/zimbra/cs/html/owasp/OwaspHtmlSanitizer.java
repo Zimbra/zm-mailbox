@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.html.owasp;
 
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 import org.owasp.html.Handler;
@@ -23,6 +25,7 @@ import org.owasp.html.HtmlSanitizer;
 import org.owasp.html.HtmlSanitizer.Policy;
 import org.owasp.html.HtmlStreamRenderer;
 import org.owasp.html.PolicyFactory;
+
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.html.owasp.policies.StyleTagReceiver;
 
@@ -36,9 +39,42 @@ public class OwaspHtmlSanitizer implements Callable<String> {
     private String vHost;
 
     public OwaspHtmlSanitizer(String html, boolean neuterImages, String vHost) {
-        this.html = html;
+        // fix to check open tags & remove
+        this.html = checkUnbalancedTags(html);
         this.neuterImages = neuterImages;
         this.vHost = vHost;
+    }
+    
+    /** 
+     * A method to check & remove unbalanced tags which may have started, not ended
+     * 
+     * @return the Formatted Html after removing unbalanced tags
+     */
+    private String checkUnbalancedTags(String html) {
+        if (StringUtil.isNullOrEmpty(html)) {
+            return html;
+        }
+        ArrayList<String> tags = new ArrayList<String>();
+        // in tags array we can add multiple tags, so for each tag write start &
+        // end with a & separator like(<!--&-->)
+        tags.add("<!--&-->");
+        String formattedHtml = "";
+        for (String str : tags) {
+            String tagArr[] = str.split("&");
+            String start = tagArr[0];
+            String end = tagArr[1];
+            String[] arrOfStr = html.split(start);
+            for (String strAfterSplit : arrOfStr) {
+                 if (!strAfterSplit.equals("") && strAfterSplit.contains(end)) {
+                     formattedHtml = formattedHtml + start + strAfterSplit;
+                 } else {
+                     formattedHtml = formattedHtml + strAfterSplit;
+                 }
+            }
+            html = formattedHtml;
+            formattedHtml = "";
+        }
+        return html;
     }
 
     private PolicyFactory POLICY_DEFINITION;
@@ -53,8 +89,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
      * 
      * @return the sanitized form of the <code>html</code>; <code>null</code> if
      *         <code>html</code> was <code>null</code>
+     * @throws UnsupportedEncodingException
      */
-    public String sanitize() {
+    public String sanitize() throws UnsupportedEncodingException {
         OwaspThreadLocal threadLocalInstance = new OwaspThreadLocal();
         threadLocalInstance.setVHost(vHost);
         OwaspHtmlSanitizer.zThreadLocal.set(threadLocalInstance);
@@ -65,14 +102,14 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         final StringBuilder htmlBuilder = new StringBuilder(html.length());
         // create the renderer that will write the sanitized HTML to the builder
         final HtmlStreamRenderer renderer = HtmlStreamRenderer.create(htmlBuilder,
-            Handler.PROPAGATE,
-            // log errors resulting from exceptionally bizarre inputs
-            new Handler<String>() {
+                Handler.PROPAGATE,
+                // log errors resulting from exceptionally bizarre inputs
+                new Handler<String>() {
 
-                public void handle(final String x) {
-                    throw new AssertionError(x);
-                }
-            });
+            public void handle(final String x) {
+                throw new AssertionError(x);
+            }
+        });
         // create a thread-specific policy
         instantiatePolicy();
         final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));

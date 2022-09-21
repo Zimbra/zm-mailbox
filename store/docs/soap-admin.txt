@@ -3281,4 +3281,81 @@ API to create address list in given domain
 
 searchFilter: See SearchCalendarResourcesRequest section in soap.txt.
 domain: domain is optional element, if domain is not provided, admin account's domain is used from admin auth token
+------------------------
+API to get device(configured with Zimbra's EAS extension) list for given filters.
+All the filters are optional so if no filter is passed in request, all devices will be returned in the response.
 
+Request:
+ <GetDeviceStatusRequest [offset="0" limit="0"]>
+   [<account by="id|name">...</account>]
+   [<device id="..." />]
+   [<status>0|1|2|3|4|5</status>]
+   [<deviceName>xr</deviceName>]
+   [<deviceType>android</deviceType>]
+   [<deviceLastUsed>yyyy-MM-dd</deviceLastUsed>]
+   [<deviceSyncVersion>16.0</deviceSyncVersion>]
+   [<filterDevicesByAnd>true</filterDevicesByAnd>]
+ </GetDeviceStatusRequest>
+
+offset: The starting offset (0 is default)
+limit: The number of devices to return per page (0 is default and means all). If offset is given in request, limit is mandatory.
+account: The account selector for which devices should be returned in the response.(equals matching)
+device: The device with given id should only be returned.(equals matching)
+status: Get devices only which have given status.(equals matching)
+        0=POLICY_NEEDPROV
+        1=OK
+        2=SUSPENDED(quarantied)
+        3=WIPE_REQ
+        4=WIPE_ACK
+        5=BLOCKED
+deviceName: Devices to be searched with given device name value.(contains matching)
+deviceType: Devices to be searched with given device type value.(contains matching)
+deviceLastUsed: The last used date in "yyyy-MM-dd" format.(equals matching)
+deviceSyncVersion: Devices to be searched with given activesync version only.(equals matching)
+filterDevicesByAnd: Filter devices in AND manner or not
+
+Response:
+ <GetDeviceStatusResponse>
+   [<device id="..." type="..." [ua="..."] [protocol="..."] [model="..."] [imei="..."] [friendly_name="..."] [os="..."] [os_language="..."] [phone_number="..."]>
+     <provisionable>...</provisionable>
+     <status>...</status>
+     <firstReqReceived>...</firstReqReceived>
+     [<lastPolicyUpdate>...</lastPolicyUpdate>]
+     [<remoteWipeReqTime>...</remoteWipeReqTime>
+     [<removeWipeAckTime>...</remoteWipeAckTime>]]
+     [<recoveryPassword>...</recoveryPassword>]
+     [<lastUsedDate>...</lastUsedDate>]
+   </device>]*
+ </GetDeviceStatusResponse>
+
+------------------------
+API to allow device || enable mobile sync feature for account and update ldap attribute values (zimbraMobileAllowedDevices, zimbraMobileBlockedDevices) at domain
+  <AllowDeviceRequest>
+     [<account by="id|name">...</account>]
+     [<device id="..."/>]
+     [<domain by="id|name|virtualHostname">...</domain>]
+  </AllowDeviceRequest>
+
+Either (account) OR (device & domain) required
+
+account: account is optional element, if account is not provided & device is present it will update ldap attribute values.
+domain: domain is optional element but must required with device, not required if we are passing account.
+device: device is optional element, if device is not provided & account is present it will enable mobile sync feature for account.
+
+if both i.e account and device is present it will just change the device statue to NEEDPROV
+
+------------------------
+API to block device || disabled mobile sync feature for account and update ldap attribute values (zimbraMobileAllowedDevices, zimbraMobileBlockedDevices) at domain
+  <BlockDeviceRequest>
+     [<account by="id|name">...</account>]
+     [<device id="..."/>]
+     [<domain by="id|name|virtualHostname">...</domain>]
+  </BlockDeviceRequest>
+
+Either (account) OR (device & domain) required
+
+account: account is optional element, if account is not provided & device is present it will update ldap attribute values.
+domain: domain is optional element but must required with device, not required if we are passing account.
+device: device is optional element, if device is not provided & account is present it will disable mobile sync feature for account.
+
+if both i.e account and device is present it will just change the device statue to BLOCKED

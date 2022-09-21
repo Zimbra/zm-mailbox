@@ -120,7 +120,7 @@ public class GetFolderTest {
         Assert.assertNotNull("top-level folder is listed", root);
         Assert.assertTrue("top level folder is stubbed", isStubbed(root));
 
-        Set<String> subfolderNames = ImmutableSet.of("Trash", "Briefcase", "foo", "bar", "Inbox");
+        Set<String> subfolderNames = ImmutableSet.of("Trash", "Briefcase", "foo", "bar", "Inbox", "Files shared with me");
         Set<String> stubbedSubfolderNames = ImmutableSet.of("bar", "Inbox");
         List<Element> subfolders = root.listElements(MailConstants.E_FOLDER);
         Assert.assertEquals("number of listed subfolders", subfolderNames.size(), subfolders.size());

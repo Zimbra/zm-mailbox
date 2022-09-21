@@ -43,6 +43,7 @@ import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.file.VolumeMailboxBlob;
 
 /**
  * Abstract base class for external store integration.
@@ -95,9 +96,20 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     @Override
     public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
     throws IOException, ServiceException {
+        /*
+            ExternalStoreManager is mean for supporting ExternalBlobs only
+         */
+        InputStream is;
+        // if src MailboxBlob is not part of ExternalMailboxBlob,
+        // then content should be pulled using respective StoreManager
+        if (!(src instanceof ExternalMailboxBlob)) {
+            is = StoreManager.getReaderSMInstance(src.getLocator()).getContent(src);
+        } else {
+            is = getContent(src);
+        }
         //default implementation does not handle de-duping
         //stores which de-dupe need to override this method appropriately
-        InputStream is = getContent(src);
+
         try {
             StagedBlob staged = stage(is, src.getSize(), destMbox);
             return link(staged, destMbox, destItemId, destRevision);

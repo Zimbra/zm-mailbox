@@ -54,6 +54,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
@@ -63,6 +64,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
+import com.zimbra.cs.service.SharedFileServletContext;
 
 enum ProxyConfOverride {
     NONE,
@@ -1106,6 +1108,114 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
     }
 }
 
+class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
+
+    public OnlyOfficeDocServiceServersVar() {
+
+        super("web.upstream.onlyoffice.docservice", null, null, ProxyConfValueType.STRING, ProxyConfOverride.CUSTOM,
+                "List of upstream HTTPS servers towards docservice port used by Web Proxy ");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        StringBuffer sb = new StringBuffer();
+        Set<String> upstreamsCreatedForZimbraId = new HashSet<String>();
+        List<Server> mailclientservers = mProv.getAllMailClientServers();
+        for (Server server : mailclientservers) {
+            String serverName = server.getServiceHostname();
+            String zimbraId = server.getId();
+            boolean hasOnlyOfficeServer = server.hasOnlyOfficeService();
+            String docServerHost = server.getDocumentServerHost();
+            mLog.debug(String.format(
+                    " Setting Docservice upstream for servername : %s , zimbraId : %s , docServerHost in config : %s ",
+                    serverName, zimbraId, docServerHost));
+            // if docServerHost is present, get the zimbraId of that host
+            // zimbraDocumentServerHost is always defined at either server or global level
+            if (docServerHost != null && docServerHost.trim().length() > 0) {
+                mLog.debug(String.format(" Setting Docservice upstream, Document Server set to : %s in config",
+                        docServerHost));
+                Server docServer = mProv.get(Key.ServerBy.name, docServerHost);
+                zimbraId = docServer.getId();
+                serverName = docServerHost;
+                hasOnlyOfficeServer = docServer.hasOnlyOfficeService();
+            }
+
+            if (!upstreamsCreatedForZimbraId.contains(zimbraId) && hasOnlyOfficeServer) {
+                sb.append(generateUpstreamBlock(zimbraId, serverName));
+                sb.append("\n");
+                upstreamsCreatedForZimbraId.add(zimbraId);
+                mLog.debug("Added docservice upstream for onlyoffice server " + serverName);
+            }
+        }
+        mValue = sb.toString();
+    }
+
+    public String generateUpstreamBlock(String zimbraId, String serverName) {
+        int timeout = 0;
+        int maxFails = 0;
+        // form the docservice upstream block
+        String encodedServerZimbraId = HttpUtil.fetchEncoded(zimbraId);
+        StringBuffer sb = new StringBuffer();
+        sb.append(String.format("upstream docservice_%s {\n", encodedServerZimbraId));
+        sb.append(String.format(String.format("\tserver\t %s:%d fail_timeout=%ds max_fails=%d;\n", serverName,
+                ProxyConfGen.ZIMBRA_UPSTREAM_ONLYOFFICE_DOCSERVICE_PORT, timeout, maxFails)));
+        sb.append(String.format("}\n", encodedServerZimbraId));
+
+        return sb.toString();
+    }
+}
+
+class OnlyOfficeSpellCheckerServersVar extends ProxyConfVar {
+
+    public OnlyOfficeSpellCheckerServersVar() {
+
+        super("web.upstream.onlyoffice.spellchecker", null, null, ProxyConfValueType.STRING, ProxyConfOverride.CUSTOM,
+                "List of upstream HTTPS servers towards spellchecker port used by Web Proxy ");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        StringBuffer sb = new StringBuffer();
+        Set<String> upstreamsCreatedForZimbraId = new HashSet<String>();
+        // get the docserver hostname configured
+        // if it is not set use the mailbox server name
+        List<Server> mailClientServers = mProv.getAllMailClientServers();
+        for (Server server : mailClientServers) {
+            String serverName = server.getServiceHostname();
+            String zimbraId = server.getId();
+            boolean hasOnlyOfficeServer = server.hasOnlyOfficeService();
+            String docServerHost = server.getDocumentServerHost();
+            // if docServerHost is present, get the zimbraId of that host
+            if (docServerHost != null && docServerHost.trim().length() > 0) {
+                Server docServer = mProv.get(Key.ServerBy.name, docServerHost);
+                zimbraId = docServer.getId();
+                serverName = docServerHost;
+                hasOnlyOfficeServer = docServer.hasOnlyOfficeService();
+            }
+            if (!upstreamsCreatedForZimbraId.contains(zimbraId) && hasOnlyOfficeServer) {
+                sb.append(generateUpstreamBlock(zimbraId, serverName));
+                sb.append("\n");
+                upstreamsCreatedForZimbraId.add(zimbraId);
+                mLog.debug("Added spellchecker upstream for onlyoffice server " + serverName);
+            }
+        }
+
+        mValue = sb.toString();
+    }
+
+    public String generateUpstreamBlock(String zimbraId, String serverName) {
+        // form the spellchecker upstream block
+        String encodedServerZimbraId = HttpUtil.fetchEncoded(zimbraId);
+        StringBuffer sb = new StringBuffer();
+        sb.append(String.format("upstream spellchecker_%s {\n", encodedServerZimbraId));
+        sb.append(String.format(String.format("\tserver\t %s:%d;\n", serverName,
+                ProxyConfGen.ZIMBRA_UPSTREAM_ONLYOFFICE_SPELLCHECKER_PORT)));
+        sb.append(String.format("}\n", encodedServerZimbraId));
+
+        return sb.toString();
+    }
+}
+
 class AddHeadersVar extends ProxyConfVar {
     private final ArrayList<String> rhdr;
     private final String key;
@@ -1914,6 +2024,7 @@ class WebSSLProtocolsVar extends ProxyConfVar {
         sslProtocols.add("TLSv1");
         sslProtocols.add("TLSv1.1");
         sslProtocols.add("TLSv1.2");
+	sslProtocols.add("TLSv1.3");
         return sslProtocols;
     }
 
@@ -1964,6 +2075,7 @@ class MailSSLProtocolsVar extends ProxyConfVar {
         sslProtocols.add("TLSv1");
         sslProtocols.add("TLSv1.1");
         sslProtocols.add("TLSv1.2");
+	sslProtocols.add("TLSv1.3");
         return sslProtocols;
     }
 
@@ -2092,6 +2204,8 @@ public class ProxyConfGen
     static final String ZIMBRA_SSL_UPSTREAM_ZX_NAME = "zx_ssl";
     static final int    ZIMBRA_UPSTREAM_ZX_PORT = 8742;
     static final int    ZIMBRA_UPSTREAM_SSL_ZX_PORT = 8743;
+    static final int    ZIMBRA_UPSTREAM_ONLYOFFICE_DOCSERVICE_PORT = 7084;
+    static final int    ZIMBRA_UPSTREAM_ONLYOFFICE_SPELLCHECKER_PORT = 7085;
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -2564,7 +2678,6 @@ public class ProxyConfGen
      */
     private static void expandTemplateByExplodeServer(
             BufferedReader temp, BufferedWriter conf, String serviceName ) throws IOException {
-
         List<ServerAttrItem> filteredServers = new ArrayList<>();
         for( ServerAttrItem serverAttrItem : mServerAttrs ) {
             if (serverAttrItem.hasService(serviceName)) {
@@ -2956,7 +3069,7 @@ public class ProxyConfGen
         mConfVars.put("web.xmpp.bosh.port", new ProxyConfVar("web.xmpp.bosh.port", Provisioning.A_zimbraReverseProxyXmppBoshPort, new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Port number of the external XMPP server where XMPP over BOSH requests need to be proxied"));
         mConfVars.put("web.xmpp.bosh.timeout", new TimeInSecVarWrapper(new ProxyConfVar("web.xmpp.bosh.timeout", Provisioning.A_zimbraReverseProxyXmppBoshTimeout, new Long(60), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "the response timeout for an external XMPP/BOSH server")));
         mConfVars.put("web.xmpp.bosh.use_ssl", new ProxyConfVar("web.xmpp.bosh.use_ssl", Provisioning.A_zimbraReverseProxyXmppBoshSSL, true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether XMPP/Bosh uses SSL"));
-	ProxyConfVar webSslDhParamFile = new ProxyConfVar("web.ssl.dhparam.file", null, mDefaultDhParamFile, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Filename with DH parameters for EDH ciphers to be used by the proxy");
+        ProxyConfVar webSslDhParamFile = new ProxyConfVar("web.ssl.dhparam.file", null, mDefaultDhParamFile, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Filename with DH parameters for EDH ciphers to be used by the proxy");
         mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar(webSslDhParamFile));
         mConfVars.put("web.ssl.dhparam.file", webSslDhParamFile);
         mConfVars.put("upstream.fair.shm.size", new ProxyFairShmVar());
@@ -2966,6 +3079,9 @@ public class ProxyConfGen
         mConfVars.put("web.ssl.upstream.zx.name", new ProxyConfVar("web.ssl.upstream.zx.name", null, ZIMBRA_SSL_UPSTREAM_ZX_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS zx upstream"));
         mConfVars.put("web.upstream.zx.:servers", new WebUpstreamZxServersVar());
         mConfVars.put("web.ssl.upstream.zx.:servers", new WebSslUpstreamZxServersVar());
+
+        mConfVars.put("web.upstream.onlyoffice.docservice", new OnlyOfficeDocServiceServersVar());
+        mConfVars.put("web.upstream.onlyoffice.spellchecker", new OnlyOfficeSpellCheckerServersVar());
 
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
@@ -3251,6 +3367,8 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpSModeConf("mixed")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.common")), new File(mConfIncludesDir, getConfFileName("docs.common")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.upstream")), new File(mConfIncludesDir, getConfFileName("docs.upstream")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("onlyoffice.common")), new File(mConfIncludesDir, getConfFileName("onlyoffice.common")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("onlyoffice.upstream")), new File(mConfIncludesDir, getConfFileName("onlyoffice.upstream")));
         } catch (ProxyConfException pe) {
             handleException(pe);
             exitCode = 1;

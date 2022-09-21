@@ -34,6 +34,7 @@ public class AccountServiceException extends ServiceException {
 
     public static final String AUTH_FAILED        = "account.AUTH_FAILED";
     public static final String CHANGE_PASSWORD    = "account.CHANGE_PASSWORD";
+    public static final String RESET_PASSWORD    = "account.RESET_PASSWORD";
     public static final String PASSWORD_LOCKED    = "account.PASSWORD_LOCKED";
     public static final String PASSWORD_CHANGE_TOO_SOON  = "account.PASSWORD_CHANGE_TOO_SOON";
     public static final String PASSWORD_RECENTLY_USED = "account.PASSWORD_RECENTLY_USED";
@@ -96,6 +97,7 @@ public class AccountServiceException extends ServiceException {
     public static final String TWO_FACTOR_AUTH_FAILED = "account.TWO_FACTOR_AUTH_FAILED";
     public static final String TWO_FACTOR_AUTH_REQUIRED = "account.TWO_FACTOR_AUTH_REQUIRED";
     public static final String NO_SUCH_ORG_UNIT = "account.NO_SUCH_ORG_UNIT";
+    public static final String WEB_CLIENT_ACCESS_NOT_ALLOWED = "account.WEB_CLIENT_ACCESS_NOT_ALLOWED";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -167,6 +169,10 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException CHANGE_PASSWORD() {
         return new AccountServiceException("must change password", CHANGE_PASSWORD, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException RESET_PASSWORD() {
+        return new AccountServiceException("reset password", RESET_PASSWORD, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException PASSWORD_LOCKED() {
@@ -427,5 +433,9 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException ALIAS_EXISTS(String name) {
         return new AccountServiceException("email address alias already exists: "+name, ALIAS_EXISTS, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException WEB_CLIENT_ACCESS_NOT_ALLOWED(String name) {
+        return new AccountServiceException("web client access not allowed: " + name, WEB_CLIENT_ACCESS_NOT_ALLOWED, SENDERS_FAULT, null);
     }
 }

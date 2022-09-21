@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -47,6 +47,9 @@ public final class DbVolume {
     private static final String CN_FILE_GROUP_BITS = "file_group_bits";
     private static final String CN_MAILBOX_BITS = "mailbox_bits";
     private static final String CN_MAILBOX_GROUP_BITS = "mailbox_group_bits";
+
+    private static final String CN_STORE_TYPE = "store_type";
+    private static final String CN_STORE_MANAGER_CLASS = "store_manager_class";
     private static final String CN_COMPRESS_BLOBS = "compress_blobs";
     private static final String CN_COMPRESSION_THRESHOLD = "compression_threshold";
     private static final String CN_METADATA = "metadata";
@@ -62,8 +65,8 @@ public final class DbVolume {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO volume (id, type, name, path, mailbox_group_bits, " +
-                    "mailbox_bits, file_group_bits, file_bits, compress_blobs, compression_threshold, metadata) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "mailbox_bits, file_group_bits, file_bits, compress_blobs, compression_threshold, metadata, store_type, store_manager_class) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setShort(pos++, nextId);
             stmt.setShort(pos++, volume.getType());
@@ -76,6 +79,8 @@ public final class DbVolume {
             stmt.setBoolean(pos++, volume.isCompressBlobs());
             stmt.setLong(pos++, volume.getCompressionThreshold());
             stmt.setString(pos++, volume.getMetadata().toString());
+            stmt.setShort(pos++, (short)(volume.getStoreType().getStoreType()));
+            stmt.setString(pos++, volume.getStoreManagerClass());
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -297,13 +302,20 @@ public final class DbVolume {
         } catch (ServiceException e) {
             throw VolumeServiceException.INVALID_METADATA(e);
         }
+
+        short storeTypeShort = rs.getShort(CN_STORE_TYPE);
+        Volume.StoreType storeType = Volume.StoreType.getStoreTypeBy(storeTypeShort);
+
         return Volume.builder().setId(rs.getShort(CN_ID)).setType(rs.getShort(CN_TYPE)).setName(rs.getString(CN_NAME))
                 .setPath(Volume.getAbsolutePath(rs.getString(CN_PATH)), false)
                 .setMboxGroupBits(rs.getShort(CN_MAILBOX_GROUP_BITS)).setMboxBit(rs.getShort(CN_MAILBOX_BITS))
                 .setFileGroupBits(rs.getShort(CN_FILE_GROUP_BITS)).setFileBits(rs.getShort(CN_FILE_BITS))
                 .setCompressBlobs(rs.getBoolean(CN_COMPRESS_BLOBS))
                 .setCompressionThreshold(rs.getLong(CN_COMPRESSION_THRESHOLD))
-                .setMetadata(metadata).build();
+                .setStoreType(storeType)
+                .setMetadata(metadata)
+                .setStoreManagerClass(rs.getString(CN_STORE_MANAGER_CLASS))
+                .build();
     }
 
     public static boolean isVolumeReferenced(DbConnection conn, short volumeId) throws ServiceException {
@@ -328,16 +340,17 @@ public final class DbVolume {
     }
 
     private static boolean isVolumeReferenced(DbConnection conn, short volumeId, int groupId) throws ServiceException {
-        return tableRefsVolume(conn, volumeId, groupId, "revision") || tableRefsVolume(conn, volumeId, groupId, "revision_dumpster") ||
-            tableRefsVolume(conn, volumeId, groupId, "mail_item_dumpster") || tableRefsVolume(conn, volumeId, groupId, "mail_item");
+        return tableRefsVolume(conn, volumeId, groupId, "revision") ||
+                tableRefsVolume(conn, volumeId, groupId, "revision_dumpster") ||
+                tableRefsVolume(conn, volumeId, groupId, "mail_item_dumpster") ||
+                tableRefsVolume(conn, volumeId, groupId, "mail_item");
     }
 
     private static boolean tableRefsVolume(DbConnection conn, short volumeId, int groupId, String table) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT count(*) from "+DbMailbox.qualifyTableName(groupId, table) +
-                " where locator=?");
+            stmt = conn.prepareStatement("SELECT count(*) from "+DbMailbox.qualifyTableName(groupId, table) + " where locator=?");
             stmt.setInt(1, volumeId);
             rs = stmt.executeQuery();
             return (rs.next() && rs.getInt(1) > 0);

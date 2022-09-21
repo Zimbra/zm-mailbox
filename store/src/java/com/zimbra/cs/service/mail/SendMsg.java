@@ -55,11 +55,14 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Rights;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -112,6 +115,8 @@ public class SendMsg extends MailDocumentHandler {
                ZimbraSoapContext zsc = getZimbraSoapContext(context);
                Mailbox mbox = getRequestedMailbox(zsc);
                AccountUtil.checkQuotaWhenSendMail(mbox);
+               AuthToken authToken = zsc.getAuthToken();
+               Account authAcct = getAuthenticatedAccount(zsc);
 
                OperationContext octxt = getOperationContext(zsc, context);
                ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
@@ -126,6 +131,10 @@ public class SendMsg extends MailDocumentHandler {
                boolean isCalendarForward = request.getAttributeBool(MailConstants.A_IS_CALENDAR_FORWARD, false);
                boolean noSaveToSent = request.getAttributeBool(MailConstants.A_NO_SAVE_TO_SENT, false);
                boolean fetchSavedMsg = request.getAttributeBool(MailConstants.A_FETCH_SAVED_MSG, false);
+               boolean deliveryReport = false;
+               if (LC.delivery_report_enabled.booleanValue()) {
+                   deliveryReport = request.getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false);
+               }
 
                String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
                ItemId iidOrigId = origId == null ? null : new ItemId(origId, zsc);
@@ -133,8 +142,42 @@ public class SendMsg extends MailDocumentHandler {
                String identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
                String dataSourceId = msgElem.getAttribute(MailConstants.A_DATASOURCE_ID, null);
                String draftId = msgElem.getAttribute(MailConstants.A_DRAFT_ID, null);
-               ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
                boolean sendFromDraft = msgElem.getAttributeBool(MailConstants.A_SEND_FROM_DRAFT, false);
+               ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
+
+               Account delegatedAccount = authAcct;
+               Mailbox  delegatedMailbox = null;
+               if (!StringUtil.isNullOrEmpty(identityId) && !identityId.equals(authAcct.getId()) ) {
+
+                   Account acctReq = AccountUtil.getRequestedAccount(identityId, authAcct);
+                   if (acctReq != null) {
+                       AccessManager accessMgr = AccessManager.getInstance();
+                       if (accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendAs, false) ||
+                               accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendOnBehalfOf, false)) {
+                           delegatedAccount = acctReq;
+
+                           Provisioning prov = Provisioning.getInstance();
+                           boolean active = delegatedAccount != null && Provisioning.ACCOUNT_STATUS_ACTIVE.equals(
+                               delegatedAccount.getAccountStatus(prov));
+                           if (!active) {
+                               ZimbraLog.soap.info("The delegated account:%s is inactive, for mail operations user context will be :%s",
+                                       delegatedAccount.getName(), authAcct.getName());
+                               delegatedAccount = authAcct;
+                           }
+
+                           delegatedMailbox = mbox;
+                           if (Provisioning.onLocalServer(delegatedAccount)) {
+                               delegatedMailbox = MailboxManager.getInstance().getMailboxByAccountId(delegatedAccount.getId());
+                           } else {
+                               Element response = proxyRequest(request, context, authToken, delegatedAccount.getId());
+                               if (iidDraft != null) {
+                                   deleteDraft(iidDraft, octxt, mbox, zsc);
+                               }
+                               return response;
+                           }
+                       }
+                   }
+               }
 
                SendState state = SendState.NEW;
                ItemId savedMsgId = null;
@@ -163,7 +206,8 @@ public class SendMsg extends MailDocumentHandler {
                    savedMsgId = sendRecord.getSecond();
                } else if (state == SendState.PENDING) {
                    // tired of waiting for another thread to complete the send
-                   throw MailServiceException.TRY_AGAIN("message send already in progress: " + sendUid);
+                   throw MailServiceException.SENDMSG_IN_PENDING_STATE_TRY_AGAIN(
+                           String.format("message send in pending state: %s", sendUid));
                } else if (state == SendState.NEW) {
                    MimeMessageData mimeData = new MimeMessageData();
                    try {
@@ -175,11 +219,21 @@ public class SendMsg extends MailDocumentHandler {
                            Message msg = mbox.getMessageById(octxt, iidDraft.getId());
                            mm = msg.getMimeMessage(false);
                        } else {
-                           mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
+                           if (Provisioning.onLocalServer(authAcct)) {
+                               Mailbox loggedUserMbox = MailboxManager.getInstance().getMailboxByAccountId(authAcct.getId());
+                               mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, loggedUserMbox, msgElem, null, mimeData);
+                           } else {
+                               mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
+                           }
                        }
 
-                       savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
-                               dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                       if  (delegatedMailbox  != null) {
+                           savedMsgId = doSendMessage(octxt, delegatedMailbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                                   dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward, deliveryReport);
+                       } else  {
+                           savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                                   dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward, deliveryReport);
+                       }
 
                        // (need to make sure that *something* gets recorded, because caching
                        //   a null ItemId makes the send appear to still be PENDING)
@@ -228,45 +282,62 @@ public class SendMsg extends MailDocumentHandler {
            }
     }
 
-    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
-            ItemId origMsgId, String replyType, String identityId, String dataSourceId, boolean noSaveToSent,
-            boolean needCalendarSentByFixup, boolean isCalendarForward)
-    throws ServiceException {
-
-        boolean isCalendarMessage = false;
+    public static ItemId getItemId(String dataSourceId, Mailbox mbox, OperationContext oc, boolean noSaveToSent,
+            MimeMessage mm, List<Upload> uploads, ItemId origMsgId, String replyType, String identityId,
+            boolean needCalendarSentByFixup, boolean isCalendarForward, boolean deliveryReport) throws ServiceException {
         ItemId id;
-        OutlookICalendarFixupMimeVisitor mv = null;
-        if (needCalendarSentByFixup || isCalendarForward) {
-            mv = new OutlookICalendarFixupMimeVisitor(mbox.getAccount(), mbox)
-                                                                    .needFixup(needCalendarSentByFixup)
-                                                                    .setIsCalendarForward(isCalendarForward);
-            try {
-                mv.accept(mm);
-            } catch (MessagingException e) {
-                throw ServiceException.PARSE_ERROR("Error while fixing up SendMsg for SENT-BY", e);
-            }
-            isCalendarMessage = mv.isCalendarMessage();
-        }
-
+        OutlookICalendarFixupMimeVisitor mv = OutlookICalendarFixupMV(needCalendarSentByFixup, isCalendarForward, mbox, mm);
+        boolean isCalendarMsg = isCalendarMessage(mv, needCalendarSentByFixup, isCalendarForward);
         MailSender sender;
         if (dataSourceId == null) {
-            sender = isCalendarMessage ? CalendarMailSender.getCalendarMailSender(mbox) : mbox.getMailSender();
+            sender = isCalendarMsg ? CalendarMailSender.getCalendarMailSender(mbox) : mbox.getMailSender();
             if (noSaveToSent) {
-                id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false, processor);
+                id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false, processor, deliveryReport);
             } else {
-                id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false, processor);
+                id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false, processor, deliveryReport);
             }
         } else {
             com.zimbra.cs.account.DataSource dataSource = mbox.getAccount().getDataSourceById(dataSourceId);
             if (dataSource == null) {
-                throw ServiceException.INVALID_REQUEST("No data source with id " + dataSourceId, null);
+                throw ServiceException.INVALID_DATASOURCE_ID(
+                        String.format("No data source with id %s", dataSourceId), null);
             }
             if (!dataSource.isSmtpEnabled()) {
-                throw ServiceException.INVALID_REQUEST("Data source SMTP is not enabled", null);
+                throw ServiceException.DATASOURCE_SMTP_DISABLED("Data source SMTP is not enabled", null);
             }
-            sender = mbox.getDataSourceMailSender(dataSource, isCalendarMessage);
-            id = sender.sendDataSourceMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType);
+            sender = mbox.getDataSourceMailSender(dataSource, isCalendarMsg);
+            id = sender.sendDataSourceMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, deliveryReport);
         }
+        sendCalendarFwdIfApplicable(isCalendarMsg, isCalendarForward, mv, oc, mm, mbox);
+        return id;
+    }
+
+    public static OutlookICalendarFixupMimeVisitor OutlookICalendarFixupMV(boolean needCalendarSentByFixup, boolean isCalendarForward,
+            Mailbox mbox, MimeMessage mm) throws ServiceException {
+        OutlookICalendarFixupMimeVisitor mv = null;
+        if (needCalendarSentByFixup || isCalendarForward) {
+            mv = new OutlookICalendarFixupMimeVisitor(mbox.getAccount(), mbox)
+                    .needFixup(needCalendarSentByFixup)
+                    .setIsCalendarForward(isCalendarForward);
+            try {
+                mv.accept(mm);
+            } catch (MessagingException e) {
+                throw ServiceException.FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR("Error while sending the message during fixup for SENT-BY of ICalendar on behalf of other user.", e);
+            }
+        }
+        return mv;
+    }
+
+    public static boolean isCalendarMessage(OutlookICalendarFixupMimeVisitor mv, boolean needCalendarSentByFixup, boolean isCalendarForward) {
+        boolean isCalendarMessage = false;
+        if (needCalendarSentByFixup || isCalendarForward) {
+            isCalendarMessage = mv.isCalendarMessage();
+        }
+        return isCalendarMessage;
+    }
+
+    public static void sendCalendarFwdIfApplicable(boolean isCalendarMessage, boolean isCalendarForward, OutlookICalendarFixupMimeVisitor mv,
+            OperationContext oc, MimeMessage mm, Mailbox mbox) {
         // Send Calendar Forward Invitation notification if applicable
         try {
             if (isCalendarMessage && isCalendarForward && mv.getOriginalInvite() != null) {
@@ -284,8 +355,22 @@ public class SendMsg extends MailDocumentHandler {
         } catch (Exception e) {
             ZimbraLog.soap.warn("Ignoring error while sending Calendar Invitation Forward Notification", e);
         }
+    }
 
-        return id;
+    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, String dataSourceId, boolean noSaveToSent,
+            boolean needCalendarSentByFixup, boolean isCalendarForward, boolean deliveryReport)
+                    throws ServiceException {
+        return getItemId(dataSourceId, mbox, oc, noSaveToSent, mm, uploads, origMsgId, replyType, identityId,
+                needCalendarSentByFixup, isCalendarForward, deliveryReport);
+    }
+
+    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, String dataSourceId, boolean noSaveToSent,
+            boolean needCalendarSentByFixup, boolean isCalendarForward)
+                    throws ServiceException {
+        return doSendMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, dataSourceId, noSaveToSent,
+                needCalendarSentByFixup, isCalendarForward, false);
     }
 
     static MimeMessage parseUploadedMessage(ZimbraSoapContext zsc, String attachId, MimeMessageData mimeData) throws ServiceException {
@@ -332,7 +417,7 @@ public class SendMsg extends MailDocumentHandler {
         } catch (MessagingException e) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException when parsing upload", e);
+            throw ServiceException.ERROR_WHILE_PARSING_UPLOAD("IOException when parsing upload", e);
         }
     }
 

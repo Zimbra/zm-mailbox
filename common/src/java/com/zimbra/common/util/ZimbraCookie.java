@@ -56,11 +56,16 @@ public class ZimbraCookie {
 
     public static void addHttpOnlyCookie(HttpServletResponse response, String name, String value,
             String path, Integer maxAge, boolean secure) {
-        addCookie(response, name, value, path, maxAge, true, secure);
+        addHttpOnlyCookie(response, name, value, path, maxAge, secure, false);
+    }
+
+    public static void addHttpOnlyCookie(HttpServletResponse response, String name, String value,
+            String path, Integer maxAge, boolean secure, boolean ignoreSameSite) {
+        addCookie(response, name, value, path, maxAge, true, secure, ignoreSameSite);
     }
 
     private static void addCookie(HttpServletResponse response, String name, String value,
-            String path, Integer maxAge, boolean httpOnly, boolean secure) {
+            String path, Integer maxAge, boolean httpOnly, boolean secure, boolean ignoreSameSite) {
         Cookie cookie = new Cookie(name, value);
 
         if (maxAge != null) {
@@ -70,7 +75,16 @@ public class ZimbraCookie {
         }
         ZimbraCookie.setAuthTokenCookieDomainPath(cookie, ZimbraCookie.PATH_ROOT);
 
-        cookie.setSecure(secure);
+        String cookieVal = LC.zimbra_same_site_cookie.value();
+        if (!ignoreSameSite && !StringUtil.isNullOrEmpty(cookieVal)) {
+            String pathStr = cookie.getPath();
+            // setting cookie value like "SameSite=Strict;", value can be Strict, Lax, None
+            pathStr = new StringBuilder(pathStr).append(";SameSite=").append(cookieVal).append(";").toString();
+            cookie.setPath(pathStr);
+            cookie.setSecure(true);
+        } else {
+            cookie.setSecure(secure);
+        }
 
         if (httpOnly) {
             cookie.setHttpOnly(httpOnly);

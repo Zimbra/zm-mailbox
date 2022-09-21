@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -63,6 +63,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
@@ -129,6 +130,7 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Note;
@@ -139,6 +141,7 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.SenderList;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.cache.WatchCache;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -158,7 +161,9 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.smime.SmimeHandler;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.type.ActivityInfo;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
 import com.zimbra.soap.mail.type.CalendarReply;
 import com.zimbra.soap.mail.type.Policy;
@@ -175,6 +180,8 @@ import com.zimbra.soap.type.WantRecipsSetting;
  */
 public final class ToXML {
     private static final Log LOG = LogFactory.getLog(ToXML.class);
+    private static final String A_WATCH = "watch";
+    private static final String FILE_SHARED_WITH_ME_ZIMBRA_ID = "0";
 
     public static enum OutputParticipants {
         PUT_SENDERS(0),
@@ -286,6 +293,10 @@ public final class ToXML {
         }
         Element elem = parent.addNonUniqueElement(MailConstants.E_FOLDER);
         encodeFolderCommon(elem, ifmt, folder, fields);
+        if (folder.getId() == FolderConstants.ID_FOLDER_FILE_SHARED_WITH_ME) {
+            elem.addAttribute(MailConstants.A_RIGHTS, "r"); //making this folder read only
+            elem.addAttribute(MailConstants.A_ZIMBRA_ID, FILE_SHARED_WITH_ME_ZIMBRA_ID);
+        }
         if (needToOutput(fields, Change.SIZE)) {
             int deleted = folder.getDeletedCount();
             elem.addAttribute(MailConstants.A_NUM, folder.getItemCount() - deleted);
@@ -3043,7 +3054,13 @@ throws ServiceException {
 
     public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields)
     throws ServiceException {
-        m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
+        if (doc.getFolderId() == FolderConstants.ID_FOLDER_FILE_SHARED_WITH_ME && doc.getOwnerAccountId() != null
+                && doc.getOwnerFileId() != null) {
+            m.addAttribute(MailConstants.A_ID, doc.getOwnerAccountId() + ":" + doc.getOwnerFileId()); // accountid:fileid
+            m.addAttribute(MailConstants.A_RIGHTS, doc.getPermission());
+        } else {
+            m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
+        }
         m.addAttribute(MailConstants.A_UUID, doc.getUuid());
         if (needToOutput(fields, Change.NAME)) {
             m.addAttribute(MailConstants.A_NAME, doc.getName());
@@ -3589,5 +3606,42 @@ throws ServiceException {
 
     public static void addExtension(ToXMLExtension e) {
         extensions.add(e);
+    }
+
+    public static void addWatchActivity(Element notify, Account account, String op, long timestamp, String itemId, String userAgent, Map<String,String> args) {
+        ActivityInfo activity = new ActivityInfo(op, timestamp, itemId);
+        if (account != null)
+            activity.setEmail(account.getName());
+        if (userAgent != null)
+            activity.setUserAgent(userAgent);
+        activity.setArgs(args);
+        JaxbUtil.addChildElementFromJaxb(notify, MailConstants.E_A,
+                MailConstants.NAMESPACE_STR, activity);
+    }
+
+    public Element encodeDocumentAdditionalAttribute(Element elem, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
+        WatchCache cache = WatchCache.get(octxt);
+        if (cache.hasMapping(doc)) {
+            return encodeDocumentWatchAttribute(elem, true);
+        }
+        return elem;
+    }
+
+    public static Element encodeDocumentWatchAttribute(Element elem, boolean watched) {
+        return elem.addAttribute(A_WATCH, watched);
+    }
+
+    public static ActivityInfo toActivityInfo(Account account, MailboxOperation op,
+            long timestamp, String itemId, int version, String userAgent, Map<String,String> args) {
+        ActivityInfo activity =
+            ActivityInfo.fromOperationTimeStampItemId(op.name(), timestamp, itemId);
+        if (version > 0)
+            activity.setVersion(version);
+        if (userAgent != null)
+            activity.setUserAgent(userAgent);
+        if (account != null)
+            activity.setEmail(account.getName());
+        activity.setArgs(args);
+        return activity;
     }
 }

@@ -16,8 +16,11 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,10 +34,12 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
+import javax.mail.internet.MimeUtility;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import com.google.common.base.Charsets;
@@ -42,6 +47,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -50,6 +56,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SmimeConstants;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
@@ -272,6 +279,24 @@ public final class ParseMimeMessage {
             }
         }
 
+        ParseMessageContext(Account account) {
+            try {
+                long mailAttachmentMaxSize = account.getMailAttachmentMaxSize();
+                Config config = Provisioning.getInstance().getConfig();
+                long mtaMaxMsgSize = config.getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
+                if (mailAttachmentMaxSize > mtaMaxMsgSize) {
+                    maxSize = mtaMaxMsgSize;
+                } else {
+                    maxSize = mailAttachmentMaxSize;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.soap.warn("Unable to determine max message size.  Disabling limit check.", e);
+            }
+            if (maxSize < 0) {
+                maxSize = Long.MAX_VALUE;
+            }
+        }
+
         void incrementSize(String name, long numBytes) throws MailServiceException {
             size += numBytes;
             ZimbraLog.soap.debug("Adding %s, incrementing size by %d to %d.", name, numBytes, size);
@@ -303,7 +328,7 @@ public final class ParseMimeMessage {
         assert(msgElem.getName().equals(MailConstants.E_MSG)); // msgElem == "<m>" E_MSG
 
         Account target = DocumentHandler.getRequestedAccount(zsc);
-        ParseMessageContext ctxt = new ParseMessageContext();
+        ParseMessageContext ctxt = new ParseMessageContext(zsc.getAuthToken().getAccount());
         ctxt.out = out;
         ctxt.zsc = zsc;
         ctxt.octxt = octxt;
@@ -321,6 +346,15 @@ public final class ParseMimeMessage {
             Element partElem   = msgElem.getOptionalElement(MailConstants.E_MIMEPART);
             Element attachElem = msgElem.getOptionalElement(MailConstants.E_ATTACH);
             Element inviteElem = msgElem.getOptionalElement(MailConstants.E_INVITE);
+
+            final boolean isSmimeSigned = msgElem.getParent().getAttributeBool(SmimeConstants.A_SIGN, false);
+            final boolean isEncrypted = msgElem.getParent().getAttributeBool(SmimeConstants.A_ENCRYPT, false);
+
+            // isQPencodeRequired is used to ensure RFC8551 Section 3.1.2/3.1.3.
+            boolean isQPencodeRequired = false;
+            if (isSmimeSigned && !isEncrypted) {
+                isQPencodeRequired = true;
+            }
 
             boolean hasContent  = (partElem != null || inviteElem != null || additionalParts != null);
             boolean isMultipart = (attachElem != null); // || inviteElem != null || additionalParts!=null);
@@ -377,7 +411,7 @@ public final class ParseMimeMessage {
 
             // handle the content from the client, if any
             if (hasContent) {
-                setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, ctxt);
+                setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, ctxt, isQPencodeRequired);
             }
             // attachments go into the toplevel "mixed" part
             if (isMultipart && attachElem != null) {
@@ -490,7 +524,11 @@ public final class ParseMimeMessage {
             boolean optional = elem.getAttributeBool(MailConstants.A_OPTIONAL, false);
             try {
                 if (attachType.equals(MailConstants.E_MIMEPART)) {
-                    ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), ctxt.zsc);
+                    String mid = elem.getAttribute(MailConstants.A_MESSAGE_ID);
+                    if (mid.indexOf(ItemIdentifier.ACCOUNT_DELIMITER) == -1) {
+                        mid = ctxt.zsc.getAuthToken().getAccount().getId() + ItemIdentifier.ACCOUNT_DELIMITER + mid;
+                    }
+                    ItemId iid = new ItemId(mid, ctxt.zsc);
                     String part = elem.getAttribute(MailConstants.A_PART);
                     attachPart(mmp, iid, part, contentID, ctxt, contentDisposition);
                 } else if (attachType.equals(MailConstants.E_MSG)) {
@@ -526,13 +564,19 @@ public final class ParseMimeMessage {
     private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives,
             ParseMessageContext ctxt)
     throws MessagingException, ServiceException, IOException {
+        setContent(mm, mmp, elem, alternatives, ctxt, false);
+    }
+
+    private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives,
+            ParseMessageContext ctxt, boolean isQPencodeRequired)
+    throws MessagingException, ServiceException, IOException {
         String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_DEFAULT).trim();
         ContentType ctype = new ContentType(type, ctxt.use2231).cleanup();
 
         // is the client passing us a multipart?
         if (ctype.getPrimaryType().equals("multipart")) {
             // handle multipart content separately...
-            setMultipartContent(ctype, mm, mmp, elem, alternatives, ctxt);
+            setMultipartContent(ctype, mm, mmp, elem, alternatives, ctxt, isQPencodeRequired);
             return;
         }
 
@@ -562,6 +606,8 @@ public final class ParseMimeMessage {
         // or a multipart/alternative created just above....either way we are safe to stick
         // the client's nice and simple body right here
         String text = elem.getAttribute(MailConstants.E_CONTENT, "");
+        boolean isAscii = StringUtil.isAsciiString(text);
+
         byte[] raw = text.getBytes(Charsets.UTF_8);
         if (raw.length > 0 || !LC.mime_exclude_empty_content.booleanValue() || ctype.getPrimaryType().equals("text")) {
             ctxt.incrementSize("message body", raw.length);
@@ -573,11 +619,41 @@ public final class ParseMimeMessage {
             Object content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
                     new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
             if (mmp != null) {
-                MimeBodyPart mbp = new ZMimeBodyPart();
-                mbp.setContent(content, ctype.toString());
-                mmp.addBodyPart(mbp);
+                if (isQPencodeRequired) {
+                    if (!isAscii) {
+                        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        final OutputStream encodedOut = MimeUtility.encode(baos, MimeConstants.ET_QUOTED_PRINTABLE);
+                        encodedOut.write(text.getBytes(charset));
+                        text = baos.toString();
+                        content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
+                            new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
+                        String mbpHeaders = "Content-Type: " + ctype.toString()
+                            + "\r\nContent-Transfer-Encoding: " + MimeConstants.ET_QUOTED_PRINTABLE
+                            + "\r\n";
+                        mmp.addBodyPart(new MimeBodyPart(
+                            new InternetHeaders(new ByteArrayInputStream(mbpHeaders.getBytes())),
+                            content.toString().getBytes()));
+                    } else {
+                        final MimeBodyPart mbp = new ZMimeBodyPart();
+                        mbp.setContent(content, ctype.toString());
+                        mmp.addBodyPart(mbp);
+                    }
+                } else {
+                    final MimeBodyPart mbp = new ZMimeBodyPart();
+                    mbp.setContent(content, ctype.toString());
+                    mmp.addBodyPart(mbp);
+                }
             } else {
-                mm.setContent(content, ctype.toString());
+                if (isQPencodeRequired) {
+                    if (!isAscii) {
+                        mm.setContent(content, ctype.toString());
+                        mm.setHeader("Content-Transfer-Encoding", "quoted-printable");
+                    } else {
+                        mm.setContent(content, ctype.toString());
+                    }
+                } else {
+                    mm.setContent(content, ctype.toString());
+                }
             }
         }
 
@@ -589,7 +665,7 @@ public final class ParseMimeMessage {
         }
     }
 
-    private static void setMultipartContent(ContentType contentType, MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
+    private static void setMultipartContent(ContentType contentType, MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt, boolean isQPencodeRequired)
     throws MessagingException, ServiceException, IOException {
         // do we need to add a multipart/alternative for the alternatives?
         if (alternatives == null || contentType.getSubType().equals("alternative")) {
@@ -608,7 +684,7 @@ public final class ParseMimeMessage {
             }
             // add each part in turn (recursively) below
             for (Element subpart : elem.listElements()) {
-                setContent(mm, mmpNew, subpart, null, ctxt);
+                setContent(mm, mmpNew, subpart, null, ctxt, isQPencodeRequired);
             }
 
             // finally, add the alternatives if there are any...
@@ -630,7 +706,7 @@ public final class ParseMimeMessage {
             }
 
             // add the entire client's multipart/whatever here inside our multipart/alternative
-            setContent(mm, mmpNew, elem, null, ctxt);
+            setContent(mm, mmpNew, elem, null, ctxt, isQPencodeRequired);
 
             // add all the alternatives
             for (int i = 0; i < alternatives.length; i++) {
@@ -836,6 +912,8 @@ public final class ParseMimeMessage {
         if (!iid.isLocal()) {
             Map<String, String> params = new HashMap<String, String>(3);
             params.put(UserServlet.QP_PART, part);
+            // Content-Disposition here is always one of two values, `attachment' or `inline'.
+            params.put(UserServlet.QP_DISP, Part.ATTACHMENT.equals(contentDisposition) ? "a" : "i");
             attachRemoteItem(mmp, iid, contentID, ctxt, params, null);
             return;
         }

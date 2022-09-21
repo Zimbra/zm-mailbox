@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -58,6 +58,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -67,6 +68,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -208,6 +210,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
+import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -219,8 +222,8 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.AddressListInfo;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -262,6 +265,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private final INamedEntryCache<ShareLocator> shareLocatorCache;
     private final INamedEntryCache<XMPPComponent> xmppComponentCache;
     private final INamedEntryCache<LdapZimlet> zimletCache;
+
+    private final UnmodifiableBloomFilter<String> commonPasswordFilter;
 
     private LdapConfig cachedGlobalConfig = null;
     private GlobalGrant cachedGlobalGrant = null;
@@ -313,6 +318,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         xmppComponentCache = cache.xmppComponentCache();
         zimletCache = cache.zimletCache();
         alwaysOnClusterCache = cache.alwaysOnClusterCache();
+
+        commonPasswordFilter = UnmodifiableBloomFilter
+            .createLazyFilterFromFile(LC.common_passwords_txt.value());
 
         setDIT();
         setHelper(new ZLdapHelper(this));
@@ -1467,7 +1475,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 password = null;
             } else if (password != null) {
                 //user entered
-                checkPasswordStrength(password, null, cos, entry);
+                checkPasswordStrength(password, null, cos, entry, localPart);
             }
             entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, LdapDateUtil.toGeneralizedTime(new Date()));
 
@@ -1896,7 +1904,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             bases[0] = options.getHabRootGroupDn();
         } else {
 	    bases = getSearchBases(domain, types);
-	} 
+	}
 
         /*
          * filter
@@ -5646,7 +5654,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password)
     throws ServiceException {
         if (password == null || password.equals("")) {
-            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+        	AuthFailedServiceException afe = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+            AuthListener.invokeOnException(afe);
+        	throw afe;
         }
 
         LdapClient.externalLdapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
@@ -5660,7 +5670,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     throws ServiceException {
 
         if (password == null || password.equals("")) {
-            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+        	AuthFailedServiceException afe = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+            AuthListener.invokeOnException(afe);
+        	throw afe;
         }
 
         ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS,
@@ -5694,9 +5706,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             ZimbraLog.account.warn(String.format(
                     "ldapAuthenticate searchFilter returned more then one result: (dn1=%s, dn2=%s, filter=%s)",
                     resultDn, tooMany, searchFilter));
-            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("too many results from search filter!");
+            AuthFailedServiceException afse = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("too many results from search filter!");
+            AuthListener.invokeOnException(afse);
+            throw afse;
         } else if (resultDn == null) {
-            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty search");
+        	AuthFailedServiceException afse = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty search");
+            AuthListener.invokeOnException(afse);
+            throw afse;
         }
         if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
         ldapAuthenticate(url, wantStartTLS, resultDn, password);
@@ -5842,8 +5858,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 return;
             }
         } catch (ServiceException e) {
-            throw AuthFailedServiceException.AUTH_FAILED(principal,
+        	AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(principal,
                     AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
+        	AuthListener.invokeOnException(afse);
+        	throw afse;
         }
 
         String msg = "one of the following attrs must be set "+
@@ -5943,11 +5961,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public void changePassword(Account acct, String currentPassword, String newPassword)
     throws ServiceException {
+        changePassword (acct, currentPassword, newPassword, false);
+    }
+
+    @Override
+    public void changePassword(Account acct, String currentPassword, String newPassword, boolean dryRun)
+    throws ServiceException {
         authAccount(acct, currentPassword, false, null);
         boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
         if (locked)
             throw AccountServiceException.PASSWORD_LOCKED();
-        setPassword(acct, newPassword, true, false);
+        setPassword(acct, newPassword, true, dryRun);
     }
 
     /**
@@ -6079,6 +6103,27 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return cos.getAttr(name);
     }
 
+    private boolean getBoolean(Account acct, Cos cos, ZMutableEntry entry, String name,
+        boolean defaultValue) throws ServiceException {
+        if (acct != null) {
+            return acct.getBooleanAttr(name, defaultValue);
+        }
+
+        try {
+            String v = entry.getAttrString(name);
+            if (v != null) {
+                try {
+                    return Boolean.parseBoolean(v);
+                } catch (NumberFormatException e) {
+                    return defaultValue;
+                }
+            }
+        } catch (ServiceException ne) {
+            throw ServiceException.FAILURE(ne.getMessage(), ne);
+        }
+
+        return cos.getBooleanAttr(name, defaultValue);
+    }
 
     /**
      * called to check password strength. Should pass in either an Account, or Cos/Attributes (during creation).
@@ -6090,6 +6135,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * @throws ServiceException
      */
     private void checkPasswordStrength(String password, Account acct, Cos cos, ZMutableEntry entry)
+            throws ServiceException {
+        checkPasswordStrength(password, acct, cos, entry, null);
+    }
+
+    private void checkPasswordStrength(String password, Account acct, Cos cos, ZMutableEntry entry, String userName)
     throws ServiceException {
         int minLength = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinLength, 0);
         if (minLength > 0 && password.length() < minLength) {
@@ -6101,6 +6151,20 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (maxLength > 0 && password.length() > maxLength) {
             throw AccountServiceException.INVALID_PASSWORD("too long",
                     new Argument(Provisioning.A_zimbraPasswordMaxLength, maxLength, Argument.Type.NUM));
+        }
+
+        // userName is passed from createAccount() and else condition is invoked 
+        // when called from other Api's Changepassword and Resetpassword Api
+        if (userName != null) {
+            checkPasswordHasUsername(password, userName);
+        } else {
+            checkPasswordHasUsername(password, acct.getUCUsername());
+        }
+
+        if (getBoolean(acct, cos, entry, Provisioning.A_zimbraPasswordBlockCommonEnabled, false)
+                && commonPasswordFilter.mightContain(password)) {
+            throw AccountServiceException.INVALID_PASSWORD("too common",
+                    new Argument(Provisioning.A_zimbraPasswordBlockCommonEnabled, "", Argument.Type.STR));
         }
 
         int minUpperCase = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinUpperCaseChars, 0);
@@ -6202,12 +6266,24 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
     }
 
+    private void checkPasswordHasUsername(String password, String userName) throws ServiceException {
+        if (!LC.allow_username_within_password.booleanValue() && StringUtils.containsIgnoreCase(password, userName)) {
+            throw AccountServiceException.INVALID_PASSWORD("password contains username",
+                    new Argument("zimbraPasswordAllowUsername", "", Argument.Type.STR));
+        }
+    }
+
     private boolean isAsciiPunc(char ch) {
         return
             (ch >= 33 && ch <= 47) || // ! " # $ % & ' ( ) * + , - . /
             (ch >= 58 && ch <= 64) || // : ; < = > ? @
             (ch >= 91 && ch <= 96) || // [ \ ] ^ _ `
             (ch >=123 && ch <= 126);  // { | } ~
+    }
+
+    public void resetPassword(Account acct, String newPassword, boolean dryRun) 
+            throws ServiceException {
+        setPassword(acct, newPassword, true, dryRun);
     }
 
     void setPassword(Account acct, String newPassword, boolean enforcePolicy, boolean dryRun)
@@ -6234,7 +6310,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         Map<String, Object> attrs = new HashMap<String, Object>();
-
         int enforceHistory = acct.getIntAttr(Provisioning.A_zimbraPasswordEnforceHistory, 0);
         if (enforceHistory > 0) {
             String[] newHistory = updateHistory(
@@ -6243,8 +6318,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     enforceHistory);
             attrs.put(Provisioning.A_zimbraPasswordHistory, newHistory);
 
-            if (enforcePolicy || dryRun)
+            if (enforcePolicy || dryRun) {
                 checkHistory(newPassword, newHistory);
+            }
         }
 
         if (dryRun) {
@@ -10965,7 +11041,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
-            String[] memberEmails = null; 
+            String[] memberEmails = null;
             DistributionList dl = get(DistributionListBy.id, group.getId());
             memberEmails =  dl.getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
 
@@ -11012,6 +11088,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return members;
     }
 
+    @Override
     public boolean dlIsInDynamicHABGroup(DynamicGroup group, List<String> dlsToCheck) {
         ZLdapContext zlc = null;
         try {
@@ -11244,14 +11321,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         try {
             zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_ENTRY);
-            String[] returnAttrs = {"userPassword", "zimbraAuthTokens", "zimbraAuthTokenValidityValue"};
+            String[] returnAttrs = { "userPassword", "zimbraAuthTokens", "zimbraAuthTokenValidityValue",
+                    Provisioning.A_zimbraResetPasswordRecoveryCode, Provisioning.A_zimbraPrefPasswordRecoveryAddress,
+                    Provisioning.A_zimbraFeatureResetPasswordStatus,
+                    Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus };
             ZAttributes attrs = helper.getAttributes(zlc, ((LdapEntry) account).getDN(), returnAttrs);
             Map<String, Object> finalAttrs = account.getAttrs(false, false);
             finalAttrs.putAll(attrs.getAttrs());
             account.setAttrs(finalAttrs);
             extendLifeInCacheOrFlush(account);  // Put this back into the cache
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE(String.format("unable to refresh userPassword for '%s'", account.getName()), e);
+            throw ServiceException.FAILURE(String.format("unable to refresh user credentials for '%s'", account.getName()), e);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -11274,7 +11354,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } finally {
             LdapClient.closeContext(zlc);
         }
-        
+
         return habOrgList;
     }
 
@@ -11326,12 +11406,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
     }
-    
+
     /**
      * @param habOrgUnitName  organizational unit name
      * @param domainDn the domain distinguishedd name
      * @return true if the ou has groups or false if empty
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     private static boolean isEmptyOu(String habOrgUnitName, String domainDn) throws ServiceException {
         ZLdapContext zlc = null;
@@ -11358,9 +11438,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
         return empty;
     }
-    
+
     /**
-     * 
+     *
      * @param domain domain for which HAB org unit list is requested
      * @return HAB org unit list under the given domain
      * @throws ServiceException
@@ -11376,14 +11456,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(FilterId.ANY_ENTRY, filter);
 
             ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, 
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED,
                     returnAttrs);
 
             ZSearchResultEnumeration ne = zlc.searchDir(domainDn, zFilter, searchControls);
 
             while(ne.hasMore()) {
                 habList.add(ne.next().getAttributes().getAttrString("ou"));
-               
+
             }
             ZimbraLog.misc.debug("The HAB orgunits under:%s, are: (%s)", domain.getName(), habList);
 
@@ -11394,9 +11474,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
         return habList;
     }
-    
+
     /**
-     * 
+     *
      * @param ouName organizational unit name
      * @param baseDn distinguishedd name
      * @return the dn with ou
@@ -11407,7 +11487,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         sb.append(ouName);
         sb.append(",");
         sb.append(baseDn);
-        
+
         return sb.toString();
     }
 
@@ -11445,10 +11525,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         return zimbraIdStr;
-   } 
+   }
 
     /**
-     * 
+     *
      * @param id id of the address list
      * @return AddressList object
      * @throws ServiceException if an error occurs while querying LDAP.
@@ -11525,4 +11605,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
     }
 
+    @Override
+    public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
+        return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailFailure);
+    }
 }

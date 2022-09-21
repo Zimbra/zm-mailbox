@@ -713,7 +713,7 @@ public class ItemActionHelper {
                 for (String key : fields.keySet()) {
                     if (ContactConstants.A_groupMember.equals(key)) {
                         String memberEncoded = fields.get(key);
-                        ContactGroup group = ContactGroup.init(memberEncoded);
+                        ContactGroup group = ContactGroup.init(memberEncoded, ct.getMailbox().getAccountId());
                         for (Member m : group.getMembers()) {
                             members.put(m.getValue(), m.getType().getSoapEncoded());
                         }
@@ -727,7 +727,7 @@ public class ItemActionHelper {
                 break;
             case MESSAGE:
                 try {
-                    in = StoreManager.getInstance().getContent(item.getBlob());
+                    in = StoreManager.getReaderSMInstance(item.getLocator()).getContent(item.getBlob());
                     createdId = zmbx.addMessage(folderStr, flags, (String) null, item.getDate(), in, item.getSize(), true);
                 } finally {
                     ByteUtil.closeStream(in);
@@ -739,7 +739,7 @@ public class ItemActionHelper {
                 for (Message msg : msgs) {
                     flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : msg.getFlagString());
                     try {
-                        in = StoreManager.getInstance().getContent(msg.getBlob());
+                        in = StoreManager.getReaderSMInstance(msg.getLocator()).getContent(msg.getBlob());
                         createdId = zmbx.addMessage(folderStr, flags, (String) null, msg.getDate(), in, msg.getSize(), true);
                     } finally {
                         ByteUtil.closeStream(in);
@@ -751,7 +751,7 @@ public class ItemActionHelper {
                 Document doc = (Document) item;
                 SoapHttpTransport transport = new SoapHttpTransport(zoptions.getUri());
                 try {
-                    in = StoreManager.getInstance().getContent(doc.getBlob());
+                    in = StoreManager.getReaderSMInstance(doc.getLocator()).getContent(doc.getBlob());
                     String uploadId = zmbx.uploadContentAsStream(name, in, doc.getContentType(), doc.getSize(), 4000, true);
                     // instead of using convenience method from ZMailbox
                     // we need to hand marshall the request and set the

@@ -317,6 +317,7 @@ public class GqlConstants {
     public static final String RIGHTS = "rights";
     public static final String ATTACHMENT_SIZE_LIMIT = "attachmentSizeLimit";
     public static final String DOCUMENT_SIZE_LIMIT = "documentSizeLimit";
+    public static final String IS_SPELL_CHECK_AVAILABLE = "isSpellCheckAvailable";
     public static final String VERSION = "version";
     public static final String ACCOUNT_ID = "accountId";
     public static final String PROFILE_IMAGE_ID = "profileImageId";
@@ -696,4 +697,16 @@ public class GqlConstants {
     public static final String GRNATEE_NAME = "granteeName";
     public static final String GRANTEE_DISPLAY_NAME = "granteeDisplayName";
     public static final String MOUNTPOINT_ID = "mountpointId";
+
+    // auth
+    public static final String CLASS_ADMIN_AUTH_REQUEST = "AdminAuthRequest";
+    public static final String CLASS_AUTH_RESPONSE = "AuthResponse";
+    public static final String ACCOUNT = "account";
+    public static final String TWO_FACTOR_CODE = "twoFactorCode";
+    public static final String DO_PERSIST_COOKIE = "doPersistCookie";
+    public static final String IS_CSRF_SUPPORTED = "isCsrfSupported";
+    public static final String CSRF_TOKEN = "csrfToken";
+
+    // GetAccount - admin api
+    public static final String APPLY_COS = "applyCos";
 }

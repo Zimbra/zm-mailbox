@@ -17,6 +17,10 @@
 
 package com.zimbra.common.util;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.common.localconfig.LC;
+
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.net.MalformedURLException;
@@ -32,11 +36,6 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.localconfig.LC;
 
 public class L10nUtil {
 
@@ -146,6 +145,7 @@ public class L10nUtil {
         shareNotifBodyGranteeRoleCustom,
 
         shareNotifBodyFolderDesc,
+        shareNotifyFileBodyDesc,
         shareNotifBodyExternalShareText,
         shareNotifBodyExternalShareHtml,
         shareNotifBodyNotesText,
@@ -271,7 +271,7 @@ public class L10nUtil {
 
         errorTitle,
         zipFile,
-        
+
         //sieve
         seiveRejectMDNSubject,
         seiveRejectMDNErrorMsg,
@@ -287,7 +287,27 @@ public class L10nUtil {
         verifyRecoveryEmailBodyHtml,
         sendPasswordRecoveryEmailSubject,
         sendPasswordRecoveryEmailBodyText,
-        sendPasswordRecoveryEmailBodyHtml
+        sendPasswordRecoveryEmailBodyHtml,
+
+        //send password reset email for new users
+        sendPasswordResetEmailSubject,
+        sendPasswordResetEmailBodyText,
+        sendPasswordResetEmailBodyHtml,
+
+        // send mobile data management notification emails
+        sendMDMNotificationEmailHtmlOpen,
+        sendMDMNotificationEmailHtmlClose,
+        sendMDMNotificationEmailBreakLine,
+        sendMDMNotificationEmailSuccess,
+        sendMDMNotificationEmailFailure,
+        sendMDMNotificationEmailHtmlTableRowOpen,
+        sendMDMNotificationEmailHtmlTableRowClose,
+        sendMDMNotificationEmailHtmlTableDataOpen,
+        sendMDMNotificationEmailHtmlTableDataClose,
+        sendMDMNotificationEmailHtmlTableOpen,
+        sendMDMNotificationEmailHtmlTableClose,
+        sendMDMNotificationEmailHtmlDeviceTableHeader,
+        sendMDMNotificationEmailNoDevicesFoundMsg
 
         // add other messages in the future...
     }

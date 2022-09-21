@@ -16,13 +16,28 @@
  */
 package com.zimbra.cs.rmgmt;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.sshd.client.SshClient;
+import org.apache.sshd.client.channel.ChannelExec;
+import org.apache.sshd.client.channel.ClientChannel;
+import org.apache.sshd.client.channel.ClientChannelEvent;
+import org.apache.sshd.client.future.ConnectFuture;
+import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.common.util.security.SecurityUtils;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
@@ -31,9 +46,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.Zimbra;
 
-import ch.ethz.ssh2.Connection;
-import ch.ethz.ssh2.Session;
-import ch.ethz.ssh2.StreamGobbler;
+
 
 public class RemoteManager {
 
@@ -95,27 +108,23 @@ public class RemoteManager {
     }
 
     private synchronized void executeBackground0(String command, RemoteBackgroundHandler handler) {
-        Session s = null;
+        RemoteResult result = new RemoteResult();
         try {
-            s = getSession();
-            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("(bg) executing shim command  '" + mShimCommand + "' on " + this);
-            s.execCommand(mShimCommand);
-            OutputStream os = s.getStdin();
-            String send = "HOST:" + mHost + " " + command;
-            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("(bg) sending mgmt command '" + send + "' on " + this);
-            os.write(send.getBytes());
-            os.close();
-            InputStream stdout = new StreamGobbler(s.getStdout());
-            InputStream stderr = new StreamGobbler(s.getStderr());
-            handler.read(stdout, stderr);
-        } catch (OutOfMemoryError e) {
+            result = executeRemoteCommand(mUser,mHost,mPort,mPrivateKey,mShimCommand,command);
+                try {
+                    ZimbraLog.rmgmt.trace("stdout content for cmd:\n%s", new String(result.mStdout, "UTF-8"));
+                    ZimbraLog.rmgmt.trace("stderr content for cmd:\n%s", new String(result.mStderr, "UTF-8"));
+                } catch (Exception ex) {
+                    ZimbraLog.rmgmt.trace("Problem logging stdout or stderr for cmd - probably not UTF-8");
+                }
+            InputStream stdout = new ByteArrayInputStream(result.mStdout);
+            InputStream stderr = new ByteArrayInputStream(result.mStderr);
+            handler.read(stdout,stderr);
+        }
+        catch (OutOfMemoryError e) {
             Zimbra.halt("out of memory", e);
         } catch (Throwable t) {
             handler.error(t);
-        } finally {
-            if (s != null) {
-                releaseSession(s);
-            }
         }
     }
 
@@ -133,82 +142,77 @@ public class RemoteManager {
         t.start();
     }
 
-    public synchronized RemoteResult execute(String command) throws ServiceException {
-        Session s = null;
+    public synchronized RemoteResult execute(String command) throws ServiceException{
+        RemoteResult result = new RemoteResult();
         try {
-            s = getSession();
-            if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("executing shim command  '" + mShimCommand + "' on " + this);
-            s.execCommand(mShimCommand);
-            OutputStream os = s.getStdin();
-            String send = "HOST:" + mHost + " " + command;
-            if (ZimbraLog.rmgmt.isDebugEnabled()) {
-                ZimbraLog.rmgmt.debug("sending mgmt command '%s' on %s", send, this);
-            }
-            os.write(send.getBytes());
-            os.close();
-
-            RemoteResult result = new RemoteResult();
-
-            InputStream stdout = new StreamGobbler(s.getStdout());
-            InputStream stderr = new StreamGobbler(s.getStderr());
-            result.mStdout = ByteUtil.getContent(stdout, -1);
-            result.mStderr = ByteUtil.getContent(stderr, -1);
-            if (ZimbraLog.rmgmt.isTraceEnabled()) {
+            result = executeRemoteCommand(mUser,mHost,mPort,mPrivateKey,mShimCommand,command);
                 try {
                     ZimbraLog.rmgmt.trace("stdout content for cmd:\n%s", new String(result.mStdout, "UTF-8"));
                     ZimbraLog.rmgmt.trace("stderr content for cmd:\n%s", new String(result.mStderr, "UTF-8"));
                 } catch (Exception ex) {
                     ZimbraLog.rmgmt.trace("Problem logging stdout or stderr for cmd - probably not UTF-8");
                 }
+        } catch (Exception ioe) {
+             throw ServiceException.FAILURE("exception executing command: " + command + " with " + this, ioe);
+        }
+        return result;
+    }
+
+    public static RemoteResult executeRemoteCommand(String username, String host, int port, File privateKey,
+            String mShimCommand, String command) throws Exception {
+        long defaultTimeoutSeconds = 100l;
+        String send = "HOST:" + host + " " + command;
+        InputStream inputStream = new ByteArrayInputStream(send.getBytes());
+        SshClient client = SshClient.setUpDefaultClient();
+        client.start();
+        ConnectFuture cf = client.connect(username, host, port);
+        try (ClientSession session = cf.verify().getSession();) {
+            session.addPublicKeyIdentity(loadKeypair(privateKey.getAbsolutePath()));
+            session.auth().verify(defaultTimeoutSeconds, TimeUnit.SECONDS);
+            ZimbraLog.rmgmt.debug("executing shim command '%s'", mShimCommand);
+            try (ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+                    ByteArrayOutputStream errorResponseStream = new ByteArrayOutputStream();
+                    ChannelExec channel = session.createExecChannel(mShimCommand);) {
+                ZimbraLog.rmgmt.debug("sending mgmt command '%s'", send);
+                channel.setIn(inputStream);
+                channel.setOut(responseStream);
+                channel.setErr(errorResponseStream);
+                channel.open().await();
+                try {
+                    channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),
+                            TimeUnit.MINUTES.toMillis(LC.zimbra_remote_cmd_channel_timeout_min.intValue()));
+                    session.close(false);
+                    RemoteResult result = new RemoteResult();
+                    ClientChannel.validateCommandExitStatusCode(mShimCommand, channel.getExitStatus());
+                    InputStream stdout = new ByteArrayInputStream(responseStream.toByteArray());
+                    InputStream stderr = new ByteArrayInputStream(errorResponseStream.toByteArray());
+                    result.mStdout = ByteUtil.getContent(stdout, -1);
+                    result.mStderr = ByteUtil.getContent(stderr, -1);
+                    result.mExitStatus = channel.getExitStatus();
+                    if (result.mExitStatus != 0) {
+                        throw new IOException("command failed: exit status=" + result.mExitStatus + ", stdout="
+                                + new String(result.mStdout) + ", stderr=" + new String(result.mStderr));
+                    }
+                    result.mExitSignal = channel.getExitSignal();
+                    return result;
+                } finally {
+                    channel.close(false);
+                    session.close();
+                }
             }
-            try {
-                result.mExitStatus = s.getExitStatus();
-            } catch (NullPointerException npe) {
-                // wow this is strange - on hold command we hit NPE here.  TODO file a bug against ganymed
-            }
-            if (result.mExitStatus != 0) {
-                throw new IOException(
-                        "command failed: exit status=" + result.mExitStatus +
-                        ", stdout=" + new String(result.mStdout) +
-                        ", stderr=" + new String(result.mStderr));
-            }
-            result.mExitSignal = s.getExitSignal();
-            return result;
-        } catch (IOException ioe) {
-            throw ServiceException.FAILURE("exception executing command: " + command + " with " + this, ioe);
         } finally {
-            if (s != null) {
-                releaseSession(s);
-            }
+            client.stop();
         }
     }
 
-    private Connection mConnection;
-
-    private void releaseSession(Session sess) {
-        try {
-            sess.close();
-        } finally {
-            mConnection.close();
-            mConnection = null;
+	public static KeyPair loadKeypair(String privateKeyPath) throws IOException, GeneralSecurityException {
+        try (InputStream privateKeyStream = new FileInputStream(privateKeyPath)) {
+            Iterable<KeyPair> keyPairIterable =
+                    SecurityUtils.loadKeyPairIdentities(null, null, privateKeyStream, null);
+            KeyPair keyPair = keyPairIterable.iterator().next();
+            return keyPair;
         }
-    }
-
-    private Session getSession() throws ServiceException {
-        try {
-            mConnection = new Connection(mHost, mPort);
-            mConnection.connect();
-            if (!mConnection.authenticateWithPublicKey(mUser, mPrivateKey, null)) {
-                throw new IOException("auth failed");
-            }
-            return mConnection.openSession();
-        } catch (IOException ioe) {
-            if (mConnection != null) {
-                mConnection.close();
-            }
-            throw ServiceException.FAILURE("exception during auth " + this, ioe);
-        }
-    }
+	}
 
     public static RemoteManager getRemoteManager(Server server) throws ServiceException {
         return new RemoteManager(server);

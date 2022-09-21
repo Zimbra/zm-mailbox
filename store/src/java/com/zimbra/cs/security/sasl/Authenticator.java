@@ -174,10 +174,10 @@ public abstract class Authenticator {
 
         switch (protocol) {
         case imap:
-            return authAccount.isImapEnabled();
+            return authAccount.isImapEnabled() && authAccount.isPrefImapEnabled();
 
         case pop3:
-            return authAccount.isPop3Enabled();
+            return authAccount.isPop3Enabled() && authAccount.isPrefPop3Enabled();
 
         default:
             return true;

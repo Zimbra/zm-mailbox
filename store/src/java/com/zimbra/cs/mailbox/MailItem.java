@@ -43,6 +43,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
@@ -1363,7 +1364,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * */
     public synchronized MailboxBlob getBlob() throws ServiceException {
         if (mBlob == null && getDigest() != null) {
-            mBlob = StoreManager.getInstance().getMailboxBlob(this);
+            StoreManager storeManager = StoreManager.getReaderSMInstance(getLocator());
+            ZimbraLog.store.trace("Store Manager for %s MailboxBlob: %s ", storeManager.getClass().getSimpleName(), getId());
+            mBlob = storeManager.getMailboxBlob(this);
             if (mBlob == null) {
                 throw MailServiceException.NO_SUCH_BLOB(mMailbox.getId(), mId, mData.modContent);
             }
@@ -1389,7 +1392,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             if (mblob == null) {
                 throw ServiceException.FAILURE("missing blob for id: " + getId() + ", change: " + getModifiedSequence(), null);
             }
-            return StoreManager.getInstance().getContent(mblob);
+            return StoreManager.getReaderSMInstance(getLocator()).getContent(mblob);
         } catch (IOException e) {
             String msg = String.format("Unable to get content for %s %d", getClass().getSimpleName(), getId());
             throw ServiceException.FAILURE(msg, e);
@@ -1897,6 +1900,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * @param parent  The created item's parent.  The parent's addChild()
      *                method will be called during the function. */
     protected void finishCreation(MailItem parent) throws ServiceException {
+        finishCreation(parent, false);
+    }
+
+    protected void finishCreation(MailItem parent, boolean isTrashFolder) throws ServiceException {
         markItemCreated();
 
         // let the parent know it's got a new child
@@ -1913,8 +1920,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         // update mailbox and folder sizes
         if (isLeafNode()) {
             boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
-
-            mMailbox.updateSize(mData.size, isQuotaCheckRequired());
+            mMailbox.updateSize(mData.size, isQuotaCheckRequired(), isTrashFolder);
             folder.updateSize(1, isDeleted ? 1 : 0, mData.size);
             updateTagSizes(1, isDeleted ? 1 : 0, mData.size);
 
@@ -2753,7 +2759,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         DbMailItem.icopy(this, data, shareIndex);
 
         MailItem copy = constructItem(mMailbox, data);
-        copy.finishCreation(null);
+        copy.finishCreation(null, target.getId() == FolderConstants.ID_FOLDER_TRASH);
 
         if (shareIndex && !isTagged(Flag.FlagInfo.COPIED)) {
             Flag copiedFlag = mMailbox.getFlagById(Flag.ID_COPIED);

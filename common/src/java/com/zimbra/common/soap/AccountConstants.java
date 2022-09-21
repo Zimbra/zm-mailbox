@@ -324,13 +324,13 @@ public class AccountConstants {
     public static final QName GET_OAUTH_CONSUMERS_RESPONSE = QName.get(E_GET_OAUTH_CONSUMERS_RESPONSE, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_REQUEST = QName.get(E_REVOKE_OAUTH_CONSUMER_REQUEST, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_RESPONSE = QName.get(E_REVOKE_OAUTH_CONSUMER_RESPONSE, NAMESPACE);
-    
+
     //HAB
     public static final String E_GET_HAB_REQUEST = "GetHABRequest";
     public static final String E_GET_HAB_RESPONSE = "GetHABResponse";
     public static final QName GET_HAB_REQUEST = QName.get( E_GET_HAB_REQUEST, NAMESPACE);
     public static final QName GET_HAB_RESPONSE = QName.get(E_GET_HAB_RESPONSE, NAMESPACE);
-    
+
     public static final QName GET_ADDRESS_LIST_MEMBERS_REQUEST = QName.get(E_GET_ADDRESS_LIST_MEMBERS_REQUEST, NAMESPACE);
     public static final QName GET_ADDRESS_LIST_MEMBERS_RESPONSE = QName.get(E_GET_ADDRESS_LIST_MEMBERS_RESPONSE, NAMESPACE);
 
@@ -421,6 +421,9 @@ public class AccountConstants {
     public static final String E_BOSH_URL = "boshURL";
     public static final String E_SUBSCRIPTION = "sub";
     public static final String E_IS_TRACKING_IMAP = "isTrackingIMAP";
+    public static final String E_DRYRUN = "dryRun";
+    public static final String E_GET_PASSWORD_RULES = "getPasswordRules";
+    public static final String E_CANCEL_RESET_PASSWORD = "cancelResetPassword";
 
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
@@ -478,6 +481,7 @@ public class AccountConstants {
     public static final String A_TOKEN_TYPE = "tokenType";
     public static final String E_JWT_TOKEN = "jwtToken";
     public static final String A_OFFSET = "offset";
+    public static final String A_IGNORE_SAME_SITE_COOKIE = "ignoreSameSite";
 
     // account ACLs
     public static final String A_ACCESSKEY = "key";
@@ -550,6 +554,9 @@ public class AccountConstants {
     public static final String A_ATTACHMENT_SIZE_LIMIT = "attSizeLimit";
     public static final String A_DOCUMENT_SIZE_LIMIT = "docSizeLimit";
 
+    //zimbra spellcheck
+    public static final String A_IS_SPELL_CHECK_AVAILABLE = "isSpellCheckAvailable";
+
     //end session
     public static final String A_LOG_OFF = "logoff";
     public static final String A_CLEAR_ALL_SOAP_SESSIONS = "all";
@@ -594,13 +601,15 @@ public class AccountConstants {
     public static final String A_CONSUMER_APP_NAME = "appName";
     public static final String A_APPROVED_ON = "approvedOn";
     public static final String A_CONSUMER_DEVICE = "device";
-    
+
     //ext user prov URL metadata constants
     public static final String P_ACCOUNT_ID = "aid";
     public static final String P_FOLDER_ID = "fid";
     public static final String P_LINK_EXPIRY = "exp";
     public static final String P_EMAIL = "email";
     public static final String P_ADDRESS_VERIFICATION = "address-verification";
+    public static final String P_ACCOUNT_VERIFICATION = "account-verification";
+    public static final String P_CODE = "recovery_code";
 
     // Password reset feature
     public static final String E_RESET_PASSWORD_REQUEST = "ResetPasswordRequest";

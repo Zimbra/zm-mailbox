@@ -21,6 +21,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.util.SharedByteArrayInputStream;
@@ -39,13 +41,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.fileupload.DefaultFileItem;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
@@ -54,6 +59,16 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.tika.Tika;
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.detect.CompositeDetector;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.mime.MimeType;
+import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.MimeTypes;
+import org.apache.tika.mime.MimeTypesFactory;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -116,12 +131,15 @@ public class FileUploadServlet extends ZimbraServlet {
     public static final class Upload {
         final String   accountId;
         String         contentType;
+        String         extension;
         final String   uuid;
         final String   name;
         final FileItem file;
         long time;
         boolean deleted = false;
         BlobInputStream blobInputStream;
+        final static TikaConfig tikaConfig = TikaConfig.getDefaultConfig();
+        final static Detector detector = tikaConfig.getDetector();
 
         Upload(String acctId, FileItem attachment) throws ServiceException {
             this(acctId, attachment, attachment.getName());
@@ -130,50 +148,57 @@ public class FileUploadServlet extends ZimbraServlet {
         Upload(String acctId, FileItem attachment, String filename) throws ServiceException {
             assert(attachment != null); // TODO: Remove null checks in mainline.
 
-
             String localServer = Provisioning.getInstance().getLocalServer().getId();
             accountId = acctId;
             time      = System.currentTimeMillis();
             uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
             name      = FileUtil.trimFilename(filename);
             file      = attachment;
+            Account acct = Provisioning.getInstance().getAccount(acctId);
+            MimeType mimeType = null;
             if (file == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
             } else {
-                // use content based detection.  we can't use magic based
-                // detection alone because it defaults to application/xml
-                // when it sees xml magic <?xml.  that's incompatible
-                // with WebDAV handlers as the content type needs to be
-                // text/xml instead.
+                mimeType = getMimeType(file);
+                contentType = mimeType.toString();
 
-                // 1. detect by file extension
-                contentType = MimeDetect.getMimeDetect().detect(name);
+                if (acct.isFeatureFileTypeUploadRestrictionsEnabled()) {
+                    mimeType = getMimeType(file);
+                    contentType = mimeType.toString();
+                    extension = filename == null ? "" : FilenameUtils.getExtension(filename).trim();
+                    String [] blockedFileTypes = null;
+                    blockedFileTypes = acct.getFileUploadBlockedFileTypes();
+                    List<String> blockedExtensionList = new ArrayList<>(Arrays.asList(blockedFileTypes));
+                    if (blockedExtensionList.size() > 0) {
+                        if (blockedExtensionList.stream().anyMatch(extension::equalsIgnoreCase)) {
+                            throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
+                                    String.format("Blocked attachment during uploading %s filetype ", extension), null);
+                        }
 
-                // 2. special-case text/xml to avoid detection
-                if (contentType == null && file.getContentType() != null) {
-                    if (file.getContentType().equals("text/xml"))
-                        contentType = file.getContentType();
-                }
-
-                // 3. detect by magic
-                if (contentType == null) {
-                    try {
-                        contentType = MimeDetect.getMimeDetect().detect(file.getInputStream());
-                    } catch (Exception e) {
-                        contentType = null;
+                        if (blockedExtensionList.stream().anyMatch((blockedContentType) -> {
+                            if (blockedContentType.contains("/")) {
+                                Pattern p = Pattern.compile(blockedContentType);
+                                Matcher m = p.matcher(contentType);
+                                return m.find();
+                            } else {
+                                return false;
+                            }
+                        })) {
+                            throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
+                                    String.format("Blocked attachment during uploading %s content-type ", contentType), null);
+                        } else {
+                            mLog.debug("Start - Using Tika library for retrieving the extension.");
+                            String fileExtension = getExtension(mimeType);
+                            mLog.debug("End - Using Tika library for retrieving the extension.");
+                            if (blockedExtensionList.stream().anyMatch(fileExtension::equalsIgnoreCase)) {
+                                throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
+                                        String.format("Blocked attachment during uploading %s filetype ", fileExtension), null);
+                            }
+                        }
+                        mLog.debug(String.format("End - Using Tika library, time taken for [ %s ] - [ %d ] milliseconds.",
+                                filename, (System.currentTimeMillis() - time)));
                     }
                 }
-
-                // 4. try the browser-specified content type
-                if (contentType == null || contentType.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
-                    contentType = file.getContentType();
-                }
-
-                // 5. when all else fails, use application/octet-stream
-                if (contentType == null)
-                    contentType = file.getContentType();
-                if (contentType == null)
-                    contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             }
         }
 
@@ -182,6 +207,37 @@ public class FileUploadServlet extends ZimbraServlet {
         public String getContentType()  { return contentType; }
         public long getSize()           { return file == null ? 0 : file.getSize(); }
         public BlobInputStream getBlobInputStream()        { return blobInputStream; }
+
+        public static MimeType getMimeType(FileItem fileItem) {
+            MimeType mimeType = null;
+            Metadata metadata = new Metadata();
+            metadata.add(Metadata.RESOURCE_NAME_KEY, fileItem.getName());
+            String customMimeTypesPath = LC.custom_mimetypes.value();
+            MediaType mediaType = null;
+            try {
+                TikaInputStream stream = TikaInputStream.get(fileItem.getInputStream());
+                if (new File(customMimeTypesPath).isFile()) {
+                    MimeTypes customMimeTypes = MimeTypesFactory.create(new URL("file://" + customMimeTypesPath));
+                    mediaType = new CompositeDetector(customMimeTypes, detector).detect(stream, metadata);
+                } else {
+                    mediaType = detector.detect(stream, metadata);
+                }
+                mimeType = tikaConfig.getMimeRepository().forName(mediaType.toString());
+                mLog.debug("Content type detected by tika: %s.", mimeType.toString());
+            } catch (MimeTypeException mexp) {
+                mLog.warn("Failed to detect file content type", mexp);
+            } catch (IOException exp) {
+                mLog.warn("Cannot get content for upload", exp);
+            }
+            return mimeType;
+        }
+
+        public static String getExtension(MimeType mimeType) {
+            String fileExtension = null;
+            fileExtension = mimeType == null ? "" : StringUtils.strip(mimeType.getExtension(), ".");
+            mLog.debug("File extension detected by tika: %s.", fileExtension);
+            return fileExtension;
+        }
 
         public InputStream getInputStream() throws IOException {
             if (wasDeleted()) {
@@ -554,7 +610,7 @@ public class FileUploadServlet extends ZimbraServlet {
         List<FileItem> items = null;
         String reqId = null;
 
-        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize);
+        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize, acct);
         try {
             items = upload.parseRequest(req);
 
@@ -689,7 +745,7 @@ public class FileUploadServlet extends ZimbraServlet {
         filename = StringEscapeUtils.unescapeHtml(filename);
 
         // store the fetched file as a normal upload
-        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize);
+        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize, acct);
         FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
         try {
             // write the upload to disk, but make sure not to exceed the permitted max upload size
@@ -713,19 +769,38 @@ public class FileUploadServlet extends ZimbraServlet {
         items.add(fi);
         Upload up = new Upload(acct.getId(), fi, filename);
 
-        if (filename.endsWith(".har")) {
-            File file = ((DiskFileItem) fi).getStoreLocation();
-            try {
-                Tika tika = new Tika();
-                String mimeType = tika.detect(file);
-                if (mimeType != null) {
-                    up.contentType = mimeType;
+        if (!acct.isFeatureFileTypeUploadRestrictionsEnabled()) {
+            if (filename.endsWith(".har")) {
+                File file = ((DiskFileItem) fi).getStoreLocation();
+                try {
+                    Tika tika = new Tika();
+                    String mimeType = tika.detect(file);
+                    if (mimeType != null) {
+                        up.contentType = mimeType;
+                    }
+                } catch (IOException e) {
+                    mLog.warn("Failed to detect file content type");
                 }
-            } catch (IOException e) {
-                mLog.warn("Failed to detect file content type");
+            }
+            final String finalMimeType = up.contentType;
+            String contentTypeBlacklist = LC.zimbra_file_content_type_blacklist.value();
+            List<String> blacklist = new ArrayList<String>();
+            if (!StringUtil.isNullOrEmpty(contentTypeBlacklist)) {
+                blacklist.addAll(Arrays.asList(contentTypeBlacklist.trim().split(",")));
+            }
+            if (blacklist.stream().anyMatch((blacklistedContentType) -> {
+                Pattern p = Pattern.compile(blacklistedContentType);
+                Matcher m = p.matcher(finalMimeType);
+                return m.find();
+            })) {
+                mLog.debug("handlePlainUpload(): deleting %s", fi);
+                fi.delete();
+                mLog.info("File content type is blacklisted : %s" + finalMimeType);
+                drainRequestStream(req);
+                sendResponse(resp, HttpServletResponse.SC_FORBIDDEN, fmt, null, null, null);
+                return Collections.emptyList();
             }
         }
-
         mLog.info("Received plain: %s", up);
         synchronized (mPending) {
             mPending.put(up.uuid, up);
@@ -841,8 +916,53 @@ public class FileUploadServlet extends ZimbraServlet {
         return maxSize;
     }
 
+    private static long getFileUploadMaxSize(boolean limitByFileUploadMaxSize, Account acct) {
+        long maxSize = DEFAULT_MAX_SIZE;
+        String attributeUsed = null;
+        try {
+            if (limitByFileUploadMaxSize && acct.getFileUploadMaxSizePerFile() > 0) {
+                long fileUploadSizePerFile = acct.getFileUploadMaxSizePerFile();
+                long fileUploadSize = Provisioning.getInstance().getLocalServer().getLongAttr(
+                        Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+                if (fileUploadSizePerFile >= fileUploadSize) {
+                    maxSize = fileUploadSize;
+                    attributeUsed = Provisioning.A_zimbraFileUploadMaxSize;
+                } else {
+                    maxSize = fileUploadSizePerFile;
+                    attributeUsed = Provisioning.A_zimbraFileUploadMaxSizePerFile;
+                }
+            } else if (!limitByFileUploadMaxSize && acct.getMailAttachmentMaxSize() > 0) {
+                long mailAttachmentMaxSize = acct.getMailAttachmentMaxSize();
+                long mtaMaxMsgSize = Provisioning.getInstance().getConfig().getLongAttr(
+                        Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
+                if (mailAttachmentMaxSize > mtaMaxMsgSize) {
+                    maxSize = mtaMaxMsgSize;
+                    attributeUsed = Provisioning.A_zimbraMtaMaxMessageSize;
+                } else {
+                    maxSize = mailAttachmentMaxSize;
+                    attributeUsed = Provisioning.A_zimbraMailAttachmentMaxSize;
+                }
+                if (maxSize == 0) {
+                    /* 0 means "no limit". The return value from this function gets used
+                     * by FileUploadBase "sizeMax" where "-1" means "no limit"
+                     */
+                    maxSize = -1;
+                }
+            } else {
+                maxSize = getFileUploadMaxSize(limitByFileUploadMaxSize);
+            }
+        } catch (ServiceException exp) {
+            mLog.error(String.format("Unable to read %s attribute.", attributeUsed), exp);
+        }
+        return maxSize;
+    }
+
     public static ServletFileUpload getUploader2(boolean limitByFileUploadMaxSize) {
         return getUploader(getFileUploadMaxSize(limitByFileUploadMaxSize));
+    }
+
+    public static ServletFileUpload getUploader2(boolean limitByFileUploadMaxSize, Account acct) {
+        return getUploader(getFileUploadMaxSize(limitByFileUploadMaxSize, acct));
     }
 
     public static ServletFileUpload getUploader(long maxSize) {

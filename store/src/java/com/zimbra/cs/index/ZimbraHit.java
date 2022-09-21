@@ -23,6 +23,7 @@ import com.google.common.base.MoreObjects;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapMessage;
@@ -379,7 +380,21 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
      */
     public static int getReadStatus(ZimbraHit zh) throws ServiceException {
         if (zh instanceof ProxiedHit) {
-            return ((ProxiedHit) zh).getElement().getAttributeInt(MailConstants.A_UNREAD);
+            try {
+                return ((ProxiedHit) zh).getElement().getAttributeInt(MailConstants.A_UNREAD);
+            } catch (ServiceException e) {
+                // This is  message hit
+                Element msgHit = null;
+                try {
+                    msgHit = ((ProxiedHit) zh).getElement();
+                    ZimbraLog.index.debug("Message hit element:%s " , msgHit.toString()) ;
+                    String flagValue = msgHit.getAttribute(MailConstants.A_FLAGS);
+                    return (flagValue.contains("u")) ? 1 : 0;
+                } catch (ServiceException e2) {
+                    ZimbraLog.index.debug("Error reading unread flag. :%s for hit:%s", e2.getMessage(), msgHit) ;
+                    return 1;
+                }
+            }
         }
         else {
             return zh.getMailItem().isUnread() ? 1 : 0;

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -38,6 +38,9 @@ public final class CreateVolume extends RedoableOp {
     private short mboxBits;
     private short fileGroupBits;
     private short fileBits;
+    private short storeType;
+
+    private String storeManagerClass;
 
     private boolean compressBlobs;
     private long compressionThreshold;
@@ -57,6 +60,8 @@ public final class CreateVolume extends RedoableOp {
         fileBits = volume.getFileBits();
         compressBlobs = volume.isCompressBlobs();
         compressionThreshold = volume.getCompressionThreshold();
+        storeType = (short)(volume.getStoreType().getStoreType());
+        storeManagerClass = volume.getStoreManagerClass();
     }
 
     public void setId(short id) {
@@ -70,6 +75,7 @@ public final class CreateVolume extends RedoableOp {
                 .add("mboxGroupBits", mboxGroupBits).add("mboxBit", mboxBits)
                 .add("fileGroupBits", fileGroupBits).add("fileBits", fileBits)
                 .add("compressBlobs", compressBlobs).add("compressionThreshold", compressionThreshold)
+                .add("storeType", storeType).add("storeManagerClass", storeManagerClass)
                 .toString();
     }
 
@@ -84,6 +90,8 @@ public final class CreateVolume extends RedoableOp {
         out.writeShort(fileGroupBits);
         out.writeShort(fileBits);
         out.writeBoolean(compressBlobs);
+        out.writeShort(storeType);
+        out.writeUTF(storeManagerClass);
     }
 
     @Override
@@ -97,6 +105,8 @@ public final class CreateVolume extends RedoableOp {
         fileGroupBits = in.readShort();
         fileBits = in.readShort();
         compressBlobs = in.readBoolean();
+        storeType = in.readShort();
+        storeManagerClass = in.readUTF();
     }
 
     @Override
@@ -114,10 +124,16 @@ public final class CreateVolume extends RedoableOp {
             }
         }
         try {
+            Volume.StoreType enumStoreType =
+                (1 == storeType) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
+
             Volume volume = Volume.builder().setId(id).setType(type).setName(name).setPath(rootPath, false)
                     .setMboxGroupBits(mboxGroupBits).setMboxBit(mboxBits)
                     .setFileGroupBits(fileGroupBits).setFileBits(fileBits)
-                    .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold).build();
+                    .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold)
+                    .setStoreType(enumStoreType)
+                    .setStoreManagerClass(storeManagerClass)
+                    .build();
             mgr.create(volume, getUnloggedReplay());
         } catch (VolumeServiceException e) {
             if (e.getCode() == VolumeServiceException.ALREADY_EXISTS) {

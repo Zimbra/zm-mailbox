@@ -33,6 +33,8 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
@@ -51,6 +53,7 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.mail.DelegatableRequest;
 import com.zimbra.cs.servlet.continuation.ResumeContinuationListener;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
@@ -176,7 +179,15 @@ public final class ZimbraSoapContext {
     public ZimbraSoapContext(AuthToken authToken, String accountId,
             SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount)
         throws ServiceException {
+        this(authToken, accountId, reqProtocol, respProtocol, hopCount, null);
+    }
 
+    /**
+     * Added via as new constructor argument for smx/idbridge
+     */
+    public ZimbraSoapContext(AuthToken authToken, String accountId,
+            SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount, String via)
+        throws ServiceException {
         mAuthToken = authToken;
         mRawAuthToken = authToken.toZAuthToken();
         mAuthTokenAccountId = authToken.getAccountId();
@@ -185,9 +196,9 @@ public final class ZimbraSoapContext {
         mResponseProtocol = respProtocol;
         mSessionEnabled = false;
         mHopCount = hopCount;
-
-        mUserAgent = mRequestIP = mVia = null;
+        mUserAgent = mRequestIP = null;
         soapRequestId = null;
+        mVia = via;
     }
 
     /**
@@ -346,8 +357,9 @@ public final class ZimbraSoapContext {
                     }
                 }
 
-                mRequestedAccountId = account.getId();
-                validateDelegatedAccess(account, handler, requestName, value);
+
+                 mRequestedAccountId = account.getId();
+                 validateDelegatedAccess(account, handler, requestName, value);
             } else if (key.equals(HeaderConstants.BY_ID)) {
                 if (mAuthToken == null) {
                     throw ServiceException.AUTH_REQUIRED();
@@ -512,6 +524,12 @@ public final class ZimbraSoapContext {
         }
 
         if ((handler != null) && handler.handlesAccountHarvesting()) {
+            return;
+        }
+
+        if (((handler != null) && handler instanceof DelegatableRequest
+                && MailConstants.FILE_SHARED_WITH_ME_REQUEST.equals(requestName)
+                && ((DelegatableRequest) handler).isDelegatable()) || (OctopusXmlConstants.GET_DOCUMENT_SHARE_URL_REQUEST.equals(requestName))) {
             return;
         }
 
@@ -996,7 +1014,7 @@ public final class ZimbraSoapContext {
      *
      * @return {@code via} header value
      */
-    String getVia() {
+    public String getVia() {
         return mVia;
     }
 

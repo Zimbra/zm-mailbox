@@ -34,6 +34,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.io.IOUtils;
+
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
@@ -46,6 +48,7 @@ import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.lmtp.LmtpProtocolException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.DeliveryServiceException;
 import com.zimbra.common.service.ServiceException;
@@ -328,10 +331,41 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    // ZCS-1149/ZCS-11096
+    private static final String[] CHARSET_NAMES = { MimeConstants.P_CHARSET_ASCII, MimeConstants.P_CHARSET_UTF8,
+            MimeConstants.P_CHARSET_LATIN1, MimeConstants.P_CHARSET_WINDOWS_1252, MimeConstants.P_CHARSET_EUC_CN,
+            MimeConstants.P_CHARSET_GB2312, MimeConstants.P_CHARSET_GBK, MimeConstants.P_CHARSET_WINDOWS_31J,
+            MimeConstants.P_CHARSET_SHIFT_JIS, MimeConstants.P_CHARSET_DEFAULT };
+    private static final String GARBLED_CHARACTER = String.valueOf((char) 0xfffD);
+
     @Override
     public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) throws UnrecoverableLmtpException {
         CopyInputStream cis = null;
         Blob blob = null;
+        // initializing input stream and blob for External Email Warning (EEW)
+        InputStream inEEW = null;
+        Blob blobEEW = null;
+        if (ExternalEmailWarning.getInstance().isEnabled()) {
+            // duplicating input stream for EEW
+            try {
+                for (int i = 0; i < CHARSET_NAMES.length; i++) {
+                    final String charsetName = CHARSET_NAMES[i];
+                    // copy input stream and evaluate content encoding
+                    final byte[] ba = IOUtils.toByteArray(in);
+                    IOUtils.closeQuietly(in);
+                    in = new ByteArrayInputStream(ba);
+                    final String content = new String(ba, charsetName);
+                    // if current encoding is suitable, use it; otherwise, continue or use default
+                    if (!content.contains(GARBLED_CHARACTER) || i == CHARSET_NAMES.length - 1) {
+                        final String contentEEW = ExternalEmailWarning.getInstance().getUpdatedContent(content);
+                        inEEW = IOUtils.toInputStream(contentEEW, charsetName);
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                ZimbraLog.lmtp.warn("failed to duplicate input stream for EEW", e);
+            }
+        }
         try {
             int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
             cis = new CopyInputStream(in, sizeHint, bufLen, bufLen);
@@ -353,6 +387,15 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 blob = StoreManager.getInstance().storeIncoming(in);
             } catch (IOException ioe) {
                 throw new UnrecoverableLmtpException("Error in storing incoming message", ioe);
+            }
+
+            // creating blob for EEW
+            try {
+                if (inEEW != null) {
+                    blobEEW = StoreManager.getInstance().storeIncoming(inEEW);
+                }
+            } catch (IOException e) {
+                ZimbraLog.lmtp.warn("failed to create blob for EEW", e);
             }
 
             if (validator != null && !validator.isValid()) {
@@ -386,7 +429,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 //            }
 
             try {
-                deliverMessageToLocalMailboxes(blob, bis, data, mm, env);
+                // invoke for non-EEW and EEW
+                deliverMessageToLocalMailboxes(blob, blobEEW, bis, data, mm, env);
             } catch (Exception e) {
                 ZimbraLog.lmtp.warn("Exception delivering mail (temporary failure)", e);
                 setDeliveryStatuses(env.getLocalRecipients(), LmtpReply.TEMPORARY_FAILURE);
@@ -414,10 +458,19 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     ZimbraLog.lmtp.warn("Error in deleting blob %s", blob, e);
                 }
             }
+            // deleting blob for EEW
+            try {
+                if (blobEEW != null) {
+                    StoreManager.getInstance().delete(blobEEW);
+                }
+            } catch (IOException e) {
+                ZimbraLog.lmtp.warn("failed to delete blob for EEW", e);
+            }
         }
     }
 
-    private void deliverMessageToLocalMailboxes(Blob blob, BlobInputStream bis, byte[] data, MimeMessage mm, LmtpEnvelope env)
+    // invoke for non-EEW and EEW
+    private void deliverMessageToLocalMailboxes(Blob blob, Blob blobEEW, BlobInputStream bis, byte[] data, MimeMessage mm, LmtpEnvelope env)
         throws ServiceException, IOException {
 
         List<LmtpAddress> recipients = env.getLocalRecipients();
@@ -474,7 +527,14 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     if (mm != null) {
                         pmo = new ParsedMessageOptions().setContent(mm).setDigest(blob.getDigest()).setSize(blob.getRawSize());
                     } else {
-                        pmo = new ParsedMessageOptions(blob, data);
+                        if (blobEEW != null && ExternalEmailWarning.getInstance().isEnabled()
+                                && ExternalEmailWarning.getInstance().isExternal(account.getName(), envSender)) {
+                            // instantiaing parsed message options for EEW
+			    pmo = new ParsedMessageOptions(blobEEW, data);
+                        } else {
+                            // instantiaing parsed message options for non-EEW
+                            pmo = new ParsedMessageOptions(blob, data);
+                        }
                     }
 
                     ParsedMessage pm;
@@ -532,6 +592,12 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             DeliveryContext sharedDeliveryCtxt = new DeliveryContext(shared, targetMailboxIds);
             sharedDeliveryCtxt.setIncomingBlob(blob);
+
+            // instantiating delivery context for EEW
+            DeliveryContext sharedDeliveryCtxtEEW = new DeliveryContext(shared, targetMailboxIds);
+            if (blobEEW != null && ExternalEmailWarning.getInstance().isEnabled()) {
+                sharedDeliveryCtxtEEW.setIncomingBlob(blobEEW);
+            }
 
             // We now know which addresses are valid and which ParsedMessage
             // version each recipient needs.  Deliver!
@@ -624,9 +690,19 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 // Get msgid first, to avoid having to reopen and reparse the blob
                                 // file if Mailbox.addMessageInternal() closes it.
                                 pm.getMessageID();
-                                addedMessageIds = RuleManager.applyRulesToIncomingMessage(
+                                if (blobEEW != null && ExternalEmailWarning.getInstance().isEnabled()
+                                        && ExternalEmailWarning.getInstance().isExternal(account.getName(),
+                                                envSender)) {
+                                    // invoking for EEW
+                                    addedMessageIds = RuleManager.applyRulesToIncomingMessage(null, mbox, pm,
+                                            (int) blobEEW.getRawSize(), rcptEmail, env, sharedDeliveryCtxtEEW,
+                                            Mailbox.ID_FOLDER_INBOX, false, true);
+                                } else {
+                                    // invoking for non-EEW
+                                    addedMessageIds = RuleManager.applyRulesToIncomingMessage(
                                         null, mbox, pm, (int) blob.getRawSize(), rcptEmail, env, sharedDeliveryCtxt,
                                         Mailbox.ID_FOLDER_INBOX, false, true);
+                                }
                             } else {
                                 pm.getMessageID();
                                 DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);

@@ -32,8 +32,8 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.AlwaysOnClusterBy;
 import com.zimbra.common.account.Key.ShareLocatorBy;
 import com.zimbra.common.account.Key.UCServiceBy;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -931,7 +931,7 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -942,6 +942,22 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public Set<String> listHabOrgUnit(Domain domain) throws ServiceException {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void changePassword(Account acct, String currentPassword, String newPassword,
+        boolean dryRun) throws ServiceException {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    @Override
+    public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
         return null;
     }
 }

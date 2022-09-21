@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.mailbox.FolderStore;
@@ -40,10 +39,9 @@ import com.zimbra.cs.mailbox.OperationContext;
 
 public abstract class ImapMailboxStore {
 
-    protected transient ImapFlagCache flags;
+    protected final static transient ImapFlagCache flags = ImapFlagCache.getSystemFlags();
 
     protected ImapMailboxStore() {
-        this.flags = ImapFlagCache.getSystemFlags();
     }
 
     public static ImapMailboxStore get(MailboxStore mbox) throws ServiceException {

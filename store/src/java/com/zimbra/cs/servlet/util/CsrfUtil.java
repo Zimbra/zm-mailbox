@@ -35,11 +35,15 @@ import com.google.common.base.Joiner;
 import com.google.common.net.HttpHeaders;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.BlobMetaDataEncodingException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -51,6 +55,7 @@ import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
 import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.servlet.CsrfFilter;
 
 
 
@@ -529,6 +534,20 @@ public final class CsrfUtil {
         return false;
     }
 
+    public static void setCSRFToken(HttpServletRequest httpReq, HttpServletResponse httpResp, AuthToken authToken, 
+        boolean csrfSupport, Element response) throws ServiceException {
+        if (csrfSupport && httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null 
+                && ((Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled))) {
+            String accountId = authToken.getAccountId();
+            long authTokenExpiration = authToken.getExpires();
+            int tokenSalt = (Integer) httpReq.getAttribute(CsrfFilter.CSRF_SALT);
+            String token = generateCsrfToken(accountId, authTokenExpiration, tokenSalt, authToken);
+            Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
+            csrfResponse.addText(token);
+            httpResp.setHeader(Constants.CSRF_TOKEN, token);
+        }
+    }
+    
     public static void main(String args[])
     {
         try {

@@ -19,6 +19,7 @@ package com.zimbra.cs.zimlet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -28,10 +29,13 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.ProtocolException;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
@@ -45,6 +49,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.protocol.HttpContext;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -83,8 +88,11 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String AUTH_PARAM = "auth";
     private static final String AUTH_BASIC = "basic";
 
+    protected static boolean isRedirectStatus(int status) {
+        return status / 100 == 3; // 3xx Redirect
+    }
 
-    private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
+    private static Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, auth.getAccountId(), auth);
 
@@ -97,31 +105,62 @@ public class ProxyServlet extends ZimbraServlet {
         return allowedDomains;
     }
 
-    private boolean checkPermissionOnTarget(URL target, AuthToken auth) {
+    protected static boolean checkPermissionOnTarget(URL target, AuthToken auth) {
         String host = target.getHost().toLowerCase();
-        ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: "+host);
+        ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: " + host);
         Set<String> domains;
         try {
             domains = getAllowedDomains(auth);
         } catch (ServiceException se) {
-            ZimbraLog.zimlet.info("error getting allowedDomains: "+se.getMessage());
+            ZimbraLog.zimlet.info("error getting allowedDomains: " + se.getMessage());
             return false;
         }
         for (String domain : domains) {
-            if (domain.equals("*")) {
-                return true;
-            }
             if (domain.charAt(0) == '*') {
                 domain = domain.substring(1);
+                if (host.endsWith(domain)) {
+                    return true;
+                }
             }
-            if (host.endsWith(domain)) {
+            else if (host.equals(domain)) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean canProxyHeader(String header) {
+    protected static boolean shouldFollowRedirectLocation(Header locationHeader, AuthToken authToken) {
+        if (locationHeader == null) {
+            ZimbraLog.zimlet.debug("refuse proxy redirect to missing location");
+            return false;
+        }
+
+        String location = locationHeader.getValue();
+
+        if (StringUtils.isEmpty(location)) {
+            ZimbraLog.zimlet.warn("refuse proxy redirect to empty location");
+            return false;
+        }
+
+        URL url = null;
+
+        try {
+            url = new URL(location);
+        } catch (MalformedURLException ex) {
+            // Malformed locations include relative ones.
+            ZimbraLog.zimlet.warn("refuse proxy redirect to malformed location: " + location);
+            return false;
+        }
+
+        if (!checkPermissionOnTarget(url, authToken)) {
+            ZimbraLog.zimlet.warn("refuse proxy redirect to restricted location: " + location);
+            return false;
+        }
+
+        return true;
+    }
+
+    protected boolean canProxyHeader(String header) {
         if (header == null) return false;
         header = header.toLowerCase();
         if (header.startsWith("accept") ||
@@ -133,13 +172,14 @@ public class ProxyServlet extends ZimbraServlet {
             //header.equals("user-agent") ||
             header.equals("cache-control") ||
             header.equals("cookie") ||
-            header.equals("transfer-encoding")) {
+            header.equals("transfer-encoding") ||
+            Arrays.asList(LC.proxy_servlet_drop_headers.value().toString().split(",")).contains(header)) {
             return false;
         }
         return true;
     }
 
-    private byte[] copyPostedData(HttpServletRequest req) throws IOException {
+    protected byte[] copyPostedData(HttpServletRequest req) throws IOException {
         int size = req.getContentLength();
         if (req.getMethod().equalsIgnoreCase("GET") || size <= 0) {
             return null;
@@ -186,9 +226,23 @@ public class ProxyServlet extends ZimbraServlet {
         return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
     }
 
-    private static final String DEFAULT_CTYPE = "text/xml";
+    protected static final String DEFAULT_CTYPE = "text/xml";
 
-    private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected static class RestrictiveRedirectStrategy extends DefaultRedirectStrategy {
+        private final AuthToken authToken;
+
+        protected RestrictiveRedirectStrategy(AuthToken authToken) {
+            this.authToken = authToken;
+        }
+
+        @Override
+        public boolean isRedirected(HttpRequest request, HttpResponse response, HttpContext context)
+        throws ProtocolException {
+            return shouldFollowRedirectLocation(response.getFirstHeader("Location"), authToken);
+        }
+    }
+
+    protected void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
         boolean isAdmin = isAdminRequest(req);
         AuthToken authToken = isAdmin ?
@@ -286,20 +340,17 @@ public class ProxyServlet extends ZimbraServlet {
             Enumeration headers = req.getHeaderNames();
             while (headers.hasMoreElements()) {
                 String hdr = (String) headers.nextElement();
-            	ZimbraLog.zimlet.debug("incoming: " + hdr + ": " + req.getHeader(hdr));
+                ZimbraLog.zimlet.debug("incoming: " + hdr + ": " + req.getHeader(hdr));
                 if (canProxyHeader(hdr)) {
-                	ZimbraLog.zimlet.debug("outgoing: " + hdr + ": " + req.getHeader(hdr));
-                	if (hdr.equalsIgnoreCase("x-host"))
-                	    method.setHeader("Host", req.getHeader(hdr));
-                	else
-                		method.addHeader(hdr, req.getHeader(hdr));
+                    ZimbraLog.zimlet.debug("outgoing: " + hdr + ": " + req.getHeader(hdr));
+                    method.addHeader(hdr, req.getHeader(hdr));
                 }
             }
 
             HttpResponse httpResp = null;
             try {
                 if (!(reqMethod.equalsIgnoreCase("POST") || reqMethod.equalsIgnoreCase("PUT"))) {
-                    clientBuilder.setRedirectStrategy(new DefaultRedirectStrategy());
+                    clientBuilder.setRedirectStrategy(new RestrictiveRedirectStrategy(authToken));
                 }
 
                 HttpClient client = clientBuilder.build();
@@ -310,7 +361,12 @@ public class ProxyServlet extends ZimbraServlet {
                 return;
             }
 
-            int status = httpResp.getStatusLine() == null ? HttpServletResponse.SC_INTERNAL_SERVER_ERROR :httpResp.getStatusLine().getStatusCode();
+            int status = httpResp.getStatusLine() == null ? HttpServletResponse.SC_INTERNAL_SERVER_ERROR : httpResp.getStatusLine().getStatusCode();
+
+            if (isRedirectStatus(status) && !shouldFollowRedirectLocation(httpResp.getFirstHeader("Location"), authToken)) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
 
             // workaround for Alexa Thumbnails paid web service, which doesn't bother to return a content-type line
             Header ctHeader = httpResp.getFirstHeader("Content-Type");
@@ -355,7 +411,7 @@ public class ProxyServlet extends ZimbraServlet {
                     if (canProxyHeader(h.getName()))
                         resp.addHeader(h.getName(), h.getValue());
                 if (targetResponseBody != null)
-                	ByteUtil.copy(targetResponseBody, true, resp.getOutputStream(), true);
+                    ByteUtil.copy(targetResponseBody, true, resp.getOutputStream(), true);
             }
         } finally {
             if (method != null)

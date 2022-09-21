@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2020, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -61,8 +61,8 @@ import com.zimbra.soap.mail.type.CreateItemNotification;
 import com.zimbra.soap.mail.type.DeleteItemNotification;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 import com.zimbra.soap.mail.type.ModifyNotification;
-import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.util.JaxbInfo;
 
 public final class JaxbUtil {
@@ -182,6 +182,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.RenewMobileGatewayAppTokenResponse.class,
             com.zimbra.soap.account.message.ResetPasswordRequest.class,
             com.zimbra.soap.account.message.ResetPasswordResponse.class,
+            com.zimbra.soap.admin.message.ResetAccountPasswordRequest.class,
+            com.zimbra.soap.admin.message.ResetAccountPasswordResponse.class,
             com.zimbra.soap.account.message.RevokeAppSpecificPasswordRequest.class,
             com.zimbra.soap.account.message.RevokeAppSpecificPasswordResponse.class,
             com.zimbra.soap.account.message.RevokeOAuthConsumerRequest.class,
@@ -212,6 +214,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.AbortHsmResponse.class,
             com.zimbra.soap.admin.message.AbortXMbxSearchRequest.class,
             com.zimbra.soap.admin.message.AbortXMbxSearchResponse.class,
+            com.zimbra.soap.admin.message.AccountOnlyRemoteWipeRequest.class,
+            com.zimbra.soap.admin.message.AccountOnlyRemoteWipeResponse.class,
             com.zimbra.soap.admin.message.ActivateLicenseRequest.class,
             com.zimbra.soap.admin.message.ActivateLicenseResponse.class,
             com.zimbra.soap.admin.message.AddAccountAliasRequest.class,
@@ -230,6 +234,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.AdminDestroyWaitSetResponse.class,
             com.zimbra.soap.admin.message.AdminWaitSetRequest.class,
             com.zimbra.soap.admin.message.AdminWaitSetResponse.class,
+            com.zimbra.soap.admin.message.AllowDeviceRequest.class,
+            com.zimbra.soap.admin.message.AllowDeviceResponse.class,
             com.zimbra.soap.admin.message.AuthRequest.class,
             com.zimbra.soap.admin.message.AuthResponse.class,
             com.zimbra.soap.admin.message.AutoCompleteGalRequest.class,
@@ -244,6 +250,10 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.BackupQueryResponse.class,
             com.zimbra.soap.admin.message.BackupRequest.class,
             com.zimbra.soap.admin.message.BackupResponse.class,
+            com.zimbra.soap.admin.message.BlockDeviceRequest.class,
+            com.zimbra.soap.admin.message.BlockDeviceResponse.class,
+            com.zimbra.soap.admin.message.CancelPendingAccountOnlyRemoteWipeRequest.class,
+            com.zimbra.soap.admin.message.CancelPendingAccountOnlyRemoteWipeResponse.class,
             com.zimbra.soap.admin.message.CancelPendingRemoteWipeRequest.class,
             com.zimbra.soap.admin.message.CancelPendingRemoteWipeResponse.class,
             com.zimbra.soap.admin.message.CheckAuthConfigRequest.class,
@@ -726,6 +736,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.SetServerOfflineResponse.class,
             com.zimbra.soap.admin.message.SuspendDeviceRequest.class,
             com.zimbra.soap.admin.message.SuspendDeviceResponse.class,
+            com.zimbra.soap.admin.message.QuarantineDeviceRequest.class,
+            com.zimbra.soap.admin.message.QuarantineDeviceResponse.class,
             com.zimbra.soap.admin.message.SyncGalAccountRequest.class,
             com.zimbra.soap.admin.message.SyncGalAccountResponse.class,
             com.zimbra.soap.admin.message.UndeployZimletRequest.class,
@@ -862,6 +874,10 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetAllDevicesResponse.class,
             com.zimbra.soap.mail.message.GetAppointmentRequest.class,
             com.zimbra.soap.mail.message.GetAppointmentResponse.class,
+            com.zimbra.soap.mail.message.GetAppointmentIdsInRangeRequest.class,
+            com.zimbra.soap.mail.message.GetAppointmentIdsInRangeResponse.class,
+            com.zimbra.soap.mail.message.GetAppointmentIdsSinceRequest.class,
+            com.zimbra.soap.mail.message.GetAppointmentIdsSinceResponse.class,
             com.zimbra.soap.mail.message.GetApptSummariesRequest.class,
             com.zimbra.soap.mail.message.GetApptSummariesResponse.class,
             com.zimbra.soap.mail.message.GetCalendarItemSummariesRequest.class,
@@ -1078,6 +1094,14 @@ public final class JaxbUtil {
             com.zimbra.soap.replication.message.StopFailoverClientResponse.class,
             com.zimbra.soap.replication.message.StopFailoverDaemonRequest.class,
             com.zimbra.soap.replication.message.StopFailoverDaemonResponse.class,
+            com.zimbra.soap.sync.message.AccountOnlyRemoteWipeRequest.class,
+            com.zimbra.soap.sync.message.AccountOnlyRemoteWipeResponse.class,
+            com.zimbra.soap.sync.message.AllowDeviceRequest.class,
+            com.zimbra.soap.sync.message.AllowDeviceResponse.class,
+            com.zimbra.soap.sync.message.CancelPendingAccountOnlyRemoteWipeRequest.class,
+            com.zimbra.soap.sync.message.CancelPendingAccountOnlyRemoteWipeResponse.class,
+            com.zimbra.soap.sync.message.BlockDeviceRequest.class,
+            com.zimbra.soap.sync.message.BlockDeviceResponse.class,
             com.zimbra.soap.sync.message.CancelPendingRemoteWipeRequest.class,
             com.zimbra.soap.sync.message.CancelPendingRemoteWipeResponse.class,
             com.zimbra.soap.sync.message.GetDeviceStatusRequest.class,
@@ -1090,6 +1114,8 @@ public final class JaxbUtil {
             com.zimbra.soap.sync.message.ResumeDeviceResponse.class,
             com.zimbra.soap.sync.message.SuspendDeviceRequest.class,
             com.zimbra.soap.sync.message.SuspendDeviceResponse.class,
+            com.zimbra.soap.sync.message.QuarantineDeviceRequest.class,
+            com.zimbra.soap.sync.message.QuarantineDeviceResponse.class,
             com.zimbra.soap.voice.message.ChangeUCPasswordRequest.class,
             com.zimbra.soap.voice.message.ChangeUCPasswordResponse.class,
             com.zimbra.soap.voice.message.GetUCInfoRequest.class,
@@ -1121,7 +1147,21 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetAddressListMembersRequest.class,
             com.zimbra.soap.account.message.GetAddressListMemberResponse.class,
             com.zimbra.soap.admin.message.GetAddressListInfoRequest.class,
-            com.zimbra.soap.admin.message.GetAddressListInfoResponse.class
+            com.zimbra.soap.admin.message.GetAddressListInfoResponse.class,
+            com.zimbra.soap.mail.message.FileSharedWithMeRequest.class,
+            com.zimbra.soap.mail.message.FileSharedWithMeResponse.class,
+            com.zimbra.soap.admin.message.ScheduleSMPolicyRequest.class,
+            com.zimbra.soap.admin.message.ScheduleSMPolicyResponse.class,
+            com.zimbra.soap.admin.message.GetScheduleSMPolicyRequest.class,
+            com.zimbra.soap.admin.message.GetScheduleSMPolicyResponse.class,
+            com.zimbra.soap.admin.message.GetS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.GetS3BucketConfigResponse.class,
+            com.zimbra.soap.admin.message.CreateS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.CreateS3BucketConfigResponse.class,
+            com.zimbra.soap.admin.message.DeleteS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.DeleteS3BucketConfigResponse.class,
+            com.zimbra.soap.admin.message.ValidateS3BucketReachableRequest.class,
+            com.zimbra.soap.admin.message.ValidateS3BucketReachableResponse.class
         };
 
         try {

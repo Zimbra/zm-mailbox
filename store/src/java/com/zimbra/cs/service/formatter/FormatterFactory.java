@@ -42,6 +42,7 @@ public class FormatterFactory {
             FREE_BUSY("freebusy", MimeConstants.CT_TEXT_HTML),
             HTML("html", MimeConstants.CT_TEXT_HTML),
             HTML_CONVERTED("native", MimeConstants.CT_TEXT_HTML),
+            HTML_ONLYOFFICE("onlyoffice", MimeConstants.CT_TEXT_HTML),
             ICS("ics", MimeConstants.CT_TEXT_CALENDAR),
             IFB("ifb", MimeConstants.CT_TEXT_CALENDAR),
             JSON("json", MimeConstants.CT_APPLICATION_JSON),

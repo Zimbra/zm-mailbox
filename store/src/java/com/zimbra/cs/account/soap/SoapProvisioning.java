@@ -17,25 +17,6 @@
 
 package com.zimbra.cs.account.soap;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.Future;
-
-import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
-import org.apache.http.concurrent.FutureCallback;
-
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -64,8 +45,11 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateTimeUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
@@ -100,6 +84,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.soap.JaxbUtil;
@@ -206,6 +191,8 @@ import com.zimbra.soap.admin.message.GetConfigRequest;
 import com.zimbra.soap.admin.message.GetConfigResponse;
 import com.zimbra.soap.admin.message.GetCosRequest;
 import com.zimbra.soap.admin.message.GetCosResponse;
+import com.zimbra.soap.admin.message.GetDeviceStatusRequest;
+import com.zimbra.soap.admin.message.GetDeviceStatusResponse;
 import com.zimbra.soap.admin.message.GetDistributionListMembershipRequest;
 import com.zimbra.soap.admin.message.GetDistributionListMembershipResponse;
 import com.zimbra.soap.admin.message.GetDistributionListRequest;
@@ -283,6 +270,7 @@ import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DLInfo;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.admin.type.DeviceStatusInfo;
 import com.zimbra.soap.admin.type.DistributionListInfo;
 import com.zimbra.soap.admin.type.DistributionListMembershipInfo;
 import com.zimbra.soap.admin.type.DistributionListSelector;
@@ -309,7 +297,27 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.TargetBy;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.concurrent.FutureCallback;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 public class SoapProvisioning extends Provisioning {
 
     public static class Options {
@@ -862,6 +870,14 @@ public class SoapProvisioning extends Provisioning {
         com.zimbra.soap.type.AccountSelector jaxbAcct =
             new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acct.getName());
         invokeJaxb(new ChangePasswordRequest(jaxbAcct, currentPassword, newPassword));
+    }
+
+    @Override
+    public void changePassword(Account acct, String currentPassword,
+        String newPassword, boolean dryRun) throws ServiceException {
+        com.zimbra.soap.type.AccountSelector jaxbAcct =
+            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acct.getName());
+        invokeJaxb(new ChangePasswordRequest(jaxbAcct, currentPassword, newPassword, dryRun));
     }
 
     @Override
@@ -3160,7 +3176,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * 
+     *
      * @param rootHabGroupId the group for which HAB is required
      * @return GetHabResponse object
      * @throws ServiceException if an error occurs while fetching hierarchy from ldap
@@ -3173,7 +3189,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * 
+     *
      * @param habGroupId HAB group to be moved
      * @param currentParentGroupId current HAB parent id
      * @param targetParentGroupId target parent id
@@ -3187,7 +3203,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * 
+     *
      * @param habGroupId HAB group to be modified
      * @param seniorityIndex seniority index
      * @throws ServiceException if an error occurs while modifying the HAB group
@@ -3201,13 +3217,67 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * 
+     *
      * @param group HAB group whose members will be returned
      * @throws ServiceException if an error occurs while getting the HAB group members
      */
+    @Override
     public List<HABGroupMember> getHABGroupMembers(Group group) throws ServiceException {
         GetDistributionListMembersResponse resp = invokeJaxb(new GetDistributionListMembersRequest(0, 0, group.getName()));
         return resp.getHABGroupMembers();
     }
 
+    @Override
+    public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    /**
+     *
+     * @param status reserved for future use if mail to send for different status to
+     *               be added
+     * @param timeInterval     accepts the time interval in which the mail has to be send
+     * @throws ServiceException if an error occurs while sending email for MDM
+     *                          notification mail
+     */
+    @Override
+    public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
+        StringBuilder devicesInfo = new StringBuilder()
+                .append(LC.zimbra_mobile_mdm_notification_email_body.value())
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlOpen))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableOpen))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlDeviceTableHeader));
+
+        GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null, null, SyncAdminConstants.MDM_STATUS_SUSPENDED));
+        List<DeviceStatusInfo> statusOfDevices = resp.getDevices().stream()
+                .filter(devices -> DateTimeUtil.checkWithinTime(Timestamp.valueOf(devices.getUpdateTime()),
+                        Long.parseLong(timeInterval), TimeUnit.MINUTES))
+                .collect(Collectors.toList());
+        int j = 0;
+        for (int i = 0; i < statusOfDevices.size(); i++) {
+                devicesInfo.append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableRowOpen))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(j + 1)
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getFriendlyName())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getId())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getUserAgent())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getUpdateTime())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableRowClose));
+                j++;
+        }
+        if (j > 0) {
+            devicesInfo.append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableClose))
+            .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlClose));
+            SyncUtil.sendReportEmail(LC.zimbra_mobile_mdm_notification_email_subject.value(), String.valueOf(devicesInfo),new String[]{LC.zimbra_mobile_mdm_notification_email_to.value()});
+        }
+
+        return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailSuccess);
+    }
 }

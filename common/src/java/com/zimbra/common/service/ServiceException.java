@@ -60,6 +60,11 @@ public class ServiceException extends Exception {
     public static final String FORBIDDEN = "service.FORBIDDEN";
     // generic "not found" error for objects other than mail items
     public static final String NOT_FOUND = "service.NOT_FOUND";
+    public static final String INTERNAL_ERROR = "service.INTERNAL_ERROR";
+    public static final String INVALID_DATASOURCE_ID = "service.INVALID_DATASOURCE_ID";
+    public static final String DATASOURCE_SMTP_DISABLED = "service.DATASOURCE_SMTP_DISABLED";
+    public static final String ERROR_WHILE_PARSING_UPLOAD = "service.IOEXCEPTION_WHILE_PARSING_UPLOAD";
+    public static final String BLOCKED_FILE_TYPE_UPLOAD = "service.BLOCKED_FILE_TYPE_UPLOAD";
 
     //smime
     public static final String LOAD_CERTIFICATE_FAILED = "smime.LOAD_CERTIFICATE_FAILED";
@@ -288,11 +293,37 @@ public class ServiceException extends Exception {
         return new ServiceException("system failure: "+message, FAILURE, RECEIVERS_FAULT, cause);
     }
 
+    public static ServiceException ERROR_WHILE_PARSING_UPLOAD(String message, Throwable cause) {
+        return new ServiceException(
+                String.format("ioexception during upload: %s", message), ERROR_WHILE_PARSING_UPLOAD, RECEIVERS_FAULT, cause);
+    }
+
+    public static ServiceException BLOCKED_FILE_TYPE_UPLOAD(String message, Throwable cause) {
+        return new ServiceException(
+                String.format("blocked file type upload: %s", message), BLOCKED_FILE_TYPE_UPLOAD, RECEIVERS_FAULT, cause);
+    }
+
     /**
      * The request was somehow invalid (wrong parameter, wrong target, etc)
      */
     public static ServiceException INVALID_REQUEST(String message, Throwable cause) {
         return new ServiceException("invalid request: "+message, INVALID_REQUEST, SENDERS_FAULT, cause);
+    }
+
+    /**
+     * The request was invalid as datasource with the specified Id is not present.
+     */
+    public static ServiceException INVALID_DATASOURCE_ID(String message, Throwable cause) {
+        return new ServiceException(
+                String.format("wrong datasource id: %s", message), INVALID_DATASOURCE_ID, SENDERS_FAULT, cause);
+    }
+
+    /**
+     * The request was invalid as datasource datasource SMTP is not enabled.
+     */
+    public static ServiceException DATASOURCE_SMTP_DISABLED(String message, Throwable cause) {
+        return new ServiceException(
+                String.format("datasource smtp not enabled: %s", message), DATASOURCE_SMTP_DISABLED, SENDERS_FAULT, cause);
     }
 
     /**
@@ -304,6 +335,11 @@ public class ServiceException extends Exception {
 
     public static ServiceException PARSE_ERROR(String message, Throwable cause) {
         return new ServiceException("parse error: "+message, PARSE_ERROR, SENDERS_FAULT, cause);
+    }
+
+    public static ServiceException FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR(String message, Throwable cause) {
+        return new ServiceException(
+                String.format("parse error for SENT-BY: %s", message), INTERNAL_ERROR, SENDERS_FAULT, cause);
     }
 
     public static ServiceException RESOURCE_UNREACHABLE(String message, Throwable cause, Argument... arguments) {
@@ -418,6 +454,15 @@ public class ServiceException extends Exception {
 
     public static ServiceException UNSUPPORTED() {
         return new ServiceException("unsupported", UNSUPPORTED, RECEIVERS_FAULT);
+    }
+
+    /**
+     * ServiceException in case wrong config provided by Sender
+     * @param msg
+     * @return
+     */
+    public static ServiceException UNSUPPORTED_CONFIG(String msg) {
+        return new ServiceException("unsupported: " + msg, UNSUPPORTED, SENDERS_FAULT);
     }
 
     public static ServiceException FORBIDDEN(String str) {

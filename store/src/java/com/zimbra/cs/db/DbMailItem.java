@@ -3241,10 +3241,13 @@ public class DbMailItem {
     static List<Integer> accumulateLeafNodes(PendingDelete info, Mailbox mbox, ResultSet rs) throws SQLException, ServiceException {
         boolean dumpsterEnabled = mbox.dumpsterEnabled();
         boolean useDumpsterForSpam = mbox.useDumpsterForSpam();
-        StoreManager sm = StoreManager.getInstance();
+
         List<Integer> versioned = new ArrayList<Integer>();
 
         while (rs.next()) {
+            // Specific store manager
+            String locator = rs.getString(LEAF_CI_LOCATOR);
+            StoreManager sm = StoreManager.getReaderSMInstance(locator);
             // first check to make sure we don't have a modify conflict
             int revision = rs.getInt(LEAF_CI_MOD_CONTENT);
             int modMetadata = rs.getInt(LEAF_CI_MOD_METADATA);
@@ -3318,7 +3321,7 @@ public class DbMailItem {
                 String blobDigest = rs.getString(LEAF_CI_BLOB_DIGEST);
                 if (blobDigest != null) {
                     info.blobDigests.add(blobDigest);
-                    String locator = rs.getString(LEAF_CI_LOCATOR);
+                    locator = rs.getString(LEAF_CI_LOCATOR);
                     try {
                         MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator, false);
                         if (mblob == null) {
@@ -3357,7 +3360,6 @@ public class DbMailItem {
         boolean dumpsterEnabled = mbox.dumpsterEnabled();
         boolean useDumpsterForSpam = mbox.useDumpsterForSpam();
         DbConnection conn = mbox.getOperationConnection();
-        StoreManager sm = StoreManager.getInstance();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -3381,6 +3383,9 @@ public class DbMailItem {
                 } else {
                     count.increment(0, 0, rs.getLong(3));
                 }
+
+                String locator = rs.getString(5);
+                StoreManager sm = StoreManager.getReaderSMInstance(locator);
 
                 int fid = folderId != null ? folderId.intValue() : -1;
                 if (!dumpsterEnabled || fid == Mailbox.ID_FOLDER_DRAFTS || (fid == Mailbox.ID_FOLDER_SPAM && !useDumpsterForSpam)) {
@@ -4167,6 +4172,57 @@ public class DbMailItem {
      * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
      * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
      */
+    public static Map<Integer, Integer> listCalendarItemIdsAndDates(Mailbox mbox, MailItem.Type type, long start, long end, int folderId,
+            int[] excludeFolderIds) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = calendarItemStatement(conn, "ci.item_id, mi.date", mbox, type, start, end, folderId, excludeFolderIds);
+            rs = stmt.executeQuery();
+
+            Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+            while (rs.next()) {
+                map.put(rs.getInt(1), rs.getInt(2));
+            }
+            return map;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("listing calendar items for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    /**
+     * @param lastSync  last synced time of appointment - int - date in seconds from epoch
+     */
+    public static Map<Integer, Integer> listCalendarItemIdsAndDates(Mailbox mbox, MailItem.Type type, int lastSync, int folderId,
+            int[] excludeFolderIds) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = calendarItemStatement(conn, "ci.item_id, mi.folder_id", mbox, type, lastSync, folderId, excludeFolderIds, "ci.item_id");
+            rs = stmt.executeQuery();
+
+            Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+            while (rs.next()) {
+                map.put(rs.getInt(1), rs.getInt(2));
+            }
+            return map;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("listing calendar items for mailbox " + mbox.getId() + " failed", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    /**
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
     private static PreparedStatement calendarItemStatement(DbConnection conn, String fields,
             Mailbox mbox, MailItem.Type type, long start, long end, int folderId, int[] excludeFolderIds)
             throws SQLException {
@@ -4206,7 +4262,49 @@ public class DbMailItem {
                 stmt.setInt(pos++, id);
             }
         }
+        return stmt;
+    }
 
+    /**
+     * The query returns remote calendar folder all visible and deleted items
+     * @param lastSync  last synced time of appointment - int - date in seconds from epoch
+     */
+    private static PreparedStatement calendarItemStatement(DbConnection conn, String fields,
+            Mailbox mbox, MailItem.Type type, int lastSync, int folderId, int[] excludeFolderIds, String orderBy)
+            throws SQLException {
+        boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
+
+        String lastSyncConstraint = " AND mi.change_date > ?";
+        String typeConstraint = type == MailItem.Type.UNKNOWN ? "type IN " + CALENDAR_TYPES : typeIn(type);
+
+        String excludeFolderPart = "";
+        if (excludeFolderIds != null && excludeFolderIds.length > 0) {
+            excludeFolderPart = " AND " + DbUtil.whereNotIn("folder_id", excludeFolderIds.length);
+        }
+        String orderByConstraint = " ORDER BY " + orderBy + " ASC";
+
+        PreparedStatement stmt = conn.prepareStatement("SELECT " + fields +
+                " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
+                " WHERE mi.id = ci.item_id" + lastSyncConstraint + " AND mi." + typeConstraint +
+                (DebugConfig.disableMailboxGroups? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
+                (folderSpecified ? " AND ( folder_id = ? OR (folder_id = '"+ Mailbox.ID_FOLDER_TRASH + "' AND prev_folders LIKE ? ))" : "") +
+                excludeFolderPart + orderByConstraint);
+        
+        int pos = 1;
+        if (lastSync < 0) {
+            lastSync = 0;
+        }
+        stmt.setInt(pos++, lastSync);
+        pos = setMailboxId(stmt, mbox, pos);
+        if (folderSpecified) {
+            stmt.setInt(pos++, folderId);
+            stmt.setString(pos++, "%:"+folderId);
+        }
+        if (excludeFolderIds != null) {
+            for (int id : excludeFolderIds) {
+                stmt.setInt(pos++, id);
+            }
+        }
         return stmt;
     }
 

@@ -119,10 +119,10 @@ public class Props2Js {
 
     private static void printHead(DataOutputStream out, String classname) throws
         IOException {
-        out.writeBytes("if (!window."+classname+") { ");
-        out.writeBytes(classname+" = {};");
+        out.writeBytes("if (!window['"+classname+"']) { ");
+        out.writeBytes("window['"+classname+"'] = {};");
         out.writeBytes(" }\n");
-        out.writeBytes("a="+classname+";\n");
+        out.writeBytes("a=window['"+classname+"'];\n");
     }
     
 	private static void printTail(DataOutputStream out) throws

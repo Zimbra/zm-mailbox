@@ -101,6 +101,7 @@
     <mkdir dir="${build.dir}/zimbra/conf"/>
     <copy file="${zm-mailbox.basedir}/store-conf/conf/antisamy.xml" todir="${build.dir}/zimbra/conf/"/>
     <copy file="${zm-mailbox.basedir}/store-conf/conf/owasp_policy.xml" todir="${build.dir}/zimbra/conf/"/>
+    <copy file="${zm-mailbox.basedir}/store-conf/conf/custom-mimetypes.xml" todir="${build.dir}/zimbra/conf/"/>
     <antcall target="make-dirs">
       <param name="base.dir" value="${dist.dir}"/>
     </antcall>
@@ -269,15 +270,16 @@
   <target name="war" depends="jar,set-dev-version">
     <delete dir="${build.tmp.dir}"/>
     <!-- delete anything that may have been left over, e.g.: older versions of same libs -->
-    <ivy:install organisation="org.slf4j" module="slf4j-api" revision="1.6.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.slf4j" module="slf4j-log4j12" revision="1.6.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.slf4j" module="slf4j-api" revision="1.7.36" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.slf4j" module="slf4j-simple" revision="1.7.36" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.logging.log4j" module="log4j-slf4j-impl" revision="2.17.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.james" module="apache-jsieve-core" revision="0.5" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.lucene" module="lucene-core" revision="3.5.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.lucene" module="lucene-analyzers" revision="3.5.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.apache.lucene" module="lucene-smartcn" revision="3.5.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="ant-tar-patched" module="ant-tar-patched" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.mina" module="mina-core" revision="2.0.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="zimbra" module="zm-ews-stub" revision="2.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.mina" module="mina-core" revision="2.1.6" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="zimbra" module="zm-ews-stub" revision="4.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.zookeeper" module="zookeeper" revision="3.4.5" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="com.101tec" module="zkclient" revision="0.1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.curator" module="curator-recipes" revision="2.0.1-incubating" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
@@ -288,21 +290,21 @@
     <ivy:install organisation="oauth" module="oauth" revision="1.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.xmlgraphics" module="batik-css" revision="1.7" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.w3c.css" module="sac" revision="1.3" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.xmlgraphics" module="batik-i18n" revision="1.9" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.xmlgraphics" module="batik-util" revision="1.8" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<ivy:install organisation="org.springframework" module="spring-aop" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.springframework" module="spring-beans" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.springframework" module="spring-context" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.springframework" module="spring-core" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.springframework" module="spring-expression" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.xmlgraphics" module="batik-i18n" revision="1.14" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.xmlgraphics" module="batik-util" revision="1.14" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.springframework" module="spring-aop" revision="5.3.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.springframework" module="spring-beans" revision="5.3.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.springframework" module="spring-context" revision="5.3.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.springframework" module="spring-core" revision="5.3.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.springframework" module="spring-expression" revision="5.3.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.ws.xmlschema" module="xmlschema-core" revision="2.0.3" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.cxf" module="cxf-core" revision="3.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<ivy:install organisation="org.apache.cxf" module="cxf-rt-bindings-soap" revision="3.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<ivy:install organisation="org.apache.cxf" module="cxf-rt-frontend-jaxws" revision="3.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<ivy:install organisation="org.apache.cxf" module="cxf-rt-transports-http" revision="3.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.cxf" module="cxf-rt-frontend-simple" revision="3.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.cxf" module="cxf-rt-databinding-jaxb" revision="3.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.cxf" module="cxf-rt-wsdl" revision="3.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.cxf" module="cxf-core" revision="3.5.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.cxf" module="cxf-rt-bindings-soap" revision="3.5.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.cxf" module="cxf-rt-frontend-jaxws" revision="3.5.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.cxf" module="cxf-rt-transports-http" revision="3.5.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.cxf" module="cxf-rt-frontend-simple" revision="3.5.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.cxf" module="cxf-rt-databinding-jaxb" revision="3.5.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.cxf" module="cxf-rt-wsdl" revision="3.5.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.codehaus.woodstox" module="stax2-api" revision="3.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="javax.ws.rs" module="javax.ws.rs-api" revision="2.0-m10" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.neethi" module="neethi" revision="3.0.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
@@ -334,29 +336,10 @@
     <ivy:install organisation="com.graphql-java" module="graphql-java" revision="9.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.reactivestreams" module="reactive-streams" revision="1.0.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.antlr" module="antlr4-runtime" revision="4.7.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.eclipse.jetty" module="jetty-servlets" revision="9.4.18.v20190429" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.eclipse.jetty" module="jetty-servlet" revision="9.4.18.v20190429" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    
-    <!-- tika -->
-    <ivy:install organisation="org.apache.tika" module="tika-core" revision="1.23" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.tika" module="tika-parsers" revision="1.23" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.tika" module="tika-xmp" revision="1.23" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.poi" module="poi" revision="4.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="com.adobe.xmp" module="xmpcore" revision="6.1.10" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="com.drewnoakes" module="metadata-extractor" revision="2.13.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.pdfbox" module="jempbox" revision="1.8.16" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.pdfbox" module="pdfbox" revision="2.0.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.pdfbox" module="fontbox" revision="2.0.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    
-    <ivy:install organisation="org.apache.poi" module="poi-scratchpad" revision="4.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.poi" module="poi" revision="4.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.poi" module="poi-ooxml-schemas" revision="4.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.poi" module="poi-ooxml" revision="4.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.commons" module="commons-math3" revision="3.6.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.commons" module="commons-collections4" revision="4.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.xmlbeans" module="xmlbeans" revision="3.1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-
-
+    <ivy:install organisation="org.eclipse.jetty" module="jetty-servlets" revision="9.4.46.v20220331" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.eclipse.jetty" module="jetty-servlet" revision="9.4.46.v20220331" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.tukaani" module="xz" revision="1.8" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-compress" revision="1.20" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     
     <war warfile="${warfile}" webxml="${war.web.xml}">
       <fileset dir="WebRoot"/>

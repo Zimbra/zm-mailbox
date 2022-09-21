@@ -64,6 +64,7 @@ import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
@@ -141,7 +142,10 @@ public class Auth extends AccountDocumentHandler {
         Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_TOKEN);
         boolean validationSuccess = tokenTypeAndElementValidation(tokenType, authTokenEl, jwtTokenElement);
         if (!validationSuccess) {
-            throw AuthFailedServiceException.AUTH_FAILED("auth: incorrect tokenType and Element combination");
+            AuthFailedServiceException e = AuthFailedServiceException
+                .AUTH_FAILED("auth: incorrect tokenType and Element combination");
+            AuthListener.invokeOnException(e);
+            throw e;
         }
         boolean acctAutoProvisioned = false;
         Claims claims = null;
@@ -174,7 +178,10 @@ public class Auth extends AccountDocumentHandler {
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
                 AuthToken.Usage usage = at.getUsage();
                 if (usage != Usage.AUTH && usage != Usage.TWO_FACTOR_AUTH) {
-                    throw AuthFailedServiceException.AUTH_FAILED("invalid auth token");
+                    AuthFailedServiceException e = AuthFailedServiceException
+                        .AUTH_FAILED("invalid auth token");
+                    AuthListener.invokeOnException(e);
+                    throw e;
                 }
                 Account authTokenAcct = AuthProvider.validateAuthToken(prov, at, false, usage);
                 if (verifyAccount) {
@@ -255,6 +262,7 @@ public class Auth extends AccountDocumentHandler {
                         acctAutoProvisioned = true;
                     }
                 } catch (AuthFailedServiceException e) {
+                    AuthListener.invokeOnException(e);
                     ZimbraLog.account.debug("auth failed, unable to auto provisioing acct " + acctValue, e);
                 } catch (ServiceException e) {
                     ZimbraLog.account.info("unable to auto provisioing acct " + acctValue, e);
@@ -269,6 +277,7 @@ public class Auth extends AccountDocumentHandler {
                 try {
                     result = prov.autoProvZMGProxyAccount(acctValuePassedIn, password);
                 } catch (AuthFailedServiceException e) {
+                    AuthListener.invokeOnException(e);
                     // Most likely in error with user creds
                 } catch (ServiceException e) {
                     ZimbraLog.account.info("unable to auto provision acct " + acctValuePassedIn, e);
@@ -281,7 +290,10 @@ public class Auth extends AccountDocumentHandler {
         }
 
         if (acct == null) {
-            throw AuthFailedServiceException.AUTH_FAILED(acctValue, acctValuePassedIn, "account not found");
+            AuthFailedServiceException e = AuthFailedServiceException.AUTH_FAILED(acctValue,
+                acctValuePassedIn, "account not found");
+            AuthListener.invokeOnException(e);
+            throw e;
         }
 
         AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
@@ -303,6 +315,7 @@ public class Auth extends AccountDocumentHandler {
                         verifyTrustedDevice(acct, trustedToken, attrs);
                         trustedDeviceOverride = true;
                     } catch (AuthFailedServiceException e) {
+                        AuthListener.invokeOnException(e);
                         ZimbraLog.account.info("trusted device not verified");
                     }
                 }
@@ -322,7 +335,7 @@ public class Auth extends AccountDocumentHandler {
                         appPasswords.authenticate(password);
                     } else {
                         prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
-                        return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType);
+                        return needTwoFactorAuth(context, request, acct, twoFactorManager, zsc, tokenType, recoveryCode);
                     }
                 } else {
                     if (password != null || recoveryCode != null) {
@@ -348,14 +361,20 @@ public class Auth extends AccountDocumentHandler {
                                     throw new AuthTokenException("two-factor auth token doesn't match the named account");
                                 }
                             } catch (AuthTokenException e) {
-                                throw AuthFailedServiceException.AUTH_FAILED("bad auth token");
+                                AuthFailedServiceException exception = AuthFailedServiceException
+                                    .AUTH_FAILED("bad auth token");
+                                AuthListener.invokeOnException(exception);
+                                throw exception;
                             }
                         }
                         TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
                         if (twoFactorCode != null) {
                             manager.authenticate(twoFactorCode);
                         } else {
-                            throw AuthFailedServiceException.AUTH_FAILED("no two-factor code provided");
+                            AuthFailedServiceException e = AuthFailedServiceException
+                                .AUTH_FAILED("no two-factor code provided");
+                            AuthListener.invokeOnException(e);
+                            throw e;
                         }
                         if (twoFactorToken != null) {
                             try {
@@ -376,7 +395,13 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
-        AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
+        AuthToken at = null;
+        if (recoveryCode != null) {
+            at = AuthProvider.getAuthToken(acct, Usage.RESET_PASSWORD, tokenType);
+        } else {
+            at = expires == 0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
+        }
+
         if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
             //generate a new trusted device token if there is no existing one or if the current one is no longer valid
             Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
@@ -394,6 +419,7 @@ public class Auth extends AccountDocumentHandler {
             at.setCsrfTokenEnabled(csrfSupport);
         }
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+        AuthListener.invokeOnSuccess(acct);
         return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
     }
 
@@ -425,7 +451,8 @@ public class Auth extends AccountDocumentHandler {
         trustedDeviceManager.verifyTrustedDevice(td, attrs);
     }
 
-    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc, TokenType tokenType) throws ServiceException {
+    private Element needTwoFactorAuth(Map<String, Object> context, Element requestElement, Account account, TwoFactorAuth auth,
+            ZimbraSoapContext zsc, TokenType tokenType, String recoveryCode) throws ServiceException {
         /* two cases here:
          * 1) the user needs to provide a two-factor code.
          *    in this case, the server returns a two-factor auth token in the response header that the client
@@ -437,10 +464,17 @@ public class Auth extends AccountDocumentHandler {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
         } else {
             Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-            AuthToken twoFactorToken = AuthProvider.getAuthToken(account, Usage.TWO_FACTOR_AUTH, tokenType);
+            AuthToken authToken = AuthProvider.getAuthToken(account, recoveryCode != null ? Usage.RESET_PASSWORD : Usage.TWO_FACTOR_AUTH, tokenType);
             response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
-            response.addAttribute(AccountConstants.E_LIFETIME, twoFactorToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
-            twoFactorToken.encodeAuthResp(response, false);
+            response.addAttribute(AccountConstants.E_LIFETIME, authToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+            authToken.encodeAuthResp(response, false);
+            if (recoveryCode != null) {
+                HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+                HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+                boolean rememberMe = requestElement.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
+                authToken.setIgnoreSameSite(requestElement.getAttributeBool(AccountConstants.A_IGNORE_SAME_SITE_COOKIE, false));
+                authToken.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
+            }
             response.addUniqueElement(AccountConstants.E_TRUSTED_DEVICES_ENABLED).setText(account.isFeatureTrustedDevicesEnabled() ? "true" : "false");
             return response;
         }
@@ -459,6 +493,7 @@ public class Auth extends AccountDocumentHandler {
         HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
         boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
+        at.setIgnoreSameSite(request.getAttributeBool(AccountConstants.A_IGNORE_SAME_SITE_COOKIE, false));
         at.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
 
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);

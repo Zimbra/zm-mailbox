@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -18,6 +18,7 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
@@ -46,7 +47,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimePart;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
@@ -56,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -86,6 +90,7 @@ import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraQueryHitResults;
 import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.mime.InternetAddress;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -122,6 +127,8 @@ import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.fb.LocalFreeBusyProvider;
+import com.zimbra.cs.html.BrowserDefang;
+import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DomainBrowseTerm;
@@ -135,10 +142,13 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
@@ -154,6 +164,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
 import com.zimbra.cs.mailbox.util.TypedIdList;
+import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedContact;
@@ -172,6 +183,7 @@ import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
 import com.zimbra.cs.redolog.op.CreateChat;
 import com.zimbra.cs.redolog.op.CreateComment;
 import com.zimbra.cs.redolog.op.CreateContact;
+import com.zimbra.cs.redolog.op.CreateFileSharedWithMe;
 import com.zimbra.cs.redolog.op.CreateFolder;
 import com.zimbra.cs.redolog.op.CreateFolderPath;
 import com.zimbra.cs.redolog.op.CreateInvite;
@@ -255,6 +267,7 @@ import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.StoreManager.StoreFeature;
+import com.zimbra.cs.store.external.ExternalBlob;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.SpoolingCache;
@@ -298,9 +311,13 @@ public class Mailbox implements MailboxStore {
     // Old mailboxes may still contain a system folder with id 18
     @Deprecated
     public static final int ID_FOLDER_PROFILE = FolderConstants.ID_FOLDER_PROFILE; // 18;
-    //This id should be incremented if any new ID_FOLDER_* is added.
-    public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 18;
 
+    public static final int ID_FOLDER_UNSUBSCRIBE = FolderConstants.ID_FOLDER_UNSUBSCRIBE; // 19;
+    public static final int ID_FOLDER_FILE_SHARED_WITH_ME = FolderConstants.ID_FOLDER_FILE_SHARED_WITH_ME; // 20;
+    //This id should be incremented if any new ID_FOLDER_* is added.
+    public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 20;
+
+    public static final int EAS_BLOCKED_EMAIL_ID = 255;
     public static final int FIRST_USER_ID = 256;
 
 
@@ -753,7 +770,6 @@ public class Mailbox implements MailboxStore {
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
-
     protected Mailbox(MailboxData data) {
         mId = data.id;
         mData = data;
@@ -1419,8 +1435,12 @@ public class Mailbox implements MailboxStore {
     /** Returns the total (uncompressed) size of the mailbox's contents. */
     @Override
     public long getSize() {
-        long additionalSize = getAdditionalSize();
-        return (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size) + additionalSize;
+        return getMailItemsSize() + getAdditionalSize();
+    }
+
+    /** Returns only the mailbox size without the addictional size */
+    public long getMailItemsSize() {
+        return (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size);
     }
 
     private long getAdditionalSize() {
@@ -1442,14 +1462,16 @@ public class Mailbox implements MailboxStore {
     }
 
     void updateSize(long delta, boolean checkQuota) throws ServiceException {
+        updateSize(delta, checkQuota, false);
+    }
+
+    void updateSize(long delta, boolean checkQuota, boolean isTrashFolder) throws ServiceException {
         if (delta == 0) {
             return;
         }
 
-        // if we go negative, that's OK! just pretend we're at 0.
-        long size = Math.max(0, (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size)
-                        + delta);
-        if (delta > 0 && checkQuota) {
+        long size = getEffectiveSize(delta);
+        if (delta > 0 && checkQuota && !isTrashFolder) {
             checkSizeChange(size);
         }
 
@@ -1460,7 +1482,7 @@ public class Mailbox implements MailboxStore {
     public void checkSizeChange(long newSize) throws ServiceException {
         Account acct = getAccount();
         long acctQuota = AccountUtil.getEffectiveQuota(acct);
-        if (acctQuota != 0 && newSize + getAdditionalSize() > acctQuota) {
+        if (acctQuota != 0 && newSize > acctQuota) {
             throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
         }
         Domain domain = Provisioning.getInstance().getDomain(acct);
@@ -1468,6 +1490,12 @@ public class Mailbox implements MailboxStore {
                         && !AccountUtil.isReceiveAllowedOverAggregateQuota(domain)) {
             throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
         }
+    }
+
+    long getEffectiveSize(long delta) {
+        // if we go negative, that's OK! just pretend we're at 0.
+        return Math.max(0, (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size)
+                        + delta);
     }
 
     /** Returns the last time that the mailbox had a write op caused by a SOAP
@@ -2244,6 +2272,13 @@ public class Mailbox implements MailboxStore {
                             MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
             Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system,
                             MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
+            Folder.create(ID_FOLDER_FILE_SHARED_WITH_ME, UUIDUtil.generateUUID(), this, userRoot, "Files shared with me", system,
+                    MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
+
+            if (this.getAccount().isFeatureSafeUnsubscribeFolderEnabled()) {
+                Folder.create(ID_FOLDER_UNSUBSCRIBE, UUIDUtil.generateUUID(), this, userRoot, "Unsubscribe", system,
+                        MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
+            }
         } finally {
             lock.release();
         }
@@ -4346,6 +4381,23 @@ public class Mailbox implements MailboxStore {
         }
         return folders;
     }
+    /**
+     * ZBUG 1634
+     * setting the FOLDER ID for which delegation has been called
+     * e.g If user1 shares his Inbox, Sent and a Calendar to user2,
+     * and user2 tries to use delegation in Apple calDAV, it fails.
+     * Reason being
+     * public List<MailItem> getItemList(OperationContext octxt, MailItem.Type type, int folderId, SortBy sort)
+     * receives -1 as folderID , and the code tries to check if user2 has fullaccess on the folders of user1 mailbox.
+     * To mitigate that a folderid parameter is being set so that in case of Delegation, particular folder's access is only checked for user2.
+     */
+    public List<Folder> getFolderList(OperationContext octxt, SortBy sort,int folderId) throws ServiceException {
+        List<Folder> folders = new ArrayList<Folder>();
+        for (MailItem item : getItemList(octxt, MailItem.Type.FOLDER, folderId, sort)) {
+            folders.add((Folder) item);
+        }
+        return folders;
+    }
 
     List<Folder> listAllFolders() {
         return new ArrayList<Folder>(mFolderCache.values());
@@ -4418,6 +4470,9 @@ public class Mailbox implements MailboxStore {
         }
         // write the subfolders' data to the response
         for (Folder subfolder : subfolders) {
+            if (!this.getAccount().isFeatureSafeUnsubscribeFolderEnabled() && subfolder.getId() == FolderConstants.ID_FOLDER_UNSUBSCRIBE) {
+                continue;
+            }
             FolderNode child = handleFolder(subfolder, visible, returnAllVisibleFolders);
             if (child != null) {
                 node.mSubfolders.add(child);
@@ -4796,6 +4851,57 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    /**
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
+    public Map<Integer, Integer> listCalendarItemIdsAndDateForRange(OperationContext octxt, MailItem.Type type, long start, long end,
+                    int folderId) throws ServiceException {
+        boolean success = false;
+        if (folderId == ID_AUTO_INCREMENT) {
+            return new HashMap<Integer, Integer>();
+        }
+        lock.lock(false);
+        try {
+            beginReadTransaction("listCalendarItemIdsAndDateForRange", octxt);
+            // if they specified a folder, make sure it actually exists
+            getFolderById(folderId);
+
+            // get the list of all visible calendar items in the specified folder
+            Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, start, end, folderId, null);
+            success = true;
+            return map;
+        } finally {
+            endTransaction(success);
+            lock.release();
+        }
+    }
+
+    /**
+     * @param lastSync  last synced time of appointment - int - date in seconds from epoch
+     */
+    public Map<Integer, Integer> listCalendarItemIdsAndDateForRange(OperationContext octxt, MailItem.Type type, int lastSync,
+                    int folderId) throws ServiceException {
+        boolean success = false;
+        if (folderId == ID_AUTO_INCREMENT) {
+            return new HashMap<Integer, Integer>();
+        }
+        lock.lock(false);
+        try {
+            beginReadTransaction("listCalendarItemIdsAndDateForRange", octxt);
+            // if they specified a folder, make sure it actually exists
+            getFolderById(folderId);
+
+            // get the list of all visible calendar items in the specified folder
+            Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, lastSync, folderId, null);
+            success = true;
+            return map;
+        } finally {
+            endTransaction(success);
+            lock.release();
+        }
+    }
+
     public List<CalendarItem> getCalendarItems(OperationContext octxt, MailItem.Type type, int folderId)
             throws ServiceException {
         return getCalendarItemsForRange(octxt, type, -1, -1, folderId, null);
@@ -5013,6 +5119,11 @@ public class Mailbox implements MailboxStore {
 
     public CalendarDataResult getCalendarSummaryForRange(OperationContext octxt, int folderId, MailItem.Type type,
                     long start, long end) throws ServiceException {
+        return getCalendarSummaryForRange(octxt, folderId, type, start, end, true);
+    }
+
+    public CalendarDataResult getCalendarSummaryForRange(OperationContext octxt, int folderId, MailItem.Type type,
+                    long start, long end, boolean followLimit) throws ServiceException {
         lock.lock(false);
         try {
             Folder folder = getFolderById(folderId);
@@ -5697,6 +5808,13 @@ public class Mailbox implements MailboxStore {
             }
         }
 
+        if (inv.getXZimbraDescriptionHtml() == null) {
+            String htmlDesc = getMsgHtmlDesc(pm);
+            if (!StringUtil.isNullOrEmpty(htmlDesc)) {
+                inv.setXZimbraDescriptionHtml(htmlDesc);
+            }
+        }
+
         byte[] data = null;
         try {
             if (pm != null) {
@@ -5766,6 +5884,59 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    /**
+     * Returns the html message. Message parts are checked for text/html,
+     * once the part is found its read and returned as the html description.
+     * If not found the null value is returned.
+     *
+     *
+     * @return null if text/html is not found
+     * @throws ServiceException
+     */
+    public String getMsgHtmlDesc(ParsedMessage pm) throws ServiceException {
+        String htmlDesc = null;
+        if (pm == null) {
+            return htmlDesc;
+        }
+
+        Account acct = getAccount();
+        MimeMessage mm = pm.getMimeMessage();
+        List<MPartInfo> parts = null;
+        InputStream stream = null;
+        Reader reader = null;
+        try {
+            parts = Mime.getParts(mm, acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
+            if (parts != null && !parts.isEmpty()) {
+                String defaultCharset = null;
+                MPartInfo mpi = null;
+                for (MPartInfo part : parts) {
+                    if (part != null && part.getContentType().equals(MimeConstants.CT_TEXT_HTML)) {
+                        mpi = part;
+                        break;
+                    }
+                }
+                if (mpi == null) {
+                    ZimbraLog.mailbox.debug("Mime part for text/html not found of message '%s' for mailbox '%d'", pm.getMessageID(), this.getId());
+                    return htmlDesc;
+                }
+                MimePart mp = mpi.getMimePart();
+                StringWriter sw = new StringWriter();
+                Writer out = sw;
+                stream = mp.getInputStream();
+                reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
+                BrowserDefang defanger = DefangFactory.getDefanger(mp.getContentType());
+                defanger.defang(reader, false, out);
+                htmlDesc = sw.toString();
+            }
+        } catch (IOException | MessagingException e) {
+            ZimbraLog.mailbox.error(String.format("Exception while reading text/html from MIME of message '%s' for mailbox '%d'", pm.getMessageID(), this.getId()), e);
+        } finally {
+            ByteUtil.closeStream(stream);
+            Closeables.closeQuietly(reader);
+        }
+        return htmlDesc;
     }
 
     public CalendarItem getCalendarItemByUid(OperationContext octxt, String uid) throws ServiceException {
@@ -6590,6 +6761,7 @@ public class Mailbox implements MailboxStore {
         StagedBlob staged;
         InputStream is = pm.getRawInputStream();
         try {
+            ZimbraLog.store.trace("StorageManager used for saving Draft is: %s", sm.getClass().getSimpleName());
             staged = sm.stage(is, this);
         } finally {
             ByteUtil.closeStream(is);
@@ -7037,12 +7209,24 @@ public class Mailbox implements MailboxStore {
             Folder folder = getFolderById(folderId);
 
             MailItem[] items = getItemById(itemIds, type, fromDumpster);
+            long requiredQuota = 0;
             for (MailItem item : items) {
                 checkItemChangeID(item);
+                if(item.isQuotaCheckRequired()) {
+                    requiredQuota = requiredQuota + item.getSize();
+                }
             }
+            // check if mailbox has enough quota available to copy all the item.
+            if (requiredQuota > 0) {
+                ZimbraLog.mailbox.info("total space required to copy items = %d", requiredQuota);
+                checkSizeChange(getEffectiveSize(requiredQuota));
+            }
+
             for (MailItem item : items) {
                 MailItem copy;
-
+                if (item.isQuotaCheckRequired()) {
+                    checkSizeChange(getEffectiveSize(item.getSize()));
+                }
                 if (item instanceof Conversation) {
                     // this should be done in Conversation.copy(), but redolog issues make that impossible
                     Conversation conv = (Conversation) item;
@@ -7135,9 +7319,21 @@ public class Mailbox implements MailboxStore {
 
             // fetch the items to copy and make sure the caller is up-to-date on change IDs
             MailItem[] items = getItemById(itemIds, type);
+            long requiredQuota = 0;
             for (MailItem item : items) {
                 checkItemChangeID(item);
+                if(item.isQuotaCheckRequired()) {
+                    requiredQuota = requiredQuota + item.getSize();
+                }
             }
+
+            // check if mailbox has enough quota available to copy all the item.
+            // ZBUG-1375 : exclude check for Trash Folder , so that messages can be deleted even when quota is full
+            if (requiredQuota > 0 && folderId != FolderConstants.ID_FOLDER_TRASH) {
+                ZimbraLog.mailbox.info("total space required to copy items = %d", requiredQuota);
+                checkSizeChange(getEffectiveSize(requiredQuota));
+            }
+
             List<MailItem> result = new ArrayList<MailItem>();
 
             for (MailItem item : items) {
@@ -8877,6 +9073,97 @@ public class Mailbox implements MailboxStore {
         return getMountpointById(octxt, mountpointId);
     }
 
+    public void createFileSharedWithMe(Mailbox mbox, OperationContext octxt, int folderId, String fileName,
+            String ownerAccountId, int ownerFileId, String remoteUuid, String fileOwnerName,
+            String contentType, long fileSize, String rights) throws ServiceException {
+
+        CreateFileSharedWithMe redoRecorder = new CreateFileSharedWithMe(mId, folderId, fileName, ownerAccountId,
+                ownerFileId, remoteUuid, fileOwnerName, contentType, rights);
+
+        boolean success = false;
+        try {
+            beginTransaction("createFileSharedWithMe", octxt, redoRecorder);
+            CreateFileSharedWithMe redoPlayer = (CreateFileSharedWithMe) currentChange().getRedoPlayer();
+
+            int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
+            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
+            UnderlyingData data = new UnderlyingData();
+            data.uuid = remoteUuid + ":" + ownerFileId;
+            data.id = mptId;
+            data.type = Type.DOCUMENT.toByte();
+            data.folderId = folderId;
+            data.date = mbox.getOperationTimestamp();
+            data.name = fileName;
+            data.setSubject(fileName);
+            data.size = fileSize;
+            data.metadata = encodeFileSharedMetadata(new Metadata(), fileOwnerName, ownerAccountId,
+                    ownerFileId, contentType, rights).toString();
+            data.contentChanged(mbox);
+            new DbMailItem(mbox).create(data);
+            Document doc = new Document(mbox, data);
+            doc.finishCreation(null);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void deleteFileSharedWithMe(Mailbox mbox, OperationContext octxt, String remoteUuid, int ownerFileId,
+            String ownerAccountId, String granteeAccountID) throws ServiceException {
+        CreateFileSharedWithMe redoRecorder = new CreateFileSharedWithMe(mId, remoteUuid);
+        boolean success = false;
+        try {
+            beginTransaction("deleteFileSharedWithMe", octxt, redoRecorder);
+            Document item = (Document) mbox.getItemByUuid(remoteUuid + ":" + ownerFileId, Type.DOCUMENT);
+            if (item.getOwnerAccountId().equals(ownerAccountId) && item.getAccountId().equals(granteeAccountID)) {
+                DbMailItem.delete(mbox, Collections.singletonList(item.getId()), false);
+                // update the folder item count and size accordingly
+                mbox.getFolderById(ID_FOLDER_FILE_SHARED_WITH_ME).updateSize(-1, -1, -item.getSize());
+                success = true;
+            } else {
+                throw ServiceException.PERM_DENIED("Revoke operation failed, Invalid request source");
+            }
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void updateFileSharedWithMe(Mailbox mbox, OperationContext octxt, String ownerAccountID, int ownerFileId,
+            String remoteUuid, String fileOwnerName, String contentType, String rights, String granteeAccountID)
+            throws ServiceException {
+        CreateFileSharedWithMe redoRecorder = new CreateFileSharedWithMe(mId, remoteUuid);
+        boolean success = false;
+        try {
+            beginTransaction("updateFileSharedWithMe", octxt, redoRecorder);
+            Document item = (Document) mbox.getItemByUuid(remoteUuid + ":" + ownerFileId, Type.DOCUMENT);
+            if (item.getOwnerAccountId().equals(ownerAccountID) && item.getAccountId().equals(granteeAccountID)) {
+                Metadata meta = new Metadata();
+                meta.put(Metadata.FN_CREATOR, fileOwnerName);
+                meta.put(Metadata.FN_MIME_TYPE, contentType);
+                meta.put(Metadata.FN_FILE_PERMISSION, rights);
+                meta.put(Metadata.FN_OWNER_ACCOUNT_ID, ownerAccountID);
+                meta.put(Metadata.FN_OWNER_FILE_ID, ownerFileId);
+                mbox.getItemCache().remove(item.getId());
+                new DbMailItem(mbox).update(item, meta);
+                success = true;
+            } else {
+                throw ServiceException.PERM_DENIED("Update operation failed, Invalid request source");
+            }
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    Metadata encodeFileSharedMetadata(Metadata meta, String creator, String ownerAccountId,
+            int ownerFileId, String contentType, String rights) {
+        meta.put(Metadata.FN_CREATOR, creator);
+        meta.put(Metadata.FN_MIME_TYPE, contentType);
+        meta.put(Metadata.FN_FILE_PERMISSION, rights);
+        meta.put(Metadata.FN_OWNER_ACCOUNT_ID, ownerAccountId);
+        meta.put(Metadata.FN_OWNER_FILE_ID, ownerFileId);
+        return meta;
+    }
+
     public void enableSharedReminder(OperationContext octxt, int mountpointId, boolean enable) throws ServiceException {
         EnableSharedReminder redoRecorder = new EnableSharedReminder(mId, mountpointId, enable);
 
@@ -9711,19 +9998,27 @@ public class Mailbox implements MailboxStore {
                 }
                 if (deletes.blobs != null) {
                     // delete any blobs associated with items deleted from db/index
-                    StoreManager sm = StoreManager.getInstance();
                     for (MailboxBlob blob : deletes.blobs) {
+                        StoreManager sm = StoreManager.getInstance();
+                        // if blob is not null then pull respective SM instance
+                        if (blob != null) {
+                            sm = StoreManager.getReaderSMInstance(blob.getLocator());
+                        }
                         sm.quietDelete(blob);
                     }
                 }
             }
             if (rollbackDeletes != null) {
-                StoreManager sm = StoreManager.getInstance();
                 for (Object obj : rollbackDeletes) {
                     if (obj instanceof MailboxBlob) {
+                        StoreManager sm = StoreManager.getReaderSMInstance(((MailboxBlob)obj).getLocator());
                         sm.quietDelete((MailboxBlob) obj);
                     } else if (obj instanceof Blob) {
-                        sm.quietDelete((Blob) obj);
+                        if (obj instanceof ExternalBlob) {
+                            StoreManager.getReaderSMInstance(((ExternalBlob) obj).getLocator()).quietDelete((ExternalBlob) obj);
+                        } else {
+                            StoreManager.getInstance().quietDelete((Blob) obj);
+                        }
                     }
                 }
             }
@@ -10098,7 +10393,7 @@ public class Mailbox implements MailboxStore {
         if (isCachedType(type)) {
             return;
         }
-        ZimbraLog.cache.debug("Cache hit for %s %d in mailbox %d", type, key, getId());
+        ZimbraLog.cache.debug("Cache hit for %s %s in mailbox %d", type, String.valueOf(key), getId());
     }
 
     public MailItem lock(OperationContext octxt, int itemId, MailItem.Type type, String accountId)

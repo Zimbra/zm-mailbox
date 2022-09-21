@@ -41,9 +41,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -92,7 +93,7 @@ public class TestImapClient {
     private ImapConfig config;
     private ImapConnection connection;
 
-    private static final Logger LOG = Logger.getLogger(TestImapClient.class);
+    private static final Logger LOG = LogManager.getLogger(TestImapClient.class);
 
     private static final String USER = "TestImapClient-user1";
     private static final String PASS = "test123";
@@ -116,9 +117,9 @@ public class TestImapClient {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        LOG.setLevel(Level.DEBUG);
+        Configurator.reconfigure();
+        Configurator.setRootLevel(Level.INFO);
+        Configurator.setLevel(LOG.getName(), Level.DEBUG);
         sp = new SoapProvisioning();
         prov = Provisioning.getInstance();
         homeServer = prov.getLocalServer();
@@ -383,7 +384,7 @@ public class TestImapClient {
     @Ignore ("deprecated")
     public void testYahoo() throws Exception {
         ImapConfig config = new ImapConfig();
-        config.getLogger().setLevel(Log.Level.trace);
+        config.getLogger().setLevel(Log.Level.trace);   
         config.setHost("imap.mail.yahoo.com");
         config.setAuthenticationId("dacztest");
         connection = new ImapConnection(config);

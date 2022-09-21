@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -879,7 +879,6 @@ public class Message extends MailItem {
             if (!cur.isPublic()) {
                 publicInvites = false;
             }
-
             // Bug 38550/41239: If ORGANIZER is missing, set it to email sender.  If that sender
             // is the same user as the recipient, don't set organizer and clear attendees instead.
             // We don't want to set organizer to receiving user unless we're absolutely certain
@@ -1111,6 +1110,13 @@ public class Message extends MailItem {
         boolean calItemIsNew = false;
         boolean modifiedCalItem = false;
         boolean success = false;
+
+        if (cur.getXZimbraDescriptionHtml() == null) {
+            String htmlDesc = this.getMailbox().getMsgHtmlDesc(pm);
+            if (!StringUtil.isNullOrEmpty(htmlDesc)) {
+                cur.setXZimbraDescriptionHtml(htmlDesc);
+            }
+        }
         try {
             InviteChanges invChanges = null;
             // Look for organizer-provided change list.

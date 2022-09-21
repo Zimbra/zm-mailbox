@@ -47,5 +47,9 @@ public final class FolderConstants {
     @Deprecated
     public static final int ID_FOLDER_PROFILE = 18;
 
-    public static final int HIGHEST_SYSTEM_ID = 18;
+    public static final int ID_FOLDER_UNSUBSCRIBE = 19;
+
+    public static final int ID_FOLDER_FILE_SHARED_WITH_ME = 20;
+
+    public static final int HIGHEST_SYSTEM_ID = 20;
 }

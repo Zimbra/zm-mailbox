@@ -2,6 +2,8 @@
 .project
 .settings/
 .idea/
+*.iml
+.java-version
 build/
 bin/
 .DS_Store
@@ -12,3 +14,4 @@ store/.pmd
 store/.ruleset
 eclipse-ivysettings.xml
 store/tmp/
+common-passwords.txt

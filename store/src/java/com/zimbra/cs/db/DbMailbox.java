@@ -513,7 +513,7 @@ public final class DbMailbox {
             stmt.setInt(pos++, mbox.getLastItemId());
             stmt.setInt(pos++, mbox.getContactCount());
             stmt.setInt(pos++, mbox.getLastChangeID());
-            stmt.setLong(pos++, mbox.getSize());
+            stmt.setLong(pos++, mbox.getMailItemsSize());
             stmt.setInt(pos++, mbox.getRecentMessageCount());
             stmt.setInt(pos++, mbox.getId());
             stmt.executeUpdate();
@@ -1297,4 +1297,26 @@ public final class DbMailbox {
 
         return groups;
     }
+
+    public static String getAccountIdByMailboxId(DbConnection conn, Integer mailboxId) throws ServiceException {
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT account_id FROM mailbox WHERE id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, mailboxId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+            return null;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error fetching account ID for mailbox %s", mailboxId), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
 }

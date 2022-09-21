@@ -201,7 +201,7 @@ public class ResetPasswordTest {
 
 class TestResetPassword extends ResetPassword {
     @Override
-    protected void setPasswordAndPurgeAuthTokens(Provisioning prov, Account acct, String newPassword)
+    protected void setPasswordAndPurgeAuthTokens(Provisioning prov, Account acct, String newPassword, boolean dryRun)
             throws ServiceException {
         // do nothing
     }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -462,6 +462,13 @@ public abstract class CalendarItem extends MailItem {
         }
         Mailbox mbox = folder.getMailbox();
 
+        if (firstInvite.getXZimbraDescriptionHtml() == null) {
+            String htmlDesc = mbox.getMsgHtmlDesc(pm);
+            if (!StringUtil.isNullOrEmpty(htmlDesc)) {
+                firstInvite.setXZimbraDescriptionHtml(htmlDesc);
+            }
+        }
+
         if (pm != null && pm.hasAttachments()) {
             firstInvite.setHasAttachment(true);
             flags |= Flag.BITMASK_ATTACHED;
@@ -549,6 +556,9 @@ public abstract class CalendarItem extends MailItem {
         CalendarItem item = type == Type.APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
         Invite defInvite = item.getDefaultInviteOrNull();
         if (defInvite != null) {
+            if (firstInvite.getXZimbraDescriptionHtml() != null) {
+                defInvite.setXZimbraDescriptionHtml(firstInvite.getXZimbraDescriptionHtml());
+            }
             Collection<Instance> instances =
                     item.expandInstances(CalendarUtils.MICROSOFT_EPOC_START_MS_SINCE_EPOC, Long.MAX_VALUE, false);
             if (instances.isEmpty()) {
@@ -2144,6 +2154,7 @@ public abstract class CalendarItem extends MailItem {
         for (Invite cur : mInvites) {
             String method = cur.getMethod();
             if (method.equals(ICalTok.REQUEST.toString()) ||
+                method.equals(ICalTok.REPLY.toString()) ||
                 method.equals(ICalTok.PUBLISH.toString())) {
                 hasSurvivingRequests = true;
                 if (cur.hasAttachment())
@@ -3512,7 +3523,11 @@ public abstract class CalendarItem extends MailItem {
                         if (itemIdGetter != null) {
                             /* ZWC expects a different mail item id for each exception */
                             localException.setMailItemId(itemIdGetter.get());
+                        } else {
+                            localException.setMailItemId(reply.getMailItemId()); // ZCS-10995
                         }
+                        sLog.debug("Exception invite for instanceId: %s with mailItemId: %s created", localException.getRecurId(),
+                                localException.getMailItemId());
                         mInvites.add(localException);
                         // create a fake ExceptionRule wrapper around the single-instance
                         recurrenceRule.addException(

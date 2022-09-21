@@ -889,7 +889,7 @@ public class StringUtil {
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
             if (i == 0) {
-                result.append(Character.isJavaIdentifierStart(ch) ? ch : "_");
+                result.append(Character.isJavaIdentifierStart(ch) ? ch : "_" + ch);
             } else {
                 result.append(Character.isJavaIdentifierPart(ch) ? ch : "_");
             }

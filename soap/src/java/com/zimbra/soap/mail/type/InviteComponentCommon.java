@@ -517,6 +517,28 @@ implements InviteComponentCommonInterface {
         + "* recurrence")
     public String getChanges() { return changes; }
 
+    // iCalendar PRIORITY to hi/med/low mapping according to RFC5545 Section 3.8.1.9
+    public boolean isHighPriority() {
+        if (priority != null) {
+            int prio = 0;
+            try {
+                prio = Integer.parseInt(priority);
+            } catch (NumberFormatException e) {}
+            return prio >= 1 && prio <= 4;
+        }
+        return false;
+    }
+    public boolean isLowPriority() {
+        if (priority != null) {
+            int prio = 0;
+            try {
+                prio = Integer.parseInt(priority);
+            } catch (NumberFormatException e) {}
+            return prio >= 6 && prio <= 9;
+        }
+        return false;
+    }
+
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("method", method)

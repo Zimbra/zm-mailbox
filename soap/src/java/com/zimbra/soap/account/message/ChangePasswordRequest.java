@@ -64,37 +64,59 @@ public class ChangePasswordRequest {
     @XmlElement(name=AccountConstants.E_VIRTUAL_HOST, required=false)
     private String virtualHost;
 
+    @XmlElement(name=AccountConstants.E_DRYRUN, required=false)
+    private boolean dryRun;
+
     public ChangePasswordRequest() {
     }
-    
+
     public ChangePasswordRequest(AccountSelector account, String oldPassword, String newPassword) {
         setAccount(account);
         setOldPassword(oldPassword);
         setPassword(newPassword);
     }
-    
+
+    public ChangePasswordRequest(AccountSelector account, String oldPassword, String newPassword, boolean dryRun) {
+        setAccount(account);
+        setOldPassword(oldPassword);
+        setPassword(newPassword);
+        setDryRun(dryRun);
+    }
+
     public AccountSelector getAccount() { return account; }
     public String oldPassword() { return oldPassword; }
     public String getPassword() { return password; }
     public String getVirtualHost() { return virtualHost; }
-    
+
     public ChangePasswordRequest setAccount(AccountSelector account) {
         this.account = account;
         return this;
     }
-    
+
     public ChangePasswordRequest setOldPassword(String oldPassword) {
         this.oldPassword = oldPassword;
         return this;
     }
-    
+
     public ChangePasswordRequest setPassword(String password) {
         this.password = password;
         return this;
     }
-    
+
     public ChangePasswordRequest setVirtualHost(String host) {
         virtualHost = host;
         return this;
     }
+
+
+    public boolean isDryRun() {
+        return dryRun;
+    }
+
+
+    public void setDryRun(boolean dryRun) {
+        this.dryRun = dryRun;
+    }
+
+
 }

@@ -27,6 +27,7 @@ import java.util.Stack;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -101,6 +102,24 @@ public class ToXML {
         resElem.addAttribute(AccountConstants.A_ID, id);
         encodeAttrs(resElem, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
         return resElem;
+    }
+
+    public static Element encodePasswordRules(Element parent, Account account) {
+
+        ToXML.encodeAttr(parent, "zimbraPasswordAllowUsername", Boolean.toString(LC.allow_username_within_password.booleanValue()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordLocked, Boolean.toString(account.isPasswordLocked()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMinLength, Integer.toString(account.getPasswordMinLength()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMaxLength, Integer.toString(account.getPasswordMaxLength()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMinUpperCaseChars, Integer.toString(account.getPasswordMinUpperCaseChars()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMinLowerCaseChars, Integer.toString(account.getPasswordMinLowerCaseChars()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMinPunctuationChars, Integer.toString(account.getPasswordMinPunctuationChars()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMinNumericChars, Integer.toString(account.getPasswordMinNumericChars()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMinDigitsOrPuncs, Integer.toString(account.getPasswordMinDigitsOrPuncs()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMinAge, Integer.toString(account.getPasswordMinAge()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMaxAge, Integer.toString(account.getPasswordMaxAge()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordEnforceHistory, Integer.toString(account.getPasswordEnforceHistory()));
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordBlockCommonEnabled, Boolean.toString(account.isPasswordBlockCommonEnabled()));
+        return parent;
     }
 
     static void encodeAttrs(Element e, Map attrs, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {

@@ -148,5 +148,8 @@ public class ZFeatures {
 	// defaults to TRUE
 	public boolean getSpam() { return	get(ZAttrProvisioning.A_zimbraFeatureAntispamEnabled) == null ||
 												getBool(ZAttrProvisioning.A_zimbraFeatureAntispamEnabled); }
+	// defaults to TRUE
+	public boolean getWebClientEnabled() { return	get(ZAttrProvisioning.A_zimbraFeatureWebClientEnabled) == null ||
+												getBool(ZAttrProvisioning.A_zimbraFeatureWebClientEnabled); }
 }
 

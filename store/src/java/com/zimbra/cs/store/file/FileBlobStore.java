@@ -28,6 +28,7 @@ import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.BlobInputStream;
@@ -36,6 +37,7 @@ import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.external.ExternalBlob;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.znative.IO;
@@ -221,7 +223,17 @@ public final class FileBlobStore extends StoreManager {
 
         ensureParentDirExists(dest);
 
-        short srcVolumeId = ((VolumeBlob) src).getVolumeId();
+        short srcVolumeId;
+        /*
+         In order to support multiple StoreManagers, sometime may need to copy ExternalBlobs(mostly secondary)
+         to FileStore blobs. Following is to get coping item's correct volume id.
+         */
+        if(src instanceof ExternalBlob) {
+            srcVolumeId = MailItemHelper.findMyVolumeId(((ExternalBlob) src).getLocator()).get();
+        } else {
+            srcVolumeId = ((VolumeBlob) src).getVolumeId();
+        }
+
         if (srcVolumeId == destVolumeId) {
             try {
                 IO.link(srcPath, destPath);
@@ -436,5 +448,42 @@ public final class FileBlobStore extends StoreManager {
 
     private static void ensureParentDirExists(File file) throws IOException {
         ensureDirExists(file.getParentFile());
+    }
+
+    /**
+     * Store a blob from external S3 storage to internal store in volume/path
+     * specified by dest* parameters. Note this method is not part of the
+     * StoreManager interface It is only to be used for FileBlobStore specific code
+     * such as ExternalToInternal
+     * 
+     * @param in
+     * @param storeAsIs
+     * @param mbox
+     * @param itemId
+     * @param revision
+     * @param destVolumeId mail_item.volume_id for message in dest Mbox
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public Blob storeIncoming(InputStream in, boolean storeAsIs, Mailbox mbox, int itemId, int revision,
+            short destVolumeId) throws IOException, ServiceException {
+        BlobBuilder builder = getBlobBuilder(mbox, itemId, revision, destVolumeId);
+        builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
+        return builder.init().append(in).finish();
+    }
+
+    private BlobBuilder getBlobBuilder(Mailbox mbox, int itemId, int revision, short destVolumeId)
+            throws IOException, ServiceException {
+        Blob blob = getUniqueIncomingBlob(mbox, itemId, revision, destVolumeId);
+        return new VolumeBlobBuilder(blob);
+    }
+
+    private Blob getUniqueIncomingBlob(Mailbox mbox, int itemId, int revision, short destVolumeId)
+            throws IOException, ServiceException {
+        ZimbraLog.store.debug("getUniqueIncomingBlob destVolumeId %s.", destVolumeId);
+        File file = new File(getBlobPath(mbox, itemId, revision, destVolumeId));
+        ensureParentDirExists(file);
+        ZimbraLog.store.debug("getUniqueIncomingBlob getRootPath %s.", file.getAbsolutePath());
+        return new VolumeBlob(file, destVolumeId);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,18 +16,10 @@
  */
 package com.zimbra.cs.volume;
 
-import java.io.IOException;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.http.HttpException;
-
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.CliUtil;
@@ -43,7 +35,17 @@ import com.zimbra.soap.admin.message.GetVolumeRequest;
 import com.zimbra.soap.admin.message.GetVolumeResponse;
 import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.SetCurrentVolumeRequest;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
+import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.http.HttpException;
+
+import java.io.IOException;
 
 public final class VolumeCLI extends SoapCLI {
 
@@ -61,6 +63,73 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_C = "c";
     private static final String O_CT = "ct";
 
+    private static final String O_SMC = "smc";
+
+    /** attributes for external storetype **/
+    private static final String O_ST = "st";
+    private static final String O_VP = "vp";
+    private static final String O_STP = "stp";
+    private static final String O_BID = "bid";
+
+    private static final String O_UFA = "ufa";
+
+    private static final String O_UFAT = "ufat";
+
+    private static final String O_UIT = "uit";
+
+    /** attributes for store type OpenIO **/
+    private static final String O_AP = "ap";
+    private static final String O_PP = "pp";
+    private static final String O_ACCOUNT = "acc";
+    private static final String O_NS = "ns";
+    private static final String O_URL = "url";
+    private static final String OPENIO = "OPENIO";
+
+    private static final String NOT_ALLOWED_INTERNAL = " is not allowed for internal storetype";
+    private static final String NOT_ALLOWED_EXTERNAL = " is not allowed for external storetype";
+    private static final String NOT_ALLOWED = " is not allowed for edit";
+    private static final String INVALID_STORE_TYPE = "invalid storetype";
+    private static final String HELP_EXTERNAL_NAME = "  only name can be edited for external store volumes ";
+    private static final String MISSING_ATTRS = " is missing";
+    private static final String NOT_ALLOWED_ID = "id cannot be specified when adding a volume";
+
+    private static final String H_STORE_TYPE = "Store type: internal or external";
+    private static final String H_STORAGE_TYPE = "Name of the store provider (S3, ObjectStore, OPENIO)";
+    private static final String H_BUCKET_ID = "S3 Bucket ID";
+    private static final String H_VOLUME_PREFIX = "Volume Prefix";
+    private static final String H_URL = "URL of OpenIO";
+    private static final String H_PROXY_PORT = "Proxy port";
+    private static final String H_ACCOUNT_PORT = "Account port";
+    private static final String H_ACCOUNT = "Name of account";
+    private static final String H_NAME_SPACE = "Namespace";
+    private static final String H_STORE_MANAGER_CLASS = "Optional parameter to specify non-default store manager class path";
+    private static final String H_USE_INFREQUENT_ACCESS_THRESHOLD = "Use Infrequent access storage class blob size threshold";
+    private static final String H_USE_INFREQUENT_ACCESS = "Use Infrequent access storage class - AWS only";
+    private static final String H_USE_INTELLIGENT_TIERING = "Use Intelligent tiering storage class - AWS only";
+    private static final String A_ID = "id";
+    private static final String A_TYPE = "type";
+    private static final String A_PATH = "path";
+    private static final String A_NAME = "name";
+    private static final String A_COMPRESS = "compress";
+    private static final String A_COMPRESS_THRESHOLD = "compressThreshold";
+    private static final String A_STORE_TYPE = "storeType";
+
+    private static final String A_STORE_MANAGER_CLASS = "storeManagerClass";
+    private static final String A_STORAGE_TYPE = "storageType";
+    private static final String A_BUCKET_ID = "bucketId";
+    private static final String A_VOLUME_PREFIX = "volumePrefix";
+    private static final String A_USE_IN_FRE_ACCESS_THRESHOLD = "useInFrequentAccThr";
+
+
+
+    private static final String A_URL = "url";
+    private static final String A_PROXY_PORT = "proxyPort";
+    private static final String A_ACCOUNT_PORT = "accountPort";
+    private static final String A_NAME_SPACE = "nameSpace";
+    private static final String A_ACCOUNT = "account";
+
+    public static final int DEFAULT_USE_INFREQUENT_ACCESS_THRESHOLD = 65536;
+
     private VolumeCLI() throws ServiceException {
         super();
         setupCommandLineOptions();
@@ -73,6 +142,22 @@ public final class VolumeCLI extends SoapCLI {
     private String path;
     private String compress;
     private String compressThreshold;
+    private String storeType;
+    private String volumePrefix;
+    private String storageType;
+    private String bucketId;
+
+    // openIO Attributes
+    private String url;
+    private String proxyPort;
+    private String accountPort;
+    private String nameSpace;
+    private String account;
+    private String storeManagerClass;
+
+    private String useInfrequentAccess;
+    private String useInfrequentAccessThreshold;
+    private String useIntelligentTiering;
 
     private void setArgs(CommandLine cl) throws ServiceException, ParseException, IOException {
         auth = getZAuthToken(cl);
@@ -82,6 +167,20 @@ public final class VolumeCLI extends SoapCLI {
         path = cl.getOptionValue(O_P);
         compress = cl.getOptionValue(O_C);
         compressThreshold = cl.getOptionValue(O_CT);
+        storeType = cl.getOptionValue(O_ST);
+        storeType = storeType == null ? null : storeType.toUpperCase();
+        volumePrefix = cl.getOptionValue(O_VP);
+        storageType = cl.getOptionValue(O_STP);
+        bucketId = cl.getOptionValue(O_BID);
+        url = cl.getOptionValue(O_URL);
+        proxyPort = cl.getOptionValue(O_PP);
+        accountPort = cl.getOptionValue(O_AP);
+        nameSpace = cl.getOptionValue(O_NS);
+        account = cl.getOptionValue(O_ACCOUNT);
+        storeManagerClass = cl.getOptionValue(O_SMC);
+        useInfrequentAccess = cl.getOptionValue(O_UFA);
+        useInfrequentAccessThreshold = cl.getOptionValue(O_UFAT);
+        useIntelligentTiering = cl.getOptionValue(O_UIT);
     }
 
     public static void main(String[] args) {
@@ -129,7 +228,7 @@ public final class VolumeCLI extends SoapCLI {
 
     private void setCurrentVolume() throws ParseException, SoapFaultException, IOException, ServiceException, NumberFormatException, HttpException {
         if (id == null) {
-            throw new ParseException("id is missing");
+            throw new ParseException(A_ID + MISSING_ATTRS);
         }
 
         auth(auth);
@@ -180,23 +279,43 @@ public final class VolumeCLI extends SoapCLI {
     }
 
     private void print(VolumeInfo vol) {
-        System.out.println("   Volume id: " + vol.getId());
-        System.out.println("        name: " + vol.getName());
-        System.out.println("        type: " + toTypeName(vol.getType()));
-        System.out.println("        path: " + vol.getRootPath());
-        System.out.print("  compressed: " + vol.isCompressBlobs());
+        System.out.println("                   Volume id: " + vol.getId());
+        System.out.println("                        name: " + vol.getName());
+        System.out.println("                        type: " + toTypeName(vol.getType()));
+        System.out.println("                        path: " + vol.getRootPath());
+        System.out.print("                  compressed: " + vol.isCompressBlobs());
         if (vol.isCompressBlobs()) {
-            System.out.println("\t         threshold: " + vol.getCompressionThreshold() + " bytes");
+            System.out.println("\t                 threshold: " + vol.getCompressionThreshold() + " bytes");
         } else {
             System.out.println();
         }
-        System.out.println("     current: " + vol.isCurrent());
+        System.out.println("                     current: " + vol.isCurrent());
+        System.out.println("           storeManagerClass: " + vol.getStoreManagerClass());
+        if (vol.getStoreType() == Volume.StoreType.EXTERNAL.getStoreType()) {
+            if (AdminConstants.A_VOLUME_S3.equals(extractStorageType(vol))) {
+                VolumeExternalInfo volumeExternalInfo = vol.getVolumeExternalInfo();
+                System.out.println("                      prefix: " + volumeExternalInfo.getVolumePrefix());
+                System.out.println(" globalBucketConfigurationId: " + volumeExternalInfo.getGlobalBucketConfigurationId());
+                System.out.println("                 storageType: " + volumeExternalInfo.getStorageType());
+                System.out.println("       useIntelligentTiering: " + volumeExternalInfo.isUseIntelligentTiering());
+                System.out.println("         useInFrequentAccess: " + volumeExternalInfo.isUseInFrequentAccess());
+                System.out.println("useInFrequentAccessThreshold: " + volumeExternalInfo.getUseInFrequentAccessThreshold());
+            } else if (AdminConstants.A_VOLUME_OPEN_IO.equals(extractStorageType(vol))) {
+                VolumeExternalOpenIOInfo volumeExternalOpenIOInfo = vol.getVolumeExternalOpenIOInfo();
+                System.out.println("                 storageType: " + volumeExternalOpenIOInfo.getStorageType());
+                System.out.println("                         url: " + volumeExternalOpenIOInfo.getUrl());
+                System.out.println("                     account: " + volumeExternalOpenIOInfo.getAccount());
+                System.out.println("                   nameSpace: " + volumeExternalOpenIOInfo.getNameSpace());
+                System.out.println("                   proxyPort: " + volumeExternalOpenIOInfo.getProxyPort());
+                System.out.println("                 accountPort: " + volumeExternalOpenIOInfo.getAccountPort());
+            }
+        }
         System.out.println();
     }
 
     private void deleteVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (id == null) {
-            throw new ParseException("id is missing");
+            throw new ParseException(A_ID + MISSING_ATTRS);
         }
 
         DeleteVolumeRequest req = new DeleteVolumeRequest(Short.parseShort(id));
@@ -207,25 +326,17 @@ public final class VolumeCLI extends SoapCLI {
 
     private void editVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (Strings.isNullOrEmpty(id)) {
-            throw new ParseException("id is missing");
+            throw new ParseException(A_ID + MISSING_ATTRS);
         }
 
+        GetVolumeRequest getVolumeRequest = new GetVolumeRequest(Short.parseShort(id));
+        auth();
+        GetVolumeResponse getVolumeResponse = JaxbUtil
+                .elementToJaxb(getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(getVolumeRequest)));
+        Volume.StoreType enumStoreType = (1 == getVolumeResponse.getVolume().getStoreType()) ? Volume.StoreType.INTERNAL
+                : Volume.StoreType.EXTERNAL;
         VolumeInfo vol = new VolumeInfo();
-        if (!Strings.isNullOrEmpty(type)) {
-            vol.setType(toType(type));
-        }
-        if (!Strings.isNullOrEmpty(name)) {
-            vol.setName(name);
-        }
-        if (!Strings.isNullOrEmpty(path)) {
-            vol.setRootPath(path);
-        }
-        if (!Strings.isNullOrEmpty(compress)) {
-            vol.setCompressBlobs(Boolean.parseBoolean(compress));
-        }
-        if (!Strings.isNullOrEmpty(compressThreshold)) {
-            vol.setCompressionThreshold(Long.parseLong(compressThreshold));
-        }
+        validateEditCommand(vol, enumStoreType);
         ModifyVolumeRequest req = new ModifyVolumeRequest(Short.parseShort(id), vol);
         auth(auth);
         getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(req));
@@ -234,29 +345,189 @@ public final class VolumeCLI extends SoapCLI {
 
     private void addVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (id != null) {
-            throw new ParseException("id cannot be specified when adding a volume");
+            throw new ParseException(NOT_ALLOWED_ID);
         }
         if (Strings.isNullOrEmpty(type)) {
-            throw new ParseException("type is missing");
+            throw new ParseException(A_TYPE + MISSING_ATTRS);
         }
         if (Strings.isNullOrEmpty(name)) {
-            throw new ParseException("name is missing");
-        }
-        if (Strings.isNullOrEmpty(path)) {
-            throw new ParseException("path is missing");
+            throw new ParseException(A_NAME + MISSING_ATTRS);
         }
 
         VolumeInfo vol = new VolumeInfo();
         vol.setType(toType(type));
         vol.setName(name);
-        vol.setRootPath(path);
         vol.setCompressBlobs(compress != null ? Boolean.parseBoolean(compress) : false);
         vol.setCompressionThreshold(compressThreshold != null ? Long.parseLong(compressThreshold) : 4096L);
+        if (!Strings.isNullOrEmpty(storeManagerClass)) {
+            vol.setStoreManagerClass(storeManagerClass);
+        }
+        validateAddCommand(vol);
         CreateVolumeRequest req = new CreateVolumeRequest(vol);
         auth();
         CreateVolumeResponse resp = JaxbUtil.elementToJaxb(getTransport().invokeWithoutSession(
                 JaxbUtil.jaxbToElement(req)));
         System.out.println("Volume " + resp.getVolume().getId() + " is created");
+    }
+
+    /**
+     * This method validate the attributes in edit command.
+     *
+     * @param volumeInfo, volStoreType
+     * @throws ParseException
+     */
+
+    private void validateEditCommand(VolumeInfo volumeInfo, Volume.StoreType volStoreType) throws ParseException {
+        if (volStoreType.equals(Volume.StoreType.INTERNAL)) {
+            if (!Strings.isNullOrEmpty(type)) {
+                volumeInfo.setType(toType(type));
+            }
+            if (!Strings.isNullOrEmpty(path)) {
+                volumeInfo.setRootPath(path);
+            }
+            if (!Strings.isNullOrEmpty(compress)) {
+                volumeInfo.setCompressBlobs(Boolean.parseBoolean(compress));
+            }
+            if (!Strings.isNullOrEmpty(compressThreshold)) {
+                volumeInfo.setCompressionThreshold(Long.parseLong(compressThreshold));
+            }
+        } else if (volStoreType.equals(Volume.StoreType.EXTERNAL)) {
+            if (!Strings.isNullOrEmpty(type)) {
+                throw new ParseException(A_TYPE + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(path)) {
+                throw new ParseException(A_PATH + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(compress)) {
+                throw new ParseException(A_COMPRESS + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(compressThreshold)) {
+                throw new ParseException(A_COMPRESS_THRESHOLD + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(url)) {
+                throw new ParseException(A_URL + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(account)) {
+                throw new ParseException(A_ACCOUNT + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(nameSpace)) {
+                throw new ParseException(A_NAME_SPACE + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(proxyPort)) {
+                throw new ParseException(A_PROXY_PORT + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(accountPort)) {
+                throw new ParseException(A_ACCOUNT_PORT + NOT_ALLOWED_EXTERNAL);
+            }
+        } else {
+            throw new ParseException(INVALID_STORE_TYPE);
+        }
+        if (!Strings.isNullOrEmpty(name)) {
+            volumeInfo.setName(name);
+        }
+        if (!Strings.isNullOrEmpty(storeType)) {
+            throw new ParseException(A_STORE_TYPE + NOT_ALLOWED);
+        }
+        if (!Strings.isNullOrEmpty(storageType)) {
+            throw new ParseException(A_STORAGE_TYPE + NOT_ALLOWED);
+        }
+        if (!Strings.isNullOrEmpty(bucketId)) {
+            throw new ParseException(A_BUCKET_ID + NOT_ALLOWED);
+        }
+        if (!Strings.isNullOrEmpty(volumePrefix)) {
+            throw new ParseException(A_VOLUME_PREFIX + NOT_ALLOWED);
+        }
+    }
+
+    /**
+     * This method validate the attributes in add command.
+     *
+     * @param volumeInfo
+     * @throws ParseException
+     */
+
+    private void validateAddCommand(VolumeInfo volumeInfo) throws ParseException {
+        if (Strings.isNullOrEmpty(storeType) || Volume.StoreType.INTERNAL.name().equals(storeType)) {
+            if (!Strings.isNullOrEmpty(storageType)) {
+                throw new ParseException(A_STORAGE_TYPE + NOT_ALLOWED_INTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(bucketId)) {
+                throw new ParseException(A_BUCKET_ID + NOT_ALLOWED_INTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(volumePrefix)) {
+                throw new ParseException(A_VOLUME_PREFIX + NOT_ALLOWED_INTERNAL);
+            }
+            if (Strings.isNullOrEmpty(path)) {
+                throw new ParseException(A_PATH + MISSING_ATTRS);
+            }
+            volumeInfo.setRootPath(path);
+        } else if (Volume.StoreType.EXTERNAL.name().equals(storeType)) {
+            if (OPENIO.equalsIgnoreCase(storageType)) {
+                VolumeExternalOpenIOInfo volumeExternalOpenIOInfo = new VolumeExternalOpenIOInfo();
+                if (!Strings.isNullOrEmpty(storageType)) {
+                    volumeExternalOpenIOInfo.setStorageType(storageType);
+                }
+                if (!Strings.isNullOrEmpty(url)) {
+                    volumeExternalOpenIOInfo.setUrl(url);
+                } else {
+                    throw new ParseException(A_URL + MISSING_ATTRS);
+                }
+                if (!Strings.isNullOrEmpty(nameSpace)) {
+                    volumeExternalOpenIOInfo.setNameSpace(nameSpace);
+                } else {
+                    throw new ParseException(A_NAME_SPACE + MISSING_ATTRS);
+                }
+                if (!Strings.isNullOrEmpty(proxyPort)) {
+                    volumeExternalOpenIOInfo.setProxyPort(Integer.parseInt(proxyPort));
+                } else {
+                    throw new ParseException(A_PROXY_PORT + MISSING_ATTRS);
+                }
+                if (!Strings.isNullOrEmpty(accountPort)) {
+                    volumeExternalOpenIOInfo.setAccountPort(Integer.parseInt(accountPort));
+                } else {
+                    throw new ParseException(A_ACCOUNT_PORT + MISSING_ATTRS);
+                }
+                if (!Strings.isNullOrEmpty(account)) {
+                    volumeExternalOpenIOInfo.setAccount(account);
+                } else {
+                    throw new ParseException(A_ACCOUNT + MISSING_ATTRS);
+                }
+                volumeInfo.setVolumeExternalOpenIOInfo(volumeExternalOpenIOInfo);
+            } else {
+                VolumeExternalInfo volumeExternalInfo = new VolumeExternalInfo();
+                if (!Strings.isNullOrEmpty(storageType)) {
+                    volumeExternalInfo.setStorageType(storageType);
+                }
+                if (!Strings.isNullOrEmpty(bucketId)) {
+                    volumeExternalInfo.setGlobalBucketConfigurationId(bucketId);
+                }
+                if (!Strings.isNullOrEmpty(volumePrefix)) {
+                    volumeExternalInfo.setVolumePrefix(volumePrefix);
+                }
+                if (!Strings.isNullOrEmpty(useInfrequentAccess)
+                        && validateBoolean(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, useInfrequentAccess)) {
+                    volumeExternalInfo.setUseInFrequentAccess(Boolean.parseBoolean(useInfrequentAccess));
+                }
+                if (!Strings.isNullOrEmpty(useIntelligentTiering)
+                        && validateBoolean(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, useIntelligentTiering)) {
+                    volumeExternalInfo.setUseIntelligentTiering(Boolean.parseBoolean(useIntelligentTiering));
+                }
+                if (!Strings.isNullOrEmpty(useInfrequentAccessThreshold)) {
+                    volumeExternalInfo.setUseInFrequentAccessThreshold(Integer.parseInt(useInfrequentAccessThreshold));
+                }
+                volumeInfo.setVolumeExternalInfo(volumeExternalInfo);
+            }
+            volumeInfo.setStoreType((short) Volume.StoreType.EXTERNAL.getStoreType());
+        } else {
+            throw new ParseException(INVALID_STORE_TYPE);
+        }
+    }
+
+    private boolean validateBoolean(String param, String value) throws ParseException {
+        if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+            return true;
+        }
+        throw new ParseException("invalid value of " + param);
     }
 
     @Override
@@ -286,6 +557,21 @@ public final class VolumeCLI extends SoapCLI {
         options.addOption(O_CT, "compressionThreshold", true, "Compression threshold; default 4KB");
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
+        options.addOption(new Option(O_ST, A_STORE_TYPE, true, H_STORE_TYPE));
+        options.addOption(new Option(O_VP, A_VOLUME_PREFIX, true, H_VOLUME_PREFIX));
+        options.addOption(new Option(O_STP, A_STORAGE_TYPE, true, H_STORAGE_TYPE));
+        options.addOption(new Option(O_BID, A_BUCKET_ID, true, H_BUCKET_ID));
+        options.addOption(new Option(O_UFA, AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, true, H_USE_INFREQUENT_ACCESS));
+        options.addOption(new Option(O_UFAT, A_USE_IN_FRE_ACCESS_THRESHOLD, true, H_USE_INFREQUENT_ACCESS_THRESHOLD));
+        options.addOption(new Option(O_UIT, AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, true, H_USE_INTELLIGENT_TIERING));
+        //OpenIO
+        options.addOption(new Option(O_AP, A_ACCOUNT_PORT, true, H_ACCOUNT_PORT));
+        options.addOption(new Option(O_PP, A_PROXY_PORT, true, H_PROXY_PORT));
+        options.addOption(new Option(O_URL, A_URL, true, H_URL));
+        options.addOption(new Option(O_NS, A_NAME_SPACE, true, H_NAME_SPACE));
+        options.addOption(new Option(O_ACCOUNT, A_ACCOUNT, true, H_ACCOUNT));
+
+        options.addOption(new Option(O_SMC, A_STORE_MANAGER_CLASS, true, H_STORE_MANAGER_CLASS));
     }
 
     @Override
@@ -297,6 +583,7 @@ public final class VolumeCLI extends SoapCLI {
         System.err.println(getCommandUsage());
         printOpt(O_A, 0);
         printOpt(O_N, 2);
+        System.err.println(HELP_EXTERNAL_NAME);
         printOpt(O_T, 2);
         printOpt(O_P, 2);
         printOpt(O_C, 2);
@@ -316,6 +603,21 @@ public final class VolumeCLI extends SoapCLI {
         printOpt(O_TS, 0);
         printOpt(SoapCLI.O_AUTHTOKEN, 0);
         printOpt(SoapCLI.O_AUTHTOKENFILE, 0);
+        printOpt(O_ST, 0);
+        printOpt(O_VP, 0);
+        printOpt(O_STP, 0);
+        printOpt(O_BID, 0);
+        printOpt(O_UIT, 0);
+        printOpt(O_UFA, 0);
+        printOpt(O_UFAT, 0);
+
+        printOpt(O_PP, 0);
+        printOpt(O_AP, 0);
+        printOpt(O_ACCOUNT, 0);
+        printOpt(O_URL, 0);
+        printOpt(O_NS, 0);
+
+        printOpt(O_SMC, 0);
     }
 
     private void printOpt(String optStr, int leftPad) {
@@ -361,5 +663,18 @@ public final class VolumeCLI extends SoapCLI {
                 return "index";
         }
         return "Unrecognized type " + type;
+    }
+
+    /**
+     * Returns the storage type name for the given volume info type.
+     */
+    private String extractStorageType(VolumeInfo volInfo) {
+        String result = null;
+        if (null != volInfo.getVolumeExternalInfo()) {
+            result = volInfo.getVolumeExternalInfo().getStorageType();
+        } else if (null != volInfo.getVolumeExternalOpenIOInfo()) {
+            result = volInfo.getVolumeExternalOpenIOInfo().getStorageType();
+        }
+        return result;
     }
 }

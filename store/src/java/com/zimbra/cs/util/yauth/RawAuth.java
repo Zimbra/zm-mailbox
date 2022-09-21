@@ -31,8 +31,10 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
@@ -49,13 +51,14 @@ public class RawAuth implements Auth {
     private String wssId;
     private long expiration;
 
-    private static final Logger LOG = Logger.getLogger(RawAuth.class);
+    private static final org.apache.logging.log4j.Logger LOG = LogManager.getLogger(RawAuth.class);
 
     private static final boolean DEBUG = false;
 
     static {
         if (DEBUG) {
-            LOG.setLevel(Level.DEBUG);
+            Configurator.reconfigure();
+            Configurator.setLevel(LOG.getName(), Level.DEBUG);
             System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
             System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
             System.setProperty("org.apache.commons.logging.simplelog.log.httpclient.wire.header", "debug");

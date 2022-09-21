@@ -29,6 +29,12 @@ import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Connection;
 
 import javax.security.sasl.Sasl;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+
 import javax.security.auth.login.LoginException;
 
 import java.io.Console;
@@ -41,25 +47,23 @@ import java.util.NoSuchElementException;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
-
 public abstract class MailClient {
     private final MailConfig config;
     protected MailConnection connection;
     private final StringBuilder sbuf = new StringBuilder(132);
     private String password;
     private boolean eof;
+    
+    private static final Logger LOG = LogManager.getLogger(MailClient.class);
 
     protected MailClient(MailConfig config) {
         this.config = config;
     }
 
     public void run(String[] args) throws LoginException, IOException {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        config.getLogger().setLevel(Log.Level.trace);
+        Configurator.reconfigure();
+        Configurator.setRootLevel(Level.INFO);
+        Configurator.setLevel(LOG.getName(), Level.INFO);
         parseArguments(args, config);
         connect();
         authenticate();

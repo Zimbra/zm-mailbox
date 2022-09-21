@@ -113,7 +113,58 @@ public class ZRecur implements Cloneable {
         }
     }
 
-    private Date estimateEndTimeByUntilAndHardLimits(ParsedDateTime dtStart) throws ServiceException {
+    private int estimateMaxCountByCountAndHardLimits() {
+        Frequency freq = mFreq;
+        if (freq == null) {
+            freq = Frequency.WEEKLY;
+        }
+        switch (freq) {
+        case WEEKLY:
+            int weeks = sExpansionLimits.maxWeeks;
+            if (weeks <= 0) {
+                return mCount;
+            } else {
+                return Math.min(weeks, mCount);
+            }
+        case MONTHLY:
+            int months = sExpansionLimits.maxMonths;
+            if (months <= 0) {
+                return mCount;
+            } else {
+                return Math.min(months, mCount);
+            }
+        case YEARLY:
+            int years = sExpansionLimits.maxYears;
+            if (years <= 0) {
+                return mCount;
+            } else {
+                return Math.min(years, mCount);
+            }
+        case DAILY:
+            int days = sExpansionLimits.maxDays;
+            if (days <= 0) {
+                return mCount;
+            } else {
+                return Math.min(days, mCount);
+            }
+        default:
+            int others = sExpansionLimits.maxInstances;
+            if (others <= 0) {
+                return mCount;
+            } else {
+                return Math.min(others, mCount);
+            }
+        }
+    }
+
+    public int getEstimatedCount(ParsedDateTime dtStart) throws ServiceException {
+        if (dtStart == null)
+            return 0;
+        return estimateMaxCountByCountAndHardLimits();
+    }
+
+    // deduct 1 from all values for mUntil calculation when appointment is not all day because it picks the next X occurrences
+    private Date estimateEndTimeByUntilAndHardLimits(ParsedDateTime dtStart, boolean allDay) throws ServiceException {
         boolean forever = false;
         Calendar hardEnd = dtStart.getCalendarCopy();
         Frequency freq = mFreq;
@@ -122,31 +173,47 @@ public class ZRecur implements Cloneable {
         switch (freq) {
         case WEEKLY:
             int weeks = sExpansionLimits.maxWeeks;
-            if (weeks <= 0)
+            if (weeks <= 0) {
                 forever = true;
-            else
+            } else {
+                if (!allDay) {
+                    weeks--;
+                }
                 hardEnd.add(Calendar.WEEK_OF_YEAR, weeks);
+            }
             break;
         case MONTHLY:
             int months = sExpansionLimits.maxMonths;
-            if (months <= 0)
+            if (months <= 0) {
                 forever = true;
-            else
+            } else {
+                if (!allDay) {
+                    months--;
+                }
                 hardEnd.add(Calendar.MONTH, months);
+            }
             break;
         case YEARLY:
             int years = sExpansionLimits.maxYears;
-            if (years <= 0)
+            if (years <= 0) {
                 forever = true;
-            else
+            } else {
+                if (!allDay) {
+                    years--;
+                }
                 hardEnd.add(Calendar.YEAR, years);
+            }
             break;
         case DAILY:
             int days = sExpansionLimits.maxDays;
-            if (days <= 0)
+            if (days <= 0) {
                 forever = true;
-            else
+            } else {
+                if (!allDay) {
+                    days--;
+                }
                 hardEnd.add(Calendar.DAY_OF_YEAR, days);
+            }
             break;
         default:
             int otherFreqYears = Math.max(sExpansionLimits.maxYearsOtherFreqs, 1);
@@ -166,9 +233,12 @@ public class ZRecur implements Cloneable {
     }
 
     public Date getEstimatedEndTime(ParsedDateTime dtStart) throws ServiceException {
+        return getEstimatedEndTime(dtStart, false);
+    }
+    public Date getEstimatedEndTime(ParsedDateTime dtStart, boolean allDay) throws ServiceException {
         if (dtStart == null)
             return null;
-        return estimateEndTimeByUntilAndHardLimits(dtStart);
+        return estimateEndTimeByUntilAndHardLimits(dtStart, allDay);
         // We can't estimate by COUNT because BYxxx rule parts yield too many possibilities.
     }
 
@@ -619,7 +689,8 @@ public class ZRecur implements Cloneable {
         int numInstancesExpanded = 1;  // initially 1 rather than 0 because DTSTART is always included
 
         // Set hard limit of expansion time range.  (bug 21989)
-        ParsedDateTime earliestDateTime = ParsedDateTime.fromUTCTime(earliestDate.getTime());
+        //changes made it handle TimeZone for ZCS-10805
+        ParsedDateTime earliestDateTime = ParsedDateTime.fromUTCTime(earliestDate.getTime(), dtStart.getTimeZone());
         Date hardEndDate = getEstimatedEndTime(earliestDateTime);
         if (hardEndDate.before(rangeEndDate))
             rangeEndDate = hardEndDate;

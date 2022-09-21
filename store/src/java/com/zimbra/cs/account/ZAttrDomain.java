@@ -298,6 +298,212 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @return zimbraActiveSyncVersion, or empty array if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public String[] getActiveSyncVersion() {
+        return getMultiAttr(Provisioning.A_zimbraActiveSyncVersion, true, true);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public void setActiveSyncVersion(String[] zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public Map<String,Object> setActiveSyncVersion(String[] zimbraActiveSyncVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        return attrs;
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public void addActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public Map<String,Object> addActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        return attrs;
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public void removeActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public Map<String,Object> removeActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        return attrs;
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public void unsetActiveSyncVersion() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncVersion, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4008)
+    public Map<String,Object> unsetActiveSyncVersion(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncVersion, "");
+        return attrs;
+    }
+
+    /**
      * whether to show catchall addresses in admin console
      *
      * @return zimbraAdminConsoleCatchAllAddressEnabled, or false if unset
@@ -4376,6 +4582,108 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @return zimbraBackupEnabled, or false if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=9014)
+    public boolean isBackupEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupEnabled, false, true);
+    }
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @param zimbraBackupEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=9014)
+    public void setBackupEnabled(boolean zimbraBackupEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, zimbraBackupEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @param zimbraBackupEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=9014)
+    public Map<String,Object> setBackupEnabled(boolean zimbraBackupEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, zimbraBackupEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=9014)
+    public void unsetBackupEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=9014)
+    public Map<String,Object> unsetBackupEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Realm for the basic auth challenge (WWW-Authenticate) header
      *
      * @return zimbraBasicAuthRealm, or "Zimbra" if unset
@@ -7368,6 +7676,262 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * enable/disable dumpster
+     *
+     * @return zimbraDumpsterEnabled, or false if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public boolean isDumpsterEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDumpsterEnabled, false, true);
+    }
+
+    /**
+     * enable/disable dumpster
+     *
+     * @param zimbraDumpsterEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public void setDumpsterEnabled(boolean zimbraDumpsterEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterEnabled, zimbraDumpsterEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable/disable dumpster
+     *
+     * @param zimbraDumpsterEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public Map<String,Object> setDumpsterEnabled(boolean zimbraDumpsterEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterEnabled, zimbraDumpsterEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable/disable dumpster
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public void unsetDumpsterEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable/disable dumpster
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public Map<String,Object> unsetDumpsterEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @return zimbraDumpsterPurgeEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public boolean isDumpsterPurgeEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDumpsterPurgeEnabled, true, true);
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @param zimbraDumpsterPurgeEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public void setDumpsterPurgeEnabled(boolean zimbraDumpsterPurgeEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterPurgeEnabled, zimbraDumpsterPurgeEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @param zimbraDumpsterPurgeEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public Map<String,Object> setDumpsterPurgeEnabled(boolean zimbraDumpsterPurgeEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterPurgeEnabled, zimbraDumpsterPurgeEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public void unsetDumpsterPurgeEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterPurgeEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public Map<String,Object> unsetDumpsterPurgeEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterPurgeEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getDumpsterUserVisibleAgeAsString to access value as a string.
+     *
+     * @see #getDumpsterUserVisibleAgeAsString()
+     *
+     * @return zimbraDumpsterUserVisibleAge in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public long getDumpsterUserVisibleAge() {
+        return getTimeInterval(Provisioning.A_zimbraDumpsterUserVisibleAge, 2592000000L, true);
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraDumpsterUserVisibleAge, or "30d" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public String getDumpsterUserVisibleAgeAsString() {
+        return getAttr(Provisioning.A_zimbraDumpsterUserVisibleAge, "30d", true);
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraDumpsterUserVisibleAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public void setDumpsterUserVisibleAge(String zimbraDumpsterUserVisibleAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterUserVisibleAge, zimbraDumpsterUserVisibleAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraDumpsterUserVisibleAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public Map<String,Object> setDumpsterUserVisibleAge(String zimbraDumpsterUserVisibleAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterUserVisibleAge, zimbraDumpsterUserVisibleAge);
+        return attrs;
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public void unsetDumpsterUserVisibleAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterUserVisibleAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public Map<String,Object> unsetDumpsterUserVisibleAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterUserVisibleAge, "");
+        return attrs;
+    }
+
+    /**
      * URL for posting error report popped up in WEB client
      *
      * @return zimbraErrorReportUrl, or null if unset
@@ -9471,7 +10035,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @return zimbraFileUploadMaxSizePerFile, or 2147483648 if unset
      *
@@ -9483,7 +10049,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param zimbraFileUploadMaxSizePerFile new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9498,7 +10066,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param zimbraFileUploadMaxSizePerFile new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9514,7 +10084,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -9528,7 +10100,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -15654,6 +16228,118 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getMailDumpsterLifetimeAsString to access value as a string.
+     *
+     * @see #getMailDumpsterLifetimeAsString()
+     *
+     * @return zimbraMailDumpsterLifetime in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public long getMailDumpsterLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraMailDumpsterLifetime, 2592000000L, true);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraMailDumpsterLifetime, or "30d" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public String getMailDumpsterLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraMailDumpsterLifetime, "30d", true);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailDumpsterLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public void setMailDumpsterLifetime(String zimbraMailDumpsterLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, zimbraMailDumpsterLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailDumpsterLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public Map<String,Object> setMailDumpsterLifetime(String zimbraMailDumpsterLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, zimbraMailDumpsterLifetime);
+        return attrs;
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public void unsetMailDumpsterLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public Map<String,Object> unsetMailDumpsterLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, "");
+        return attrs;
+    }
+
+    /**
      * Map from a certificate field to a Zimbra account key that can uniquely
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
@@ -15934,6 +16620,274 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetMailTrustedSenderListMaxNumEntries(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, "");
+        return attrs;
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @return zimbraMobileAllowedDevices, or empty array if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public String[] getMobileAllowedDevices() {
+        return getMultiAttr(Provisioning.A_zimbraMobileAllowedDevices, true, true);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public void setMobileAllowedDevices(String[] zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> setMobileAllowedDevices(String[] zimbraMobileAllowedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        return attrs;
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public void addMobileAllowedDevices(String zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> addMobileAllowedDevices(String zimbraMobileAllowedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        return attrs;
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public void removeMobileAllowedDevices(String zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> removeMobileAllowedDevices(String zimbraMobileAllowedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        return attrs;
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public void unsetMobileAllowedDevices() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedDevices, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> unsetMobileAllowedDevices(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedDevices, "");
+        return attrs;
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @return zimbraMobileBlockedDevices, or empty array if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public String[] getMobileBlockedDevices() {
+        return getMultiAttr(Provisioning.A_zimbraMobileBlockedDevices, true, true);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public void setMobileBlockedDevices(String[] zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public Map<String,Object> setMobileBlockedDevices(String[] zimbraMobileBlockedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        return attrs;
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public void addMobileBlockedDevices(String zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public Map<String,Object> addMobileBlockedDevices(String zimbraMobileBlockedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        return attrs;
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public void removeMobileBlockedDevices(String zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public Map<String,Object> removeMobileBlockedDevices(String zimbraMobileBlockedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        return attrs;
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public void unsetMobileBlockedDevices() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileBlockedDevices, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3090)
+    public Map<String,Object> unsetMobileBlockedDevices(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileBlockedDevices, "");
         return attrs;
     }
 

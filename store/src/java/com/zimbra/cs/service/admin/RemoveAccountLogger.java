@@ -19,6 +19,9 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -63,7 +66,7 @@ public class RemoveAccountLogger extends AdminDocumentHandler {
             category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
             if (category.equalsIgnoreCase(AddAccountLogger.CATEGORY_ALL)) {
                 category = null;
-            } else if (!LogFactory.logExists(category)) {
+            } else if (!((LoggerContext) LogManager.getContext(false)).hasLogger(category)) {
                 throw ServiceException.INVALID_REQUEST("Log category " + category + " does not exist.", null);
             }
         }

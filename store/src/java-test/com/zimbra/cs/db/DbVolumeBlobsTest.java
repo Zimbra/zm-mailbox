@@ -53,6 +53,7 @@ import com.zimbra.cs.store.file.BlobReference;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.SpoolingCache;
 import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.Volume.StoreType;
 import com.zimbra.cs.volume.VolumeManager;
 
 import junit.framework.Assert;
@@ -436,7 +437,7 @@ public class DbVolumeBlobsTest {
         volFile.mkdirs();
 
         Volume vol2 = Volume.builder().setPath(volFile.getAbsolutePath(), true)
-            .setType(Volume.TYPE_MESSAGE).setName("volume2").build();
+            .setType(Volume.TYPE_MESSAGE).setName("volume2").setStoreType(StoreType.INTERNAL).build();
 
         vol2 = VolumeManager.getInstance().create(vol2);
 

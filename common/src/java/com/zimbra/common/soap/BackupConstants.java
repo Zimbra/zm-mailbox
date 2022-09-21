@@ -45,6 +45,8 @@ public final class BackupConstants {
     public static final String E_GET_MAILBOX_VERSION_RESPONSE = "GetMailboxVersionResponse";
     public static final String E_GET_MAILBOX_VOLUMES_REQUEST = "GetMailboxVolumesRequest";
     public static final String E_GET_MAILBOX_VOLUMES_RESPONSE = "GetMailboxVolumesResponse";
+    public static final String E_GET_MAILBOX_CURRENT_VOLUMES_REQUEST = "GetMailboxCurrentVolumesRequest";
+    public static final String E_GET_MAILBOX_CURRENT_VOLUMES_RESPONSE = "GetMailboxCurrentVolumesResponse";
     public static final String E_UNLOAD_MAILBOX_REQUEST = "UnloadMailboxRequest";
     public static final String E_UNLOAD_MAILBOX_RESPONSE = "UnloadMailboxResponse";
     public static final String E_RELOAD_ACCOUNT_REQUEST = "ReloadAccountRequest";
@@ -82,6 +84,8 @@ public final class BackupConstants {
     public static final QName GET_MAILBOX_VERSION_RESPONSE = QName.get(E_GET_MAILBOX_VERSION_RESPONSE, NAMESPACE);
     public static final QName GET_MAILBOX_VOLUMES_REQUEST = QName.get(E_GET_MAILBOX_VOLUMES_REQUEST, NAMESPACE);
     public static final QName GET_MAILBOX_VOLUMES_RESPONSE = QName.get(E_GET_MAILBOX_VOLUMES_RESPONSE, NAMESPACE);
+    public static final QName GET_MAILBOX_CURRENT_VOLUMES_REQUEST = QName.get(E_GET_MAILBOX_CURRENT_VOLUMES_REQUEST, NAMESPACE);
+    public static final QName GET_MAILBOX_CURRENT_VOLUMES_RESPONSE = QName.get(E_GET_MAILBOX_CURRENT_VOLUMES_RESPONSE, NAMESPACE);
     public static final QName UNLOAD_MAILBOX_REQUEST = QName.get(E_UNLOAD_MAILBOX_REQUEST, NAMESPACE);
     public static final QName UNLOAD_MAILBOX_RESPONSE = QName.get(E_UNLOAD_MAILBOX_RESPONSE, NAMESPACE);
     public static final QName RELOAD_ACCOUNT_REQUEST = QName.get(E_RELOAD_ACCOUNT_REQUEST, NAMESPACE);
@@ -94,7 +98,9 @@ public final class BackupConstants {
     public static final QName QUERY_MAILBOX_MOVE_RESPONSE = QName.get(E_QUERY_MAILBOX_MOVE_RESPONSE, NAMESPACE);
 
     public static final String ZM_SCHEDULE_BACKUP = "zmschedulebackup";
-
+    // this constant used as license attribute
+    public static final String LA_BACKUP_ENABLED = "BackupEnabled";
+    
     public static final String E_ACCOUNT = "account";
     public static final String E_ACCOUNTS = "accounts";
     public static final String E_CURRENT_ACCOUNTS = "currentAccounts";
@@ -150,6 +156,7 @@ public final class BackupConstants {
     public static final String A_RESTORE_TO_TIME = "restoreToTime";
     public static final String A_RESTORE_TO_REDO_SEQ = "restoreToRedoSeq";
     public static final String A_RESTORE_TO_INCR_LABEL = "restoreToIncrLabel";
+    public static final String A_RESTORE_IN_DR_MODE = "restoreInDRMode";
     public static final String A_IGNORE_REDO_ERRORS = "ignoreRedoErrors";
     public static final String A_SKIP_DELETE_OPS = "skipDeleteOps";
     public static final String A_COUNTER_UNIT = "unit";
@@ -195,4 +202,6 @@ public final class BackupConstants {
     public static final String V_EXCLUDE = "exclude";
     public static final String V_CONFIG = "config";
     public static final String A_FORCE_DELETE_BLOBS = "forceDeleteBlobs";
+    public static final String A_SCHEDULE_BACKUP_RESULT = "scheduleBackupResult";
+
 }
