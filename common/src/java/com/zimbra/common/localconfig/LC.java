@@ -1478,7 +1478,7 @@ public final class LC {
     // ZBUG-2547 : zimbra_strict_unclosed_comment_tag if this is false we relax rule
     // of allowing unclosed tag based on zimbra_skip_tags_with_unclosed_cdata value
     // zimbra_skip_tags_with_unclosed_cdata : Set values , based on this tags would be checked for closed comment
-    public static final KnownKey zimbra_strict_unclosed_comment_tag = KnownKey.newKey(false);
+    public static final KnownKey zimbra_strict_unclosed_comment_tag = KnownKey.newKey(true);
     public static final KnownKey zimbra_skip_tags_with_unclosed_cdata = KnownKey.newKey("style");
 
     
