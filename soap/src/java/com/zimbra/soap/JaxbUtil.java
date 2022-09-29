@@ -1161,7 +1161,9 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.DeleteS3BucketConfigRequest.class,
             com.zimbra.soap.admin.message.DeleteS3BucketConfigResponse.class,
             com.zimbra.soap.admin.message.ValidateS3BucketReachableRequest.class,
-            com.zimbra.soap.admin.message.ValidateS3BucketReachableResponse.class
+            com.zimbra.soap.admin.message.ValidateS3BucketReachableResponse.class,
+            com.zimbra.soap.admin.message.EditS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.EditS3BucketConfigResponse.class
         };
 
         try {
