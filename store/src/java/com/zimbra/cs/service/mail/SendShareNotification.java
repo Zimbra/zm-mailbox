@@ -766,6 +766,7 @@ public class SendShareNotification extends MailDocumentHandler {
         req.setRights(rights);
         req.setContentType(docReqItem.getContentType());
         req.setSize(docReqItem.getTotalSize());
+        req.setOwnerAccountId(ownerAccountId);
         Element request = JaxbUtil.jaxbToElement(req);
         proxyRequest(request, context, granteeId);
     }
