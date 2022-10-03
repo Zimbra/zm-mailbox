@@ -17,19 +17,19 @@
 
 package com.zimbra.soap.admin.message;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SyncAdminConstants;
+import com.zimbra.common.soap.SyncConstants;
+import com.zimbra.soap.admin.type.CosSelector;
+import com.zimbra.soap.admin.type.DeviceId;
+import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.type.AccountSelector;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.SyncAdminConstants;
-import com.zimbra.common.soap.SyncConstants;
-import com.zimbra.soap.admin.type.DeviceId;
-import com.zimbra.soap.type.AccountSelector;
-import com.zimbra.common.soap.Element;
-import com.zimbra.soap.admin.type.DomainSelector;
-import com.zimbra.soap.admin.type.CosSelector;
 
 /**
  * @zm-api-command-network-edition
@@ -53,6 +53,13 @@ public class GetDeviceStatusRequest {
      */
     @XmlAttribute(name=SyncConstants.A_LIMIT /* limit */, required=false)
     private int limit = 0;
+
+    /**
+     * @zm-api-field-tag getAll
+     * @zm-api-field-description Indicates if the request needs to get all records for all matching conditions across mailbox servers without any limit
+     */
+    @XmlAttribute(name=SyncConstants.A_GET_ALL /* getAll */, required=false)
+    private String getAll = "false";
 
     /**
      * @zm-api-field-tag account
@@ -265,6 +272,20 @@ public class GetDeviceStatusRequest {
 
     public Boolean getFilterDevicesByAnd() throws ServiceException{
         return Element.parseBool(SyncConstants.A_FILTERDEVICESBYAND, filterDevicesByAnd);
+    }
+
+    public Boolean getAll() throws ServiceException{
+        return Element.parseBool(SyncConstants.A_GET_ALL, getAll);
+    }
+
+    public GetDeviceStatusRequest setAll(Boolean getAll){
+        this.getAll = getAll.toString();
+        return this;
+    }
+
+    public GetDeviceStatusRequest setNotificationEmail(Boolean notificationEmail){
+        this.notificationEmail = notificationEmail.toString();
+        return this;
     }
 
     public void setDeviceSyncVersion(String deviceSyncVersion) {
