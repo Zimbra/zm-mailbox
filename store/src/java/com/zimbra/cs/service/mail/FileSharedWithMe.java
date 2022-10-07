@@ -51,25 +51,26 @@ public class FileSharedWithMe extends MailDocumentHandler implements Delegatable
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
 
             String action = request.getAttribute(MailConstants.E_ACTION);
-            String fileName = request.getAttribute(MailConstants.A_CONTENT_FILENAME);
-            int ownerFileId = request.getAttributeInt(MailConstants.A_ITEMID);
-            String fileUUID = request.getAttribute(MailConstants.A_REMOTE_UUID);
-            String fileOwnerName = request.getAttribute(MailConstants.A_OWNER_NAME);
-            String rights = request.getAttribute(MailConstants.A_RIGHTS);
-            String contentType = request.getAttribute(MailConstants.A_CONTENT_TYPE);
             // ZCS-11901: When A share's folder to B and B subsequent shares the file's from
             // A folder to C,
             // use actualOwnerAccountId i.e. accountId of A
             // this remains correct when file is shared from A to B , or from B to C
             String actualOwnerAccountId = request.getAttribute(MailConstants.A_REMOTE_ID);
-            long size = request.getAttributeLong(MailConstants.A_SIZE);
+            String fileName = request.getAttribute(MailConstants.A_CONTENT_FILENAME, "");
+            int ownerFileId = request.getAttributeInt(MailConstants.A_ITEMID, -1);
+            String fileUUID = request.getAttribute(MailConstants.A_REMOTE_UUID, "");
+            String fileOwnerName = request.getAttribute(MailConstants.A_OWNER_NAME, "");
+            String rights = request.getAttribute(MailConstants.A_RIGHTS, "");
+            String contentType = request.getAttribute(MailConstants.A_CONTENT_TYPE, "");
+            long size = request.getAttributeLong(MailConstants.A_SIZE, -1);
             Element response = zsc.createElement(MailConstants.FILE_SHARED_WITH_ME_RESPONSE);
             if (Provisioning.onLocalServer(account)) {
                 // if file is shared, this file should be available at receivers end
                 if (action != null && CREATE.equals(action)) {
                     mbox.createFileSharedWithMe(mbox, octxt, FolderConstants.ID_FOLDER_FILE_SHARED_WITH_ME, fileName,
+
                             actualOwnerAccountId, ownerFileId, fileUUID, fileOwnerName, contentType, size, rights);
-                } // if file access is revoked at source, delete it from receiver end as well
+                } // if file access is revoked/deleted at source, delete it from receiver end as well
                 else if (action != null && REVOKE.equals(action)) {
                     mbox.deleteFileSharedWithMe(mbox, octxt, fileUUID, ownerFileId, actualOwnerAccountId, granteeAccountID);
                 } // if file rights is changed, update file permission accordingly

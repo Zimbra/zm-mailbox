@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.client.ZFolder;
@@ -42,13 +45,18 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.datasource.imap.ImapFolder;
 import com.zimbra.cs.datasource.imap.ImapFolderCollection;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -61,9 +69,12 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.message.FileSharedWithMeRequest;
+import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
 
 /**
  * @since May 29, 2005
@@ -200,6 +211,11 @@ public class ItemAction extends MailDocumentHandler {
                 localResults = ItemActionHelper.DUMPSTER_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
             } else if (opStr.equals(MailConstants.OP_TRASH)) {
                 localResults = handleTrashOperation(octxt, request, mbox, responseProto, local, type, tcon);
+                try {
+                    handleTrashOperationForSharedFile(octxt, mbox, local, type, context);
+                } catch (ServiceException | MessagingException e) {
+                    throw ServiceException.FAILURE("Error performing handleTrashOperationForSharedFile", e);
+                }
             } else if (opStr.equals(MailConstants.OP_MOVE)) {
                 localResults = handleMoveOperation(zsc, octxt, request, action, mbox, responseProto, local, type, tcon);
             } else if (opStr.equals(MailConstants.OP_COPY)) {
@@ -376,6 +392,58 @@ public class ItemAction extends MailDocumentHandler {
             trashResults.setSuccessIds(reconstructedIds);
         }
         return trashResults;
+    }
+
+    /**
+     * @param octxt
+     * @param mbox
+     * @param local
+     * @param type
+     * @param context
+     * @throws ServiceException
+     * @throws MessagingException Method to delete the files on sharer side when
+     *                            owner file is deleted also notify user that file
+     *                            access has been revoked
+     */
+    protected void handleTrashOperationForSharedFile(OperationContext octxt, Mailbox mbox, List<Integer> local,
+            MailItem.Type type, Map<String, Object> context) throws ServiceException, MessagingException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account authAccount = getAuthenticatedAccount(zsc);
+        Account account = getRequestedAccount(zsc);
+        MailItem[] items = mbox.getItemById(octxt, local, MailItem.Type.UNKNOWN);
+        SendShareNotification sendNotification = new SendShareNotification();
+        for (MailItem item : items) {
+            if (item instanceof Document && item.getACL() != null) {
+                for (Grant grant : item.getACL().getGrants()) {
+                    // form shareinfodata object to send file revoke notification email to each grantee
+                    ShareInfoData sr = new ShareInfoData();
+                    sr.setOwnerAcctId(item.getAccountId());
+                    sr.setOwnerAcctEmail(mbox.getAccount().getMail());
+                    sr.setOwnerAcctDisplayName(mbox.getAccount().getDisplayName() == null ? mbox.getAccount().getMail()
+                            : mbox.getAccount().getDisplayName());
+                    sr.setItemId(item.getId());
+                    sr.setItemUuid(item.getUuid());
+                    sr.setPath(item.getPath());
+                    sr.setFolderDefaultView(Type.DOCUMENT);
+                    sr.setGranteeType(ACL.GRANTEE_USER);
+                    // get grantee account email to whom notification email needs to be sent
+                    Account granteeAccount = Provisioning.getInstance().getAccount(grant.getGranteeId());
+                    sr.setGranteeId(grant.getGranteeId());
+                    sr.setGranteeName(granteeAccount.getName());
+                    MimeMessage mm = sendNotification.generateShareNotification(authAccount, account, sr, null, Action.revoke, null,
+                            null, true);
+                    mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
+                    FileSharedWithMeRequest req = new FileSharedWithMeRequest();
+                    // revoking access for shared file from sharee as the file from sharer is deleted.
+                    req.setAction("revoke");
+                    req.setOwnerFileId(item.getId()); // fileId
+                    req.setFileUUID(item.getUuid()); // fileUUid
+                    req.setOwnerAccountId(item.getAccountId()); // remote account Id
+                    Element request = JaxbUtil.jaxbToElement(req);
+                    proxyRequest(request, context, grant.getGranteeId());
+                }
+            }
+        }
     }
 
     protected ItemActionResult handleMoveOperation(ZimbraSoapContext zsc, OperationContext octxt,
