@@ -1517,6 +1517,13 @@ public final class LC {
     // Storage Management
     public final static KnownKey zimbra_sm_blob_mover_parallelism_level = KnownKey.newKey(5);
     public final static KnownKey zimbra_s3_connection_request_timeout_ms = KnownKey.newKey(20000);
+
+    // ZBUG-2547 : zimbra_strict_unclosed_comment_tag if this is false we relax rule
+    // of allowing unclosed tag based on zimbra_skip_tags_with_unclosed_cdata value
+    // zimbra_skip_tags_with_unclosed_cdata : Set values , based on this tags would be checked for closed comment
+    public static final KnownKey zimbra_strict_unclosed_comment_tag = KnownKey.newKey(true);
+    public static final KnownKey zimbra_skip_tags_with_unclosed_cdata = KnownKey.newKey("style");
+
     
     static {
         // Automatically set the key name with the variable name.
