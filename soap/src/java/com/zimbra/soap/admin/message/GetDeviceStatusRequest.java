@@ -283,11 +283,6 @@ public class GetDeviceStatusRequest {
         return this;
     }
 
-    public GetDeviceStatusRequest setNotificationEmail(Boolean notificationEmail){
-        this.notificationEmail = notificationEmail.toString();
-        return this;
-    }
-
     public void setDeviceSyncVersion(String deviceSyncVersion) {
         this.deviceSyncVersion = deviceSyncVersion;
     }
