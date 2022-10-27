@@ -98,11 +98,18 @@ public class FileSharedWithMeRequest {
     @XmlElement(name = MailConstants.A_REMOTE_ID, required = true)
     private String ownerAccountId;
 
+    /**
+     * @zm-api-field-tag date
+     * @zm-api-field-description Actual file modified date
+     */
+    @XmlElement(name = MailConstants.A_DATE, required = true)
+    private Long date;
+
     public FileSharedWithMeRequest() {
     }
 
     public FileSharedWithMeRequest(String action, String granteeId, String fileName, String ownerAccountId,
-            int ownerFileId, String fileUUID, String fileOwnerName, String rights, String contentType, long size) {
+            int ownerFileId, String fileUUID, String fileOwnerName, String rights, String contentType, long size, long date) {
         super();
         this.action = action;
         this.fileName = fileName;
@@ -113,6 +120,7 @@ public class FileSharedWithMeRequest {
         this.contentType = contentType;
         this.size = size;
         this.ownerAccountId = ownerAccountId;
+        this.date = date;
     }
 
     public String getAction() {
@@ -185,6 +193,14 @@ public class FileSharedWithMeRequest {
 
     public void setOwnerAccountId(String ownerAccountId) {
         this.ownerAccountId = ownerAccountId;
+    }
+
+    public Long getDate() {
+        return date;
+    }
+
+    public void setDate(Long date) {
+        this.date = date;
     }
 
 }
