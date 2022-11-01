@@ -559,6 +559,7 @@ public class Notification implements LmtpCallback {
             out = new MimeMessage(smtpSession, is);
             InternetAddress address = new JavaMailInternetAddress(destination);
             out.setRecipient(javax.mail.Message.RecipientType.TO, address);
+            out.setSentDate(new Date());
         } else {
             out = new ZMimeMessage(smtpSession);
 

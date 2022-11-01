@@ -128,6 +128,7 @@ public class SpamHandler {
 
         out.setRecipient(javax.mail.Message.RecipientType.TO, sr.reportRecipient);
         out.setEnvelopeFrom(config.getSpamReportEnvelopeFrom());
+        out.setSentDate(new Date());
         out.setSubject(config.getSpamTrainingSubjectPrefix() + " " + sr.accountName + ": " + isSpamString);
         Transport.send(out);
 
