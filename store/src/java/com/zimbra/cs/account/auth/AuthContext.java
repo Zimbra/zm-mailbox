@@ -34,6 +34,21 @@ public class AuthContext {
     public static final String AC_REMOTE_IP = "remoteip";
 
     /*
+     * Port as seen from ZimbraSoapContext in: 
+     * zm-mailbox/store/src/java/com/zimbra/cs/service/admin/Auth.java
+     * Present in context for SOAP (web-UI and SMTP authentication)
+     *
+     * To be used with ZimbraCustomAuth extensions to distinguish 
+     * between SMTP and web-UI authentication. 
+     *
+     * Example this is true for an SMTP auth request:
+     * if (context.get("soapport").equals(account.getServer().getMtaAuthPort()))
+     *
+     * type: Integer
+     */
+    public static final String AC_SOAP_PORT = "soapport";
+
+    /*
      * Account name passed in to the interface.
      * Present in context for SOAP and http basic authentication.
      *
