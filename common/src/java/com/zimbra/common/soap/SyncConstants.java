@@ -150,4 +150,8 @@ public final class SyncConstants {
     public static final Integer ITEMOPERATIONS_STATUS_CREDENTIALS_REQUIRED = 18;
     public static final Integer ITEMOPERATIONS_STATUS_ELEMENT_MISSING = 155;
     public static final Integer ITEMOPERATIONS_STATUS_ACTION_NOT_SUPPORTED = 156;
+
+    // ZimbraSync Commands
+    public static final String ZIMBRASYNC_CMD_SEND_MAIL = "SendMail";
+    public static final String ZIMBRASYNC_CMD_MOVE_ITEMS = "MoveItems";
 }
