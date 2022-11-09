@@ -197,7 +197,6 @@ public final class SyncUtil {
         } catch (MessagingException mex) {
             error = new MailSender.SafeMessagingException(mex);
         }
-
         if (error != null) {
             ZimbraLog.mailbox.warn("Unable to send notification report email to " + toStrs.toString() +
                             ", subject = " + subject,
