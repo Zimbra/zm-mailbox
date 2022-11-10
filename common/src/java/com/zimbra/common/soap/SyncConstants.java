@@ -108,6 +108,7 @@ public final class SyncConstants {
     public static final String A_SHOWITEM = "showItems";
     public static final String A_OFFSET = "offset";
     public static final String A_LIMIT = "limit";
+    public static final String A_GET_ALL = "getAll";
     public static final String A_FILTERDEVICESBYAND = "filterDevicesByAnd";
     public static final String A_ADMIN = "Admin";
     public static final String A_USER = "User";
