@@ -2690,7 +2690,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="512" name="zimbraBackupMode" type="enum" value="Standard,Auto-Grouped" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>Auto-Grouped</globalConfigValue>
+  <globalConfigValue>Standard</globalConfigValue>
   <desc>backup mode</desc>
 </attr>
 
