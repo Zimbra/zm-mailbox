@@ -5553,11 +5553,11 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [Standard, Auto-Grouped]
      *
-     * @return zimbraBackupMode, or ZAttrProvisioning.BackupMode.Auto_Grouped if unset and/or has invalid value
+     * @return zimbraBackupMode, or ZAttrProvisioning.BackupMode.Standard if unset and/or has invalid value
      */
     @ZAttr(id=512)
     public ZAttrProvisioning.BackupMode getBackupMode() {
-        try { String v = getAttr(Provisioning.A_zimbraBackupMode, true, true); return v == null ? ZAttrProvisioning.BackupMode.Auto_Grouped : ZAttrProvisioning.BackupMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.BackupMode.Auto_Grouped; }
+        try { String v = getAttr(Provisioning.A_zimbraBackupMode, true, true); return v == null ? ZAttrProvisioning.BackupMode.Standard : ZAttrProvisioning.BackupMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.BackupMode.Standard; }
     }
 
     /**
@@ -5565,11 +5565,11 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [Standard, Auto-Grouped]
      *
-     * @return zimbraBackupMode, or "Auto-Grouped" if unset
+     * @return zimbraBackupMode, or "Standard" if unset
      */
     @ZAttr(id=512)
     public String getBackupModeAsString() {
-        return getAttr(Provisioning.A_zimbraBackupMode, "Auto-Grouped", true);
+        return getAttr(Provisioning.A_zimbraBackupMode, "Standard", true);
     }
 
     /**
