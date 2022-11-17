@@ -382,14 +382,14 @@ public class PreAuthServlet extends ZimbraServlet {
 
             // ZBUG-3105: we are allowing redirectURL only from zimbraPublicServiceHostname and
             // also url from zimbra_allowed_redirect_url
-            ZimbraLog.account.info("redirectURL: %s received for user account: %s", redirectURL, acct.getId());
+            ZimbraLog.account.debug("redirectURL: %s received for user account: %s", redirectURL, acct.getName());
             if ((!StringUtil.isNullOrEmpty(publicURLForDomain) && redirectURL.startsWith(publicURLForDomain))
                     || (!StringUtil.isNullOrEmpty(zimbraAllowedRedirectURL)
                             && redirectURL.startsWith(zimbraAllowedRedirectURL))) {
                 resp.sendRedirect(redirectURL);
             } else {
-                ZimbraLog.account.error("Invalid redirectURL received for user account: %s", acct.getId());
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URL " + redirectURL);
+                ZimbraLog.account.warn("Invalid redirectURL received for user account: %s", acct.getName());
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }
         } else {
             StringBuilder sb = new StringBuilder();
