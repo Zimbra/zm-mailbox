@@ -1494,6 +1494,8 @@ public final class LC {
     public static final KnownKey zimbra_strict_unclosed_comment_tag = KnownKey.newKey(true);
     public static final KnownKey zimbra_skip_tags_with_unclosed_cdata = KnownKey.newKey("style");
 
+    // ZBUG-3105: zimbra_allowed_redirect_url is a url that allows in preauth redirectURL
+    public static final KnownKey zimbra_allowed_redirect_url = KnownKey.newKey("");
     
     static {
         // Automatically set the key name with the variable name.

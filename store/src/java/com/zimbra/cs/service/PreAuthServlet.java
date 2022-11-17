@@ -38,8 +38,9 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -160,7 +161,7 @@ public class PreAuthServlet extends ZimbraServlet {
 
                     authToken.setCsrfTokenEnabled(true); // ZBUG-2662
                     // no need to redirect to the correct server, just send them off to do business
-                    setCookieAndRedirect(req, resp, authToken);
+                    setCookieAndRedirect(req, resp, authToken, acct);
                 } else {
                     // redirect to the correct server with the incoming auth token
                     // we no longer send the auth token we generate over when we redirect to the correct server,
@@ -252,8 +253,7 @@ public class PreAuthServlet extends ZimbraServlet {
                         at = (expires ==  0) ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
 
                     at.setCsrfTokenEnabled(true); // ZBUG-2662
-                    setCookieAndRedirect(req, resp, at);
-
+                    setCookieAndRedirect(req, resp, at, acct);
                 } else {
                     // redirect to the correct server.
                     // Note: we do not send over the generated auth token (the auth token param passed to
@@ -329,14 +329,13 @@ public class PreAuthServlet extends ZimbraServlet {
             // send all incoming params over
             addQueryParams(req, sb, false, false);
         }
-
         resp.sendRedirect(sb.toString());
     }
 
     private static final String DEFAULT_MAIL_URL = "/zimbra";
     private static final String DEFAULT_ADMIN_URL = "/zimbraAdmin";
 
-    private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws IOException, ServiceException {
+    private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken, Account acct) throws IOException, ServiceException {
         boolean isAdmin = AuthToken.isAnyAdmin(authToken);
         boolean secureCookie = req.getScheme().equals("https");
         authToken.encode(resp, isAdmin, secureCookie);
@@ -372,7 +371,26 @@ public class PreAuthServlet extends ZimbraServlet {
         }
 
         if (redirectURL != null) {
-            resp.sendRedirect(redirectURL);
+            Provisioning prov = Provisioning.getInstance();
+            Server server = prov.getServer(acct);
+            Domain domain = prov.getDomain(acct);
+            String publicURLForDomain = null;
+            if (server != null) {
+                publicURLForDomain = URLUtil.getPublicURLForDomain(server, domain, "", true);
+            }
+            String zimbraAllowedRedirectURL = LC.zimbra_allowed_redirect_url.value();
+
+            // ZBUG-3105: we are allowing redirectURL only from zimbraPublicServiceHostname and
+            // also url from zimbra_allowed_redirect_url
+            ZimbraLog.account.info("redirectURL: %s received for user account: %s", redirectURL, acct.getId());
+            if ((!StringUtil.isNullOrEmpty(publicURLForDomain) && redirectURL.startsWith(publicURLForDomain))
+                    || (!StringUtil.isNullOrEmpty(zimbraAllowedRedirectURL)
+                            && redirectURL.startsWith(zimbraAllowedRedirectURL))) {
+                resp.sendRedirect(redirectURL);
+            } else {
+                ZimbraLog.account.error("Invalid redirectURL received for user account: %s", acct.getId());
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URL " + redirectURL);
+            }
         } else {
             StringBuilder sb = new StringBuilder();
             addQueryParams(req, sb, true, true);
@@ -398,6 +416,5 @@ public class PreAuthServlet extends ZimbraServlet {
             }
         }
     }
-
 
 }
