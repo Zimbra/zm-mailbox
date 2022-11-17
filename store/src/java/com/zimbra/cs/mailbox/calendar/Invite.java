@@ -163,6 +163,63 @@ public class Invite {
         setRecurId(recurrenceId);
     }
 
+    Invite(MailItem.Type type, String methodStr, TimeZoneMap tzmap, CalendarItem calItem, String uid, String status,
+           String priority, String pctComplete, long completed, String freebusy, String transp, String classProp,
+           ParsedDateTime start, ParsedDateTime end, ParsedDuration duration, Recurrence.IRecurrence recurrence,
+           boolean isOrganizer, ZOrganizer org, List<ZAttendee> attendees, String name, String operationType, String tagColour,
+           String loc, int flags, String partStat, Boolean rsvp, RecurId recurrenceId, long dtstamp, long lastModified,
+           int seqno, int lastFullSeqno, int mailboxId, int mailItemId, int componentNum, boolean sentByMe,
+           String description, String descHtml, String fragment, List<String> comments, List<String> categories,
+           List<String> contacts, Geo geo, String url) {
+        setItemType(type);
+        mMethod = lookupMethod(methodStr);
+        mTzMap = tzmap;
+        mCalItem = calItem;
+        mUid = uid;
+        mStatus = status;
+        mPriority = priority;
+        mPercentComplete = pctComplete;
+        mCompleted = completed;
+        mFreeBusy = freebusy;
+        mTransparency = transp;
+        mClass = classProp;
+        mClassSetByMe = sentByMe;
+        mStart = start;
+        mEnd = end;
+        mDuration = duration;
+        mIsOrganizer = isOrganizer;
+        mOrganizer = org;
+        mAttendees = attendees;
+        mName = name != null ? name : "";
+        mOpType = operationType;
+        mTagColour = tagColour;
+        mLocation = loc != null ? loc : "";
+        mFlags = flags;
+        mPartStat = partStat;
+        mRsvp = rsvp;
+        mSeqNo = seqno;
+        // bug 74117 : mLastSeqNo contains the sequence number for which invitation is sent to all the attendees.
+        // This will be used when accepting the replies.
+        mLastFullSeqNo = lastFullSeqno;
+        setDtStamp(dtstamp);
+        setLastModified(lastModified);
+
+        mMailboxId = mailboxId;
+        mMailItemId = mailItemId;
+        mComponentNum = componentNum;
+        mSentByMe = sentByMe;
+        setDescription(description, descHtml);
+        mFragment = fragment != null ? fragment : "";
+        mComments = comments != null ? comments : new ArrayList<String>();
+        mCategories = categories != null ? categories : new ArrayList<String>();
+        mContacts = contacts != null ? contacts : new ArrayList<String>();
+        mGeo = geo;
+        setUrl(url);
+
+        setRecurrence(recurrence);
+        setRecurId(recurrenceId);
+    }
+
     private Recurrence.IRecurrence mRecurrence;
     public Recurrence.IRecurrence getRecurrence() { return mRecurrence; }
     public void setRecurrence(Recurrence.IRecurrence recur) {
@@ -278,6 +335,8 @@ public class Invite {
     private static final String FN_LAST_MODIFIED   = "lastMod";
     private static final String FN_METHOD          = "mthd";
     private static final String FN_NAME            = "n";
+    private static final String FN_OPERATION_TYPE  = "op";
+    private static final String FN_TAG_COLOUR      = "tn";
     private static final String FN_NUM_ATTENDEES   = "numAt";
     private static final String FN_NUM_CATEGORIES  = "numCat";
     private static final String FN_NUM_COMMENTS    = "numCmt";
@@ -357,6 +416,9 @@ public class Invite {
         }
 
         meta.put(FN_NAME, inv.getName());
+        meta.put(FN_OPERATION_TYPE, inv.getOperationType());
+        meta.put(FN_TAG_COLOUR, inv.getTagColour());
+
 
         meta.put(FN_LOCATION, inv.mLocation);
         meta.put(FN_APPT_FLAGS, inv.getFlags());
@@ -579,6 +641,10 @@ public class Invite {
         String name = meta.get(FN_NAME, "");
         String loc = meta.get(FN_LOCATION, null);
 
+        // Tag related data
+        String opType = meta.get(FN_OPERATION_TYPE, null);
+        String tagCol = meta.get(FN_TAG_COLOUR, null);
+
         // For existing invites with no partstat, default to ACCEPTED status.
         String partStat = meta.get(FN_PARTSTAT, IcalXmlStrMap.PARTSTAT_ACCEPTED);
         // For existing invites with no RSVP, default to true.
@@ -673,7 +739,7 @@ public class Invite {
 
         Invite invite = new Invite(type, methodStr, tzMap, calItem, uid, status, priority, pctComplete, completed,
                 freebusy, transp, classProp, dtStart, dtEnd, duration, recurrence, isOrganizer, org, attendees, name,
-                loc, flags, partStat, rsvp, recurrenceId, dtstamp, lastModified,
+                opType, tagCol, loc, flags, partStat, rsvp, recurrenceId, dtstamp, lastModified,
                 seqno, lastFullSeqno, mailboxId, mailItemId, componentNum, sentByMe,
                 desc, descHtml, fragment, comments, categories, contacts, geo, url);
         invite.mDescInMeta = descInMeta;  // a little hacky, but necessary
@@ -989,6 +1055,13 @@ public class Invite {
     public void setUid(String uid) { mUid = uid; }
     public String getName() { return mName; };
     public void setName(String name) { mName = name; }
+
+    public String getOperationType() { return mOpType; };
+    public void setOperationType(String op) { mOpType = op; }
+
+    public String getTagColour() { return mTagColour; };
+    public void setTagColour(String tagColour) { mTagColour = tagColour; }
+
     public String getStatus() { return mStatus; }
     public void setStatus(String status) { mStatus = status; }
     public boolean hasFreeBusy() { return mFreeBusy != null; }
@@ -1299,6 +1372,10 @@ public class Invite {
     protected long mCompleted = 0;  // COMPLETED DATE-TIME of VTODO
 
     protected String mName; /* name of the invite, aka "subject" */
+
+    protected String mOpType; /* name of the operationType, aka "op" */
+    protected String mTagColour; /* name of the colour, aka "tn" */
+
     protected String mLocation;
     protected int mFlags = APPT_FLAG_EVENT;
     protected long mDTStamp = 0;

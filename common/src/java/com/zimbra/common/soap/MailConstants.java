@@ -856,6 +856,10 @@ public final class MailConstants {
     // messages
     public static final String E_MIMEPART = "mp";
     public static final String E_SUBJECT = "su";
+
+    public static final String E_OPERATION_TYPE = "op";
+    public static final String E_TAG_COLOUR = "tn";
+
     public static final String E_FRAG = "fr";
     public static final String E_MSG_ID_HDR = "mid";
     public static final String E_IN_REPLY_TO = "irt";

@@ -2237,6 +2237,8 @@ public final class ToXML {
                 }
                 e.addAttribute(MailConstants.A_NAME, invite.getName());
                 e.addAttribute(MailConstants.A_CAL_LOCATION, invite.getLocation());
+                e.addAttribute(MailConstants.E_OPERATION_TYPE, invite.getOperationType());
+                e.addAttribute(MailConstants.E_TAG_COLOUR, invite.getTagColour());
 
                 List<String> categories = invite.getCategories();
                 if (categories != null) {
