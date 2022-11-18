@@ -30675,6 +30675,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @return zimbraMailSieveScriptMaxSize, or 0 if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public long getMailSieveScriptMaxSize() {
+        return getLongAttr(Provisioning.A_zimbraMailSieveScriptMaxSize, 0L, true);
+    }
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @param zimbraMailSieveScriptMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public void setMailSieveScriptMaxSize(long zimbraMailSieveScriptMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScriptMaxSize, Long.toString(zimbraMailSieveScriptMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @param zimbraMailSieveScriptMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public Map<String,Object> setMailSieveScriptMaxSize(long zimbraMailSieveScriptMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScriptMaxSize, Long.toString(zimbraMailSieveScriptMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public void unsetMailSieveScriptMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScriptMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public Map<String,Object> unsetMailSieveScriptMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScriptMaxSize, "");
+        return attrs;
+    }
+
+    /**
      * In our web app, AJAX and standard html client, we have support for
      * adding the HTTP client IP address as X-Originating-IP in an outbound
      * message. We also use the HTTP client IP address in our logging. In the
