@@ -746,6 +746,7 @@ public final class MailConstants {
     public static final String A_PASSWORD = "pw";
     public static final String A_ACCESSKEY = "key";
     public static final String A_EXPIRY = "expiry";
+    public static final String A_SHARED_FILE_ID = "sfid";
 
     // account ACLs
     public static final String E_ACE = "ace";
