@@ -91,6 +91,13 @@ public class FileSharedWithMeRequest {
     @XmlElement(name = MailConstants.A_SIZE, required = true)
     private long size;
 
+    /**
+     * @zm-api-field-tag ownerAccountId
+     * @zm-api-field-description Remote account owner ID
+     */
+    @XmlElement(name = MailConstants.A_REMOTE_ID, required = true)
+    private String ownerAccountId;
+
     public FileSharedWithMeRequest() {
     }
 
@@ -105,6 +112,7 @@ public class FileSharedWithMeRequest {
         this.rights = rights;
         this.contentType = contentType;
         this.size = size;
+        this.ownerAccountId = ownerAccountId;
     }
 
     public String getAction() {
@@ -169,6 +177,14 @@ public class FileSharedWithMeRequest {
 
     public void setSize(long size) {
         this.size = size;
+    }
+
+    public String getOwnerAccountId() {
+        return ownerAccountId;
+    }
+
+    public void setOwnerAccountId(String ownerAccountId) {
+        this.ownerAccountId = ownerAccountId;
     }
 
 }

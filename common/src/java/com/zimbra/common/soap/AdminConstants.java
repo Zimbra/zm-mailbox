@@ -16,10 +16,11 @@
  */
 package com.zimbra.common.soap;
 
-import java.util.Arrays;
-import java.util.List;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
+
+import java.util.Arrays;
+import java.util.List;
 
 public final class AdminConstants {
 
@@ -535,16 +536,6 @@ public final class AdminConstants {
     // Skins
     public static final String E_GET_ALL_SKINS_REQUEST = "GetAllSkinsRequest";
     public static final String E_GET_ALL_SKINS_RESPONSE = "GetAllSkinsResponse";
-    
-    // Sending Emails
-    public static final String E_SEND_MDM_NOTIFICATION_EMAIL_REQUEST = "SendMdmNotificationEmailRequest";
-    public static final String E_SEND_MDM_NOTIFICATION_EMAIL_RESPONSE = "SendMdmNotificationEmailResponse";
-    
-    // Active Sync
-    public static final QName SEND_MDM_NOTIFICATION_EMAIL_REQUEST = QName.get(E_SEND_MDM_NOTIFICATION_EMAIL_REQUEST, NAMESPACE);
-    public static final QName SEND_MDM_NOTIFICATION_EMAIL_RESPONSE = QName.get(E_SEND_MDM_NOTIFICATION_EMAIL_RESPONSE, NAMESPACE);
-
-
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
     public static final QName CHECK_HEALTH_REQUEST = QName.get(E_CHECK_HEALTH_REQUEST, NAMESPACE);
@@ -1594,12 +1585,16 @@ public final class AdminConstants {
     // Global External Store Config
     public static final String E_GET_S3_BUCKET_CONFIG_REQUEST = "GetS3BucketConfigRequest";
     public static final String E_GET_S3_BUCKET_CONFIG_RESPONSE = "GetS3BucketConfigResponse";
+    public static final String E_EDIT_S3_BUCKET_CONFIG_REQUEST = "EditS3BucketConfigRequest";
+    public static final String E_EDIT_S3_BUCKET_CONFIG_RESPONSE = "EditS3BucketConfigResponse";
     public static final String E_CREATE_S3_BUCKET_CONFIG_REQUEST = "CreateS3BucketConfigRequest";
     public static final String E_CREATE_S3_BUCKET_CONFIG_RESPONSE = "CreateS3BucketConfigResponse";
     public static final String E_DELETE_S3_BUCKET_CONFIG_REQUEST = "DeleteS3BucketConfigRequest";
     public static final String E_DELETE_S3_BUCKET_CONFIG_RESPONSE = "DeleteS3BucketConfigResponse";
     public static final QName GET_S3_BUCKET_CONFIG_REQUEST = QName.get(E_GET_S3_BUCKET_CONFIG_REQUEST, NAMESPACE);
     public static final QName GET_S3_BUCKET_CONFIG_RESPONSE = QName.get(E_GET_S3_BUCKET_CONFIG_RESPONSE, NAMESPACE);
+    public static final QName EDIT_S3_BUCKET_CONFIG_REQUEST = QName.get(E_EDIT_S3_BUCKET_CONFIG_REQUEST, NAMESPACE);;
+    public static final QName EDIT_S3_BUCKET_CONFIG_RESPONSE = QName.get(E_EDIT_S3_BUCKET_CONFIG_RESPONSE, NAMESPACE);
     public static final QName CREATE_S3_BUCKET_CONFIG_REQUEST = QName.get(E_CREATE_S3_BUCKET_CONFIG_REQUEST, NAMESPACE);
     public static final QName CREATE_S3_BUCKET_CONFIG_RESPONSE = QName.get(E_CREATE_S3_BUCKET_CONFIG_RESPONSE, NAMESPACE);
     public static final QName DELETE_S3_BUCKET_CONFIG_REQUEST = QName.get(E_DELETE_S3_BUCKET_CONFIG_REQUEST, NAMESPACE);
@@ -1610,7 +1605,7 @@ public final class AdminConstants {
     public static final String E_VALIDATE_S3_BUCKET_REACHABLE_RESPONSE = "ValidateS3BucketReachableResponse";
     public static final QName VALIDATE_S3_BUCKET_REACHABLE_REQUEST = QName.get(E_VALIDATE_S3_BUCKET_REACHABLE_REQUEST, NAMESPACE);
     public static final QName VALIDATE_S3_BUCKET_REACHABLE_RESPONSE = QName.get(E_VALIDATE_S3_BUCKET_REACHABLE_RESPONSE, NAMESPACE);
-    
+
     // Removed Zetras zimlet package list
     public static final List<String> ZEXTRAS_PACKAGES_LIST = Arrays.asList("com_ng_auth", "com_zextras_zextras",
             "com_zextras_client", "com_zimbra_connect_classic", "com_zimbra_connect_modern", "com_zextras_docs",

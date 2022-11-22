@@ -3058,6 +3058,7 @@ throws ServiceException {
                 && doc.getOwnerFileId() != null) {
             m.addAttribute(MailConstants.A_ID, doc.getOwnerAccountId() + ":" + doc.getOwnerFileId()); // accountid:fileid
             m.addAttribute(MailConstants.A_RIGHTS, doc.getPermission());
+            m.addAttribute(MailConstants.A_SHARED_FILE_ID, doc.getId());
         } else {
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
         }

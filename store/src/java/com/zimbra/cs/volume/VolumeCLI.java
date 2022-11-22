@@ -333,11 +333,14 @@ public final class VolumeCLI extends SoapCLI {
         auth();
         GetVolumeResponse getVolumeResponse = JaxbUtil
                 .elementToJaxb(getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(getVolumeRequest)));
-        Volume.StoreType enumStoreType = (1 == getVolumeResponse.getVolume().getStoreType()) ? Volume.StoreType.INTERNAL
+        VolumeInfo respVolumeInfo = getVolumeResponse.getVolume();
+        Volume.StoreType enumStoreType = (1 == respVolumeInfo.getStoreType()) ? Volume.StoreType.INTERNAL
                 : Volume.StoreType.EXTERNAL;
-        VolumeInfo vol = new VolumeInfo();
-        validateEditCommand(vol, enumStoreType);
-        ModifyVolumeRequest req = new ModifyVolumeRequest(Short.parseShort(id), vol);
+        VolumeInfo volumeInfo = new VolumeInfo();
+        volumeInfo.setCompressBlobs(respVolumeInfo.isCompressBlobs());
+        volumeInfo.setCompressionThreshold(respVolumeInfo.getCompressionThreshold());
+        validateEditCommand(volumeInfo, enumStoreType);
+        ModifyVolumeRequest req = new ModifyVolumeRequest(Short.parseShort(id), volumeInfo);
         auth(auth);
         getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(req));
         System.out.println("Edited volume " + id);
@@ -376,7 +379,7 @@ public final class VolumeCLI extends SoapCLI {
      * @param volumeInfo, volStoreType
      * @throws ParseException
      */
-
+    
     private void validateEditCommand(VolumeInfo volumeInfo, Volume.StoreType volStoreType) throws ParseException {
         if (volStoreType.equals(Volume.StoreType.INTERNAL)) {
             if (!Strings.isNullOrEmpty(type)) {
@@ -389,7 +392,11 @@ public final class VolumeCLI extends SoapCLI {
                 volumeInfo.setCompressBlobs(Boolean.parseBoolean(compress));
             }
             if (!Strings.isNullOrEmpty(compressThreshold)) {
-                volumeInfo.setCompressionThreshold(Long.parseLong(compressThreshold));
+                if (volumeInfo.isCompressBlobs()) {
+                    volumeInfo.setCompressionThreshold(Long.parseLong(compressThreshold));
+                } else {
+                    throw new ParseException("compressThreshold cannot be edited when the compress option is disabled for the volume.");
+                }
             }
         } else if (volStoreType.equals(Volume.StoreType.EXTERNAL)) {
             if (!Strings.isNullOrEmpty(type)) {
