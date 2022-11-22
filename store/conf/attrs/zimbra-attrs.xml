@@ -10015,4 +10015,7 @@ TODO: delete them permanently from here
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Zimbra StoreManager runtime switching enabled </desc>
 </attr>
+<attr id="4023" name="zimbraHelpModernURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="10.0.0">
+	  <desc>Help URL for modern client</desc>
+</attr>
 </attrs>
