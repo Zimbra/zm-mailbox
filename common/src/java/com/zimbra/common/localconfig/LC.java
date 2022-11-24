@@ -403,6 +403,11 @@ public final class LC {
     @Supported
     public static final KnownKey ldap_starttls_required = KnownKey.newKey(true);
 
+    @Reloadable
+    public static final KnownKey clamav_socket_timeout = KnownKey.newKey(2000);
+    @Reloadable
+    public static final KnownKey clamav_scan_data_chunk_size = KnownKey.newKey(2048);
+
     @Supported
     public static final KnownKey zimbra_directory_max_search_result = KnownKey.newKey(5000);
 
