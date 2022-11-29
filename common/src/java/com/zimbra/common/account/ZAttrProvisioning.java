@@ -8142,7 +8142,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHelpDelegatedURL = "zimbraHelpDelegatedURL";
 
     /**
-     * help URL for standard client
+     * Help URL for modern client
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4023)
+    public static final String A_zimbraHelpModernURL = "zimbraHelpModernURL";
+
+    /**
+     * Deprecated since: 11.0.0. Zimbra help standard URL has been deprecated
+     * because standard client is removed from the product. Orig desc: help
+     * URL for standard client
      *
      * @since ZCS 5.0.7
      */

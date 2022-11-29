@@ -21282,7 +21282,81 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * help URL for standard client
+     * Help URL for modern client
+     *
+     * @return zimbraHelpModernURL, or null if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4023)
+    public String getHelpModernURL() {
+        return getAttr(Provisioning.A_zimbraHelpModernURL, null, true);
+    }
+
+    /**
+     * Help URL for modern client
+     *
+     * @param zimbraHelpModernURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4023)
+    public void setHelpModernURL(String zimbraHelpModernURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHelpModernURL, zimbraHelpModernURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Help URL for modern client
+     *
+     * @param zimbraHelpModernURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4023)
+    public Map<String,Object> setHelpModernURL(String zimbraHelpModernURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHelpModernURL, zimbraHelpModernURL);
+        return attrs;
+    }
+
+    /**
+     * Help URL for modern client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4023)
+    public void unsetHelpModernURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHelpModernURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Help URL for modern client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4023)
+    public Map<String,Object> unsetHelpModernURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHelpModernURL, "");
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 11.0.0. Zimbra help standard URL has been deprecated
+     * because standard client is removed from the product. Orig desc: help
+     * URL for standard client
      *
      * @return zimbraHelpStandardURL, or null if unset
      *
@@ -21294,7 +21368,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * help URL for standard client
+     * Deprecated since: 11.0.0. Zimbra help standard URL has been deprecated
+     * because standard client is removed from the product. Orig desc: help
+     * URL for standard client
      *
      * @param zimbraHelpStandardURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21309,7 +21385,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * help URL for standard client
+     * Deprecated since: 11.0.0. Zimbra help standard URL has been deprecated
+     * because standard client is removed from the product. Orig desc: help
+     * URL for standard client
      *
      * @param zimbraHelpStandardURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21325,7 +21403,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * help URL for standard client
+     * Deprecated since: 11.0.0. Zimbra help standard URL has been deprecated
+     * because standard client is removed from the product. Orig desc: help
+     * URL for standard client
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -21339,7 +21419,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * help URL for standard client
+     * Deprecated since: 11.0.0. Zimbra help standard URL has been deprecated
+     * because standard client is removed from the product. Orig desc: help
+     * URL for standard client
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

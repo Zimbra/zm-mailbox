@@ -3599,8 +3599,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>help URL for advanced client</desc>
 </attr>
 
-<attr id="677" name="zimbraHelpStandardURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
+<attr id="677" name="zimbraHelpStandardURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7" deprecatedSince="11.0.0">
   <desc>help URL for standard client</desc>
+  <deprecateDesc>Zimbra help standard URL has been deprecated because standard client is removed from the product</deprecateDesc>
 </attr>
 
 <attr id="678" name="zimbraPrefAdvancedClientEnforceMinDisplay" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
@@ -10048,4 +10049,9 @@ TODO: delete them permanently from here
     indexing         - Generate index
   </desc>
 </attr>
+
+<attr id="4023" name="zimbraHelpModernURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="11.0.0">
+  <desc>Help URL for modern client</desc>
+</attr>
+
 </attrs>
