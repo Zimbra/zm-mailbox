@@ -19,6 +19,8 @@ package com.zimbra.cs.filter;
 import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_VARIABLES;
 
 import java.io.IOException;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -43,7 +45,7 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.exception.SyntaxException;
-
+import org.apache.http.entity.ContentType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.sun.mail.smtp.SMTPMessage;
@@ -271,34 +273,37 @@ public final class FilterUtil {
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     public static final String HEADER_RETURN_PATH = "Return-Path";
     public static final String HEADER_AUTO_SUBMITTED = "Auto-Submitted";
+    public static final String DEFAULT_CONTENT_TYPE = "text/plain; charset=us-ascii";
 
     public static void redirect(OperationContext octxt, Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
     throws ServiceException {
         MimeMessage outgoingMsg;
 
         try {
-            if (!isMailLoop(sourceMbox, msg, new String[]{HEADER_FORWARDED})) {
+            if (!isMailLoop(sourceMbox, msg, new String[] { HEADER_FORWARDED })) {
                 outgoingMsg = new Mime.FixedMimeMessage(msg);
                 Mime.recursiveRepairTransferEncoding(outgoingMsg);
                 outgoingMsg.addHeader(HEADER_FORWARDED, sourceMbox.getAccount().getName());
+
+                // ZBUG-3064: validating the Content-Type and if it is not valid then according
+                // to rfc2045 it is also recommend that default
+                // Content-type(text/plain; charset=us-ascii) be assumed when a syntactically
+                // invalid Content-Type header field is encountered.
+                if (!isValidContentType(outgoingMsg.getHeader(HEADER_CONTENT_TYPE, null))) {
+                    outgoingMsg.removeHeader(HEADER_CONTENT_TYPE);
+                    outgoingMsg.addHeader(HEADER_CONTENT_TYPE, DEFAULT_CONTENT_TYPE);
+                }
                 outgoingMsg.saveChanges();
             } else {
                 String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(msg));
                 throw ServiceException.FAILURE(error, null);
             }
-        } catch (MessagingException e) {
+        } catch (MessagingException | IOException e) {
             try {
-                outgoingMsg = createRedirectMsgOnError(msg);
                 ZimbraLog.filter.info("Message format error detected.  Wrapper class in use.  %s", e.toString());
+                outgoingMsg = createRedirectMsgOnError(msg);
             } catch (MessagingException again) {
                 throw ServiceException.FAILURE("Message format error detected.  Workaround failed.", again);
-            }
-        } catch (IOException e) {
-            try {
-                outgoingMsg = createRedirectMsgOnError(msg);
-                ZimbraLog.filter.info("Message format error detected.  Wrapper class in use.  %s", e.toString());
-            } catch (MessagingException me) {
-                throw ServiceException.FAILURE("Message format error detected.  Workaround failed.", me);
             }
         }
 
@@ -326,6 +331,24 @@ public final class FilterUtil {
         } catch (MessagingException e) {
             ZimbraLog.filter.warn("Envelope sender will be set to the default value.", e);
         }
+    }
+
+    /**
+     * validating the Content-Type format
+     *
+     * @param contentType
+     * @return
+     */
+    private static boolean isValidContentType(String contentType) {
+        try {
+            if (contentType != null) {
+                ContentType.parse(contentType);
+                return true;
+            }
+        } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+            ZimbraLog.filter.error("Content-Type %s is not valid.", contentType, e);
+        }
+        return false;
     }
 
     private static boolean isDeliveryStatusNotification(MimeMessage msg)
