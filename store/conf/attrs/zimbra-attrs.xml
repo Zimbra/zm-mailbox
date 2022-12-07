@@ -10017,6 +10017,14 @@ TODO: delete them permanently from here
   <desc>Zimbra StoreManager runtime switching enabled </desc>
 </attr>
 
+<attr id="4024" name="domainAggrQuotaWarnMsgSubjectKey" type="string" cardinality="single" optionalIn="domain" since="11.0.0">
+  <desc>A key in ZsMsg.properties for a subject of a domain aggregate quota warning message. If it is not set, domainAggrQuotaWarnMsgSubject is used.</desc>
+</attr>
+
+<attr id="4025" name="domainAggrQuotaWarnMsgBodyKey" type="string" cardinality="single" optionalIn="domain" since="11.0.0">
+  <desc>A key in ZsMsg.properties for a body of a domain aggregate quota warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.</desc>
+</attr>
+
 <attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" requiredIn="globalConfig" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited" since="11.0.0">
   <globalConfigValue>0</globalConfigValue>
   <defaultCOSValue>0</defaultCOSValue>

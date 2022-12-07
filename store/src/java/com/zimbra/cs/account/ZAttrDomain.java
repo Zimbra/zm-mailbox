@@ -164,6 +164,165 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * A key in ZsMsg.properties for a body of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.
+     *
+     * @return domainAggrQuotaWarnMsgBodyKey, or null if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4025)
+    public String getDomainAggrQuotaWarnMsgBodyKey() {
+        return getAttr(Provisioning.A_domainAggrQuotaWarnMsgBodyKey, null, true);
+    }
+
+    /**
+     * A key in ZsMsg.properties for a body of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.
+     *
+     * @param domainAggrQuotaWarnMsgBodyKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4025)
+    public void setDomainAggrQuotaWarnMsgBodyKey(String domainAggrQuotaWarnMsgBodyKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_domainAggrQuotaWarnMsgBodyKey, domainAggrQuotaWarnMsgBodyKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A key in ZsMsg.properties for a body of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.
+     *
+     * @param domainAggrQuotaWarnMsgBodyKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4025)
+    public Map<String,Object> setDomainAggrQuotaWarnMsgBodyKey(String domainAggrQuotaWarnMsgBodyKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_domainAggrQuotaWarnMsgBodyKey, domainAggrQuotaWarnMsgBodyKey);
+        return attrs;
+    }
+
+    /**
+     * A key in ZsMsg.properties for a body of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4025)
+    public void unsetDomainAggrQuotaWarnMsgBodyKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_domainAggrQuotaWarnMsgBodyKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A key in ZsMsg.properties for a body of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4025)
+    public Map<String,Object> unsetDomainAggrQuotaWarnMsgBodyKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_domainAggrQuotaWarnMsgBodyKey, "");
+        return attrs;
+    }
+
+    /**
+     * A key in ZsMsg.properties for a subject of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgSubject is
+     * used.
+     *
+     * @return domainAggrQuotaWarnMsgSubjectKey, or null if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4024)
+    public String getDomainAggrQuotaWarnMsgSubjectKey() {
+        return getAttr(Provisioning.A_domainAggrQuotaWarnMsgSubjectKey, null, true);
+    }
+
+    /**
+     * A key in ZsMsg.properties for a subject of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgSubject is
+     * used.
+     *
+     * @param domainAggrQuotaWarnMsgSubjectKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4024)
+    public void setDomainAggrQuotaWarnMsgSubjectKey(String domainAggrQuotaWarnMsgSubjectKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_domainAggrQuotaWarnMsgSubjectKey, domainAggrQuotaWarnMsgSubjectKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A key in ZsMsg.properties for a subject of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgSubject is
+     * used.
+     *
+     * @param domainAggrQuotaWarnMsgSubjectKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4024)
+    public Map<String,Object> setDomainAggrQuotaWarnMsgSubjectKey(String domainAggrQuotaWarnMsgSubjectKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_domainAggrQuotaWarnMsgSubjectKey, domainAggrQuotaWarnMsgSubjectKey);
+        return attrs;
+    }
+
+    /**
+     * A key in ZsMsg.properties for a subject of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgSubject is
+     * used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4024)
+    public void unsetDomainAggrQuotaWarnMsgSubjectKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_domainAggrQuotaWarnMsgSubjectKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * A key in ZsMsg.properties for a subject of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgSubject is
+     * used.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4024)
+    public Map<String,Object> unsetDomainAggrQuotaWarnMsgSubjectKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_domainAggrQuotaWarnMsgSubjectKey, "");
+        return attrs;
+    }
+
+    /**
      * Zimbra access control list
      *
      * @return zimbraACE, or empty array if unset

@@ -2732,6 +2732,25 @@ public class ZAttrProvisioning {
     public static final String A_displayName = "displayName";
 
     /**
+     * A key in ZsMsg.properties for a body of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4025)
+    public static final String A_domainAggrQuotaWarnMsgBodyKey = "domainAggrQuotaWarnMsgBodyKey";
+
+    /**
+     * A key in ZsMsg.properties for a subject of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgSubject is
+     * used.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4024)
+    public static final String A_domainAggrQuotaWarnMsgSubjectKey = "domainAggrQuotaWarnMsgSubjectKey";
+
+    /**
      * RFC2256: Facsimile (Fax) Telephone Number
      */
     @ZAttr(id=-1)
