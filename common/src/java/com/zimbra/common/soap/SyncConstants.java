@@ -157,4 +157,7 @@ public final class SyncConstants {
     public static final String ZIMBRASYNC_CMD_MOVE_ITEMS = "MoveItems";
     public static final String ZIMBRASYNC_CMD_SMART_REPLY = "SmartReply";
     public static final String ZIMBRASYNC_CMD_SMART_FORWARD = "SmartForward";
+    
+    // App specific
+    public static final String BOXER_APP = "Boxer";
 }
