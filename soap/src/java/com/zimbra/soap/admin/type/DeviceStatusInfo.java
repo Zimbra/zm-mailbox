@@ -18,13 +18,13 @@
 package com.zimbra.soap.admin.type;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.soap.SyncConstants;
+import com.zimbra.soap.type.ZmBoolean;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-
-import com.zimbra.common.soap.SyncConstants;
-import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DeviceStatusInfo {
@@ -252,6 +252,8 @@ public class DeviceStatusInfo {
     public String getRecoveryPassword() { return recoveryPassword; }
     public String getLastUsedDate() { return lastUsedDate; }
     public String getUpdateTime() { return timestamp; }
+    public String getEmailAddress() { return emailAddress; }
+    public String getTimestamp() { return timestamp; }
 
     public MoreObjects.ToStringHelper addToStringInfo(
                 MoreObjects.ToStringHelper helper) {

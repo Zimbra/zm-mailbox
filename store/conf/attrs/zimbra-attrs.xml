@@ -3599,8 +3599,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>help URL for advanced client</desc>
 </attr>
 
-<attr id="677" name="zimbraHelpStandardURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
+<attr id="677" name="zimbraHelpStandardURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7" deprecatedSince="11.0.0">
   <desc>help URL for standard client</desc>
+  <deprecateDesc>Zimbra help standard URL has been deprecated because standard client is removed from the product</deprecateDesc>
 </attr>
 
 <attr id="678" name="zimbraPrefAdvancedClientEnforceMinDisplay" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
@@ -10015,4 +10016,42 @@ TODO: delete them permanently from here
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Zimbra StoreManager runtime switching enabled </desc>
 </attr>
+
+<attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" requiredIn="globalConfig" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited" since="11.0.0">
+  <globalConfigValue>0</globalConfigValue>
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>Maximum size in bytes for sieve script attributes. When it is set to 0, the size is not limited.</desc>
+</attr>
+
+<attr id="9002" name="zimbraFeatureCustomUIDEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="11.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether the custom UID is used when the POP3 UIDL command is submitted.
+        Set TRUE to use custom UID string which is set by SOAP request SetPop3UIDRequest.
+        If any custom UID string is not set or the value is an empty string, the standard Zimbra UID is used.
+        Set FALSE to use a standard Zimbra UID ('id.digest').
+        Note that this attribute affects only the behavior of the POP3 UIDL command. It does not affect the return value of GetPop3UIDRequest API.
+  </desc>
+</attr>
+
+<attr id="9003" name="zimbraFeatureDelayedIndexEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="11.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether the "delayed index" feature is enabled. If FALSE, index is always generated.</desc>
+</attr>
+
+<attr id="9004" name="zimbraDelayedIndexStatus" type="enum" value="suppressed,waitingForSearch,indexing" cardinality="single" optionalIn="account" flags="accountInfo" since="11.0.0">
+  <desc>Whether MBS generates index data of the account's mailbox. The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+    suppressed       - Not generate index. (default)
+                       When administrator accesses the account via admin console, it changes to "waitingForSearch".
+                       When the account logs in via SOAP, IMAP or MobileSync protocol, it changes to "indexing".
+    waitingForSearch - Not generate index.
+                       When administrator executes text search on the account, it changes to "indexing".
+                       When the account logs in via SOAP, IMAP or MobileSync protocol, it changes to "indexing".
+    indexing         - Generate index
+  </desc>
+</attr>
+
+<attr id="4023" name="zimbraHelpModernURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="11.0.0">
+  <desc>Help URL for modern client</desc>
+</attr>
+
 </attrs>

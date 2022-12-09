@@ -16,10 +16,11 @@
  */
 package com.zimbra.common.soap;
 
-import java.util.Arrays;
-import java.util.List;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
+
+import java.util.Arrays;
+import java.util.List;
 
 public final class AdminConstants {
 
@@ -535,16 +536,6 @@ public final class AdminConstants {
     // Skins
     public static final String E_GET_ALL_SKINS_REQUEST = "GetAllSkinsRequest";
     public static final String E_GET_ALL_SKINS_RESPONSE = "GetAllSkinsResponse";
-
-    // Sending Emails
-    public static final String E_SEND_MDM_NOTIFICATION_EMAIL_REQUEST = "SendMdmNotificationEmailRequest";
-    public static final String E_SEND_MDM_NOTIFICATION_EMAIL_RESPONSE = "SendMdmNotificationEmailResponse";
-
-    // Active Sync
-    public static final QName SEND_MDM_NOTIFICATION_EMAIL_REQUEST = QName.get(E_SEND_MDM_NOTIFICATION_EMAIL_REQUEST, NAMESPACE);
-    public static final QName SEND_MDM_NOTIFICATION_EMAIL_RESPONSE = QName.get(E_SEND_MDM_NOTIFICATION_EMAIL_RESPONSE, NAMESPACE);
-
-
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
     public static final QName CHECK_HEALTH_REQUEST = QName.get(E_CHECK_HEALTH_REQUEST, NAMESPACE);
