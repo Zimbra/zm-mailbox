@@ -1532,7 +1532,9 @@ public final class LC {
     public static final KnownKey zimbra_strict_unclosed_comment_tag = KnownKey.newKey(true);
     public static final KnownKey zimbra_skip_tags_with_unclosed_cdata = KnownKey.newKey("style");
 
-    
+    //ZCS-11191 : Allow to enable/disable SRS feature
+    public static final KnownKey zimbra_srs_enabled = KnownKey.newKey(false);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

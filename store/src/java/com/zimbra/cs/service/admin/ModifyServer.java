@@ -16,19 +16,28 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -58,6 +67,8 @@ public final class ModifyServer extends AdminDocumentHandler {
         }
         checkRight(zsc, context, server, attrs);
 
+        startOrStopPostSRSd(server, attrs);
+
         // pass in true to checkImmutable
         prov.modifyAttrs(server, attrs, true);
 
@@ -73,5 +84,105 @@ public final class ModifyServer extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY,
                 Admin.R_modifyServer.getName(), "server"));
+    }
+
+    /**
+     * Enable/disable postsrs service
+     * @param server to check what services are available
+     * @param attrs existing map to populate services
+     * @return nothing
+     */
+    public void startOrStopPostSRSd(Server server, Map<String, Object> attrs) throws ServiceException {
+
+        List<String> command = new ArrayList<>();
+        List<String> response = new ArrayList<>();
+        List<String> attrsUI = new ArrayList<>();
+        List<String> attrsLDAP = new ArrayList<>();
+        boolean UIWantsToEnablePostsrs = false;
+        boolean isPostsrsEnabledInLDAP = false;
+        final String POSTSRSD_SECRET = "/opt/zimbra/common/etc/postsrsd.secret";
+        final String POSTSRSD_EXE = LC.zimbra_home.value() + "/common/sbin/postsrsd";
+
+        try {
+            if (!attrs.isEmpty()) {
+                Collections.addAll(attrsUI, (String[]) attrs.get(Provisioning.A_zimbraServiceEnabled));
+                ZimbraLog.mailbox.info("attrsUI: " + attrsUI);
+                UIWantsToEnablePostsrs = attrsUI.contains("postsrs");
+            }
+
+            if (!server.getAttrs().isEmpty()) {
+                Collections.addAll(attrsLDAP, server.getServiceEnabled());
+                ZimbraLog.mailbox.info("attrsLDAP: " + attrsLDAP);
+                isPostsrsEnabledInLDAP = attrsLDAP.contains("postsrs");
+            }
+
+            if (UIWantsToEnablePostsrs && !isPostsrsEnabledInLDAP) {
+                command = Stream.of(POSTSRSD_EXE, "-s", POSTSRSD_SECRET, "-d", server.getName(), "-D")
+                        .collect(Collectors.toList());
+                response = executeLinuxCommand(command);
+                ZimbraLog.mailbox.info(response);
+                ZimbraLog.mailbox.info("postsrsd has been enabled");
+            } else if (UIWantsToEnablePostsrs && isPostsrsEnabledInLDAP) {
+                ZimbraLog.mailbox.info("postsrsd is already enabled");
+            } else if (!UIWantsToEnablePostsrs && isPostsrsEnabledInLDAP) {
+                // There is no command to disable SRS so far. The only way is killing the
+                // process.
+                command = Stream.of("pgrep", "-f", "postsrsd").collect(Collectors.toList());
+                response = executeLinuxCommand(command);
+                ZimbraLog.mailbox.info("response: " + response);
+                if (response.isEmpty()) {
+                    ZimbraLog.mailbox.info("postsrsd is already disabled");
+                } else {
+                    String postSrsdPID = response.get(0);
+                    command.clear();
+                    response.clear();
+                    command = Stream.of("kill", "-9", postSrsdPID).collect(Collectors.toList());
+                    response = executeLinuxCommand(command);
+                    ZimbraLog.mailbox.info("response: " + response);
+                    ZimbraLog.mailbox.info("postsrsd has been disabled");
+                }
+            } else if (!UIWantsToEnablePostsrs && !isPostsrsEnabledInLDAP) {
+                ZimbraLog.mailbox.info("postsrsd is already disabled");
+            }
+        } catch (IOException e) {
+            ZimbraLog.mailbox.warn(e);
+        } catch (InterruptedException e) {
+            ZimbraLog.mailbox.warn(e);
+        }
+    }
+
+    /**
+     * Execute linux command
+     * @param command to be executed
+     * @return list of string
+     */
+    public List<String> executeLinuxCommand(List<String> command) throws IOException, InterruptedException  {
+
+        InputStream is = null;
+        ProcessBuilder pb = null;
+        Process ps = null;
+        List<String> lines = new ArrayList<>();
+
+        ZimbraLog.mailbox.info("command: " + command);
+        // Executing the linux command
+        pb = new ProcessBuilder(command);
+        ps = pb.start();
+        int exitValue = ps.waitFor();
+        ZimbraLog.mailbox.info("command executed");
+        // Getting executed command response as List
+        if (exitValue == 0) {
+            is = ps.getInputStream();
+        } else {
+            is = ps.getErrorStream();
+        }
+        InputStreamReader isr = new InputStreamReader(is);
+        BufferedReader br = new BufferedReader(isr);
+        String line;
+        while ((line = br.readLine()) != null) {
+            lines.add(line);
+        }
+        ps.destroy();
+
+        return lines;
     }
 }
