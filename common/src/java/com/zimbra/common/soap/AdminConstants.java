@@ -1308,6 +1308,8 @@ public final class AdminConstants {
     public static final String A_VOLUME_S3 = "S3";
     public static final String A_VOLUME_OPEN_IO = "OPENIO";
     public static final String A_VOLUME_STORE_MANAGER_CLASS = "storeManagerClass";
+    public static final String A_VOLUME_BUCKET_ID = "bucketId";
+    public static final String A_VOLUME_NAME_SPACE = "nameSpace";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
