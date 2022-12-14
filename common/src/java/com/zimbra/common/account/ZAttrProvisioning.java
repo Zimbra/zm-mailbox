@@ -4206,6 +4206,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBatchedIndexingSize = "zimbraBatchedIndexingSize";
 
     /**
+     * Block sending email from external email addresses.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4026)
+    public static final String A_zimbraBlockEmailSendFromImapPop = "zimbraBlockEmailSendFromImapPop";
+
+    /**
      * alternate location for calendar and task folders
      *
      * @since ZCS 5.0.6
