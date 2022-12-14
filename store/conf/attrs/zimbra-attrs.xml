@@ -10054,4 +10054,9 @@ TODO: delete them permanently from here
   <desc>Help URL for modern client</desc>
 </attr>
 
+  <attr id="4026" name="zimbraBlockEmailSendFromImapPop" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="11.0.0">
+    <defaultCOSValue>FALSE</defaultCOSValue>
+    <desc>Block sending email from external email addresses.</desc>
+  </attr>
+
 </attrs>
