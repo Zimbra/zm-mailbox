@@ -20,6 +20,8 @@
  */
 package com.zimbra.cs.service.account;
 
+import io.jsonwebtoken.Claims;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -64,6 +66,7 @@ import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.extension.ZimbraExtensionNotification;
 import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.JWTUtil;
@@ -75,8 +78,6 @@ import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
-
-import io.jsonwebtoken.Claims;
 
 /**
  * @author schemers
@@ -117,6 +118,8 @@ public class Auth extends AccountDocumentHandler {
             }
             acct = prov.get(acctBy, acctValue);
         }
+
+        ZimbraExtensionNotification.notifyExtension("com.zimbra.cs.service.account.Auth:validate", request, context);
 
         TrustedDeviceToken trustedToken = null;
         if (acct != null) {
@@ -435,7 +438,7 @@ public class Auth extends AccountDocumentHandler {
         if (jwtElem != null && authElem != null) {
             ZimbraLog.account.debug("both jwt and auth element can not be present in auth request");
             return Boolean.FALSE;
-        } 
+        }
         if (jwtElem == null && authElem != null && TokenType.JWT.equals(tokenType)) {
             ZimbraLog.account.debug("jwt token type not supported with auth element");
             return Boolean.FALSE;
