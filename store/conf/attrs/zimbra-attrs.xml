@@ -10008,13 +10008,19 @@ TODO: delete them permanently from here
 <attr id="4020" name="zimbraServerExternalStoreConfig" type="string" cardinality="single" optionalIn="server" since="10.0.0">
   <desc>Server level external store config</desc>
 </attr>
+
 <attr id="4021" name="zimbraSMMultiReaderEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="10.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Zimbra multiple reader StoreManagers enabled </desc>
 </attr>
+
 <attr id="4022" name="zimbraSMRuntimeSwitchEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="10.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Zimbra StoreManager runtime switching enabled </desc>
+</attr>
+
+<attr id="4023" name="zimbraHelpModernURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="11.0.0">
+  <desc>Help URL for modern client</desc>
 </attr>
 
 <attr id="4024" name="domainAggrQuotaWarnMsgSubjectKey" type="string" cardinality="single" optionalIn="domain" since="11.0.0">
@@ -10023,6 +10029,11 @@ TODO: delete them permanently from here
 
 <attr id="4025" name="domainAggrQuotaWarnMsgBodyKey" type="string" cardinality="single" optionalIn="domain" since="11.0.0">
   <desc>A key in ZsMsg.properties for a body of a domain aggregate quota warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.</desc>
+</attr>
+
+<attr id="4026" name="zimbraBlockEmailSendFromImapPop" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="11.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Block sending email from external email addresses.</desc>
 </attr>
 
 <attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" requiredIn="globalConfig" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited" since="11.0.0">
@@ -10057,14 +10068,4 @@ TODO: delete them permanently from here
     indexing         - Generate index
   </desc>
 </attr>
-
-<attr id="4023" name="zimbraHelpModernURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="11.0.0">
-  <desc>Help URL for modern client</desc>
-</attr>
-
-  <attr id="4026" name="zimbraBlockEmailSendFromImapPop" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="11.0.0">
-    <defaultCOSValue>FALSE</defaultCOSValue>
-    <desc>Block sending email from external email addresses.</desc>
-  </attr>
-
 </attrs>
