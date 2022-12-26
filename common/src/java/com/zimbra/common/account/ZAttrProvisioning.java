@@ -6059,6 +6059,46 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainInheritedAttr = "zimbraDomainInheritedAttr";
 
     /**
+     * Whether to load a domain-specific login page without redirection.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4027)
+    public static final String A_zimbraDomainLoginPageEnabled = "zimbraDomainLoginPageEnabled";
+
+    /**
+     * File path for error of domain-specific login page. If domain settings
+     * cannot be fetched, the file specified in
+     * zimbraDomainLoginPageErrorPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4030)
+    public static final String A_zimbraDomainLoginPageErrorPath = "zimbraDomainLoginPageErrorPath";
+
+    /**
+     * File path for fallback of domain-specific login page. If
+     * zimbraLoginFilePath is empty, the file specified in
+     * zimbraDomainLoginPageFallbackPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4029)
+    public static final String A_zimbraDomainLoginPageFallbackPath = "zimbraDomainLoginPageFallbackPath";
+
+    /**
+     * File path of domain-specific login page. If it is not empty, the
+     * specified file is loaded in login page without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4028)
+    public static final String A_zimbraDomainLoginPagePath = "zimbraDomainLoginPagePath";
+
+    /**
      * enable domain mandatory mail signature
      *
      * @since ZCS 6.0.4

@@ -7005,6 +7005,175 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * File path for fallback of domain-specific login page. If
+     * zimbraLoginFilePath is empty, the file specified in
+     * zimbraDomainLoginPageFallbackPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @return zimbraDomainLoginPageFallbackPath, or null if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4029)
+    public String getDomainLoginPageFallbackPath() {
+        return getAttr(Provisioning.A_zimbraDomainLoginPageFallbackPath, null, true);
+    }
+
+    /**
+     * File path for fallback of domain-specific login page. If
+     * zimbraLoginFilePath is empty, the file specified in
+     * zimbraDomainLoginPageFallbackPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @param zimbraDomainLoginPageFallbackPath new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4029)
+    public void setDomainLoginPageFallbackPath(String zimbraDomainLoginPageFallbackPath) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageFallbackPath, zimbraDomainLoginPageFallbackPath);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * File path for fallback of domain-specific login page. If
+     * zimbraLoginFilePath is empty, the file specified in
+     * zimbraDomainLoginPageFallbackPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @param zimbraDomainLoginPageFallbackPath new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4029)
+    public Map<String,Object> setDomainLoginPageFallbackPath(String zimbraDomainLoginPageFallbackPath, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageFallbackPath, zimbraDomainLoginPageFallbackPath);
+        return attrs;
+    }
+
+    /**
+     * File path for fallback of domain-specific login page. If
+     * zimbraLoginFilePath is empty, the file specified in
+     * zimbraDomainLoginPageFallbackPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4029)
+    public void unsetDomainLoginPageFallbackPath() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageFallbackPath, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * File path for fallback of domain-specific login page. If
+     * zimbraLoginFilePath is empty, the file specified in
+     * zimbraDomainLoginPageFallbackPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4029)
+    public Map<String,Object> unsetDomainLoginPageFallbackPath(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageFallbackPath, "");
+        return attrs;
+    }
+
+    /**
+     * File path of domain-specific login page. If it is not empty, the
+     * specified file is loaded in login page without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @return zimbraDomainLoginPagePath, or null if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4028)
+    public String getDomainLoginPagePath() {
+        return getAttr(Provisioning.A_zimbraDomainLoginPagePath, null, true);
+    }
+
+    /**
+     * File path of domain-specific login page. If it is not empty, the
+     * specified file is loaded in login page without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @param zimbraDomainLoginPagePath new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4028)
+    public void setDomainLoginPagePath(String zimbraDomainLoginPagePath) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPagePath, zimbraDomainLoginPagePath);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * File path of domain-specific login page. If it is not empty, the
+     * specified file is loaded in login page without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @param zimbraDomainLoginPagePath new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4028)
+    public Map<String,Object> setDomainLoginPagePath(String zimbraDomainLoginPagePath, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPagePath, zimbraDomainLoginPagePath);
+        return attrs;
+    }
+
+    /**
+     * File path of domain-specific login page. If it is not empty, the
+     * specified file is loaded in login page without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4028)
+    public void unsetDomainLoginPagePath() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPagePath, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * File path of domain-specific login page. If it is not empty, the
+     * specified file is loaded in login page without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4028)
+    public Map<String,Object> unsetDomainLoginPagePath(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPagePath, "");
+        return attrs;
+    }
+
+    /**
      * enable domain mandatory mail signature
      *
      * @return zimbraDomainMandatoryMailSignatureEnabled, or false if unset

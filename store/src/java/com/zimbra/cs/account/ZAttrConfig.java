@@ -15742,6 +15742,165 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to load a domain-specific login page without redirection.
+     *
+     * @return zimbraDomainLoginPageEnabled, or false if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4027)
+    public boolean isDomainLoginPageEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDomainLoginPageEnabled, false, true);
+    }
+
+    /**
+     * Whether to load a domain-specific login page without redirection.
+     *
+     * @param zimbraDomainLoginPageEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4027)
+    public void setDomainLoginPageEnabled(boolean zimbraDomainLoginPageEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageEnabled, zimbraDomainLoginPageEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to load a domain-specific login page without redirection.
+     *
+     * @param zimbraDomainLoginPageEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4027)
+    public Map<String,Object> setDomainLoginPageEnabled(boolean zimbraDomainLoginPageEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageEnabled, zimbraDomainLoginPageEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to load a domain-specific login page without redirection.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4027)
+    public void unsetDomainLoginPageEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to load a domain-specific login page without redirection.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4027)
+    public Map<String,Object> unsetDomainLoginPageEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * File path for error of domain-specific login page. If domain settings
+     * cannot be fetched, the file specified in
+     * zimbraDomainLoginPageErrorPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @return zimbraDomainLoginPageErrorPath, or null if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4030)
+    public String getDomainLoginPageErrorPath() {
+        return getAttr(Provisioning.A_zimbraDomainLoginPageErrorPath, null, true);
+    }
+
+    /**
+     * File path for error of domain-specific login page. If domain settings
+     * cannot be fetched, the file specified in
+     * zimbraDomainLoginPageErrorPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @param zimbraDomainLoginPageErrorPath new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4030)
+    public void setDomainLoginPageErrorPath(String zimbraDomainLoginPageErrorPath) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageErrorPath, zimbraDomainLoginPageErrorPath);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * File path for error of domain-specific login page. If domain settings
+     * cannot be fetched, the file specified in
+     * zimbraDomainLoginPageErrorPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @param zimbraDomainLoginPageErrorPath new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4030)
+    public Map<String,Object> setDomainLoginPageErrorPath(String zimbraDomainLoginPageErrorPath, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageErrorPath, zimbraDomainLoginPageErrorPath);
+        return attrs;
+    }
+
+    /**
+     * File path for error of domain-specific login page. If domain settings
+     * cannot be fetched, the file specified in
+     * zimbraDomainLoginPageErrorPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4030)
+    public void unsetDomainLoginPageErrorPath() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageErrorPath, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * File path for error of domain-specific login page. If domain settings
+     * cannot be fetched, the file specified in
+     * zimbraDomainLoginPageErrorPath is loaded without redirection. It is
+     * ignored when zimbraDomainLoginPageEnabled is not TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4030)
+    public Map<String,Object> unsetDomainLoginPageErrorPath(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainLoginPageErrorPath, "");
+        return attrs;
+    }
+
+    /**
      * enable domain mandatory mail signature
      *
      * @return zimbraDomainMandatoryMailSignatureEnabled, or false if unset

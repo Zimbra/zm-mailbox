@@ -10036,6 +10036,32 @@ TODO: delete them permanently from here
   <desc>Block sending email from external email addresses.</desc>
 </attr>
 
+<attr id="4027" name="zimbraDomainLoginPageEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="11.0.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to load a domain-specific login page without redirection.</desc>
+</attr>
+
+<attr id="4028" name="zimbraDomainLoginPagePath" type="string" max="256" cardinality="single" optionalIn="domain" flags="domainInfo" since="11.0.0">
+  <desc>File path of domain-specific login page.
+        If it is not empty, the specified file is loaded in login page without redirection.
+        It is ignored when zimbraDomainLoginPageEnabled is not TRUE.
+  </desc>
+</attr>
+
+<attr id="4029" name="zimbraDomainLoginPageFallbackPath" type="string" max="256" cardinality="single" optionalIn="domain" flags="domainInfo" since="11.0.0">
+  <desc>File path for fallback of domain-specific login page.
+        If zimbraLoginFilePath is empty, the file specified in zimbraDomainLoginPageFallbackPath is loaded without redirection.
+        It is ignored when zimbraDomainLoginPageEnabled is not TRUE.
+  </desc>
+</attr>
+
+<attr id="4030" name="zimbraDomainLoginPageErrorPath" type="string" max="256" cardinality="single" optionalIn="globalConfig" since="11.0.0">
+  <desc>File path for error of domain-specific login page.
+        If domain settings cannot be fetched, the file specified in zimbraDomainLoginPageErrorPath is loaded without redirection.
+        It is ignored when zimbraDomainLoginPageEnabled is not TRUE.
+  </desc>
+</attr>
+
 <attr id="4031" name="zimbraFeatureModernChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="11.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether Chat feature is enabled or not</desc>
@@ -10078,5 +10104,4 @@ TODO: delete them permanently from here
     indexing         - Generate index
   </desc>
 </attr>
-
 </attrs>
