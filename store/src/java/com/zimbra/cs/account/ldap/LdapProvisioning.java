@@ -8204,7 +8204,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.SIGNATURE_EXISTS(signatureName);
         } catch (LdapException e) {
-            throw e;
+            throw AccountServiceException.SIGNATURE_CREATION_FAILURE(signatureName);
         } catch (AccountServiceException e) {
             throw e;
         } catch (ServiceException e) {
