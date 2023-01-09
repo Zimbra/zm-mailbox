@@ -30,6 +30,7 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 public class SearchDirectoryOptions {
     public static final int ALL_RESULTS = 0;
+    public static final int DEFAULT_LIMIT = 0;
     public static final String[] ALL_ATTRS = null;
     public static final SearchDirectoryOptions.SortOpt DEFAULT_SORT_OPT = SortOpt.NO_SORT;
     public static final String DEFAULT_SORT_ATTR = null;
@@ -137,6 +138,7 @@ public class SearchDirectoryOptions {
     private boolean onMaster = false;
     private final boolean useConnPool = true; // TODO: retire this
     private int maxResults = ALL_RESULTS;
+    private int resultPageSize = DEFAULT_LIMIT;
 
     /*
      * search base
@@ -221,6 +223,10 @@ public class SearchDirectoryOptions {
         }
 
         if (maxResults != other.getMaxResults()) {
+            return false;
+        }
+
+        if (resultPageSize != other.getResultPageSize()) {
             return false;
         }
 
@@ -341,6 +347,18 @@ public class SearchDirectoryOptions {
 
     public int getMaxResults() {
         return maxResults;
+    }
+
+    public void setResultPageSize(int resultPageSize) throws ServiceException {
+        if (resultPageSize >= 0) {
+            this.resultPageSize = resultPageSize;
+        } else {
+            throw ServiceException.INVALID_REQUEST("limit cannot be a negative value.", null);
+        }
+    }
+
+    public int getResultPageSize() {
+        return resultPageSize;
     }
 
     public void setDomain(Domain domain) {

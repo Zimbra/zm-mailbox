@@ -104,7 +104,7 @@ public class SearchLdapOptions {
     private String[] returnAttrs = RETURN_ALL_ATTRS;
     private int maxResults = SIZE_UNLIMITED;
     private Set<String> binaryAttrs;
-    private int resultPageSize  = DEFAULT_RESULT_PAGE_SIZE;
+    private int resultPageSize = DEFAULT_RESULT_PAGE_SIZE;
     private ZSearchScope searchScope;
     private SearchLdapOptions.SearchLdapVisitor visitor;
     private boolean isUseControl = true;
@@ -131,6 +131,20 @@ public class SearchLdapOptions {
         setFilter(filter);
         setReturnAttrs(returnAttrs);
         setMaxResults(maxResults);
+        setBinaryAttrs(binaryAttrs);
+        setSearchScope(searchScope);
+        setVisitor(visitor);
+    }
+
+ // TODO: use only this
+    public SearchLdapOptions(String searchbase, ZLdapFilter filter,
+            String[] returnAttrs, int maxResults, Set<String> binaryAttrs, int resultPageSize,
+            ZSearchScope searchScope, SearchLdapOptions.SearchLdapVisitor visitor) {
+        setSearchBase(searchbase);
+        setFilter(filter);
+        setReturnAttrs(returnAttrs);
+        setMaxResults(maxResults);
+        setResultPageSize(resultPageSize);
         setBinaryAttrs(binaryAttrs);
         setSearchScope(searchScope);
         setVisitor(visitor);
