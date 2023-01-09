@@ -752,7 +752,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     ZimbraLog.lmtp.info("rejecting message from=%s,to=%s: sieve filter rule", envSender, rcptEmail);
                     reply = LmtpReply.PERMANENT_MESSAGE_REFUSED;
                 } catch (ServiceException e) {
-                    if (e.getCode().equals(MailServiceException.QUOTA_EXCEEDED)) {
+                    if (e.getCode().equals(MailServiceException.QUOTA_EXCEEDED) || e.getCode().equals(MailServiceException.DOMAIN_QUOTA_EXCEEDED)) {
                         ZimbraLog.lmtp.info("rejecting message from=%s,to=%s: overquota", envSender, rcptEmail);
                         if (config.isPermanentFailureWhenOverQuota()) {
                             reply = LmtpReply.PERMANENT_FAILURE_OVER_QUOTA;
