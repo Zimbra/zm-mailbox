@@ -53,6 +53,7 @@ public class SearchDirectoryRequest extends AttributeSelectorImpl {
 
     /**
      * @zm-api-field-description The maximum number of accounts to return (0 is default and means all)
+     * and it must be greater than or equal to 0.
      */
     @XmlAttribute(name=AdminConstants.A_LIMIT, required=false)
     private Integer limit;

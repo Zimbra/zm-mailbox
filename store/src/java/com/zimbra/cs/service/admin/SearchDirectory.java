@@ -174,6 +174,11 @@ public class SearchDirectory extends AdminDocumentHandler {
         options.setDomain(d);
         options.setTypes(types);
         options.setMaxResults(maxResults);
+        options.setResultPageSize(limit);
+        if (limit == Integer.MAX_VALUE) {
+            options.setUseControl(false);
+        }
+
         options.setFilterString(FilterId.ADMIN_SEARCH, query);
         options.setReturnAttrs(attrs);
         options.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
