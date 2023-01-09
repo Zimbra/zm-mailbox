@@ -2218,9 +2218,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                         opts.getMakeObjectOpt(), returnAttrs);
 
             SearchLdapOptions searchObjectsOptions = new SearchLdapOptions(base, filter,
-                    returnAttrs, opts.getMaxResults(), null, ZSearchScope.SEARCH_SCOPE_SUBTREE,
+                    returnAttrs, opts.getMaxResults(), null, opts.getResultPageSize(), ZSearchScope.SEARCH_SCOPE_SUBTREE,
                     searchObjectsVisitor);
-            searchObjectsOptions.setUseControl(opts.isUseControl());
+            if (opts.getResultPageSize() == 0 || opts.getResultPageSize() == Integer.MAX_VALUE) {
+                searchObjectsOptions.setUseControl(false);
+            } else {
+                searchObjectsOptions.setUseControl(opts.isUseControl());
+            }
             searchObjectsOptions.setManageDSAit(opts.isManageDSAit());
             zlc.searchPaged(searchObjectsOptions);
         } catch (LdapSizeLimitExceededException e) {
@@ -9485,7 +9489,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
         }
 
-        // one more search if there are remainding
+        // one more search if there are remaining
         if (query.length() != queryStart.length()) {
             query.append(queryEnd);
             searchLdapOnReplica(base, query.toString(), returnAttrs, visitor);
