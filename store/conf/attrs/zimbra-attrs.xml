@@ -10023,11 +10023,11 @@ TODO: delete them permanently from here
   <desc>Help URL for modern client</desc>
 </attr>
 
-<attr id="4024" name="domainAggrQuotaWarnMsgSubjectKey" type="string" cardinality="single" optionalIn="domain" since="11.0.0">
+<attr id="4024" name="zimbraDomainAggrQuotaWarnMsgSubjectKey" type="string" cardinality="single" optionalIn="domain" since="11.0.0">
   <desc>A key in ZsMsg.properties for a subject of a domain aggregate quota warning message. If it is not set, domainAggrQuotaWarnMsgSubject is used.</desc>
 </attr>
 
-<attr id="4025" name="domainAggrQuotaWarnMsgBodyKey" type="string" cardinality="single" optionalIn="domain" since="11.0.0">
+<attr id="4025" name="zimbraDomainAggrQuotaWarnMsgBodyKey" type="string" cardinality="single" optionalIn="domain" since="11.0.0">
   <desc>A key in ZsMsg.properties for a body of a domain aggregate quota warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.</desc>
 </attr>
 
