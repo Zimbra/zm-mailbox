@@ -7018,12 +7018,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMobileSyncEnabled = "zimbraFeatureMobileSyncEnabled";
 
     /**
+     * Whether Chat feature is enabled or not
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9005)
+    public static final String A_zimbraFeatureModernChatEnabled = "zimbraFeatureModernChatEnabled";
+
+    /**
      * Whether to allow a user to access Zimbra modern desktop
      *
      * @since ZCS 8.9.0
      */
     @ZAttr(id=3082)
     public static final String A_zimbraFeatureModernDesktopEnabled = "zimbraFeatureModernDesktopEnabled";
+
+    /**
+     * Whether Video feature is enabled or not
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9006)
+    public static final String A_zimbraFeatureModernVideoEnabled = "zimbraFeatureModernVideoEnabled";
 
     /**
      * Whether user can create address books

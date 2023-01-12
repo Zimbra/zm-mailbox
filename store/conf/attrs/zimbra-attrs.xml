@@ -10068,4 +10068,14 @@ TODO: delete them permanently from here
     indexing         - Generate index
   </desc>
 </attr>
+
+<attr id="9005" name="zimbraFeatureModernChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="11.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether Chat feature is enabled or not</desc>
+</attr>
+
+<attr id="9006" name="zimbraFeatureModernVideoEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="11.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether Video feature is enabled or not</desc>
+</attr>
 </attrs>
