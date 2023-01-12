@@ -10036,6 +10036,16 @@ TODO: delete them permanently from here
   <desc>Block sending email from external email addresses.</desc>
 </attr>
 
+<attr id="4031" name="zimbraFeatureModernChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="11.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether Chat feature is enabled or not</desc>
+</attr>
+
+<attr id="4032" name="zimbraFeatureModernVideoEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="11.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether Video feature is enabled or not</desc>
+</attr>
+
 <attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" requiredIn="globalConfig" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited" since="11.0.0">
   <globalConfigValue>0</globalConfigValue>
   <defaultCOSValue>0</defaultCOSValue>
@@ -10069,13 +10079,4 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="9005" name="zimbraFeatureModernChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="11.0.0">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Whether Chat feature is enabled or not</desc>
-</attr>
-
-<attr id="9006" name="zimbraFeatureModernVideoEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="11.0.0">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Whether Video feature is enabled or not</desc>
-</attr>
 </attrs>

@@ -18070,7 +18070,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9005)
+    @ZAttr(id=4031)
     public boolean isFeatureModernChatEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureModernChatEnabled, false, true);
     }
@@ -18083,7 +18083,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9005)
+    @ZAttr(id=4031)
     public void setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
@@ -18099,7 +18099,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9005)
+    @ZAttr(id=4031)
     public Map<String,Object> setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
@@ -18113,7 +18113,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9005)
+    @ZAttr(id=4031)
     public void unsetFeatureModernChatEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
@@ -18128,7 +18128,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9005)
+    @ZAttr(id=4031)
     public Map<String,Object> unsetFeatureModernChatEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
@@ -18214,7 +18214,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9006)
+    @ZAttr(id=4032)
     public boolean isFeatureModernVideoEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureModernVideoEnabled, false, true);
     }
@@ -18227,7 +18227,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9006)
+    @ZAttr(id=4032)
     public void setFeatureModernVideoEnabled(boolean zimbraFeatureModernVideoEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureModernVideoEnabled, zimbraFeatureModernVideoEnabled ? TRUE : FALSE);
@@ -18243,7 +18243,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9006)
+    @ZAttr(id=4032)
     public Map<String,Object> setFeatureModernVideoEnabled(boolean zimbraFeatureModernVideoEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureModernVideoEnabled, zimbraFeatureModernVideoEnabled ? TRUE : FALSE);
@@ -18257,7 +18257,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9006)
+    @ZAttr(id=4032)
     public void unsetFeatureModernVideoEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureModernVideoEnabled, "");
@@ -18272,7 +18272,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9006)
+    @ZAttr(id=4032)
     public Map<String,Object> unsetFeatureModernVideoEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureModernVideoEnabled, "");

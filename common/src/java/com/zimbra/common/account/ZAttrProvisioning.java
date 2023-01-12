@@ -7022,7 +7022,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9005)
+    @ZAttr(id=4031)
     public static final String A_zimbraFeatureModernChatEnabled = "zimbraFeatureModernChatEnabled";
 
     /**
@@ -7038,7 +7038,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=9006)
+    @ZAttr(id=4032)
     public static final String A_zimbraFeatureModernVideoEnabled = "zimbraFeatureModernVideoEnabled";
 
     /**
