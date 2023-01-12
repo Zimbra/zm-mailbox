@@ -675,9 +675,7 @@ public class ZimletUtil {
         if (zf.hasZimletConfig()) {
             ZimletConfig zc = getZimletConfig(zimletName);
             if (zc != null) {
-                Version zimletConfigVersion = new Version (zf.getZimletConfig().getVersion().toString());
-                Version zimletConfigVersionInLDAP = new Version (zc.getVersion().toString());
-                if (zimletConfigVersion.compareTo(zimletConfigVersionInLDAP)> 0) {
+                if (zf.getZimletConfig().getVersion().compareTo(zc.getVersion()) > 0) {
                     installConfig(zf.getZimletConfig());
                 }
             }
