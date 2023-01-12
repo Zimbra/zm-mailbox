@@ -680,9 +680,6 @@ public class ZimletUtil {
                 if (zimletConfigVersion.compareTo(zimletConfigVersionInLDAP)> 0) {
                     installConfig(zf.getZimletConfig());
                 }
-                if (zimletConfigVersion.compareTo(zimletConfigVersionInLDAP) == 0) {
-                    return;
-                }
             }
             else {
                 installConfig(zf.getZimletConfig());
