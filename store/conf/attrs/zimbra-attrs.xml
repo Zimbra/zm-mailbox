@@ -10046,7 +10046,7 @@ TODO: delete them permanently from here
   <desc>Whether Video feature is enabled or not</desc>
 </attr>
 
-<attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" requiredIn="globalConfig" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited" since="11.0.0">
+<attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited" since="11.0.0">
   <globalConfigValue>0</globalConfigValue>
   <defaultCOSValue>0</defaultCOSValue>
   <desc>Maximum size in bytes for sieve script attributes. When it is set to 0, the size is not limited.</desc>
