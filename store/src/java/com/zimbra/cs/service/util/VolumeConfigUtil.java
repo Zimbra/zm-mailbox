@@ -17,6 +17,9 @@
 
 package com.zimbra.cs.service.util;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -38,8 +41,6 @@ import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.util.ExternalVolumeInfoHandler;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class VolumeConfigUtil {
 
@@ -210,7 +211,7 @@ public class VolumeConfigUtil {
      */
     public static void postCreateVolumeActions(CreateVolumeRequest request, Volume volRequest,
                                                VolumeInfo volInfoRequest, VolumeInfo volInfoResponse,
-                                               Volume.StoreType enumStoreType) throws ServiceException {
+                                               Volume.StoreType enumStoreType, String serverId) throws ServiceException {
         ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
         if (Volume.StoreType.EXTERNAL.equals(enumStoreType)) {
             try {
@@ -221,7 +222,7 @@ public class VolumeConfigUtil {
                 } else {
                     volInfoResponse.setVolumeExternalOpenIOInfo(volInfoRequest.getVolumeExternalOpenIOInfo());
                 }
-                extVolInfoHandler.addServerProperties(volInfoRequest);
+                extVolInfoHandler.addServerProperties(volInfoRequest, serverId);
             } catch (JSONException e) {
                 throw ServiceException.FAILURE("Error while processing postCreateVolumeActions", e);
             }
@@ -290,7 +291,7 @@ public class VolumeConfigUtil {
      * @return
      * @throws ServiceException
      */
-    public static void parseDeleteVolumeRequest(DeleteVolumeRequest req) throws ServiceException {
+    public static void parseDeleteVolumeRequest(DeleteVolumeRequest req, String serverId) throws ServiceException {
         VolumeManager mgr = VolumeManager.getInstance();
         Volume vol = mgr.getVolume(req.getId()); // make sure the volume exists before doing anything heavyweight...
         StoreManager storeManager = StoreManager.getInstance();
@@ -302,7 +303,7 @@ public class VolumeConfigUtil {
             if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
                 ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
                 if (extVolInfoHandler.isVolumePresentInJson(req.getId())) {
-                    extVolInfoHandler.deleteServerProperties(req.getId());
+                    extVolInfoHandler.deleteServerProperties(req.getId(), serverId);
                 } else {
                     String errMsg = "External volume entry in JSON not found, Volume ID " + req.getId();
                     throw ServiceException.FAILURE(errMsg, null);

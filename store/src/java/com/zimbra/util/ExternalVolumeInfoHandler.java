@@ -13,7 +13,9 @@ import org.json.JSONObject;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.GlobalExternalStoreConfigConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
@@ -73,7 +75,7 @@ public class ExternalVolumeInfoHandler {
      * @param server
      * @throws JSONException, ServiceException
      */
-    public void deleteServerProperties(int volumeId) throws ServiceException, JSONException {
+    public void deleteServerProperties(int volumeId, String serverId) throws ServiceException, JSONException {
         try {
             // step 1: Fetch current JSON state object and current JSON state array
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
@@ -100,6 +102,8 @@ public class ExternalVolumeInfoHandler {
             // step 6: Set ldap attribute
             provisioning.getLocalServer().setServerExternalStoreConfig(currentJsonObject.toString());
 
+            editGlobalConfigOnDeleteVolume(volumeId, serverId);
+
         } catch (JSONException e) {
             throw e;
         }
@@ -111,7 +115,7 @@ public class ExternalVolumeInfoHandler {
      * @param server
      * @throws JSONException, ServiceException
      */
-    public void addServerProperties(VolumeInfo volInfo) throws ServiceException, JSONException {
+    public void addServerProperties(VolumeInfo volInfo, String serverId) throws ServiceException, JSONException {
         VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
         VolumeExternalOpenIOInfo volExtOpenIoInfo = volInfo.getVolumeExternalOpenIOInfo();
 
@@ -147,11 +151,129 @@ public class ExternalVolumeInfoHandler {
 
             // step 6: Set ldap attribute
             provisioning.getLocalServer().setServerExternalStoreConfig(currentJsonObject.toString());
+
+            //If Unified volume is enable then go ahead to edit GlobalExternalStore
+            if (volInfo.getVolumeExternalInfo() != null
+                    && AdminConstants.A_VOLUME_S3.equalsIgnoreCase(volInfo.getVolumeExternalInfo().getStorageType())
+                    && volInfo.getVolumeExternalInfo().isUnified()) {
+                editGlobalConfigOnAddVolume(volInfo, serverId);
+            }
+
         } catch (JSONException e) {
             throw e;
         }
     }
 
+    /**
+     * Modify zimbraGlobalExternalStoreConfig LDAP attribute
+     * @param volInfo
+     * @param serverId
+     * @throws JSONException, ServiceException
+     */
+    public void editGlobalConfigOnAddVolume(VolumeInfo volInfo, String serverId) throws ServiceException, JSONException {
+        String globalExtStoreConfJString = Provisioning.getInstance().getConfig().getGlobalExternalStoreConfig();
+        editGlobalConfigOnAddVolume(volInfo, serverId, globalExtStoreConfJString);
+    }
+
+    /**
+     * Modify zimbraGlobalExternalStoreConfig LDAP attribute,
+     * adds/update unified volumes
+     * @param volInfo
+     * @param serverId
+     * @param globalExtStoreConfJString
+     * @throws JSONException, ServiceException
+     */
+    public String editGlobalConfigOnAddVolume(VolumeInfo volInfo, String serverId, String globalExtStoreConfJString) {
+
+        JSONObject globalExtStoreConfJson = null;
+        if (!StringUtil.isNullOrEmpty(globalExtStoreConfJString) && volInfo != null && !StringUtil.isNullOrEmpty(serverId)) {
+            try {
+                globalExtStoreConfJson = new JSONObject(globalExtStoreConfJString);
+
+                if (globalExtStoreConfJson != null) {
+
+                    JSONObject unifiedJsonObject = globalExtStoreConfJson
+                            .optJSONObject(GlobalExternalStoreConfigConstants.A_S3_UNIFIED_VOLUME);
+                    JSONArray volumeList = null;
+
+                    JSONObject newVolume = new JSONObject();
+                    newVolume.put(AdminConstants.A_VOLUME_ID, volInfo.getId());
+                    newVolume.put(AdminConstants.A_VOLUME_VOLUME_PREFIX, volInfo.getVolumeExternalInfo().getVolumePrefix());
+                    newVolume.put(GlobalExternalStoreConfigConstants.A_S3_GLOBAL_BUCKET_UUID,
+                            volInfo.getVolumeExternalInfo().getGlobalBucketConfigurationId());
+
+                    // First time adding unified/volumes into JSON
+                    if (unifiedJsonObject == null) {
+                        unifiedJsonObject = new JSONObject();
+                        volumeList = new JSONArray();
+                        volumeList.put(newVolume);
+                    } else if (unifiedJsonObject != null) {
+                        //If the server details already exist in unified
+                        //then getting server's existing volume.
+                        if (unifiedJsonObject.has(serverId)) {
+                            volumeList = (JSONArray) unifiedJsonObject.opt(serverId);
+                        }
+
+                        // if server entry does not exist
+                        if (volumeList == null) {
+                            volumeList = new JSONArray();
+                        }
+
+                        volumeList.put(newVolume);
+                    }
+                    unifiedJsonObject.put(serverId, volumeList);
+                    globalExtStoreConfJson.put(GlobalExternalStoreConfigConstants.A_S3_UNIFIED_VOLUME, unifiedJsonObject);
+                    Provisioning.getInstance().getConfig().setGlobalExternalStoreConfig(globalExtStoreConfJson.toString());
+                }
+            } catch (JSONException | ServiceException e) {
+                ZimbraLog.store.error("Failed to modify Global external config on adding volume :  ", e.getMessage());
+            }
+            return globalExtStoreConfJson.toString();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Delete volume entry from Global level external volume properties
+     * @param volumeId
+     * @param serverId
+     * @throws JSONException, ServiceException
+     */
+    public void editGlobalConfigOnDeleteVolume(int volumeId, String serverId) throws ServiceException, JSONException {
+        String gescLdapJson = Provisioning.getInstance().getConfig().getGlobalExternalStoreConfig();
+        Provisioning.getInstance().getLocalServer();
+        if (!StringUtil.isNullOrEmpty(gescLdapJson)) {
+           JSONObject globalExtStoreConfJson = new JSONObject(gescLdapJson);
+           JSONObject unifiedJsonObject = globalExtStoreConfJson.optJSONObject(GlobalExternalStoreConfigConstants.A_S3_UNIFIED_VOLUME);
+
+           if (globalExtStoreConfJson != null && unifiedJsonObject != null) {
+               JSONArray volumeList = null;
+
+               if(unifiedJsonObject.has(serverId)) {
+                   volumeList = (JSONArray) unifiedJsonObject.opt(serverId);
+               }
+
+                if(volumeList != null) {
+                   JSONObject volume = null;
+                   JSONArray tempVolumeJsonObj = new JSONArray();
+
+                   //Copy volumeList to tempVolumeJsonObj except the element to be deleted
+                   for (int i = 0; i < volumeList.length(); i++) {
+                       volume = volumeList.optJSONObject(i);
+                        if (volumeId != volume.getInt(AdminConstants.A_VOLUME_ID)) {
+                           tempVolumeJsonObj.put(volume);
+                        }
+                   }
+                   volumeList = tempVolumeJsonObj;
+
+                   unifiedJsonObject.put(serverId, volumeList);
+                   globalExtStoreConfJson.put(GlobalExternalStoreConfigConstants.A_S3_UNIFIED_VOLUME, unifiedJsonObject);
+                   Provisioning.getInstance().getConfig().setGlobalExternalStoreConfig(globalExtStoreConfJson.toString());
+                }
+           }
+        }
+    }
     /**
      * Modify server level external volume properties
      * @param volumeId
