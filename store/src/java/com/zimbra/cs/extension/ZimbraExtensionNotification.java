@@ -44,6 +44,7 @@ public abstract class ZimbraExtensionNotification {
                                    "registering of " + obj.getClass().getCanonicalName() + " is ignored");
             return;
         }
+        ZimbraLog.extensions.info("registered notification handler for " + notificationId);
         mHandlers.put(notificationId, handler);
     }
 

@@ -68,6 +68,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.extension.ZimbraExtensionNotification;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Threader.ThreadIndex;
@@ -985,7 +986,14 @@ public class MailSender {
         boolean addMailer = prov.getConfig().isSmtpSendAddMailer();
         if (addMailer) {
             String ua = octxt != null ? octxt.getUserAgent() : null;
-            String mailer = "Zimbra " + BuildInfo.VERSION + (ua == null ? "" : " (" + ua + ")");
+            String[] customXMailer = new String[] { null };
+            ZimbraExtensionNotification.notifyExtension("com.zimbra.cs.mailbox.MailSender:X_MAILER", customXMailer, ua);
+            String mailer;
+            if (customXMailer[0] == null) {
+                mailer = "Zimbra " + BuildInfo.VERSION + (ua == null ? "" : " (" + ua + ")");
+            } else {
+                mailer = customXMailer[0];
+            }
             mm.addHeader(X_MAILER, mailer);
         }
 
