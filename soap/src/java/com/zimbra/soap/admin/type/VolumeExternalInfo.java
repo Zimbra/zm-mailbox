@@ -60,6 +60,21 @@ public class VolumeExternalInfo extends BaseExternalVolume{
     @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=false)
     private boolean useIntelligentTiering = false;
 
+    /**
+     * @zm-api-field-description Specifies unified/shared enabled or not
+     */
+
+    @XmlAttribute(name=AdminConstants.A_VOLUME_UNIFIED /* unified */, required=false)
+    private boolean unified = false;
+
+    public boolean isUnified() {
+        return unified;
+    }
+
+    public void setUnified(boolean unified) {
+        this.unified = unified;
+    }
+
     public void setVolumePrefix(String value) {
         volumePrefix = value;
     }
@@ -111,6 +126,7 @@ public class VolumeExternalInfo extends BaseExternalVolume{
         volExtInfoObj.put(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, String.valueOf(volExtInfo.isUseIntelligentTiering()));
         volExtInfoObj.put(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID, volExtInfo.getGlobalBucketConfigurationId());
         volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD, String.valueOf(volExtInfo.getUseInFrequentAccessThreshold()));
+        volExtInfoObj.put(AdminConstants.A_VOLUME_UNIFIED, String.valueOf(volExtInfo.isUnified()));
         return volExtInfoObj;
     }
 
@@ -122,6 +138,7 @@ public class VolumeExternalInfo extends BaseExternalVolume{
         volExtInfo.setUseIntelligentTiering(Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING)));
         volExtInfo.setUseInFrequentAccessThreshold(Integer.parseInt(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD)));
         volExtInfo.setStorageType(properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE));
+        volExtInfo.setUnified(Boolean.valueOf(properties.optString(AdminConstants.A_VOLUME_UNIFIED)));
         return volExtInfo;
     }
 }

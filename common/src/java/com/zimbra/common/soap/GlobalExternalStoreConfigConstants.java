@@ -14,4 +14,5 @@ public final class GlobalExternalStoreConfigConstants {
     public static final String A_S3_URL = "url";
     public static final String A_S3_BUCKET_STATUS = "bucketStatus";
 
+    public static final String A_S3_UNIFIED_VOLUME = "unified/volumes";
 }
