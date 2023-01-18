@@ -17,9 +17,13 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.util.VolumeConfigUtil;
@@ -32,9 +36,6 @@ import com.zimbra.soap.admin.message.CreateVolumeResponse;
 import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
 import com.zimbra.soap.admin.type.VolumeInfo;
 
-import java.util.List;
-import java.util.Map;
-
 public final class CreateVolume extends AdminDocumentHandler {
 
     @Override
@@ -45,7 +46,9 @@ public final class CreateVolume extends AdminDocumentHandler {
 
     private CreateVolumeResponse handle(CreateVolumeRequest request, Map<String, Object> ctx) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
-        checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
+        Server server = Provisioning.getInstance().getLocalServer();
+
+        checkRight(zsc, ctx, server, Admin.R_manageVolume);
 
         VolumeInfo volInfoRequest = request.getVolumeInfo();
         Volume.StoreType enumStoreType = (1 == volInfoRequest.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
@@ -53,7 +56,7 @@ public final class CreateVolume extends AdminDocumentHandler {
 
         Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest, enumStoreType));
         VolumeInfo volInfoResponse = volRequest.toJAXB();
-        VolumeConfigUtil.postCreateVolumeActions(request, volRequest, volInfoRequest, volInfoResponse, enumStoreType);
+        VolumeConfigUtil.postCreateVolumeActions(request, volRequest, volInfoRequest, volInfoResponse, enumStoreType, server.getId());
 
         CreateVolumeResponse createVolumeResponse = new CreateVolumeResponse(volInfoResponse);
         // if its primary volume then set respective store manager if it's different
