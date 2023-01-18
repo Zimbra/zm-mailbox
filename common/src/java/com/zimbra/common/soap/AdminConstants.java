@@ -16,11 +16,11 @@
  */
 package com.zimbra.common.soap;
 
-import org.dom4j.Namespace;
-import org.dom4j.QName;
-
 import java.util.Arrays;
 import java.util.List;
+
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 
 public final class AdminConstants {
 
@@ -1310,6 +1310,7 @@ public final class AdminConstants {
     public static final String A_VOLUME_STORE_MANAGER_CLASS = "storeManagerClass";
     public static final String A_VOLUME_BUCKET_ID = "bucketId";
     public static final String A_VOLUME_NAME_SPACE = "nameSpace";
+    public static final String A_VOLUME_UNIFIED = "unified";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
