@@ -23,10 +23,10 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.util.VolumeConfigUtil;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteVolumeRequest;
 import com.zimbra.soap.admin.message.DeleteVolumeResponse;
@@ -41,9 +41,9 @@ public final class DeleteVolume extends AdminDocumentHandler {
 
     private DeleteVolumeResponse handle(DeleteVolumeRequest req, Map<String, Object> ctx) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
-        checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
-
-        VolumeConfigUtil.parseDeleteVolumeRequest(req);
+        Server server = Provisioning.getInstance().getLocalServer();
+        checkRight(zsc, ctx, server, Admin.R_manageVolume);
+        VolumeConfigUtil.parseDeleteVolumeRequest(req, server.getId());
         return new DeleteVolumeResponse();
     }
 
