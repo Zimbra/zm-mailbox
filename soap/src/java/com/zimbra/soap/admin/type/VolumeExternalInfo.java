@@ -63,7 +63,6 @@ public class VolumeExternalInfo extends BaseExternalVolume{
     /**
      * @zm-api-field-description Specifies unified/shared enabled or not
      */
-
     @XmlAttribute(name=AdminConstants.A_VOLUME_UNIFIED /* unified */, required=false)
     private boolean unified = false;
 
