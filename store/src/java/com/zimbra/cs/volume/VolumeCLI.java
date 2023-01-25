@@ -16,6 +16,15 @@
  */
 package com.zimbra.cs.volume;
 
+import java.io.IOException;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.http.HttpException;
+
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -25,7 +34,6 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
-import com.zimbra.cs.volume.VolumeCLIConstants;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
@@ -39,14 +47,6 @@ import com.zimbra.soap.admin.message.SetCurrentVolumeRequest;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.http.HttpException;
-
-import java.io.IOException;
 
 public final class VolumeCLI extends SoapCLI {
 
@@ -66,6 +66,7 @@ public final class VolumeCLI extends SoapCLI {
     private String volumePrefix;
     private String storageType;
     private String bucketId;
+    private String unified;
 
     // openIO Attributes
     private String url;
@@ -101,6 +102,7 @@ public final class VolumeCLI extends SoapCLI {
         useInfrequentAccess = cl.getOptionValue(VolumeCLIConstants.O_UFA);
         useInfrequentAccessThreshold = cl.getOptionValue(VolumeCLIConstants.O_UFAT);
         useIntelligentTiering = cl.getOptionValue(VolumeCLIConstants.O_UIT);
+        unified = cl.getOptionValue(VolumeCLIConstants.O_UN);
     }
 
     public static void main(String[] args) {
@@ -442,6 +444,10 @@ public final class VolumeCLI extends SoapCLI {
                 if (!Strings.isNullOrEmpty(useInfrequentAccessThreshold)) {
                     volumeExternalInfo.setUseInFrequentAccessThreshold(Integer.parseInt(useInfrequentAccessThreshold));
                 }
+                if (!Strings.isNullOrEmpty(unified)
+                        && validateBoolean(AdminConstants.A_VOLUME_UNIFIED, unified)) {
+                    volumeExternalInfo.setUnified(Boolean.parseBoolean(unified));
+                }
                 volumeInfo.setVolumeExternalInfo(volumeExternalInfo);
             }
             volumeInfo.setStoreType((short) Volume.StoreType.EXTERNAL.getStoreType());
@@ -494,6 +500,7 @@ public final class VolumeCLI extends SoapCLI {
         options.addOption(new Option(VolumeCLIConstants.O_UFAT,  AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD, true, VolumeCLIConstants.H_DESC_VOL_AWS_UFAT));
         options.addOption(new Option(VolumeCLIConstants.O_UIT,   AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING,      true, VolumeCLIConstants.H_DESC_VOL_AWS_UIT));
         options.addOption(new Option(VolumeCLIConstants.O_SMC,   AdminConstants.A_VOLUME_STORE_MANAGER_CLASS,          true, VolumeCLIConstants.H_DESC_VOL_SMC));
+        options.addOption(new Option(VolumeCLIConstants.O_UN,    AdminConstants.A_VOLUME_UNIFIED,                      true,VolumeCLIConstants.H_DESC_VOL_UN));
         // OpenIO
         options.addOption(new Option(VolumeCLIConstants.O_AP,  AdminConstants.A_VOLUME_ACCOUNT_PORT, true, VolumeCLIConstants.H_DESC_VOL_AP));
         options.addOption(new Option(VolumeCLIConstants.O_PP,  AdminConstants.A_VOLUME_PROXY_PORT,   true, VolumeCLIConstants.H_DESC_VOL_PP));
@@ -535,6 +542,7 @@ public final class VolumeCLI extends SoapCLI {
         printOptWithDesc(VolumeCLIConstants.O_UFA,   8, VolumeCLIConstants.H_DESC_VOL_AWS_UFA,    false);
         printOptWithDesc(VolumeCLIConstants.O_UFAT,  8, VolumeCLIConstants.H_DESC_VOL_AWS_UFAT,   false);
         printOptWithDesc(VolumeCLIConstants.O_SMC,   8, VolumeCLIConstants.H_DESC_VOL_SMC,        false);
+        printOptWithDesc(VolumeCLIConstants.O_UN,    8, VolumeCLIConstants.H_DESC_VOL_UN,         false);
         printLineWithLeftPad(VolumeCLIConstants.H_NOTE_EXT_S3_VOL_ADD, 4);
         printLineWithLeftPad(VolumeCLIConstants.H_EXP_EXT_S3_VOL_ADD, 4);
 
