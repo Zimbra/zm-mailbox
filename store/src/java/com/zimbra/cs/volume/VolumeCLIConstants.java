@@ -16,13 +16,6 @@
  */
 package com.zimbra.cs.volume;
 
-import com.google.common.base.Strings;
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
-
-import java.io.IOException;
-
 public final class VolumeCLIConstants {
 
     /** attributes for generic purpose **/
@@ -40,6 +33,7 @@ public final class VolumeCLIConstants {
     public static final String O_C     = "c";
     public static final String O_CT    = "ct";
     public static final String O_SMC   = "smc";
+    public static final String O_UN    = "un";
 
     /** attributes for external storetype **/
     public static final String O_ST    = "st";
@@ -118,6 +112,7 @@ public final class VolumeCLIConstants {
     public static final String H_DESC_VOL_ST         = "Store type: internal or external";
     public static final String H_DESC_VOL_STP        = "Supported storage types are S3 and OPENIO";
     public static final String H_STORE_MANAGER_CLASS = "Optional parameter to specify non-default store manager class path";
+    public static final String H_DESC_VOL_UN         = "Unified Storage for S3 (true, false)";
 
     /** attributes for maintaining example of zmvolume cli options **/
     public static final String H_EXP_INT_VOL_ADD     = "Example: zmvolume -a -t primaryMessage -p /opt/zimbra/sda1 -n internalVolName";
