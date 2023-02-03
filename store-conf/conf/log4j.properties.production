@@ -128,7 +128,7 @@ appender.EWS.strategy.type = DefaultRolloverStrategy
 # Syslog appender
 %%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.type = Syslog
 %%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.name = syslogAppender
-%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.host = localhost
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.host = %%zimbraLogHostname%%
 %%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.port = 514
 %%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.protocol = UDP
 %%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.facility = LOCAL0
