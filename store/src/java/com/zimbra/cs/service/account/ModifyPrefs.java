@@ -64,6 +64,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class ModifyPrefs extends AccountDocumentHandler {
 
     public static final String PREF_PREFIX = "zimbraPref";
+    public static final String COMMA_SEPARATOR = ",";
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -75,6 +76,7 @@ public class ModifyPrefs extends AccountDocumentHandler {
             throw ServiceException.PERM_DENIED("can not modify options");
 
         HashMap<String, Object> prefs = new HashMap<String, Object>();
+        HashMap<String, String> prefsLog = new HashMap<String, String>(); // for logging the changed attributes
         Map<String, Set<String>> name2uniqueAttrValues = new HashMap<String, Set<String>>();
         for (KeyValuePair kvp : request.listKeyValuePairs(AccountConstants.E_PREF, AccountConstants.A_NAME)) {
             String name = kvp.getKey(), value = kvp.getValue();
@@ -86,6 +88,13 @@ public class ModifyPrefs extends AccountDocumentHandler {
             AttributeInfo attrInfo = AttributeManager.getInstance().getAttributeInfo(name.substring(offset));
             if (attrInfo == null) {
                 throw ServiceException.INVALID_REQUEST("no such attribute: " + name, null);
+            }
+
+            String attrValue = prefsLog.get(name);
+            if (attrValue == null) {
+                prefsLog.put(name, value);
+            } else {
+                prefsLog.put(name, attrValue.concat(COMMA_SEPARATOR).concat(value));
             }
             if (attrInfo.isCaseInsensitive()) {
                 String valueLowerCase = Strings.nullToEmpty(value).toLowerCase();
@@ -139,6 +148,7 @@ public class ModifyPrefs extends AccountDocumentHandler {
         Provisioning.getInstance().modifyAttrs(account, prefs, true, zsc.getAuthToken());
 
         Element response = zsc.createElement(AccountConstants.MODIFY_PREFS_RESPONSE);
+        ZimbraLog.account.info("Setting Preference attributes: %s ", prefsLog.toString());
         return response;
     }
 
