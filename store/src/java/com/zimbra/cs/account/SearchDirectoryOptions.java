@@ -25,6 +25,7 @@ import java.util.Set;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
@@ -353,7 +354,8 @@ public class SearchDirectoryOptions {
         if (resultPageSize >= 0) {
             this.resultPageSize = resultPageSize;
         } else {
-            throw ServiceException.INVALID_REQUEST("limit cannot be a negative value.", null);
+            this.resultPageSize = DEFAULT_LIMIT;
+            ZimbraLog.search.info("Limit cannot be a negative value. Setting it back to %s", this.resultPageSize);
         }
     }
 
