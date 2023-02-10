@@ -640,7 +640,15 @@ public class ZimletUtil {
 
         // install the config
         if (zf.hasZimletConfig()) {
-            installConfig(zf.getZimletConfig());
+            ZimletConfig zc = getZimletConfig(zimletName);
+            if (zc != null) {
+                if (zf.getZimletConfig().getVersion().compareTo(zc.getVersion()) > 0) {
+                    installConfig(zf.getZimletConfig());
+                }
+            }
+            else {
+                installConfig(zf.getZimletConfig());
+            }
         }
 
         // activate
