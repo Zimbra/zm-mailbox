@@ -22,13 +22,18 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.FlushCacheRequest;
 import com.zimbra.soap.admin.message.RevokeRightRequest;
+import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.soap.admin.type.CacheSelector;
+import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 
 public class RevokeRight extends RightDocumentHandler {
 
@@ -43,6 +48,17 @@ public class RevokeRight extends RightDocumentHandler {
 
         RightCommand.revokeRight(Provisioning.getInstance(), getAuthenticatedAccount(zsc), rrReq.getTarget(),
                                 rrReq.getGrantee(), rrReq.getRight().getValue(), rightModifier);
+        EffectiveRightsTargetSelector erTargSel = rrReq.getTarget();
+        if (com.zimbra.soap.type.TargetType.global == erTargSel.getType()) {
+            CacheSelector cacheSel = new CacheSelector(true /* allServers */, CacheEntryType.globalgrant.toString());
+            FlushCacheRequest fcReq = new FlushCacheRequest(cacheSel);
+            try {
+                FlushCache.doFlushCache(this, context, fcReq);
+            } catch (ServiceException se) {
+                ZimbraLog.acl.warn("Problem flushing acl cache for global %s/%s after revoking rights",
+                        erTargSel.getBy(), erTargSel.getValue(), se);
+            }
+        }
 
         Element response = zsc.createElement(AdminConstants.REVOKE_RIGHT_RESPONSE);
         return response;
