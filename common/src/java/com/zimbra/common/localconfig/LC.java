@@ -1140,6 +1140,11 @@ public final class LC {
     public static final KnownKey smtp_to_lmtp_port = KnownKey.newKey(7024);
 
     @Supported
+    public static final KnownKey prefs_settings_value_logging_enabled = KnownKey.newKey(false);
+    public static final KnownKey prefs_settings_value_logging_delimeter = KnownKey.newKey("; ");
+    public static final KnownKey prefs_settings_value_logging_chars_limit = KnownKey.newKey(100);
+
+    @Supported
     public static final KnownKey socks_enabled = KnownKey.newKey(false);
 
     public static final KnownKey socket_connect_timeout = KnownKey.newKey(30000);

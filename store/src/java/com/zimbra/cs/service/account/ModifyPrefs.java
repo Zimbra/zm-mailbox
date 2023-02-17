@@ -29,15 +29,18 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.account.ZAttrProvisioning.FeatureAddressVerificationStatus;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -45,9 +48,9 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeInfo;
 import com.zimbra.cs.account.AttributeManager;
@@ -64,7 +67,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class ModifyPrefs extends AccountDocumentHandler {
 
     public static final String PREF_PREFIX = "zimbraPref";
-    public static final String COMMA_SEPARATOR = ",";
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -75,8 +77,11 @@ public class ModifyPrefs extends AccountDocumentHandler {
         if (!canModifyOptions(zsc, account))
             throw ServiceException.PERM_DENIED("can not modify options");
 
+        boolean isLoggingAttrValuesEnabled = LC.prefs_settings_value_logging_enabled.booleanValue();
+        CharSequence prefsDelimiter = LC.prefs_settings_value_logging_delimeter.value();
+        int attrValueLmit = LC.prefs_settings_value_logging_chars_limit.intValue();
         HashMap<String, Object> prefs = new HashMap<String, Object>();
-        HashMap<String, String> prefsLog = new HashMap<String, String>(); // for logging the changed attributes
+        HashMap<String, String> prefsValueLog = new HashMap<String, String>(); // for logging the values of changed attributes
         Map<String, Set<String>> name2uniqueAttrValues = new HashMap<String, Set<String>>();
         for (KeyValuePair kvp : request.listKeyValuePairs(AccountConstants.E_PREF, AccountConstants.A_NAME)) {
             String name = kvp.getKey(), value = kvp.getValue();
@@ -90,12 +95,15 @@ public class ModifyPrefs extends AccountDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("no such attribute: " + name, null);
             }
 
-            String attrValue = prefsLog.get(name);
-            if (attrValue == null) {
-                prefsLog.put(name, value);
-            } else {
-                prefsLog.put(name, attrValue.concat(COMMA_SEPARATOR).concat(value));
+            if (isLoggingAttrValuesEnabled) {
+                String attrValue = prefsValueLog.get(name);
+                if (attrValue == null) {
+                    prefsValueLog.put(name, StringUtils.truncate(value, attrValueLmit));
+                } else {
+                    prefsValueLog.put(name, StringUtils.truncate(attrValue.concat(",").concat(value), attrValueLmit));
+                }
             }
+
             if (attrInfo.isCaseInsensitive()) {
                 String valueLowerCase = Strings.nullToEmpty(value).toLowerCase();
                 if (name2uniqueAttrValues.get(name) == null) {
@@ -148,7 +156,12 @@ public class ModifyPrefs extends AccountDocumentHandler {
         Provisioning.getInstance().modifyAttrs(account, prefs, true, zsc.getAuthToken());
 
         Element response = zsc.createElement(AccountConstants.MODIFY_PREFS_RESPONSE);
-        ZimbraLog.account.info("Setting Preference attributes: %s ", prefsLog.toString());
+        if (isLoggingAttrValuesEnabled) {
+            ZimbraLog.account.info("Setting Preference attributes : %s ", prefsValueLog.entrySet()
+                    .stream().map(String::valueOf).collect(Collectors.joining(prefsDelimiter, "[", "]")));
+        } else {
+            ZimbraLog.account.info("Setting Preference attributes: %s ", prefs.keySet());
+        }
         return response;
     }
 
