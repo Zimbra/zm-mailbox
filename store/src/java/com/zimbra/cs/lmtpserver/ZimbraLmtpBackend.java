@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -582,7 +582,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             }
 
             ZimbraLog.removeAccountFromContext();
-            if (ZimbraLog.lmtp.isInfoEnabled()) {
+            if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+                ZimbraLog.lmtp.info("Delivering message started: size=%s, nrcpts=%d, sender=%s, msgid=%s",
+                        env.getSize() == 0 ? "unspecified" : Integer.toString(env.getSize()) + " bytes",
+                        recipients.size(),
+                        env.getSender(),
+                        msgId == null ? "" : msgId);
+            } else if (ZimbraLog.lmtp.isInfoEnabled()) {
                 ZimbraLog.lmtp.info("Delivering message: size=%s, nrcpts=%d, sender=%s, msgid=%s",
                                     env.getSize() == 0 ? "unspecified" : Integer.toString(env.getSize()) + " bytes",
                                     recipients.size(),
@@ -783,6 +789,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 }
             }
 
+            if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+                ZimbraLog.lmtp.info("Delivering message completed: size=%s, nrcpts=%d, sender=%s, msgid=%s",
+                                    env.getSize() == 0 ? "unspecified" : Integer.toString(env.getSize()) + " bytes",
+                                    recipients.size(),
+                                    env.getSender(),
+                                    msgId == null ? "" : msgId);
+            }
             // If this message is being streamed from disk, cache it
             ParsedMessage mimeSource = pmAttachIndex != null ? pmAttachIndex : pmNoAttachIndex;
             MailboxBlob mblob = sharedDeliveryCtxt.getMailboxBlob();

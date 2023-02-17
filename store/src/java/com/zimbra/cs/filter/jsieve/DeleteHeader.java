@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -37,10 +37,12 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
+import com.zimbra.cs.mime.Mime;
 
 public class DeleteHeader extends AbstractCommand {
     private EditHeaderExtension ehe = new EditHeaderExtension();
@@ -137,9 +139,15 @@ public class DeleteHeader extends AbstractCommand {
                     mm.addHeaderLine(header.getName() + ": " + header.getValue());
                     hasEdited = true;
                 } else {
-                    ZimbraLog.filter.info(
-                        "deleteheader: deleted header in mime with name: %s and value: %s",
-                        header.getName(), header.getValue());
+                    if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+                        ZimbraLog.filter.info(
+                                "deleteheader: name=%s value=%s", header.getName(), header.getValue()
+                                + FilterUtil.getExtendedInfo(mm));
+                    } else {
+                        ZimbraLog.filter.info(
+                                "deleteheader: deleted header in mime with name: %s and value: %s",
+                                header.getName(), header.getValue());
+                    }
                 }
             }
             if (hasEdited) {

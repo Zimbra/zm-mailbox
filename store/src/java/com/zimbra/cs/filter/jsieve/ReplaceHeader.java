@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016, 2017 Synacor, Inc.
+ * Copyright (C) 2016, 2017, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -39,11 +39,13 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeUtil;
 
 public class ReplaceHeader extends AbstractCommand {
@@ -140,9 +142,15 @@ public class ReplaceHeader extends AbstractCommand {
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
-                                ZimbraLog.filter.info(
-                                    "replaceheader: replaced header in mime with name: %s and value: %s",
-                                    newHeaderName, newHeaderValue);
+                                if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+                                    ZimbraLog.filter.info(
+                                            "replaceheader: name=%s value=%s", newHeaderName, newHeaderValue
+                                            + FilterUtil.getExtendedInfo(mm));
+                                } else {
+                                    ZimbraLog.filter.info(
+                                            "replaceheader: replaced header in mime with name: %s and value: %s",
+                                            newHeaderName, newHeaderValue);
+                                }
                                 header = new Header(newHeaderName, newHeaderValue);
                                 break;
                             }
