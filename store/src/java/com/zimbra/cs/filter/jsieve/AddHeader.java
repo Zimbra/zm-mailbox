@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016, 2017 Synacor, Inc.
+ * Copyright (C) 2016, 2017, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -41,6 +41,7 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.StringUtil;
@@ -48,6 +49,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeUtil;
 
 
@@ -129,9 +131,15 @@ public class AddHeader extends AbstractCommand {
                 }
                 EditHeaderExtension.saveChanges(mailAdapter, "addheader", mm);
                 mailAdapter.updateIncomingBlob();
-                ZimbraLog.filter.info(
-                    "addheader: New header is added in mime with name: %s and value: %s",
-                    headerName, headerValue);
+                if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+                    ZimbraLog.filter.info(
+                            "addheader: name=%s value=%s", headerName, headerValue
+                            + FilterUtil.getExtendedInfo(mm));
+                } else {
+                    ZimbraLog.filter.info(
+                            "addheader: New header is added in mime with name: %s and value: %s",
+                            headerName, headerValue);
+                }
             } catch (MessagingException e) {
                 throw new OperationException("addheader: Error occured while adding new header in mime.", e);
             }

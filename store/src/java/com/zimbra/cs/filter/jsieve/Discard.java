@@ -33,11 +33,7 @@ public class Discard extends org.apache.jsieve.commands.Discard {
         if (!(mail instanceof ZimbraMailAdapter)) {
             return null;
         }
-        for (String msgId : mail.getHeader("Message-ID")) {
-            if (!msgId.isEmpty()) {
-                ZimbraLog.filter.info("Discarding Message: Message-ID=%s", msgId);
-            }
-        }
+        // removing logging as discard action is logged @setDiscardActionPresent() method
         ((ZimbraMailAdapter) mail).setDiscardActionPresent();
         return super.executeBasic(mail, arguments, block, context);
     }

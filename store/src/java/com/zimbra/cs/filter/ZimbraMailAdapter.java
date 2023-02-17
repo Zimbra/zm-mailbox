@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2017 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2017, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -52,6 +52,7 @@ import org.apache.jsieve.mail.optional.EnvelopeAccessors;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -282,8 +283,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             // If the Sieve script has no actions, JSieve generates an implicit keep.  If
             // the script contains a single discard action, JSieve returns an empty list.
             if (this.discardActionPresent) {
-                ZimbraLog.filter.info("Discarding message with Message-ID %s from %s",
-                    messageId, Mime.getSender(handler.getMimeMessage()));
+                if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+                    ZimbraLog.filter.info("Discarding message " + FilterUtil.getExtendedInfo(handler.getMimeMessage()));
+                } else {
+                    ZimbraLog.filter.info("Discarding message with Message-ID %s from %s",
+                            messageId, Mime.getSender(handler.getMimeMessage()));
+                }
             }
             if (getActions().size() == 0) {
                 handler.discard();
@@ -387,7 +392,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         // redirect mail to another address
         ActionRedirect redirect = (ActionRedirect) action;
         String addr = redirect.getAddress();
-        ZimbraLog.filter.info("Redirecting message to %s.", addr);
+        if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+            ZimbraLog.filter.info("Redirecting message to %s.", addr + FilterUtil.getExtendedInfo(handler.getMimeMessage()));
+        } else {
+            ZimbraLog.filter.info("Redirecting message to %s.", addr);
+        }
         try {
             handler.redirect(addr);
         } catch (Exception e) {
@@ -400,7 +409,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private void executeActionReplyInternal(Action action) throws ServiceException {
         // reply to mail
         ActionReply reply = (ActionReply) action;
-        ZimbraLog.filter.debug("Replying to message");
+        if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+            ZimbraLog.filter.info("Replying to message" + FilterUtil.getExtendedInfo(handler.getMimeMessage()));
+        } else {
+            ZimbraLog.filter.debug("Replying to message");
+        }
         try {
             String replyStrg = reply.getBodyTemplate();
             handler.reply(replyStrg);
@@ -412,7 +425,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
     private void executeActionNotifyInternal(Action action) throws ServiceException {
         ActionNotify notify = (ActionNotify) action;
-        ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
+        if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+            ZimbraLog.filter.info("Sending notification message to %s.", notify.getEmailAddr()
+                                + FilterUtil.getExtendedInfo(handler.getMimeMessage()));
+        } else {
+            ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
+        }
         try {
             handler.notify(notify.getEmailAddr(),
                     notify.getSubjectTemplate(),
@@ -427,7 +445,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
     private void executeActionRejectInternal(Action action) throws ServiceException {
         ActionReject reject = (ActionReject) action;
-        ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
+        if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+            ZimbraLog.filter.info("Refusing delivery of a message: %s", reject.getMessage()
+                                + FilterUtil.getExtendedInfo(handler.getMimeMessage()));
+        } else {
+            ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
+        }
         try {
             String msg = reject.getMessage();
             handler.reject(msg, envelope);
@@ -438,9 +461,14 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         }
     }
 
-    private void executeActionErejectInternal(Action action) throws ErejectException {
+    private void executeActionErejectInternal(Action action) throws ServiceException, ErejectException {
         ActionEreject ereject = (ActionEreject) action;
-        ZimbraLog.filter.debug("Refusing delivery of a message at the protocol level");
+        if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+            ZimbraLog.filter.info("Refusing delivery of a message at the protocol level"
+                                + FilterUtil.getExtendedInfo(handler.getMimeMessage()));
+        } else {
+            ZimbraLog.filter.debug("Refusing delivery of a message at the protocol level");
+        }
         try {
             handler.ereject(envelope);
         } catch (ErejectException e) {
@@ -453,7 +481,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
     private void executeActionNotifyMailto(Action action) throws ServiceException {
         ActionNotifyMailto notifyMailto = (ActionNotifyMailto) action;
-        ZimbraLog.filter.debug("Sending RFC 5435/5436 compliant notification message to %s.", notifyMailto.getMailto());
+        if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+            ZimbraLog.filter.info("Sending RFC 5435/5436 compliant notification message to %s.", notifyMailto.getMailto()
+                                + FilterUtil.getExtendedInfo(handler.getMimeMessage()));
+        } else {
+            ZimbraLog.filter.debug("Sending RFC 5435/5436 compliant notification message to %s.", notifyMailto.getMailto());
+        }
         try {
             handler.notifyMailto(envelope,
                                  notifyMailto.getFrom(),
@@ -529,8 +562,13 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         String folderPath = handler.getDefaultFolderPath();
         folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
         Message msg = null;
-        ZimbraLog.filter.debug(type == KeepType.EXPLICIT_KEEP ? "Explicit - fileinto " : "Implicit - fileinto " +
-            appendFlagTagActionsInfo(folderPath, getFlagActions(), getTagActions()));
+        String keepType = (type == KeepType.EXPLICIT_KEEP) ? "Explicit - fileinto " : "Implicit - fileinto ";
+        if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+            ZimbraLog.filter.info(keepType + appendFlagTagActionsInfo(folderPath, getFlagActions(), getTagActions())
+                                + FilterUtil.getExtendedInfo(handler.getMimeMessage()));
+        } else {
+            ZimbraLog.filter.debug(keepType + appendFlagTagActionsInfo(folderPath, getFlagActions(), getTagActions()));
+        }
         if (isPathContainedInFiledIntoPaths(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
@@ -572,7 +610,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private void fileInto(String folderPath)
     throws ServiceException {
         folderPath = CharMatcher.is('/').trimFrom(folderPath); // trim leading and trailing '/'
-        if (ZimbraLog.filter.isDebugEnabled()) {
+        if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+            ZimbraLog.filter.info(
+                    appendFlagTagActionsInfo("fileinto " + folderPath, getFlagActions(), getTagActions())
+                                            + FilterUtil.getExtendedInfo(handler.getMimeMessage()));
+        } else if (ZimbraLog.filter.isDebugEnabled()) {
             ZimbraLog.filter.debug(
                     appendFlagTagActionsInfo("fileinto " + folderPath, getFlagActions(), getTagActions()));
         }

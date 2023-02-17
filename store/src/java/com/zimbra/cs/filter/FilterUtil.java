@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 Synacor, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -1105,6 +1105,12 @@ public final class FilterUtil {
         if (headerName.contains(" ")) {
             throw new SyntaxException("ZimbraComparatorUtils : Header name must not have space(s) : \"" + headerName + "\"");
         }
+    }
+
+    public static String getExtendedInfo(MimeMessage msg) {
+        String sender = Mime.getSender(msg);
+        sender = (sender.contains("<")) ? sender.substring(sender.indexOf("<") + 1, sender.length() - 1) : sender;
+        return ", sender=" + sender +  ", MsgId=" + Mime.getMessageID(msg);
     }
 }
 

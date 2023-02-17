@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016, 2017 Synacor, Inc.
+ * Copyright (C) 2016, 2017, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -29,10 +29,14 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.soap.mail.type.FilterAction;
+
+import javax.mail.internet.MimeMessage;
 
 public class VariableLog extends Log {
     private ZimbraMailAdapter mailAdapter = null;
@@ -46,6 +50,15 @@ public class VariableLog extends Log {
         }
 
         this.mailAdapter = (ZimbraMailAdapter) mail;
+        MimeMessage mm = mailAdapter.getMimeMessage();
+        if (LC.lmtp_extended_logs_enabled.booleanValue()) {
+            Iterator<Argument> itr = arguments.getArgumentList().iterator();
+            while (itr.hasNext()) {
+                Argument arg = itr.next();
+                ZimbraLog.filter.info(
+                        "Log: " + arg + FilterUtil.getExtendedInfo(mm));
+            }
+        }
         return super.executeBasic(mail, arguments, block, context);
 
     }
