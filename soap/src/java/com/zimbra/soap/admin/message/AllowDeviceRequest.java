@@ -17,18 +17,18 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
-import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.type.AccountSelector;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @zm-api-command-auth-required true
@@ -60,6 +60,12 @@ public class AllowDeviceRequest {
     private DomainSelector domain;
 
     /**
+     * @zm-api-field-description Boolean byDeviceIdOnly
+     */
+    @XmlElement(name=AdminConstants.E_BY_DEVICEID_ONLY /* byDeviceIdOnly */, required=false)
+    private Boolean byDeviceIdOnly;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -88,8 +94,12 @@ public class AllowDeviceRequest {
 
     public DomainSelector getDomain() { return domain; }
 
+    public Boolean getByDeviceIdOnly() { return byDeviceIdOnly; }
+
+    public void setByDeviceIdOnly(Boolean byDeviceIdOnly) { this.byDeviceIdOnly = byDeviceIdOnly; }
+
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).add("domain", this.domain).toString();
+        return MoreObjects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).add("domain", this.domain).add("byDeviceIdOnly", this.byDeviceIdOnly).toString();
     }
 }
