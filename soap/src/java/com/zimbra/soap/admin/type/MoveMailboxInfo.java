@@ -17,13 +17,13 @@
 
 package com.zimbra.soap.admin.type;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.type.ZmBoolean;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class MoveMailboxInfo {
@@ -100,6 +100,13 @@ public class MoveMailboxInfo {
     private ZmBoolean sync;
 
     /**
+     * @zm-api-field-tag ngMigration
+     * @zm-api-field-description If set, run synchronously; command doesn't return until move is finished
+     */
+    @XmlAttribute(name=BackupConstants.A_NG_MIGRATION /* sync */, required=false)
+    private ZmBoolean ngMigration;
+
+    /**
      * @zm-api-field-tag skipRemoteLockout
      * @zm-api-field-description If set, do not lockout the remote mailbox. Used for backward compatibility when moving from legacy server versions
      */
@@ -135,6 +142,7 @@ public class MoveMailboxInfo {
     public void setMaxSyncs(Integer maxSyncs) { this.maxSyncs = maxSyncs; }
     public void setSyncFinishThreshold(Long syncFinishThreshold) { this.syncFinishThreshold = syncFinishThreshold; }
     public void setSync(Boolean sync) { this.sync = ZmBoolean.fromBool(sync); }
+    public void setNgMigration(Boolean ngMigration) { this.ngMigration = ZmBoolean.fromBool(ngMigration); }
     public void setSkipRemoteLockout(Boolean skipRemoteLockout) { this.skipRemoteLockout = ZmBoolean.fromBool(skipRemoteLockout); }
     public void setSkipMemcachePurge(Boolean skipMemcachePurge) { this.skipMemcachePurge = ZmBoolean.fromBool(skipMemcachePurge); }
     public String getName() { return name; }
@@ -146,6 +154,8 @@ public class MoveMailboxInfo {
     public Integer getMaxSyncs() { return maxSyncs; }
     public Long getSyncFinishThreshold() { return syncFinishThreshold; }
     public Boolean getSync() { return ZmBoolean.toBool(sync); }
+    public Boolean getNgMigration() { return ZmBoolean.toBool(ngMigration); }
+
     public Boolean getSkipRemoteLockout() { return ZmBoolean.toBool(skipRemoteLockout); }
     public Boolean getSkipMemcachePurge() { return ZmBoolean.toBool(skipMemcachePurge); }
 
@@ -162,6 +172,7 @@ public class MoveMailboxInfo {
             .add("maxSyncs", maxSyncs)
             .add("syncFinishThreshold", syncFinishThreshold)
             .add("sync", sync)
+            .add("ngMigration", ngMigration)
             .add("skipRemoteLockout", skipRemoteLockout)
             .add("skipMemcachePurge", skipMemcachePurge);
     }
