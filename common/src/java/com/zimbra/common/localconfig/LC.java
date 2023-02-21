@@ -408,6 +408,9 @@ public final class LC {
     @Reloadable
     public static final KnownKey clamav_scan_data_chunk_size = KnownKey.newKey(2048);
 
+    @Reloadable
+    public static final KnownKey zimbra_enable_dnssec = KnownKey.newKey(true);
+
     @Supported
     public static final KnownKey zimbra_directory_max_search_result = KnownKey.newKey(5000);
 
