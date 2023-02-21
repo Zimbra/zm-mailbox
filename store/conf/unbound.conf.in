@@ -6,7 +6,7 @@ server:
 	do-tcp: %%zimbraDNSUseTCP%%
 	do-udp: %%zimbraDNSUseUDP%%
 	tcp-upstream: %%zimbraDNSTCPUpstream%%
-	trust-anchor-file: "/opt/zimbra/conf/root.key"
+	%%uncomment LOCAL:zimbra_enable_dnssec%%trust-anchor-file: "/opt/zimbra/conf/root.key"
 
 local-zone: "10.in-addr.arpa." nodefault
 local-zone: "16.172.in-addr.arpa." nodefault
