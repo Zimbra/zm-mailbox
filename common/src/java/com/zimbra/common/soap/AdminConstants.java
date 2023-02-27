@@ -1134,7 +1134,6 @@ public final class AdminConstants {
     public static final String E_HOSTNAME = "hostname";
     public static final String E_LIFETIME = "lifetime";
     public static final String E_MESSAGE = "message";
-    public static final String E_BY_DEVICEID_ONLY = "bydeviceidonly";
     public static final String E_USERNAME = "username";
     public static final String E_PASSWORD = "password";
     public static final String E_NEW_PASSWORD = "newPassword";
