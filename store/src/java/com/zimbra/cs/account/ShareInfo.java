@@ -684,6 +684,7 @@ public class ShareInfo {
 
         private static String genRevokePart(ShareInfoData sid, Locale locale, boolean html) {
             return L10nUtil.getMessage(html ? MsgKey.shareRevokeBodyHtml : MsgKey.shareRevokeBodyText,
+                    locale,
                     sid.getName(),
                     formatFolderDesc(locale, sid),
                     sid.getOwnerNotifName());
@@ -691,6 +692,7 @@ public class ShareInfo {
 
         private static String genExpirePart(ShareInfoData sid, Locale locale, boolean html) {
             return L10nUtil.getMessage((html ? MsgKey.shareExpireBodyHtml : MsgKey.shareExpireBodyText),
+                    locale,
                     sid.getName(),
                     formatFolderDesc(locale, sid),
                     sid.getOwnerNotifName());
