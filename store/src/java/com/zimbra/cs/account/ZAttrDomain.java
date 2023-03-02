@@ -4828,6 +4828,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @return zimbraBrandingFolderName, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4088)
+    public String getBrandingFolderName() {
+        return getAttr(Provisioning.A_zimbraBrandingFolderName, null, true);
+    }
+
+    /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @param zimbraBrandingFolderName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4088)
+    public void setBrandingFolderName(String zimbraBrandingFolderName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBrandingFolderName, zimbraBrandingFolderName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @param zimbraBrandingFolderName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4088)
+    public Map<String,Object> setBrandingFolderName(String zimbraBrandingFolderName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBrandingFolderName, zimbraBrandingFolderName);
+        return attrs;
+    }
+
+    /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4088)
+    public void unsetBrandingFolderName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBrandingFolderName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4088)
+    public Map<String,Object> unsetBrandingFolderName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBrandingFolderName, "");
+        return attrs;
+    }
+
+    /**
      * list of disabled fields in calendar location web UI
      *
      * @return zimbraCalendarLocationDisabledFields, or null if unset
@@ -5754,6 +5831,130 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetDNSCheckHostname(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSCheckHostname, "");
+        return attrs;
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getDelayedIndexInactiveAccountAgeAsString to access value as a string.
+     *
+     * @see #getDelayedIndexInactiveAccountAgeAsString()
+     *
+     * @return zimbraDelayedIndexInactiveAccountAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4070)
+    public long getDelayedIndexInactiveAccountAge() {
+        return getTimeInterval(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, -1L, true);
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraDelayedIndexInactiveAccountAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4070)
+    public String getDelayedIndexInactiveAccountAgeAsString() {
+        return getAttr(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, null, true);
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraDelayedIndexInactiveAccountAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4070)
+    public void setDelayedIndexInactiveAccountAge(String zimbraDelayedIndexInactiveAccountAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, zimbraDelayedIndexInactiveAccountAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraDelayedIndexInactiveAccountAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4070)
+    public Map<String,Object> setDelayedIndexInactiveAccountAge(String zimbraDelayedIndexInactiveAccountAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, zimbraDelayedIndexInactiveAccountAge);
+        return attrs;
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4070)
+    public void unsetDelayedIndexInactiveAccountAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4070)
+    public Map<String,Object> unsetDelayedIndexInactiveAccountAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, "");
         return attrs;
     }
 
@@ -7889,6 +8090,215 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
+     * desc: Can be used by an external service to indicate that a trial is
+     * set to convert to active at expiration.
+     *
+     * @return zimbraDomainTrialConvertAtExpiration, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4079)
+    public boolean isDomainTrialConvertAtExpiration() {
+        return getBooleanAttr(Provisioning.A_zimbraDomainTrialConvertAtExpiration, false, true);
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
+     * desc: Can be used by an external service to indicate that a trial is
+     * set to convert to active at expiration.
+     *
+     * @param zimbraDomainTrialConvertAtExpiration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4079)
+    public void setDomainTrialConvertAtExpiration(boolean zimbraDomainTrialConvertAtExpiration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialConvertAtExpiration, zimbraDomainTrialConvertAtExpiration ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
+     * desc: Can be used by an external service to indicate that a trial is
+     * set to convert to active at expiration.
+     *
+     * @param zimbraDomainTrialConvertAtExpiration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4079)
+    public Map<String,Object> setDomainTrialConvertAtExpiration(boolean zimbraDomainTrialConvertAtExpiration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialConvertAtExpiration, zimbraDomainTrialConvertAtExpiration ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
+     * desc: Can be used by an external service to indicate that a trial is
+     * set to convert to active at expiration.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4079)
+    public void unsetDomainTrialConvertAtExpiration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialConvertAtExpiration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
+     * desc: Can be used by an external service to indicate that a trial is
+     * set to convert to active at expiration.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4079)
+    public Map<String,Object> unsetDomainTrialConvertAtExpiration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialConvertAtExpiration, "");
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialExpirationDate. Orig desc: Can
+     * be used by an external service to indicate when a trial will expire.
+     *
+     * <p>Use getDomainTrialExpirationDateAsString to access value as a string.
+     *
+     * @see #getDomainTrialExpirationDateAsString()
+     *
+     * @return zimbraDomainTrialExpirationDate as Date, null if unset or unable to parse
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4078)
+    public Date getDomainTrialExpirationDate() {
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraDomainTrialExpirationDate, null, true);
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialExpirationDate. Orig desc: Can
+     * be used by an external service to indicate when a trial will expire.
+     *
+     * @return zimbraDomainTrialExpirationDate, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4078)
+    public String getDomainTrialExpirationDateAsString() {
+        return getAttr(Provisioning.A_zimbraDomainTrialExpirationDate, null, true);
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialExpirationDate. Orig desc: Can
+     * be used by an external service to indicate when a trial will expire.
+     *
+     * @param zimbraDomainTrialExpirationDate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4078)
+    public void setDomainTrialExpirationDate(Date zimbraDomainTrialExpirationDate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, zimbraDomainTrialExpirationDate==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraDomainTrialExpirationDate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialExpirationDate. Orig desc: Can
+     * be used by an external service to indicate when a trial will expire.
+     *
+     * @param zimbraDomainTrialExpirationDate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4078)
+    public Map<String,Object> setDomainTrialExpirationDate(Date zimbraDomainTrialExpirationDate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, zimbraDomainTrialExpirationDate==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraDomainTrialExpirationDate));
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialExpirationDate. Orig desc: Can
+     * be used by an external service to indicate when a trial will expire.
+     *
+     * @param zimbraDomainTrialExpirationDate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4078)
+    public void setDomainTrialExpirationDateAsString(String zimbraDomainTrialExpirationDate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, zimbraDomainTrialExpirationDate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialExpirationDate. Orig desc: Can
+     * be used by an external service to indicate when a trial will expire.
+     *
+     * @param zimbraDomainTrialExpirationDate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4078)
+    public Map<String,Object> setDomainTrialExpirationDateAsString(String zimbraDomainTrialExpirationDate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, zimbraDomainTrialExpirationDate);
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialExpirationDate. Orig desc: Can
+     * be used by an external service to indicate when a trial will expire.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4078)
+    public void unsetDomainTrialExpirationDate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 9.0.0. use zimbraTrialExpirationDate. Orig desc: Can
+     * be used by an external service to indicate when a trial will expire.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4078)
+    public Map<String,Object> unsetDomainTrialExpirationDate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, "");
+        return attrs;
+    }
+
+    /**
      * should be one of: local, alias
      *
      * <p>Valid values: [local, alias]
@@ -8400,6 +8810,155 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetErrorReportUrl(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraErrorReportUrl, "");
+        return attrs;
+    }
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @return zimbraEventIndexInitialNumShards, or -1 if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4067)
+    public int getEventIndexInitialNumShards() {
+        return getIntAttr(Provisioning.A_zimbraEventIndexInitialNumShards, -1, true);
+    }
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @param zimbraEventIndexInitialNumShards new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4067)
+    public void setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @param zimbraEventIndexInitialNumShards new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4067)
+    public Map<String,Object> setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
+        return attrs;
+    }
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4067)
+    public void unsetEventIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4067)
+    public Map<String,Object> unsetEventIndexInitialNumShards(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
+        return attrs;
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @return zimbraEventIndexName, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4054)
+    public String getEventIndexName() {
+        return getAttr(Provisioning.A_zimbraEventIndexName, null, true);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @param zimbraEventIndexName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4054)
+    public void setEventIndexName(String zimbraEventIndexName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @param zimbraEventIndexName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4054)
+    public Map<String,Object> setEventIndexName(String zimbraEventIndexName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
+        return attrs;
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4054)
+    public void unsetEventIndexName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4054)
+    public Map<String,Object> unsetEventIndexName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexName, "");
         return attrs;
     }
 
@@ -10754,6 +11313,98 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetFeatureSocialName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSocialName, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @return zimbraFeatureZulipChatEnabled, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4081)
+    public boolean isFeatureZulipChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, false, true);
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @param zimbraFeatureZulipChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4081)
+    public void setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @param zimbraFeatureZulipChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4081)
+    public Map<String,Object> setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4081)
+    public void unsetFeatureZulipChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4081)
+    public Map<String,Object> unsetFeatureZulipChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
         return attrs;
     }
 
@@ -17506,6 +18157,150 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @return zimbraMailboxIndexInitialNumShards, or -1 if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4066)
+    public int getMailboxIndexInitialNumShards() {
+        return getIntAttr(Provisioning.A_zimbraMailboxIndexInitialNumShards, -1, true);
+    }
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @param zimbraMailboxIndexInitialNumShards new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4066)
+    public void setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @param zimbraMailboxIndexInitialNumShards new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4066)
+    public Map<String,Object> setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
+        return attrs;
+    }
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4066)
+    public void unsetMailboxIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4066)
+    public Map<String,Object> unsetMailboxIndexInitialNumShards(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
+        return attrs;
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @return zimbraMailboxIndexName, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4065)
+    public String getMailboxIndexName() {
+        return getAttr(Provisioning.A_zimbraMailboxIndexName, null, true);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @param zimbraMailboxIndexName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4065)
+    public void setMailboxIndexName(String zimbraMailboxIndexName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @param zimbraMailboxIndexName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4065)
+    public Map<String,Object> setMailboxIndexName(String zimbraMailboxIndexName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
+        return attrs;
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4065)
+    public void unsetMailboxIndexName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=4065)
+    public Map<String,Object> unsetMailboxIndexName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
+        return attrs;
+    }
+
+    /**
      * Allowed mobile device list for ActiveSync/ABQ
      *
      * @return zimbraMobileAllowedDevices, or empty array if unset
@@ -17770,6 +18565,150 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetMobileBlockedDevices(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobileBlockedDevices, "");
+        return attrs;
+    }
+
+    /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @return zimbraMobileConfigSigningCertificate, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4086)
+    public String getMobileConfigSigningCertificate() {
+        return getAttr(Provisioning.A_zimbraMobileConfigSigningCertificate, null, true);
+    }
+
+    /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @param zimbraMobileConfigSigningCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4086)
+    public void setMobileConfigSigningCertificate(String zimbraMobileConfigSigningCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningCertificate, zimbraMobileConfigSigningCertificate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @param zimbraMobileConfigSigningCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4086)
+    public Map<String,Object> setMobileConfigSigningCertificate(String zimbraMobileConfigSigningCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningCertificate, zimbraMobileConfigSigningCertificate);
+        return attrs;
+    }
+
+    /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4086)
+    public void unsetMobileConfigSigningCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4086)
+    public Map<String,Object> unsetMobileConfigSigningCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningCertificate, "");
+        return attrs;
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @return zimbraMobileConfigSigningKey, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4087)
+    public String getMobileConfigSigningKey() {
+        return getAttr(Provisioning.A_zimbraMobileConfigSigningKey, null, true);
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @param zimbraMobileConfigSigningKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4087)
+    public void setMobileConfigSigningKey(String zimbraMobileConfigSigningKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningKey, zimbraMobileConfigSigningKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @param zimbraMobileConfigSigningKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4087)
+    public Map<String,Object> setMobileConfigSigningKey(String zimbraMobileConfigSigningKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningKey, zimbraMobileConfigSigningKey);
+        return attrs;
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4087)
+    public void unsetMobileConfigSigningKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4087)
+    public Map<String,Object> unsetMobileConfigSigningKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningKey, "");
         return attrs;
     }
 
@@ -22607,6 +23546,328 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @return zimbraSMTPPublicServiceHostname, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4083)
+    public String getSMTPPublicServiceHostname() {
+        return getAttr(Provisioning.A_zimbraSMTPPublicServiceHostname, null, true);
+    }
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServiceHostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4083)
+    public void setSMTPPublicServiceHostname(String zimbraSMTPPublicServiceHostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceHostname, zimbraSMTPPublicServiceHostname);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServiceHostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4083)
+    public Map<String,Object> setSMTPPublicServiceHostname(String zimbraSMTPPublicServiceHostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceHostname, zimbraSMTPPublicServiceHostname);
+        return attrs;
+    }
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4083)
+    public void unsetSMTPPublicServiceHostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceHostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4083)
+    public Map<String,Object> unsetSMTPPublicServiceHostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceHostname, "");
+        return attrs;
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * <p>Use getSMTPPublicServicePortAsString to access value as a string.
+     *
+     * @see #getSMTPPublicServicePortAsString()
+     *
+     * @return zimbraSMTPPublicServicePort, or -1 if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4084)
+    public int getSMTPPublicServicePort() {
+        return getIntAttr(Provisioning.A_zimbraSMTPPublicServicePort, -1, true);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @return zimbraSMTPPublicServicePort, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4084)
+    public String getSMTPPublicServicePortAsString() {
+        return getAttr(Provisioning.A_zimbraSMTPPublicServicePort, null, true);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServicePort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4084)
+    public void setSMTPPublicServicePort(int zimbraSMTPPublicServicePort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, Integer.toString(zimbraSMTPPublicServicePort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServicePort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4084)
+    public Map<String,Object> setSMTPPublicServicePort(int zimbraSMTPPublicServicePort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, Integer.toString(zimbraSMTPPublicServicePort));
+        return attrs;
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServicePort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4084)
+    public void setSMTPPublicServicePortAsString(String zimbraSMTPPublicServicePort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, zimbraSMTPPublicServicePort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServicePort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4084)
+    public Map<String,Object> setSMTPPublicServicePortAsString(String zimbraSMTPPublicServicePort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, zimbraSMTPPublicServicePort);
+        return attrs;
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4084)
+    public void unsetSMTPPublicServicePort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4084)
+    public Map<String,Object> unsetSMTPPublicServicePort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, "");
+        return attrs;
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @return zimbraSMTPPublicServiceProtocol, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4085)
+    public ZAttrProvisioning.SMTPPublicServiceProtocol getSMTPPublicServiceProtocol() {
+        try { String v = getAttr(Provisioning.A_zimbraSMTPPublicServiceProtocol, true, true); return v == null ? null : ZAttrProvisioning.SMTPPublicServiceProtocol.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @return zimbraSMTPPublicServiceProtocol, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4085)
+    public String getSMTPPublicServiceProtocolAsString() {
+        return getAttr(Provisioning.A_zimbraSMTPPublicServiceProtocol, null, true);
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param zimbraSMTPPublicServiceProtocol new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4085)
+    public void setSMTPPublicServiceProtocol(ZAttrProvisioning.SMTPPublicServiceProtocol zimbraSMTPPublicServiceProtocol) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, zimbraSMTPPublicServiceProtocol.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param zimbraSMTPPublicServiceProtocol new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4085)
+    public Map<String,Object> setSMTPPublicServiceProtocol(ZAttrProvisioning.SMTPPublicServiceProtocol zimbraSMTPPublicServiceProtocol, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, zimbraSMTPPublicServiceProtocol.toString());
+        return attrs;
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param zimbraSMTPPublicServiceProtocol new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4085)
+    public void setSMTPPublicServiceProtocolAsString(String zimbraSMTPPublicServiceProtocol) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, zimbraSMTPPublicServiceProtocol);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param zimbraSMTPPublicServiceProtocol new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4085)
+    public Map<String,Object> setSMTPPublicServiceProtocolAsString(String zimbraSMTPPublicServiceProtocol, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, zimbraSMTPPublicServiceProtocol);
+        return attrs;
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4085)
+    public void unsetSMTPPublicServiceProtocol() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=4085)
+    public Map<String,Object> unsetSMTPPublicServiceProtocol(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, "");
+        return attrs;
+    }
+
+    /**
      * SSL certificate
      *
      * @return zimbraSSLCertificate, or null if unset
@@ -23244,6 +24505,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetSieveRequireControlEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Signup affiliate identifier.
+     *
+     * @return zimbraSignupAffiliate, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4090)
+    public String getSignupAffiliate() {
+        return getAttr(Provisioning.A_zimbraSignupAffiliate, null, true);
+    }
+
+    /**
+     * Signup affiliate identifier.
+     *
+     * @param zimbraSignupAffiliate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4090)
+    public void setSignupAffiliate(String zimbraSignupAffiliate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignupAffiliate, zimbraSignupAffiliate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Signup affiliate identifier.
+     *
+     * @param zimbraSignupAffiliate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4090)
+    public Map<String,Object> setSignupAffiliate(String zimbraSignupAffiliate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignupAffiliate, zimbraSignupAffiliate);
+        return attrs;
+    }
+
+    /**
+     * Signup affiliate identifier.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4090)
+    public void unsetSignupAffiliate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignupAffiliate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Signup affiliate identifier.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4090)
+    public Map<String,Object> unsetSignupAffiliate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignupAffiliate, "");
         return attrs;
     }
 
@@ -24535,6 +25868,210 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetStandardClientCustomPrefTabsEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @return zimbraTrialConvertAtExpiration, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4093)
+    public boolean isTrialConvertAtExpiration() {
+        return getBooleanAttr(Provisioning.A_zimbraTrialConvertAtExpiration, false, true);
+    }
+
+    /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @param zimbraTrialConvertAtExpiration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4093)
+    public void setTrialConvertAtExpiration(boolean zimbraTrialConvertAtExpiration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialConvertAtExpiration, zimbraTrialConvertAtExpiration ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @param zimbraTrialConvertAtExpiration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4093)
+    public Map<String,Object> setTrialConvertAtExpiration(boolean zimbraTrialConvertAtExpiration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialConvertAtExpiration, zimbraTrialConvertAtExpiration ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4093)
+    public void unsetTrialConvertAtExpiration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialConvertAtExpiration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4093)
+    public Map<String,Object> unsetTrialConvertAtExpiration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialConvertAtExpiration, "");
+        return attrs;
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * <p>Use getTrialExpirationDateAsString to access value as a string.
+     *
+     * @see #getTrialExpirationDateAsString()
+     *
+     * @return zimbraTrialExpirationDate as Date, null if unset or unable to parse
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4092)
+    public Date getTrialExpirationDate() {
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraTrialExpirationDate, null, true);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @return zimbraTrialExpirationDate, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4092)
+    public String getTrialExpirationDateAsString() {
+        return getAttr(Provisioning.A_zimbraTrialExpirationDate, null, true);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param zimbraTrialExpirationDate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4092)
+    public void setTrialExpirationDate(Date zimbraTrialExpirationDate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialExpirationDate, zimbraTrialExpirationDate==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraTrialExpirationDate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param zimbraTrialExpirationDate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4092)
+    public Map<String,Object> setTrialExpirationDate(Date zimbraTrialExpirationDate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialExpirationDate, zimbraTrialExpirationDate==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraTrialExpirationDate));
+        return attrs;
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param zimbraTrialExpirationDate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4092)
+    public void setTrialExpirationDateAsString(String zimbraTrialExpirationDate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialExpirationDate, zimbraTrialExpirationDate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param zimbraTrialExpirationDate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4092)
+    public Map<String,Object> setTrialExpirationDateAsString(String zimbraTrialExpirationDate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialExpirationDate, zimbraTrialExpirationDate);
+        return attrs;
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4092)
+    public void unsetTrialExpirationDate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialExpirationDate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4092)
+    public Map<String,Object> unsetTrialExpirationDate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTrialExpirationDate, "");
         return attrs;
     }
 
@@ -26471,6 +28008,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetZimletUserPropertiesMaxNumEntries(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletUserPropertiesMaxNumEntries, "");
+        return attrs;
+    }
+
+    /**
+     * Zulip chat domain ID
+     *
+     * @return zimbraZulipChatDomainId, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4082)
+    public String getZulipChatDomainId() {
+        return getAttr(Provisioning.A_zimbraZulipChatDomainId, null, true);
+    }
+
+    /**
+     * Zulip chat domain ID
+     *
+     * @param zimbraZulipChatDomainId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4082)
+    public void setZulipChatDomainId(String zimbraZulipChatDomainId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipChatDomainId, zimbraZulipChatDomainId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip chat domain ID
+     *
+     * @param zimbraZulipChatDomainId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4082)
+    public Map<String,Object> setZulipChatDomainId(String zimbraZulipChatDomainId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipChatDomainId, zimbraZulipChatDomainId);
+        return attrs;
+    }
+
+    /**
+     * Zulip chat domain ID
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4082)
+    public void unsetZulipChatDomainId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipChatDomainId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip chat domain ID
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4082)
+    public Map<String,Object> unsetZulipChatDomainId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipChatDomainId, "");
         return attrs;
     }
 
