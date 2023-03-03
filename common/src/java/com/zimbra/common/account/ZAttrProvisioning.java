@@ -7141,6 +7141,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMailPriorityEnabled = "zimbraFeatureMailPriorityEnabled";
 
     /**
+     * Enables the mail recall functionality
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4094)
+    public static final String A_zimbraFeatureMailRecallEnabled = "zimbraFeatureMailRecallEnabled";
+
+    /**
+     * Time(in minutes) within which a message can be recalled. The default
+     * time is 30 minutes and accepts value from 1 to 30.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4095)
+    public static final String A_zimbraFeatureMailRecallTime = "zimbraFeatureMailRecallTime";
+
+    /**
      * whether the send later feature is enabled
      *
      * @since ZCS 7.0.0
