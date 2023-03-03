@@ -12239,6 +12239,155 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Enables the mail recall functionality
+     *
+     * @return zimbraFeatureMailRecallEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4094)
+    public boolean isFeatureMailRecallEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMailRecallEnabled, false, true);
+    }
+
+    /**
+     * Enables the mail recall functionality
+     *
+     * @param zimbraFeatureMailRecallEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4094)
+    public void setFeatureMailRecallEnabled(boolean zimbraFeatureMailRecallEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailRecallEnabled, zimbraFeatureMailRecallEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables the mail recall functionality
+     *
+     * @param zimbraFeatureMailRecallEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4094)
+    public Map<String,Object> setFeatureMailRecallEnabled(boolean zimbraFeatureMailRecallEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailRecallEnabled, zimbraFeatureMailRecallEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enables the mail recall functionality
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4094)
+    public void unsetFeatureMailRecallEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailRecallEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enables the mail recall functionality
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4094)
+    public Map<String,Object> unsetFeatureMailRecallEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailRecallEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Time(in minutes) within which a message can be recalled. The default
+     * time is 30 minutes and accepts value from 1 to 30.
+     *
+     * @return zimbraFeatureMailRecallTime, or 30 if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4095)
+    public int getFeatureMailRecallTime() {
+        return getIntAttr(Provisioning.A_zimbraFeatureMailRecallTime, 30, true);
+    }
+
+    /**
+     * Time(in minutes) within which a message can be recalled. The default
+     * time is 30 minutes and accepts value from 1 to 30.
+     *
+     * @param zimbraFeatureMailRecallTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4095)
+    public void setFeatureMailRecallTime(int zimbraFeatureMailRecallTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailRecallTime, Integer.toString(zimbraFeatureMailRecallTime));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time(in minutes) within which a message can be recalled. The default
+     * time is 30 minutes and accepts value from 1 to 30.
+     *
+     * @param zimbraFeatureMailRecallTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4095)
+    public Map<String,Object> setFeatureMailRecallTime(int zimbraFeatureMailRecallTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailRecallTime, Integer.toString(zimbraFeatureMailRecallTime));
+        return attrs;
+    }
+
+    /**
+     * Time(in minutes) within which a message can be recalled. The default
+     * time is 30 minutes and accepts value from 1 to 30.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4095)
+    public void unsetFeatureMailRecallTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailRecallTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Time(in minutes) within which a message can be recalled. The default
+     * time is 30 minutes and accepts value from 1 to 30.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4095)
+    public Map<String,Object> unsetFeatureMailRecallTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailRecallTime, "");
+        return attrs;
+    }
+
+    /**
      * whether the send later feature is enabled
      *
      * @return zimbraFeatureMailSendLaterEnabled, or false if unset
