@@ -5145,6 +5145,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCOSInheritedAttr = "zimbraCOSInheritedAttr";
 
     /**
+     * whether to enable CountObjectsRequest with userAccount/account type on
+     * Zimbra Admin Console
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4096)
+    public static final String A_zimbraCountAccountsEnabled = "zimbraCountAccountsEnabled";
+
+    /**
      * time object was created
      *
      * @since ZCS 6.0.0_BETA1

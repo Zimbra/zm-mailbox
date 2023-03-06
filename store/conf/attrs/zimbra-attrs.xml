@@ -10352,4 +10352,9 @@ TODO: delete them permanently from here
     indexing         - Generate index
   </desc>
 </attr>
+
+<attr id="4096" name="zimbraCountAccountsEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="11.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether to enable CountObjectsRequest with userAccount/account type on Zimbra Admin Console</desc>
+</attr>
 </attrs>

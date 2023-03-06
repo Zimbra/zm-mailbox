@@ -12697,6 +12697,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * whether to enable CountObjectsRequest with userAccount/account type on
+     * Zimbra Admin Console
+     *
+     * @return zimbraCountAccountsEnabled, or true if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4096)
+    public boolean isCountAccountsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCountAccountsEnabled, true, true);
+    }
+
+    /**
+     * whether to enable CountObjectsRequest with userAccount/account type on
+     * Zimbra Admin Console
+     *
+     * @param zimbraCountAccountsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4096)
+    public void setCountAccountsEnabled(boolean zimbraCountAccountsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCountAccountsEnabled, zimbraCountAccountsEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to enable CountObjectsRequest with userAccount/account type on
+     * Zimbra Admin Console
+     *
+     * @param zimbraCountAccountsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4096)
+    public Map<String,Object> setCountAccountsEnabled(boolean zimbraCountAccountsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCountAccountsEnabled, zimbraCountAccountsEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to enable CountObjectsRequest with userAccount/account type on
+     * Zimbra Admin Console
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4096)
+    public void unsetCountAccountsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCountAccountsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to enable CountObjectsRequest with userAccount/account type on
+     * Zimbra Admin Console
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4096)
+    public Map<String,Object> unsetCountAccountsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCountAccountsEnabled, "");
+        return attrs;
+    }
+
+    /**
      * time object was created
      *
      * <p>Use getCreateTimestampAsString to access value as a string.
