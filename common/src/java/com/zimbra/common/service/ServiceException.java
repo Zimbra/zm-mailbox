@@ -58,6 +58,8 @@ public class ServiceException extends Exception {
     public static final String SAX_READER_ERROR = "service.SAX_READER_ERROR";
     public static final String UNSUPPORTED = "service.UNSUPPORTED";
     public static final String FORBIDDEN = "service.FORBIDDEN";
+    public static final String SIEVE_SCRIPT_MAX_SIZE_EXCEPTION = "service.SIEVE_SCRIPT_MAX_SIZE_EXCEPTION";
+    
     // generic "not found" error for objects other than mail items
     public static final String NOT_FOUND = "service.NOT_FOUND";
     public static final String INTERNAL_ERROR = "service.INTERNAL_ERROR";
@@ -307,7 +309,11 @@ public class ServiceException extends Exception {
      * The request was somehow invalid (wrong parameter, wrong target, etc)
      */
     public static ServiceException INVALID_REQUEST(String message, Throwable cause) {
-        return new ServiceException("invalid request: "+message, INVALID_REQUEST, SENDERS_FAULT, cause);
+        return new ServiceException("invalid request: " + message, INVALID_REQUEST, SENDERS_FAULT, cause);
+    }
+
+    public static ServiceException SIEVE_SCRIPT_MAX_SIZE_EXCEPTION(String message, Throwable cause) {
+        return new ServiceException("seive script max limit exceeded: " + message, SIEVE_SCRIPT_MAX_SIZE_EXCEPTION, SENDERS_FAULT, cause);
     }
 
     /**

@@ -195,11 +195,10 @@ public final class RuleManager {
             throws ServiceException {
         long sieveScriptMaxSize;
         String zimbraMailSieveScriptMaxSize = entry.getAttr(Provisioning.A_zimbraMailSieveScriptMaxSize);
-        if (zimbraMailSieveScriptMaxSize != null && !zimbraMailSieveScriptMaxSize.isEmpty()) {
+        if (zimbraMailSieveScriptMaxSize != null && !zimbraMailSieveScriptMaxSize.isEmpty() && !zimbraMailSieveScriptMaxSize.equals("0")) {
             sieveScriptMaxSize = Long.parseLong(zimbraMailSieveScriptMaxSize);
         } else {
-            Config config = Provisioning.getInstance().getConfig();
-            sieveScriptMaxSize = config.getMailSieveScriptMaxSize();
+            return;
         }
 
         long newSieveScriptSize = newSieveScript.getBytes(StandardCharsets.UTF_8).length;
@@ -248,7 +247,7 @@ public final class RuleManager {
                 .append(" bytes exceeds the limit of ")
                 .append(sieveScriptMaxSize)
                 .append(" bytes");
-            throw ServiceException.INVALID_REQUEST(msg.toString(), null);
+            throw ServiceException.SIEVE_SCRIPT_MAX_SIZE_EXCEPTION(msg.toString(), null);
         }
     }
 

@@ -30366,7 +30366,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Maximum size in bytes for sieve script attributes. When it is set to
-     * 0, the size is not limited
+     * 0, the size is not limited.
      *
      * @param zimbraMailSieveScriptMaxSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
