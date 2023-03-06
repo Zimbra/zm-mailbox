@@ -18555,13 +18555,13 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Maximum size in bytes for sieve script attributes. When it is set to
      * 0, the size is not limited.
      *
-     * @return zimbraMailSieveScriptMaxSize, or -1 if unset
+     * @return zimbraMailSieveScriptMaxSize, or 0 if unset
      *
      * @since ZCS 11.0.0
      */
     @ZAttr(id=9001)
     public long getMailSieveScriptMaxSize() {
-        return getLongAttr(Provisioning.A_zimbraMailSieveScriptMaxSize, -1L, true);
+        return getLongAttr(Provisioning.A_zimbraMailSieveScriptMaxSize, 0L, true);
     }
 
     /**
