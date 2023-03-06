@@ -10334,7 +10334,7 @@ TODO: delete them permanently from here
   <desc>Time(in minutes) within which a message can be recalled. The default time is 30 minutes and accepts value from 1 to 30.</desc>
 </attr>
 
-<attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited" since="11.0.0">
+<attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainInherited" since="11.0.0">
   <globalConfigValue>0</globalConfigValue>
   <defaultCOSValue>0</defaultCOSValue>
   <desc>Maximum size in bytes for sieve script attributes. When it is set to 0, the size is not limited.</desc>
