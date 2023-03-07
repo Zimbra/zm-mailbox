@@ -34,7 +34,7 @@ import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 
-public class ParticallyDenied {
+public class PartiallyDenied {
 
     private static final Log sLog = ZimbraLog.acl;
 
