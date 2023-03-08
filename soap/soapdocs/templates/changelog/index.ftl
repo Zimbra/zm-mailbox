@@ -12,11 +12,11 @@
 <div class="super-nav">
     <div class="container">
         <ul>
-            <li><a href="http://www.zimbra.com">zimbra.com</a></li>
-            <li><a href="http://wiki.zimbra.com">wiki</a></li>
-            <li><a href="http://www.zimbra.com/forums">forums</a></li>
-            <li><a href="http://gallery.zimbra.com">gallery</a></li>
-            <li class="last"><a href="http://www.zimbrablog.com">blog</a></li>
+            <li><a href="https://www.zimbra.com">zimbra.com</a></li>
+            <li><a href="https://wiki.zimbra.com">wiki</a></li>
+            <li><a href="https://forums.zimbra.org/">forums</a></li>
+            <li><a href="https://gallery.zimbra.com">gallery</a></li>
+            <li class="last"><a href="https://blog.zimbra.com">blog</a></li>
         </ul>
     </div>
 </div>
@@ -151,10 +151,10 @@
 
 <div class="container footer">
     <div class="span-12">
-        <p>Copyright &copy; 2012 Zimbra, Inc. All rights reserved</p>
+        <p>Copyright &copy; 2023 Synacor, Inc. All rights reserved</p>
     </div>
     <div class="span-12 last right">
-        <p><a href="http://www.zimbra.com/forums/">Forums</a> | <a href="http://www.zimbra.com/about/">About</a> | <a href="http://www.zimbra.com/legal.html#copyright">Copyright</a> | <a href="http://www.zimbra.com/privacy.html">Privacy</a> | <a href="http://www.zimbra.com/license/">License</a> | <a href="http://www.zimbra.com/legal.html">Trademarks</a></p>
+        <p><a href="https://forums.zimbra.org/">Forums</a> | <a href=https://synacor.com/about-us">About</a> | <a href="https://www.zimbra.com/legal/">Copyright</a> | <a href="https://synacor.com/privacy-policy">Privacy</a> | <a href="https://www.zimbra.com/legal/licensing/">License</a> | <a href="https://www.zimbra.com/legal/">Trademarks</a></p>
     </div>
 </div>
 </body
