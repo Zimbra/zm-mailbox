@@ -52,7 +52,7 @@ Service ${service.name}
 </p>
 
 <p>
-Copyright 2012 Zimbra, Inc. All rights reserved.
+Copyright 2023 Synacor, Inc. All rights reserved.
 </p>
 
 </body>

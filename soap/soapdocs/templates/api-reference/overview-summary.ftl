@@ -56,7 +56,7 @@ This document is the reference specification for the Zimbra SOAP API.
 
 <HR>
 <p>
-Copyright 2012 Zimbra, Inc. All rights reserved.
+Copyright 2023 Synacor, Inc. All rights reserved.
 </p>
 
 </body>
