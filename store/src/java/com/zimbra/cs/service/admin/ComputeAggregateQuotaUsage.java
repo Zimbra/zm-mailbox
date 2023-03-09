@@ -39,6 +39,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -153,9 +154,17 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
 
                     // using default locale since not sure which locale to pick
                     Locale locale = Locale.getDefault();
-                    out.setSubject(L10nUtil.getMessage(L10nUtil.MsgKey.domainAggrQuotaWarnMsgSubject, locale));
+                    String subjectKey = domain.getDomainAggrQuotaWarnMsgSubjectKey();
+                    if (StringUtil.isNullOrEmpty(subjectKey)) {
+                        subjectKey = L10nUtil.MsgKey.domainAggrQuotaWarnMsgSubject.toString();
+                    }
+                    out.setSubject(L10nUtil.getMessage(subjectKey, locale));
 
-                    out.setText(L10nUtil.getMessage(L10nUtil.MsgKey.domainAggrQuotaWarnMsgBody, locale,
+                    String bodyKey = domain.getDomainAggrQuotaWarnMsgBodyKey();
+                    if (StringUtil.isNullOrEmpty(bodyKey)) {
+                        bodyKey = L10nUtil.MsgKey.domainAggrQuotaWarnMsgBody.toString();
+                    }
+                    out.setText(L10nUtil.getMessage(bodyKey, locale,
                             domain.getName(),
                             domain.getAggregateQuotaLastUsage() / 1024.0 / 1024.0,
                             domain.getDomainAggregateQuotaWarnPercent(),

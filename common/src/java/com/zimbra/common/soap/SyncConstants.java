@@ -108,6 +108,7 @@ public final class SyncConstants {
     public static final String A_SHOWITEM = "showItems";
     public static final String A_OFFSET = "offset";
     public static final String A_LIMIT = "limit";
+    public static final String A_GET_ALL = "getAll";
     public static final String A_FILTERDEVICESBYAND = "filterDevicesByAnd";
     public static final String A_ADMIN = "Admin";
     public static final String A_USER = "User";
@@ -150,4 +151,13 @@ public final class SyncConstants {
     public static final Integer ITEMOPERATIONS_STATUS_CREDENTIALS_REQUIRED = 18;
     public static final Integer ITEMOPERATIONS_STATUS_ELEMENT_MISSING = 155;
     public static final Integer ITEMOPERATIONS_STATUS_ACTION_NOT_SUPPORTED = 156;
+
+    // ZimbraSync Commands
+    public static final String ZIMBRASYNC_CMD_SEND_MAIL = "SendMail";
+    public static final String ZIMBRASYNC_CMD_MOVE_ITEMS = "MoveItems";
+    public static final String ZIMBRASYNC_CMD_SMART_REPLY = "SmartReply";
+    public static final String ZIMBRASYNC_CMD_SMART_FORWARD = "SmartForward";
+    
+    // App specific
+    public static final String BOXER_APP = "Boxer";
 }

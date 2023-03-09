@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Provisioning.AuthMode;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.extension.ZimbraExtensionNotification;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.servlet.util.AuthUtil;
@@ -73,7 +74,7 @@ public class Auth extends AdminDocumentHandler {
             if (name == null && acctEl == null || name != null && acctEl != null) {
                 throw ServiceException.INVALID_REQUEST("invalid request parameter", null);
             }
-            
+
             AccountBy by;
             if (name != null) {
                 acctName = name;
@@ -87,6 +88,9 @@ public class Auth extends AdminDocumentHandler {
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
             acct = AccountUtil.getAccount(by, acctName, virtualHost, zsc.getAuthToken(), prov);
+
+            ZimbraExtensionNotification.notifyExtension("com.zimbra.cs.service.admin.Auth:validate", request, context);
+
             // make sure that the authenticated account is active and has not been deleted/disabled since the last request
             if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
                 throw ServiceException.PERM_DENIED("Error in Authentication");
@@ -119,7 +123,7 @@ public class Auth extends AdminDocumentHandler {
             at = AuthUtil.getAuthToken(request, prov, zsc);
 
             acct = AuthProvider.validateAuthToken(prov, at, true, at.getUsage());
-            
+
             // check this Auth token is for admin account and Zimbra user
             if (!(AuthToken.isAnyAdmin(at) && at.isZimbraUser())) {
                 throw ServiceException.PERM_DENIED("Error in Authentication");
@@ -138,7 +142,7 @@ public class Auth extends AdminDocumentHandler {
                 at = AuthUtil.getAuthToken(acct, true, null, null, authedByMech);
             }
         }
-        
+
         return doResponse(request, at, zsc, context, acct, csrfSupport);
     }
 
@@ -176,7 +180,7 @@ public class Auth extends AdminDocumentHandler {
         if (!ok)
             throw ServiceException.PERM_DENIED("not an admin account");
     }
-    
+
     @Deprecated
     private void setCSRFToken(HttpServletRequest httpReq, HttpServletResponse httpResp, AuthToken authToken, boolean csrfSupport, Element response) throws ServiceException {
         boolean csrfCheckEnabled = false;
@@ -193,7 +197,7 @@ public class Auth extends AdminDocumentHandler {
             httpResp.setHeader(Constants.CSRF_TOKEN, token);
         }
     }
-    
+
     @Override
     public boolean needsAuth(Map<String, Object> context) {
         // can't require auth on auth request

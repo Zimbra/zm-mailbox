@@ -84,6 +84,7 @@ public class AccountServiceException extends ServiceException {
     public static final String IDENTITY_EXISTS     = "account.IDENTITY_EXISTS";
     public static final String TOO_MANY_IDENTITIES = "account.TOO_MANY_IDENTITIES";
     public static final String SIGNATURE_EXISTS = "account.SIGNATURE_EXISTS";
+    public static final String SIGNATURE_CREATION_FAILURE = "account.SIGNATURE_CREATION_FAILURE";
     public static final String TOO_MANY_SIGNATURES = "account.TOO_MANY_SIGNATURES";
     public static final String TOO_MANY_ZIMLETUSERPROPERTIES = "account.TOO_MANY_ZIMLETUSERPROPERTIES";
     public static final String DATA_SOURCE_EXISTS = "account.DATA_SOURCE_EXISTS";
@@ -371,6 +372,10 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException SIGNATURE_EXISTS(String name) {
         return new AccountServiceException("signature already exists: " + name, SIGNATURE_EXISTS, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException SIGNATURE_CREATION_FAILURE(String name) {
+        return new AccountServiceException("unable to create signature: " + name, SIGNATURE_CREATION_FAILURE, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException TOO_MANY_SIGNATURES() {

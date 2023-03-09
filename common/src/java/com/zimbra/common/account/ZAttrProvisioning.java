@@ -316,6 +316,24 @@ public class ZAttrProvisioning {
         public boolean isSsl() { return this == ssl;}
     }
 
+    public static enum DelayedIndexStatus {
+        suppressed("suppressed"),
+        waitingForSearch("waitingForSearch"),
+        indexing("indexing");
+        private String mValue;
+        private DelayedIndexStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DelayedIndexStatus fromString(String s) throws ServiceException {
+            for (DelayedIndexStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSuppressed() { return this == suppressed;}
+        public boolean isWaitingForSearch() { return this == waitingForSearch;}
+        public boolean isIndexing() { return this == indexing;}
+    }
+
     public static enum DistributionListSubscriptionPolicy {
         ACCEPT("ACCEPT"),
         REJECT("REJECT"),
@@ -4188,6 +4206,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBatchedIndexingSize = "zimbraBatchedIndexingSize";
 
     /**
+     * Block sending email from external email addresses.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4026)
+    public static final String A_zimbraBlockEmailSendFromImapPop = "zimbraBlockEmailSendFromImapPop";
+
+    /**
      * alternate location for calendar and task folders
      *
      * @since ZCS 5.0.6
@@ -5684,6 +5710,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDefaultFolderFlags = "zimbraDefaultFolderFlags";
 
     /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9004)
+    public static final String A_zimbraDelayedIndexStatus = "zimbraDelayedIndexStatus";
+
+    /**
      * allowed passcode lockout duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
@@ -5920,6 +5963,25 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1330)
     public static final String A_zimbraDomainAggregateQuotaWarnPercent = "zimbraDomainAggregateQuotaWarnPercent";
+
+    /**
+     * A key in ZsMsg.properties for a body of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgBody is used.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4025)
+    public static final String A_zimbraDomainAggrQuotaWarnMsgBodyKey = "zimbraDomainAggrQuotaWarnMsgBodyKey";
+
+    /**
+     * A key in ZsMsg.properties for a subject of a domain aggregate quota
+     * warning message. If it is not set, domainAggrQuotaWarnMsgSubject is
+     * used.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4024)
+    public static final String A_zimbraDomainAggrQuotaWarnMsgSubjectKey = "zimbraDomainAggrQuotaWarnMsgSubjectKey";
 
     /**
      * zimbraId of domain alias target
@@ -6623,12 +6685,35 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureCrocodocEnabled = "zimbraFeatureCrocodocEnabled";
 
     /**
+     * Whether the custom UID is used when the POP3 UIDL command is
+     * submitted. Set TRUE to use custom UID string which is set by SOAP
+     * request SetPop3UIDRequest. If any custom UID string is not set or the
+     * value is an empty string, the standard Zimbra UID is used. Set FALSE
+     * to use a standard Zimbra UID (&#039;id.digest&#039;). Note that this
+     * attribute affects only the behavior of the POP3 UIDL command. It does
+     * not affect the return value of GetPop3UIDRequest API.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9002)
+    public static final String A_zimbraFeatureCustomUIDEnabled = "zimbraFeatureCustomUIDEnabled";
+
+    /**
      * Whether data source purging is enabled
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2014)
     public static final String A_zimbraFeatureDataSourcePurgingEnabled = "zimbraFeatureDataSourcePurgingEnabled";
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9003)
+    public static final String A_zimbraFeatureDelayedIndexEnabled = "zimbraFeatureDelayedIndexEnabled";
 
     /**
      * enable end-user mail discarding defined in mail filters features
@@ -6933,12 +7018,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMobileSyncEnabled = "zimbraFeatureMobileSyncEnabled";
 
     /**
+     * Whether Chat feature is enabled or not
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4031)
+    public static final String A_zimbraFeatureModernChatEnabled = "zimbraFeatureModernChatEnabled";
+
+    /**
      * Whether to allow a user to access Zimbra modern desktop
      *
      * @since ZCS 8.9.0
      */
     @ZAttr(id=3082)
     public static final String A_zimbraFeatureModernDesktopEnabled = "zimbraFeatureModernDesktopEnabled";
+
+    /**
+     * Whether Video feature is enabled or not
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4032)
+    public static final String A_zimbraFeatureModernVideoEnabled = "zimbraFeatureModernVideoEnabled";
 
     /**
      * Whether user can create address books
@@ -8084,7 +8185,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHelpDelegatedURL = "zimbraHelpDelegatedURL";
 
     /**
-     * help URL for standard client
+     * Help URL for modern client
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4023)
+    public static final String A_zimbraHelpModernURL = "zimbraHelpModernURL";
+
+    /**
+     * Deprecated since: 11.0.0. Zimbra help standard URL has been deprecated
+     * because standard client is removed from the product. Orig desc: help
+     * URL for standard client
      *
      * @since ZCS 5.0.7
      */
@@ -9545,6 +9656,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=32)
     public static final String A_zimbraMailSieveScript = "zimbraMailSieveScript";
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public static final String A_zimbraMailSieveScriptMaxSize = "zimbraMailSieveScriptMaxSize";
 
     /**
      * maximum length of mail signature, 0 means unlimited.

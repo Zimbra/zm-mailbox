@@ -143,6 +143,7 @@ public final class BackupConstants {
     public static final String A_MIN_REDO_SEQ = "minRedoSeq";
     public static final String A_MAX_REDO_SEQ = "maxRedoSeq";
     public static final String A_SYNC = "sync";
+    public static final String A_NG_MIGRATION = "ngMigration";
     public static final String A_ZIP = "zip";
     public static final String A_ZIP_STORE = "zipStore";
     public static final String A_SERVER = "server";

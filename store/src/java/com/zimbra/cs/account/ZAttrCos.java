@@ -2187,6 +2187,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Block sending email from external email addresses.
+     *
+     * @return zimbraBlockEmailSendFromImapPop, or false if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4026)
+    public boolean isBlockEmailSendFromImapPop() {
+        return getBooleanAttr(Provisioning.A_zimbraBlockEmailSendFromImapPop, false, true);
+    }
+
+    /**
+     * Block sending email from external email addresses.
+     *
+     * @param zimbraBlockEmailSendFromImapPop new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4026)
+    public void setBlockEmailSendFromImapPop(boolean zimbraBlockEmailSendFromImapPop) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBlockEmailSendFromImapPop, zimbraBlockEmailSendFromImapPop ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Block sending email from external email addresses.
+     *
+     * @param zimbraBlockEmailSendFromImapPop new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4026)
+    public Map<String,Object> setBlockEmailSendFromImapPop(boolean zimbraBlockEmailSendFromImapPop, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBlockEmailSendFromImapPop, zimbraBlockEmailSendFromImapPop ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Block sending email from external email addresses.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4026)
+    public void unsetBlockEmailSendFromImapPop() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBlockEmailSendFromImapPop, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Block sending email from external email addresses.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4026)
+    public Map<String,Object> unsetBlockEmailSendFromImapPop(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBlockEmailSendFromImapPop, "");
+        return attrs;
+    }
+
+    /**
      * CalDAV shared folder cache duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
@@ -9332,6 +9404,108 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether the custom UID is used when the POP3 UIDL command is
+     * submitted. Set TRUE to use custom UID string which is set by SOAP
+     * request SetPop3UIDRequest. If any custom UID string is not set or the
+     * value is an empty string, the standard Zimbra UID is used. Set FALSE
+     * to use a standard Zimbra UID (&#039;id.digest&#039;). Note that this
+     * attribute affects only the behavior of the POP3 UIDL command. It does
+     * not affect the return value of GetPop3UIDRequest API.
+     *
+     * @return zimbraFeatureCustomUIDEnabled, or false if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9002)
+    public boolean isFeatureCustomUIDEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureCustomUIDEnabled, false, true);
+    }
+
+    /**
+     * Whether the custom UID is used when the POP3 UIDL command is
+     * submitted. Set TRUE to use custom UID string which is set by SOAP
+     * request SetPop3UIDRequest. If any custom UID string is not set or the
+     * value is an empty string, the standard Zimbra UID is used. Set FALSE
+     * to use a standard Zimbra UID (&#039;id.digest&#039;). Note that this
+     * attribute affects only the behavior of the POP3 UIDL command. It does
+     * not affect the return value of GetPop3UIDRequest API.
+     *
+     * @param zimbraFeatureCustomUIDEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9002)
+    public void setFeatureCustomUIDEnabled(boolean zimbraFeatureCustomUIDEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCustomUIDEnabled, zimbraFeatureCustomUIDEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the custom UID is used when the POP3 UIDL command is
+     * submitted. Set TRUE to use custom UID string which is set by SOAP
+     * request SetPop3UIDRequest. If any custom UID string is not set or the
+     * value is an empty string, the standard Zimbra UID is used. Set FALSE
+     * to use a standard Zimbra UID (&#039;id.digest&#039;). Note that this
+     * attribute affects only the behavior of the POP3 UIDL command. It does
+     * not affect the return value of GetPop3UIDRequest API.
+     *
+     * @param zimbraFeatureCustomUIDEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9002)
+    public Map<String,Object> setFeatureCustomUIDEnabled(boolean zimbraFeatureCustomUIDEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCustomUIDEnabled, zimbraFeatureCustomUIDEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the custom UID is used when the POP3 UIDL command is
+     * submitted. Set TRUE to use custom UID string which is set by SOAP
+     * request SetPop3UIDRequest. If any custom UID string is not set or the
+     * value is an empty string, the standard Zimbra UID is used. Set FALSE
+     * to use a standard Zimbra UID (&#039;id.digest&#039;). Note that this
+     * attribute affects only the behavior of the POP3 UIDL command. It does
+     * not affect the return value of GetPop3UIDRequest API.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9002)
+    public void unsetFeatureCustomUIDEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCustomUIDEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the custom UID is used when the POP3 UIDL command is
+     * submitted. Set TRUE to use custom UID string which is set by SOAP
+     * request SetPop3UIDRequest. If any custom UID string is not set or the
+     * value is an empty string, the standard Zimbra UID is used. Set FALSE
+     * to use a standard Zimbra UID (&#039;id.digest&#039;). Note that this
+     * attribute affects only the behavior of the POP3 UIDL command. It does
+     * not affect the return value of GetPop3UIDRequest API.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9002)
+    public Map<String,Object> unsetFeatureCustomUIDEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCustomUIDEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether data source purging is enabled
      *
      * @return zimbraFeatureDataSourcePurgingEnabled, or false if unset
@@ -9400,6 +9574,83 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeatureDataSourcePurgingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureDataSourcePurgingEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated.
+     *
+     * @return zimbraFeatureDelayedIndexEnabled, or false if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9003)
+    public boolean isFeatureDelayedIndexEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureDelayedIndexEnabled, false, true);
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated.
+     *
+     * @param zimbraFeatureDelayedIndexEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9003)
+    public void setFeatureDelayedIndexEnabled(boolean zimbraFeatureDelayedIndexEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, zimbraFeatureDelayedIndexEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated.
+     *
+     * @param zimbraFeatureDelayedIndexEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9003)
+    public Map<String,Object> setFeatureDelayedIndexEnabled(boolean zimbraFeatureDelayedIndexEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, zimbraFeatureDelayedIndexEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9003)
+    public void unsetFeatureDelayedIndexEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9003)
+    public Map<String,Object> unsetFeatureDelayedIndexEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, "");
         return attrs;
     }
 
@@ -12194,6 +12445,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether Chat feature is enabled or not
+     *
+     * @return zimbraFeatureModernChatEnabled, or false if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4031)
+    public boolean isFeatureModernChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureModernChatEnabled, false, true);
+    }
+
+    /**
+     * Whether Chat feature is enabled or not
+     *
+     * @param zimbraFeatureModernChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4031)
+    public void setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether Chat feature is enabled or not
+     *
+     * @param zimbraFeatureModernChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4031)
+    public Map<String,Object> setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether Chat feature is enabled or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4031)
+    public void unsetFeatureModernChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether Chat feature is enabled or not
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4031)
+    public Map<String,Object> unsetFeatureModernChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to allow a user to access Zimbra modern desktop
      *
      * @return zimbraFeatureModernDesktopEnabled, or false if unset
@@ -12262,6 +12585,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeatureModernDesktopEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureModernDesktopEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether Video feature is enabled or not
+     *
+     * @return zimbraFeatureModernVideoEnabled, or false if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4032)
+    public boolean isFeatureModernVideoEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureModernVideoEnabled, false, true);
+    }
+
+    /**
+     * Whether Video feature is enabled or not
+     *
+     * @param zimbraFeatureModernVideoEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4032)
+    public void setFeatureModernVideoEnabled(boolean zimbraFeatureModernVideoEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernVideoEnabled, zimbraFeatureModernVideoEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether Video feature is enabled or not
+     *
+     * @param zimbraFeatureModernVideoEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4032)
+    public Map<String,Object> setFeatureModernVideoEnabled(boolean zimbraFeatureModernVideoEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernVideoEnabled, zimbraFeatureModernVideoEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether Video feature is enabled or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4032)
+    public void unsetFeatureModernVideoEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernVideoEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether Video feature is enabled or not
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4032)
+    public Map<String,Object> unsetFeatureModernVideoEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernVideoEnabled, "");
         return attrs;
     }
 
@@ -20974,6 +21369,83 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMailQuota(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailQuota, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @return zimbraMailSieveScriptMaxSize, or 0 if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public long getMailSieveScriptMaxSize() {
+        return getLongAttr(Provisioning.A_zimbraMailSieveScriptMaxSize, 0L, true);
+    }
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @param zimbraMailSieveScriptMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public void setMailSieveScriptMaxSize(long zimbraMailSieveScriptMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScriptMaxSize, Long.toString(zimbraMailSieveScriptMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @param zimbraMailSieveScriptMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public Map<String,Object> setMailSieveScriptMaxSize(long zimbraMailSieveScriptMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScriptMaxSize, Long.toString(zimbraMailSieveScriptMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public void unsetMailSieveScriptMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScriptMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for sieve script attributes. When it is set to
+     * 0, the size is not limited.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=9001)
+    public Map<String,Object> unsetMailSieveScriptMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSieveScriptMaxSize, "");
         return attrs;
     }
 

@@ -44,7 +44,9 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.imap.ImapFolder;
 import com.zimbra.cs.datasource.imap.ImapFolderCollection;
+import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -61,9 +63,11 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.message.FileSharedWithMeRequest;
 
 /**
  * @since May 29, 2005
@@ -213,6 +217,7 @@ public class ItemAction extends MailDocumentHandler {
                 String name = action.getAttribute(MailConstants.A_NAME);
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, "-1"), zsc);
                 localResults = ItemActionHelper.RENAME(octxt, mbox, responseProto, local, type, tcon, name, iidFolder).getResult();
+                handleRenameOperationForSharedFile(octxt, request, mbox, local, context, name);
             } else if (opStr.equals(MailConstants.OP_UPDATE)) {
                 String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
                 ItemId iidFolder = null;
@@ -401,6 +406,41 @@ public class ItemAction extends MailDocumentHandler {
                     " is supported only for " + MailConstants.E_CONV_ACTION_REQUEST, null);
         }
         return localResults;
+    }
+
+    /**
+     * This method renames the file at file receiver ed as well 
+     * so that file name's are in sync always
+     * @param octxt
+     * @param request
+     * @param mbox
+     * @param local
+     * @param context
+     * @param name
+     * @throws ServiceException
+     */
+    protected void handleRenameOperationForSharedFile(OperationContext octxt, Element request, Mailbox mbox,
+            List<Integer> local, Map<String, Object> context, String name) throws ServiceException {
+
+        MailItem[] items = mbox.getItemById(octxt, local, MailItem.Type.UNKNOWN);
+        for (MailItem item : items) {
+            if (item instanceof Document && item.getACL() != null) {
+                Document doc = (Document) item;
+                for (Grant grant : item.getACL().getGrants()) {
+                    FileSharedWithMeRequest req = new FileSharedWithMeRequest();
+                    req.setAction("edit");
+                    req.setFileUUID(doc.getUuid());
+                    req.setOwnerFileId(doc.getId());
+                    req.setFileName(doc.getName());
+                    req.setDate(doc.getDate());
+                    req.setSize(doc.getSize());
+                    req.setOwnerAccountId(doc.getAccountId());
+                    req.setContentType(doc.getContentType());
+                    Element Sharedrequest = JaxbUtil.jaxbToElement(req);
+                    proxyRequest(Sharedrequest, context, grant.getGranteeId());
+                }
+            }
+        }
     }
 
     private String getDataSourceOfItem(OperationContext octxt, Mailbox mbox, MailItem item) throws ServiceException {

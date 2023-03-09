@@ -3251,7 +3251,7 @@ public class SoapProvisioning extends Provisioning {
                 .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableOpen))
                 .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlDeviceTableHeader));
 
-        GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null, null, SyncAdminConstants.MDM_STATUS_SUSPENDED));
+        GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null, null, SyncAdminConstants.MDM_STATUS_SUSPENDED).setAll(true));
         List<DeviceStatusInfo> statusOfDevices = resp.getDevices().stream()
                 .filter(devices -> DateTimeUtil.checkWithinTime(Timestamp.valueOf(devices.getUpdateTime()),
                         Long.parseLong(timeInterval), TimeUnit.MINUTES))

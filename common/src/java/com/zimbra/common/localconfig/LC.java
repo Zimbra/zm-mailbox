@@ -17,18 +17,17 @@
 
 package com.zimbra.common.localconfig;
 
+import com.google.common.base.Strings;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
+import org.dom4j.DocumentException;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-
-import org.dom4j.DocumentException;
-
-import com.google.common.base.Strings;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Provides convenient means to get at local configuration - stuff that we do
@@ -408,6 +407,11 @@ public final class LC {
 
     @Supported
     public static final KnownKey ldap_starttls_required = KnownKey.newKey(true);
+
+    @Reloadable
+    public static final KnownKey clamav_socket_timeout = KnownKey.newKey(2000);
+    @Reloadable
+    public static final KnownKey clamav_scan_data_chunk_size = KnownKey.newKey(2048);
 
     @Supported
     public static final KnownKey zimbra_directory_max_search_result = KnownKey.newKey(5000);
@@ -978,6 +982,10 @@ public final class LC {
     public static final KnownKey httpclient_soaphttptransport_retry_count = KnownKey.newKey(2);
     public static final KnownKey httpclient_soaphttptransport_so_timeout = KnownKey.newKey(300 * Constants.MILLIS_PER_SECOND);
     public static final KnownKey httpclient_soaphttptransport_keepalive_connections = KnownKey.newKey(true);
+    public static final KnownKey httpclient_internal_connmgr_mailbox_timeout = KnownKey.newKey(3 * Constants.MILLIS_PER_SECOND);
+    public static final KnownKey httpclient_mdm_devices_limit_per_server = KnownKey.newKey(50);
+    public static final KnownKey httpclient_mdm_devices_total_limit= KnownKey.newKey(500);
+
 
     /**
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
@@ -1517,6 +1525,15 @@ public final class LC {
     // Storage Management
     public final static KnownKey zimbra_sm_blob_mover_parallelism_level = KnownKey.newKey(5);
     public final static KnownKey zimbra_s3_connection_request_timeout_ms = KnownKey.newKey(20000);
+
+    // ZBUG-2547 : zimbra_strict_unclosed_comment_tag if this is false we relax rule
+    // of allowing unclosed tag based on zimbra_skip_tags_with_unclosed_cdata value
+    // zimbra_skip_tags_with_unclosed_cdata : Set values , based on this tags would be checked for closed comment
+    public static final KnownKey zimbra_strict_unclosed_comment_tag = KnownKey.newKey(true);
+    public static final KnownKey zimbra_skip_tags_with_unclosed_cdata = KnownKey.newKey("style");
+
+    // ZBUG-3105: zimbra_allowed_redirect_url is a url that allows in preauth redirectURL
+    public static final KnownKey zimbra_allowed_redirect_url = KnownKey.newKey("");
     
     static {
         // Automatically set the key name with the variable name.
