@@ -93,6 +93,9 @@ import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.BufferStream;
@@ -109,6 +112,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -139,6 +143,7 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
@@ -146,6 +151,7 @@ import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
@@ -180,6 +186,7 @@ import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
 import com.zimbra.cs.redolog.op.CreateChat;
 import com.zimbra.cs.redolog.op.CreateComment;
 import com.zimbra.cs.redolog.op.CreateContact;
+import com.zimbra.cs.redolog.op.CreateFileSharedWithMe;
 import com.zimbra.cs.redolog.op.CreateFolder;
 import com.zimbra.cs.redolog.op.CreateFolderPath;
 import com.zimbra.cs.redolog.op.CreateInvite;
@@ -267,7 +274,9 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.SpoolingCache;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.message.FileSharedWithMeRequest;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
@@ -308,8 +317,9 @@ public class Mailbox implements MailboxStore {
     public static final int ID_FOLDER_PROFILE = FolderConstants.ID_FOLDER_PROFILE; // 18;
 
     public static final int ID_FOLDER_UNSUBSCRIBE = FolderConstants.ID_FOLDER_UNSUBSCRIBE; // 19;
+    public static final int ID_FOLDER_FILE_SHARED_WITH_ME = FolderConstants.ID_FOLDER_FILE_SHARED_WITH_ME; // 20;
     //This id should be incremented if any new ID_FOLDER_* is added.
-    public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 19;
+    public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 20;
 
     public static final int FIRST_USER_ID = 256;
 
@@ -2261,6 +2271,8 @@ public class Mailbox implements MailboxStore {
                             MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
             Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system,
                             MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
+            Folder.create(ID_FOLDER_FILE_SHARED_WITH_ME, UUIDUtil.generateUUID(), this, userRoot, "Files shared with me", system,
+                    MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
 
             if (LC.zimbra_feature_safe_unsubscribe_folder_enabled.booleanValue()) {
                 Folder.create(ID_FOLDER_UNSUBSCRIBE, UUIDUtil.generateUUID(), this, userRoot, "Unsubscribe", system,
@@ -9002,6 +9014,103 @@ public class Mailbox implements MailboxStore {
         return getMountpointById(octxt, mountpointId);
     }
 
+    public void createFileSharedWithMe(Mailbox mbox, OperationContext octxt, int folderId, String fileName,
+                                       String ownerAccountId, int ownerFileId, String remoteUuid, String fileOwnerName,
+                                       String contentType, long fileSize, String rights) throws ServiceException {
+
+        CreateFileSharedWithMe redoRecorder = new CreateFileSharedWithMe(mId, folderId, fileName, ownerAccountId,
+                ownerFileId, remoteUuid, fileOwnerName, contentType, rights);
+
+        boolean success = false;
+        try {
+            beginTransaction("createFileSharedWithMe", octxt, redoRecorder);
+            CreateFileSharedWithMe redoPlayer = (CreateFileSharedWithMe) currentChange().getRedoPlayer();
+
+            int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
+            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
+            UnderlyingData data = new UnderlyingData();
+            data.uuid = remoteUuid + ":" + ownerFileId;
+            data.id = mptId;
+            data.type = Type.DOCUMENT.toByte();
+            data.folderId = folderId;
+            data.date = mbox.getOperationTimestamp();
+            data.name = fileName;
+            data.setSubject(fileName);
+            data.size = fileSize;
+            data.metadata = encodeFileSharedMetadata(new Metadata(), fileOwnerName, ownerAccountId,
+                    ownerFileId, contentType, rights).toString();
+            data.contentChanged(mbox);
+            new DbMailItem(mbox).create(data);
+            Document doc = new Document(mbox, data);
+            doc.finishCreation(null);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void deleteFileSharedWithMe(Mailbox mbox, OperationContext octxt, String remoteUuid, int ownerFileId,
+                                       String ownerAccountId, String granteeAccountID) throws ServiceException {
+        CreateFileSharedWithMe redoRecorder = new CreateFileSharedWithMe(mId, remoteUuid);
+        boolean success = false;
+        try {
+            beginTransaction("deleteFileSharedWithMe", octxt, redoRecorder);
+            Document item = (Document) mbox.getItemByUuid(remoteUuid + ":" + ownerFileId, Type.DOCUMENT);
+            if (item.getOwnerAccountId().equals(ownerAccountId) && item.getAccountId().equals(granteeAccountID)) {
+                DbMailItem.delete(mbox, Collections.singletonList(item.getId()), false);
+                // update the folder item count and size accordingly
+                mbox.getFolderById(ID_FOLDER_FILE_SHARED_WITH_ME).updateSize(-1, -1, -item.getSize());
+                success = true;
+            } else {
+                throw ServiceException.PERM_DENIED("Revoke operation failed, Invalid request source");
+            }
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void updateFileSharedWithMe(Mailbox mbox, OperationContext octxt, String ownerAccountID, int ownerFileId,
+                                       String remoteUuid, String fileOwnerName, String contentType, String rights, String granteeAccountID,
+                                       String fileName, Long date, Long size) throws ServiceException {
+        CreateFileSharedWithMe redoRecorder = new CreateFileSharedWithMe(mId, remoteUuid);
+        boolean success = false;
+        try {
+            beginTransaction("updateFileSharedWithMe", octxt, redoRecorder);
+            Document item = (Document) mbox.getItemByUuid(remoteUuid + ":" + ownerFileId, Type.DOCUMENT);
+            if (item.getOwnerAccountId().equals(ownerAccountID) && item.getAccountId().equals(granteeAccountID)) {
+                Metadata meta = new Metadata();
+                meta.put(Metadata.FN_CREATOR, fileOwnerName == "" ? item.creator : fileOwnerName);
+                meta.put(Metadata.FN_MIME_TYPE, contentType == "" ? item.contentType : contentType);
+                meta.put(Metadata.FN_FILE_PERMISSION, rights == "" ? item.permission : rights);
+                meta.put(Metadata.FN_OWNER_ACCOUNT_ID, ownerAccountID);
+                meta.put(Metadata.FN_OWNER_FILE_ID, ownerFileId);
+                mbox.getItemCache().remove(item.getId());
+                // rename operation, document revision
+                if (!StringUtil.isNullOrEmpty(fileName) && date != -1) {
+                    new DbMailItem(mbox).updateSharedFile(item, meta, fileName, date, size);
+                } else {
+                    // when change in file rights
+                    new DbMailItem(mbox).update(item, meta);
+                }
+                success = true;
+            } else {
+                throw ServiceException.PERM_DENIED("Update operation failed, Invalid request source");
+            }
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    Metadata encodeFileSharedMetadata(Metadata meta, String creator, String ownerAccountId,
+                                      int ownerFileId, String contentType, String rights) {
+        meta.put(Metadata.FN_CREATOR, creator);
+        meta.put(Metadata.FN_MIME_TYPE, contentType);
+        meta.put(Metadata.FN_FILE_PERMISSION, rights);
+        meta.put(Metadata.FN_OWNER_ACCOUNT_ID, ownerAccountId);
+        meta.put(Metadata.FN_OWNER_FILE_ID, ownerFileId);
+        return meta;
+    }
+
     public void enableSharedReminder(OperationContext octxt, int mountpointId, boolean enable) throws ServiceException {
         EnableSharedReminder redoRecorder = new EnableSharedReminder(mId, mountpointId, enable);
 
@@ -9361,19 +9470,23 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public static final String ZIMBRA_SOAP_USER_AGENT = "ZimbraWebClient";
+    public static final String ZIMBRA_SOAP_VERSION = "1.0";
+    public static final int ZIMBRA_SOAP_TIMEOUT = 6000;
+    public static final int ZIMBRA_SOAP_RETRY_COUNT = 1;
+
     public Document addDocumentRevision(OperationContext octxt, int docId, ParsedDocument pd)
     throws IOException, ServiceException {
 
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(pd.getBlob(), this);
-
-        AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
-
         boolean success = false;
+        AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
+        Document doc = null;
         try {
             beginTransaction("addDocumentRevision", octxt, redoRecorder);
 
-            Document doc = getDocumentById(docId);
+            doc = getDocumentById(docId);
             redoRecorder.setDocument(pd);
             redoRecorder.setDocId(docId);
             redoRecorder.setItemType(doc.getType());
@@ -9395,6 +9508,28 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
             sm.quietDelete(staged);
+            // when file revision is done check for acl object and update file size time and
+            // details
+            updateFileSharedWithMe(pd, doc);
+        }
+    }
+
+    public void updateFileSharedWithMe(ParsedDocument pd, Document doc) throws ServiceException {
+        if (doc != null && doc instanceof Document && doc.getACL() != null && pd != null) {
+            for (Grant grant : doc.getACL().getGrants()) {
+                Account acct = Provisioning.getInstance().getAccountById(grant.getGranteeId());
+                FileSharedWithMeRequest req = new FileSharedWithMeRequest();
+                req.setAction("edit");
+                req.setFileUUID(doc.getUuid());
+                req.setOwnerFileId(doc.getId());
+                req.setFileName(doc.getName());
+                req.setDate(doc.getDate());
+                req.setSize(pd.getSize());
+                req.setOwnerAccountId(doc.getAccountId());
+                req.setContentType(doc.getContentType());
+                Element sharedRequest = JaxbUtil.jaxbToElement(req);
+                sendRequest(acct, sharedRequest, null, true, ZIMBRA_SOAP_TIMEOUT);
+            }
         }
     }
 
@@ -10657,5 +10792,58 @@ public class Mailbox implements MailboxStore {
      */
     public void resetDefaultCalendarId() throws ServiceException {
         getAccount().setPrefDefaultCalendarId(ID_FOLDER_CALENDAR);
+    }
+
+    /**
+     * Method is used to call the API based on request being formed
+     * @param acct
+     * @param request
+     * @param uri
+     * @param authRequired
+     * @param timeout
+     * @return
+     * @throws ServiceException
+     */
+    public static Element sendRequest(Account acct, Element request, String uri, boolean authRequired, int timeout)
+            throws ServiceException {
+        assert request != null;
+        assert acct != null;
+
+        String soapUri = null;
+        if (StringUtil.isNullOrEmpty(uri)) {
+            soapUri = AccountUtil.getSoapUri(acct);
+        } else {
+            soapUri = uri + AccountConstants.USER_SERVICE_URI;
+        }
+
+        SoapHttpTransport transport = new SoapHttpTransport(soapUri);
+        try {
+            transport.setUserAgent(ZIMBRA_SOAP_USER_AGENT, ZIMBRA_SOAP_VERSION);
+            transport.setTimeout(timeout);
+            transport.setRetryCount(ZIMBRA_SOAP_RETRY_COUNT);
+            transport.setOriginalUserAgent("createDocumentRevision");
+            if (authRequired) {
+                try {
+                    transport.setAuthToken(AuthProvider.getAuthToken(acct).getEncoded());
+                } catch (AuthTokenException e) {
+                    throw ServiceException.FAILURE("Failed to generate auth token for " + acct.getName(), e);
+                }
+            }
+            transport.setRequestProtocol(SoapProtocol.Soap12);
+
+            logDebugXML(request);
+            Element response = transport.invokeWithoutSession(request.detach());
+            logDebugXML(response);
+
+            return response;
+        } catch (IOException e) {
+            throw ServiceException.PROXY_ERROR(e, soapUri);
+        } finally {
+            transport.shutdown();
+        }
+    }
+
+    public static void logDebugXML(Element e) {
+        ZimbraLog.sync.debug(e.prettyPrint());
     }
 }

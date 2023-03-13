@@ -40,6 +40,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 
+import com.zimbra.common.mailbox.FolderConstants;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 
@@ -175,6 +176,7 @@ import com.zimbra.soap.type.WantRecipsSetting;
  */
 public final class ToXML {
     private static final Log LOG = LogFactory.getLog(ToXML.class);
+    private static final String FILE_SHARED_WITH_ME_ZIMBRA_ID = "0";
 
     public static enum OutputParticipants {
         PUT_SENDERS(0),
@@ -286,6 +288,10 @@ public final class ToXML {
         }
         Element elem = parent.addNonUniqueElement(MailConstants.E_FOLDER);
         encodeFolderCommon(elem, ifmt, folder, fields);
+        if (folder.getId() == FolderConstants.ID_FOLDER_FILE_SHARED_WITH_ME) {
+            elem.addAttribute(MailConstants.A_RIGHTS, "r"); //making this folder read only
+            elem.addAttribute(MailConstants.A_ZIMBRA_ID, FILE_SHARED_WITH_ME_ZIMBRA_ID);
+        }
         if (needToOutput(fields, Change.SIZE)) {
             int deleted = folder.getDeletedCount();
             elem.addAttribute(MailConstants.A_NUM, folder.getItemCount() - deleted);
@@ -3044,6 +3050,14 @@ throws ServiceException {
 
     public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields)
     throws ServiceException {
+        if (doc.getFolderId() == FolderConstants.ID_FOLDER_FILE_SHARED_WITH_ME && doc.getOwnerAccountId() != null
+                && doc.getOwnerFileId() != null) {
+            m.addAttribute(MailConstants.A_ID, doc.getOwnerAccountId() + ":" + doc.getOwnerFileId()); // accountid:fileid
+            m.addAttribute(MailConstants.A_RIGHTS, doc.getPermission());
+            m.addAttribute(MailConstants.A_SHARED_FILE_ID, doc.getId());
+        } else {
+            m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
+        }
         m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
         m.addAttribute(MailConstants.A_UUID, doc.getUuid());
         if (needToOutput(fields, Change.NAME)) {
