@@ -24,6 +24,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.OctopusXmlConstants;
+import com.zimbra.cs.service.mail.DelegatableRequest;
 import org.dom4j.QName;
 import org.eclipse.jetty.continuation.Continuation;
 
@@ -513,6 +516,12 @@ public final class ZimbraSoapContext {
         }
 
         if ((handler != null) && handler.handlesAccountHarvesting()) {
+            return;
+        }
+
+        if (((handler != null) && handler instanceof DelegatableRequest
+                && MailConstants.FILE_SHARED_WITH_ME_REQUEST.equals(requestName)
+                && ((DelegatableRequest) handler).isDelegatable()) || (OctopusXmlConstants.GET_DOCUMENT_SHARE_URL_REQUEST.equals(requestName))) {
             return;
         }
 
