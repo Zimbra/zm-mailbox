@@ -46,6 +46,9 @@ public class Document extends MailItem {
     protected long lockTimestamp;
     protected String description;
     protected boolean descEnabled;
+    protected String ownerAccountId;
+    protected String ownerFileId;
+    protected String permission;
 
     public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
@@ -86,6 +89,18 @@ public class Document extends MailItem {
 
     public boolean isDescriptionEnabled() {
         return descEnabled;
+    }
+
+    public String getOwnerAccountId() {
+        return ownerAccountId;
+    }
+
+    public String getPermission() {
+        return permission;
+    }
+
+    public String getOwnerFileId() {
+        return ownerFileId;
     }
 
     @Override
@@ -286,6 +301,15 @@ public class Document extends MailItem {
         description = meta.get(Metadata.FN_DESCRIPTION, description);
         lockTimestamp = meta.getLong(Metadata.FN_LOCK_TIMESTAMP, 0);
         descEnabled = meta.getBool(Metadata.FN_DESC_ENABLED, true);
+        if (meta.containsKey(Metadata.FN_OWNER_ACCOUNT_ID)) {
+            ownerAccountId = meta.get(Metadata.FN_OWNER_ACCOUNT_ID);
+        }
+        if (meta.containsKey(Metadata.FN_OWNER_FILE_ID)) {
+            ownerFileId = meta.get(Metadata.FN_OWNER_FILE_ID);
+        }
+        if (meta.containsKey(Metadata.FN_FILE_PERMISSION)) {
+            permission = meta.get(Metadata.FN_FILE_PERMISSION);
+        }
     }
 
     @Override

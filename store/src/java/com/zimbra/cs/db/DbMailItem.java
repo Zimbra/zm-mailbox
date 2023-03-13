@@ -1158,6 +1158,35 @@ public class DbMailItem {
         }
     }
 
+    public void updateSharedFile(MailItem item, Metadata metadata, String fileName, Long date, Long size) throws ServiceException {
+        String name = fileName.isEmpty() ? item.getName() : fileName;
+        checkNamingConstraint(mailbox, item.getFolderId(), name, item.getId());
+
+        DbConnection conn = mailbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item)
+                    + " SET  date = ?, size = ? , name = ? , mod_metadata = ? , metadata = ?, "
+                    + "  change_date = ?, mod_content = ?" + " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, (int) (date / 1000));
+            stmt.setLong(pos++, size);
+            stmt.setString(pos++, name);
+            stmt.setInt(pos++, mailbox.getOperationChangeID());
+            stmt.setString(pos++, checkMetadataLength(metadata.toString()));
+            stmt.setInt(pos++, mailbox.getOperationTimestamp());
+            stmt.setInt(pos++, item.getSavedSequence());
+            pos = setMailboxId(stmt, mailbox, pos);
+            stmt.setInt(pos++, item.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to update item mbox = " + mailbox.getId() + ", id = " + item.getId(),
+                    e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     public static void saveBlobInfo(MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         DbConnection conn = mbox.getOperationConnection();

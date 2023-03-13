@@ -122,6 +122,9 @@ public final class Metadata {
     public static final String FN_WIKI_WORD        = "ww";
     public static final String FN_ELIDED           = "X";
     public static final String FN_EXTRA_DATA       = "xd";
+    public static final String FN_OWNER_ACCOUNT_ID = "oai";
+    public static final String FN_OWNER_FILE_ID    = "ofi";
+    public static final String FN_FILE_PERMISSION  = "perm";
 
     private final Integer associatedItemId;
 
