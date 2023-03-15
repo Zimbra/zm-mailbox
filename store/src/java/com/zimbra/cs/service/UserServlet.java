@@ -345,6 +345,10 @@ public class UserServlet extends ZimbraServlet {
             checkTargetAccountStatus(context);
 
             if (!checkTwoFactorAuthentication(context)) {
+                // ZBUG-2224: remove the ZM_AUTH_TOKEN from header if Two factor auth failed
+                if (!resp.isCommitted()) {
+                    resp.reset();
+                }
                 throw ServiceException.AUTH_REQUIRED("two factor auth is required");
             }
 
