@@ -1545,7 +1545,10 @@ public final class LC {
 
     // ZBUG-3105: zimbra_allowed_redirect_url is a url that allows in preauth redirectURL
     public static final KnownKey zimbra_allowed_redirect_url = KnownKey.newKey("");
-    
+
+	// ZCS-12948: ssdb_zok_compat is true if we should write ephemeral values as JSON strings.
+	public static final KnownKey ssdb_zok_compat = KnownKey.newKey(false);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

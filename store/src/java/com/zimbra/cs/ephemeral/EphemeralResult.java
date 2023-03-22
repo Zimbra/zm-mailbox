@@ -1,9 +1,12 @@
 package com.zimbra.cs.ephemeral;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.BooleanUtils;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -19,33 +22,37 @@ public class EphemeralResult {
     private EphemeralKey key;
     private String[] values;
 
+	private final Pattern JSON_STRING_RE = Pattern.compile("^\"(.*)\"$");
+
     public EphemeralResult(EphemeralKey key, String value) {
         this.key = key;
-        this.values = value == null ? null : new String[] {value};
+        this.values = value == null ? null : normalizeZokValues(new String[]{ value });
     }
 
     public EphemeralResult(EphemeralKey key, String[] values) {
         this.key = key;
-        this.values = values;
+        this.values = normalizeZokValues(values);
     }
 
     public EphemeralResult(EphemeralKeyValuePair entry) {
         this.key = entry.getKey();
-        this.values = entry == null ? null : new String[] { entry.getValue() };
+        this.values = entry == null ? null : normalizeZokValues(new String[]{ entry.getValue() });
     }
 
     public EphemeralResult(EphemeralKeyValuePair[] entries) throws ServiceException {
         if (entries != null && entries.length > 0) {
             this.key = entries[0].getKey();
-            this.values = new String[entries.length];
+            String[] values = new String[entries.length];
             for (int i = 0; i < entries.length; i++) {
-                this.values[i] = entries[i].getValue();
+                values[i] = entries[i].getValue();
             }
+			this.values = normalizeZokValues(values);
         }
     }
 
     public EphemeralResult(EphemeralKey key, List<String> values) {
         this(key, values.toArray(new String[values.size()]));
+		this.values = normalizeZokValues(this.values);
     }
 
     public String getValue() {
@@ -209,4 +216,25 @@ public class EphemeralResult {
     private Boolean stringToBool(String s) {
         return BooleanUtils.toBooleanObject(s.toLowerCase(), "true", "false", "null");
     }
+
+
+	/** Replace extraneous quotes and other remnants of ZOK converting certain values to JSON.
+	 *
+	 * @param values the values to be set
+	 * @return the clean values
+	 */
+	private String[] normalizeZokValues(final String[] values) {
+		if (!LC.ssdb_zok_compat.booleanValue()) {
+			return values;
+		}
+
+		String[] normalized = new String[values.length];
+
+		for (int i = 0; i < values.length; i++) {
+			final Matcher m = JSON_STRING_RE.matcher(values[i]);
+			normalized[i] = m.matches() ? m.group(1) : values[i];
+		}
+
+		return normalized;
+	}
 }

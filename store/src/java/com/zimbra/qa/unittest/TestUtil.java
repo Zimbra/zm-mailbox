@@ -1636,7 +1636,7 @@ public class TestUtil extends Assert {
         try {
             org.junit.Assume.assumeTrue(testVal);
         } catch (AssumptionViolatedException ave) {
-            throw new AssumptionViolatedException(missive, null);
+            throw new AssumptionViolatedException(missive, ave);
         }
     }
 
