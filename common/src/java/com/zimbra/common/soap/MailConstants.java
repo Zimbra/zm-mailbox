@@ -1425,4 +1425,11 @@ public final class MailConstants {
     public static final QName RECOVER_ACCOUNT_RESPONSE = QName.get(E_RECOVER_ACCOUNT_RESPONSE, NAMESPACE);
     public static final String A_RECOVERY_ACCOUNT = "recoveryAccount";
     public static final String A_CHANNEL = "channel";
+
+    // MailRecall Uses
+    public static final String E_MAIL_RECALL_REQUEST = "MailRecallRequest";
+    public static final String E_MAIL_RECALL_RESPONSE = "MailRecallResponse";
+    public static final QName MAIL_RECALL_REQUEST = QName.get(E_MAIL_RECALL_REQUEST, NAMESPACE);
+    public static final QName MAIL_RECALL_RESPONSE = QName.get(E_MAIL_RECALL_RESPONSE, NAMESPACE);
+    public static final String ITEM_ID = "itemId";
 }
