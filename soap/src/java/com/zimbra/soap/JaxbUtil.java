@@ -18,6 +18,8 @@
 
 package com.zimbra.soap;
 
+import com.zimbra.soap.mail.message.MailRecallRequest;
+import com.zimbra.soap.mail.message.MailRecallResponse;
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Iterator;
