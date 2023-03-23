@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.mail.Address;
@@ -41,6 +42,7 @@ import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Joiner;
@@ -81,6 +83,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.SecretKey;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.BuildInfo;
@@ -91,6 +94,8 @@ public class MailSender {
     public static final String MSGTYPE_REPLY = String.valueOf(Flag.toChar(Flag.ID_REPLIED));
     public static final String MSGTYPE_FORWARD = String.valueOf(Flag.toChar(Flag.ID_FORWARDED));
     private static Map<String, PreSendMailListener> mPreSendMailListeners = new ConcurrentHashMap<String, PreSendMailListener>();
+    private static final MailDateFormat mailDateFormat = new MailDateFormat();
+    private static final String X_MESSAGE_VERIFICATION = "X-Zimbra-Message-Verification";
 
     private Boolean mSaveToSent;
     private Collection<Upload> mUploads;
@@ -1020,7 +1025,18 @@ public class MailSender {
         mm.setFrom(from);
         mm.setSender(sender);
 
-        mm.setSentDate(new Date());
+        Date date = new Date();
+        mm.setSentDate(date);
+
+        Optional.ofNullable(SecretKey.getMessageVerificationHeaderValue(mm.getMessageID(), mailDateFormat.format(date),
+                from.getAddress())).ifPresent(value -> {
+            try {
+                mm.addHeader(X_MESSAGE_VERIFICATION, value);
+            } catch (MessagingException e) {
+                throw new RuntimeException(String.format("Failed to add Message Verification header: %s", value), e);
+            }
+        });
+
         if (sender == null) {
             Address[] existingReplyTos = mm.getReplyTo();
             if (existingReplyTos == null || existingReplyTos.length == 0) {
@@ -1483,4 +1499,6 @@ public class MailSender {
             }
         }
     }
+
+
 }
