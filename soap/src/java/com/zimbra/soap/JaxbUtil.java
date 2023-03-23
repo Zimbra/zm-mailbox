@@ -30,6 +30,8 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 
+import com.zimbra.soap.admin.message.GenerateSecretKeyRequest;
+import com.zimbra.soap.admin.message.GenerateSecretKeyResponse;
 import org.dom4j.Document;
 import org.dom4j.Namespace;
 import org.dom4j.io.DocumentResult;
@@ -1171,7 +1173,10 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ValidateS3BucketReachableRequest.class,
             com.zimbra.soap.admin.message.ValidateS3BucketReachableResponse.class,
             com.zimbra.soap.admin.message.EditS3BucketConfigRequest.class,
-            com.zimbra.soap.admin.message.EditS3BucketConfigResponse.class
+            com.zimbra.soap.admin.message.EditS3BucketConfigResponse.class,
+            com.zimbra.soap.admin.message.GenerateSecretKeyRequest.class,
+            com.zimbra.soap.admin.message.GenerateSecretKeyResponse.class
+
         };
 
         try {
