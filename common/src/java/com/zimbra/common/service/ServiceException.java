@@ -60,6 +60,7 @@ public class ServiceException extends Exception {
     public static final String UNSUPPORTED = "service.UNSUPPORTED";
     public static final String FORBIDDEN = "service.FORBIDDEN";
     public static final String SIEVE_SCRIPT_MAX_SIZE_EXCEPTION = "service.SIEVE_SCRIPT_MAX_SIZE_EXCEPTION";
+    public static final String MAIL_RECALL_ERROR = "service.MAIL_RECALL_ERROR";
     
     // generic "not found" error for objects other than mail items
     public static final String NOT_FOUND = "service.NOT_FOUND";
@@ -301,6 +302,10 @@ public class ServiceException extends Exception {
      */
     public static ServiceException LICENSE_ERROR(String message, Throwable cause) {
         return new ServiceException("license error: "+message, LICENSE_ERROR, RECEIVERS_FAULT, cause);
+    }
+
+    public static ServiceException ERROR_MESSAGE(String str, Throwable cause){
+        return new ServiceException(String.format("mailRecall error: %s", str), MAIL_RECALL_ERROR, SENDERS_FAULT, cause);
     }
 
     public static ServiceException ERROR_WHILE_PARSING_UPLOAD(String message, Throwable cause) {
