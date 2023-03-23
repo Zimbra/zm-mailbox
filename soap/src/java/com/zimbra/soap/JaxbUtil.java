@@ -17,6 +17,8 @@
 
 package com.zimbra.soap;
 
+import com.zimbra.soap.mail.message.MailRecallRequest;
+import com.zimbra.soap.mail.message.MailRecallResponse;
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1094,6 +1096,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.VerifyCodeResponse.class,
             com.zimbra.soap.mail.message.WaitSetRequest.class,
             com.zimbra.soap.mail.message.WaitSetResponse.class,
+            com.zimbra.soap.mail.message.MailRecallRequest.class,
+            com.zimbra.soap.mail.message.MailRecallResponse.class,
             com.zimbra.soap.replication.message.BecomeMasterRequest.class,
             com.zimbra.soap.replication.message.BecomeMasterResponse.class,
             com.zimbra.soap.replication.message.BringDownServiceIPRequest.class,
@@ -1181,7 +1185,9 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ValidateS3BucketReachableRequest.class,
             com.zimbra.soap.admin.message.ValidateS3BucketReachableResponse.class,
             com.zimbra.soap.admin.message.EditS3BucketConfigRequest.class,
-            com.zimbra.soap.admin.message.EditS3BucketConfigResponse.class
+            com.zimbra.soap.admin.message.EditS3BucketConfigResponse.class,
+            com.zimbra.soap.admin.message.GenerateSecretKeyRequest.class,
+            com.zimbra.soap.admin.message.GenerateSecretKeyResponse.class
         };
 
         try {
