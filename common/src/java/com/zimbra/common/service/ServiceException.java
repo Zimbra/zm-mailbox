@@ -62,7 +62,7 @@ public class ServiceException extends Exception {
     public static final String SIEVE_SCRIPT_MAX_SIZE_EXCEPTION = "service.SIEVE_SCRIPT_MAX_SIZE_EXCEPTION";
 
     public static final String MAIL_RECALL_ERROR = "service.MAIL_RECALL_ERROR";
-    
+
     // generic "not found" error for objects other than mail items
     public static final String NOT_FOUND = "service.NOT_FOUND";
     public static final String INTERNAL_ERROR = "service.INTERNAL_ERROR";
