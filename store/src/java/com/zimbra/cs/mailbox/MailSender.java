@@ -22,17 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.mail.Address;
@@ -41,6 +31,7 @@ import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Joiner;
@@ -61,13 +52,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Identity;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.*;
 import com.zimbra.cs.extension.ZimbraExtensionNotification;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -81,6 +66,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.SecretKey;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.BuildInfo;
@@ -91,6 +77,8 @@ public class MailSender {
     public static final String MSGTYPE_REPLY = String.valueOf(Flag.toChar(Flag.ID_REPLIED));
     public static final String MSGTYPE_FORWARD = String.valueOf(Flag.toChar(Flag.ID_FORWARDED));
     private static Map<String, PreSendMailListener> mPreSendMailListeners = new ConcurrentHashMap<String, PreSendMailListener>();
+    private static final MailDateFormat mailDateFormat = new MailDateFormat();
+    private static final String X_MESSAGE_VERIFICATION = "X-Zimbra-Message-Verification";
 
     private Boolean mSaveToSent;
     private Collection<Upload> mUploads;
@@ -1015,7 +1003,12 @@ public class MailSender {
         mm.setFrom(from);
         mm.setSender(sender);
 
-        mm.setSentDate(new Date());
+        Date date = new Date();
+        mm.setSentDate(date);
+
+        String value = SecretKey.getMessageVerificationHeaderValue(mm.getMessageID(), mailDateFormat.format(date), from.getAddress());
+        mm.addHeader(X_MESSAGE_VERIFICATION, value);
+
         if (sender == null) {
             Address[] existingReplyTos = mm.getReplyTo();
             if (existingReplyTos == null || existingReplyTos.length == 0) {
@@ -1478,4 +1471,6 @@ public class MailSender {
             }
         }
     }
+
+
 }

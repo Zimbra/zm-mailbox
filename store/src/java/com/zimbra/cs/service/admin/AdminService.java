@@ -311,6 +311,9 @@ public class AdminService implements DocumentService {
 
         // ContactBackup API
         dispatcher.registerHandler(AdminConstants.CONTACT_BACKUP_REQUEST, new ContactBackup());
+
+        // GetSecretKey API
+        dispatcher.registerHandler(AdminConstants.GENERATE_SECRET_KEY_REQUEST, new GenerateSecretKey());
     }
 
     /**
