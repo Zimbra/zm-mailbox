@@ -167,7 +167,7 @@ public class ServerThrottle {
         } catch (UnknownHostException e) {
             ZimbraLog.net.warn("unknown host %s cannot be added to throttle %slist." +
             		" %s requests from this host may be throttled. " +
-            		"If this host is a proxy please add it to your DNS.", (whitelist ? "white" : "ignore "), hostname, serverType);
+            		"If this host is a proxy please add it to your DNS.", hostname, (whitelist ? "white" : "ignore "), serverType);
         }
     }
 
