@@ -314,9 +314,8 @@ class ProxyConfVar
         if(!isTarget) {
             return false;
         }
-
         String mode = server.getAttr(Provisioning.A_zimbraMailMode, "");
-        if (mode.equalsIgnoreCase(Provisioning.MailMode.http.toString())
+        if (!serverName.startsWith(LC.get("zimbra_upstream_disabled_prefix")) && (mode.equalsIgnoreCase(Provisioning.MailMode.http.toString())
                 || mode.equalsIgnoreCase(Provisioning.MailMode.mixed
                         .toString())
                 || mode.equalsIgnoreCase(Provisioning.MailMode.both
@@ -324,7 +323,7 @@ class ProxyConfVar
                 || mode.equalsIgnoreCase(Provisioning.MailMode.redirect
                         .toString())
                 || mode.equalsIgnoreCase(Provisioning.MailMode.https
-                        .toString())) {
+                        .toString()))) {
             return true;
         } else {
             mLog.warn("Upstream: Ignoring server: " + serverName
