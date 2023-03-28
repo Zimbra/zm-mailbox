@@ -779,7 +779,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /**
      * value stored in the Metadata.FN_POP3_UID ("p3uid")
      */
-    protected String             mPop3Uid;
+    protected String mPop3Uid;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);

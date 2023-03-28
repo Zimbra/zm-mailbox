@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2019 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -98,7 +98,7 @@ public final class Pop3Message {
         }
     }
 
-	void setUid(String uid) {
-		this.uid = uid;
-	}
+    void setUid(String uid) {
+        this.uid = uid;
+    }
 }

@@ -304,11 +304,10 @@ public final class MailConstants {
     public static final String E_IMAP_COPY_RESPONSE = "IMAPCopyResponse";
     public static final String E_FILE_SHARED_WITH_ME_REQUEST = "FileSharedWithMeRequest";
     public static final String E_FILE_SHARED_WITH_ME_RESPONSE = "FileSharedWithMeResponse";
-
-	public static final String E_GET_POP3_UID_REQUEST = "GetPop3UIDRequest";
-	public static final String E_GET_POP3_UID_RESPONSE = "GetPop3UIDResponse";
-	public static final String E_SET_POP3_UID_REQUEST = "SetPop3UIDRequest";
-	public static final String E_SET_POP3_UID_RESPONSE = "SetPop3UIDResponse";
+    public static final String E_GET_POP3_UID_REQUEST = "GetPop3UIDRequest";
+    public static final String E_GET_POP3_UID_RESPONSE = "GetPop3UIDResponse";
+    public static final String E_SET_POP3_UID_REQUEST = "SetPop3UIDRequest";
+    public static final String E_SET_POP3_UID_RESPONSE = "SetPop3UIDResponse";
 
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
@@ -617,10 +616,10 @@ public final class MailConstants {
     public static final QName FILE_SHARED_WITH_ME_RESPONSE = QName.get(E_FILE_SHARED_WITH_ME_RESPONSE, NAMESPACE);
 
     // POP3 UIDL
-	public static final QName GET_POP3_UID_REQUEST = QName.get(E_GET_POP3_UID_REQUEST, NAMESPACE);
-	public static final QName GET_POP3_UID_RESPONSE = QName.get(E_GET_POP3_UID_RESPONSE, NAMESPACE);
-	public static final QName SET_POP3_UID_REQUEST = QName.get(E_SET_POP3_UID_REQUEST, NAMESPACE);
-	public static final QName SET_POP3_UID_RESPONSE = QName.get(E_SET_POP3_UID_RESPONSE, NAMESPACE);
+    public static final QName GET_POP3_UID_REQUEST = QName.get(E_GET_POP3_UID_REQUEST, NAMESPACE);
+    public static final QName GET_POP3_UID_RESPONSE = QName.get(E_GET_POP3_UID_RESPONSE, NAMESPACE);
+    public static final QName SET_POP3_UID_REQUEST = QName.get(E_SET_POP3_UID_REQUEST, NAMESPACE);
+    public static final QName SET_POP3_UID_RESPONSE = QName.get(E_SET_POP3_UID_RESPONSE, NAMESPACE);
 
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";

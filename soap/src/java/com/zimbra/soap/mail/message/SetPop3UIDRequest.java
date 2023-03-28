@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2019 Synacor, Inc.
+ * Copyright (C) 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -44,8 +44,7 @@ import com.zimbra.soap.mail.type.Uid;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SET_POP3_UID_REQUEST)
 public class SetPop3UIDRequest {
-
-	@ZimbraKeyValuePairs
+    @ZimbraKeyValuePairs
     @XmlElement(name=MailConstants.E_POP3UID, required=false)
     private List<Uid> uids = Lists.newArrayList();
 
