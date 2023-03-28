@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Zimbra Windows Components 8.8.10 GA
+Zimbra Windows Components 10.0.0 GA
 
 
 ===========================================================================
