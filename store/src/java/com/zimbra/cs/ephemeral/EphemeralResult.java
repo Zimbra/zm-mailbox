@@ -224,7 +224,7 @@ public class EphemeralResult {
 	 * @return the clean values
 	 */
 	private String[] normalizeZokValues(final String[] values) {
-		if (!LC.ssdb_zok_compat.booleanValue()) {
+		if (!LC.ssdb_zimbrax_compat.booleanValue()) {
 			return values;
 		}
 
