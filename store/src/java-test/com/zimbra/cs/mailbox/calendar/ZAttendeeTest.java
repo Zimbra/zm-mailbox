@@ -21,11 +21,11 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hamcrest.core.StringContains;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.internal.matchers.StringContains;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
 
