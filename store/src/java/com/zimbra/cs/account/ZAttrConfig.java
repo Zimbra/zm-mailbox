@@ -165,6 +165,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Can be used in Mail Recall to make it more secure from spoof.
+     *
+     * @return secretKeyForMailRecall, or null if unset
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4103)
+    public String getSecretKeyForMailRecall() {
+        return getAttr(Provisioning.A_secretKeyForMailRecall, null, true);
+    }
+
+    /**
+     * Can be used in Mail Recall to make it more secure from spoof.
+     *
+     * @param secretKeyForMailRecall new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4103)
+    public void setSecretKeyForMailRecall(String secretKeyForMailRecall) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_secretKeyForMailRecall, secretKeyForMailRecall);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used in Mail Recall to make it more secure from spoof.
+     *
+     * @param secretKeyForMailRecall new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4103)
+    public Map<String,Object> setSecretKeyForMailRecall(String secretKeyForMailRecall, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_secretKeyForMailRecall, secretKeyForMailRecall);
+        return attrs;
+    }
+
+    /**
+     * Can be used in Mail Recall to make it more secure from spoof.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4103)
+    public void unsetSecretKeyForMailRecall() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_secretKeyForMailRecall, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used in Mail Recall to make it more secure from spoof.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4103)
+    public Map<String,Object> unsetSecretKeyForMailRecall(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_secretKeyForMailRecall, "");
+        return attrs;
+    }
+
+    /**
      * Zimbra access control list
      *
      * @return zimbraACE, or empty array if unset
@@ -18602,7 +18674,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraFeatureMailRecallEnabled, or false if unset
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4094)
     public boolean isFeatureMailRecallEnabled() {
@@ -18615,7 +18687,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraFeatureMailRecallEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4094)
     public void setFeatureMailRecallEnabled(boolean zimbraFeatureMailRecallEnabled) throws com.zimbra.common.service.ServiceException {
@@ -18631,7 +18703,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4094)
     public Map<String,Object> setFeatureMailRecallEnabled(boolean zimbraFeatureMailRecallEnabled, Map<String,Object> attrs) {
@@ -18645,7 +18717,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4094)
     public void unsetFeatureMailRecallEnabled() throws com.zimbra.common.service.ServiceException {
@@ -18660,7 +18732,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4094)
     public Map<String,Object> unsetFeatureMailRecallEnabled(Map<String,Object> attrs) {
@@ -18675,7 +18747,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraFeatureMailRecallTime, or 30 if unset
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4095)
     public int getFeatureMailRecallTime() {
@@ -18689,7 +18761,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraFeatureMailRecallTime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4095)
     public void setFeatureMailRecallTime(int zimbraFeatureMailRecallTime) throws com.zimbra.common.service.ServiceException {
@@ -18706,7 +18778,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4095)
     public Map<String,Object> setFeatureMailRecallTime(int zimbraFeatureMailRecallTime, Map<String,Object> attrs) {
@@ -18721,7 +18793,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4095)
     public void unsetFeatureMailRecallTime() throws com.zimbra.common.service.ServiceException {
@@ -18737,7 +18809,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4095)
     public Map<String,Object> unsetFeatureMailRecallTime(Map<String,Object> attrs) {

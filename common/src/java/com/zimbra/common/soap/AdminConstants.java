@@ -1617,6 +1617,12 @@ public final class AdminConstants {
     public static final QName VALIDATE_S3_BUCKET_REACHABLE_REQUEST = QName.get(E_VALIDATE_S3_BUCKET_REACHABLE_REQUEST, NAMESPACE);
     public static final QName VALIDATE_S3_BUCKET_REACHABLE_RESPONSE = QName.get(E_VALIDATE_S3_BUCKET_REACHABLE_RESPONSE, NAMESPACE);
 
+    // Secret key for mail recall
+    public static final String E_GENERATE_SECRET_KEY_REQUEST = "GenerateSecretKeyRequest";
+    public static final String E_GENERATE_SECRET_KEY_RESPONSE = "GenerateSecretKeyResponse";
+    public static final QName GENERATE_SECRET_KEY_REQUEST = QName.get(E_GENERATE_SECRET_KEY_REQUEST, NAMESPACE);
+    public static final QName GENERATE_SECRET_KEY_RESPONSE = QName.get(E_GENERATE_SECRET_KEY_RESPONSE, NAMESPACE);
+
     // Removed Zetras zimlet package list
     public static final List<String> ZEXTRAS_PACKAGES_LIST = Arrays.asList("com_ng_auth", "com_zextras_zextras",
             "com_zextras_client", "com_zimbra_connect_classic", "com_zimbra_connect_modern", "com_zextras_docs",

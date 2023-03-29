@@ -10322,17 +10322,16 @@ TODO: delete them permanently from here
 <attr id="4093" name="zimbraTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="9.0.0">
   <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
-<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
+<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" callback="GenerateSecretKeyCallback" since="10.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enables the mail recall functionality</desc>
 </attr>
-<attr id="4095" name="zimbraFeatureMailRecallTime" type="integer" min="1" max="30" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
+<attr id="4095" name="zimbraFeatureMailRecallTime" type="integer" min="1" max="30" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" since="10.0.0">
   <globalConfigValue>30</globalConfigValue>
   <defaultCOSValue>30</defaultCOSValue>
   <desc>Time(in minutes) within which a message can be recalled. The default time is 30 minutes and accepts value from 1 to 30.</desc>
 </attr>
-
 <attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited" since="11.0.0">
   <globalConfigValue>0</globalConfigValue>
   <defaultCOSValue>0</defaultCOSValue>
@@ -10389,6 +10388,10 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>Whether retention policy feature is enabled</desc>
+</attr>
+
+<attr id="4103" name="secretKeyForMailRecall" type="string" max="128" cardinality="single" optionalIn="globalConfig" since="10.0.0">
+  <desc>Can be used in Mail Recall to make it more secure from spoof.</desc>
 </attr>
 
 </attrs>

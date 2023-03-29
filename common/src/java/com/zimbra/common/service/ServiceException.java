@@ -37,6 +37,7 @@ import com.zimbra.common.util.StringUtil;
 public class ServiceException extends Exception {
 
     public static final String FAILURE = "service.FAILURE";
+    public static final String ERROR = "service.ERROR";
     public static final String INVALID_REQUEST = "service.INVALID_REQUEST";
     public static final String UNKNOWN_DOCUMENT = "service.UNKNOWN_DOCUMENT";
     public static final String PARSE_ERROR = "service.PARSE_ERROR";
@@ -291,6 +292,10 @@ public class ServiceException extends Exception {
      */
     public static ServiceException FAILURE(String message, Throwable cause) {
         return new ServiceException("system failure: "+message, FAILURE, RECEIVERS_FAULT, cause);
+    }
+
+    public static ServiceException ERROR_MESSAGE(String message, Throwable cause){
+        return new ServiceException(message, ERROR, SENDERS_FAULT, cause);
     }
 
     public static ServiceException ERROR_WHILE_PARSING_UPLOAD(String message, Throwable cause) {

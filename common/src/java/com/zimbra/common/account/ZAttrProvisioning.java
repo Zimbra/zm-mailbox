@@ -2870,6 +2870,14 @@ public class ZAttrProvisioning {
     public static final String A_registeredAddress = "registeredAddress";
 
     /**
+     * Can be used in Mail Recall to make it more secure from spoof.
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=4103)
+    public static final String A_secretKeyForMailRecall = "secretKeyForMailRecall";
+
+    /**
      * RFC2256: last (family) name(s) for which the entity is known by
      */
     @ZAttr(id=-1)
@@ -7152,7 +7160,7 @@ public class ZAttrProvisioning {
     /**
      * Enables the mail recall functionality
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4094)
     public static final String A_zimbraFeatureMailRecallEnabled = "zimbraFeatureMailRecallEnabled";
@@ -7161,7 +7169,7 @@ public class ZAttrProvisioning {
      * Time(in minutes) within which a message can be recalled. The default
      * time is 30 minutes and accepts value from 1 to 30.
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.0.0
      */
     @ZAttr(id=4095)
     public static final String A_zimbraFeatureMailRecallTime = "zimbraFeatureMailRecallTime";
