@@ -22,7 +22,7 @@ public class EphemeralResult {
     private EphemeralKey key;
     private String[] values;
 
-	private final Pattern JSON_STRING_RE = Pattern.compile("^\"(.*)\"$");
+    private final Pattern JSON_STRING_RE = Pattern.compile("^\"(.*)\"$");
 
     public EphemeralResult(EphemeralKey key, String value) {
         this.key = key;
@@ -46,13 +46,13 @@ public class EphemeralResult {
             for (int i = 0; i < entries.length; i++) {
                 values[i] = entries[i].getValue();
             }
-			this.values = normalizeZokValues(values);
+            this.values = normalizeZokValues(values);
         }
     }
 
     public EphemeralResult(EphemeralKey key, List<String> values) {
         this(key, values.toArray(new String[values.size()]));
-		this.values = normalizeZokValues(this.values);
+        this.values = normalizeZokValues(this.values);
     }
 
     public String getValue() {
@@ -218,23 +218,23 @@ public class EphemeralResult {
     }
 
 
-	/** Replace extraneous quotes and other remnants of ZOK converting certain values to JSON.
-	 *
-	 * @param values the values to be set
-	 * @return the clean values
-	 */
-	private String[] normalizeZokValues(final String[] values) {
-		if (!LC.ssdb_zimbrax_compat.booleanValue()) {
-			return values;
-		}
+    /** Replace extraneous quotes and other remnants of ZOK converting certain values to JSON.
+     *
+     * @param values the values to be set
+     * @return the clean values
+     */
+    private String[] normalizeZokValues(final String[] values) {
+        if (!LC.ssdb_zimbrax_compat.booleanValue()) {
+            return values;
+        }
 
-		String[] normalized = new String[values.length];
+        String[] normalized = new String[values.length];
 
-		for (int i = 0; i < values.length; i++) {
-			final Matcher m = JSON_STRING_RE.matcher(values[i]);
-			normalized[i] = m.matches() ? m.group(1) : values[i];
-		}
+        for (int i = 0; i < values.length; i++) {
+            final Matcher m = JSON_STRING_RE.matcher(values[i]);
+            normalized[i] = m.matches() ? m.group(1) : values[i];
+        }
 
-		return normalized;
-	}
+        return normalized;
+    }
 }
