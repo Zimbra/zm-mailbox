@@ -2591,6 +2591,14 @@ public final class ToXML {
         return ie;
     }
 
+    public static Element encodeGetPop3UID(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+            Message msg, OutputParticipants output) throws ServiceException {
+        Element elem = parent.addNonUniqueElement(MailConstants.E_MSG);
+        elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
+        elem.addAttribute(MailConstants.A_UID, msg.getPop3Uid());
+        return elem;
+    }
+
     private enum VisitPhase { PREVISIT, POSTVISIT }
 
     private static void addParts(Element root, MPartInfo mpiRoot, Set<MPartInfo> bodies, String prefix, int maxSize,

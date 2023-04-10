@@ -241,6 +241,7 @@ import com.zimbra.cs.redolog.op.SetFolderUrl;
 import com.zimbra.cs.redolog.op.SetImapUid;
 import com.zimbra.cs.redolog.op.SetItemTags;
 import com.zimbra.cs.redolog.op.SetPermissions;
+import com.zimbra.cs.redolog.op.SetPop3Uid;
 import com.zimbra.cs.redolog.op.SetRetentionPolicy;
 import com.zimbra.cs.redolog.op.SetSubscriptionData;
 import com.zimbra.cs.redolog.op.SetWebOfflineSyncDays;
@@ -3703,7 +3704,12 @@ public class Mailbox implements MailboxStore {
             for (int folderId : folderIds) {
                 folders.add(getFolderById(folderId));
             }
-            List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folders.build(), popSince);
+            Account acct = octxt.getAuthenticatedUser();
+            boolean useCustomPop3UID = false;
+            if (null != acct) {
+                useCustomPop3UID = acct.getBooleanAttr(Provisioning.A_zimbraFeatureCustomUIDEnabled, false);
+            }
+            List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folders.build(), popSince, useCustomPop3UID);
             success = true;
             return p3list;
         } finally {
@@ -6936,6 +6942,41 @@ public class Mailbox implements MailboxStore {
             success = true;
         } finally {
             endTransaction(success);
+        }
+    }
+
+    public void setPop3Uid(OperationContext octxt, int itemId, MailItem.Type type, String uid)
+    throws ServiceException {
+        validateUid(uid);
+        SetPop3Uid redoRecorder = new SetPop3Uid(mId, itemId, type, uid);
+
+        boolean success = false;
+        try {
+            beginTransaction("setPop3Uid", octxt, redoRecorder);
+
+            MailItem item = checkAccess(getItemById(itemId, type));
+            if (!checkItemChangeID(item)) {
+                throw MailServiceException.MODIFY_CONFLICT();
+            }
+            item.setPop3Uid(uid);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    /**
+     * Check the format of unique-id.  (note: it does not check the uniqueness of the given string
+     * among the mailbox)
+     * @param uid
+     * @throws ServiceException
+     */
+    private void validateUid(String uid) throws ServiceException {
+        if (!uid.matches("^[\\x21-\\x7F]*$")) {
+            throw ServiceException.INVALID_REQUEST("invalid uid string: contain invalid octets outside the range 0x21 to 0x7E", null);
+        }
+        if (uid.length() > 70) {
+            throw ServiceException.INVALID_REQUEST("invalid uid string: longer than 70 characters: " + uid.length(), null);
         }
     }
 

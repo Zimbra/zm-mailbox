@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,6 +17,7 @@
 package com.zimbra.cs.pop3;
 
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Metadata;
 
 /**
  * one for each message in the mailbox
@@ -32,16 +33,31 @@ public final class Pop3Message {
     private String digest;
 
     /**
+     * Value stored in the Metadata.FN_POP3_UID ("p3uid").  If this field is empty, empty
+     * string will be set
+     */
+    private String uid;
+
+    /**
      * save enough info from the Message so we don't have to keep a reference to it.
      */
     public Pop3Message(Message msg) {
-        this(msg.getId(), msg.getSize(), msg.getDigest());
+        this.id = msg.getId();
+        this.size = msg.getSize();
+        this.digest = msg.getDigest();
+        this.uid = msg.getPop3Uid();
     }
 
+    @Deprecated
     public Pop3Message(int id, long size, String digest) {
+       this(id, size, digest, null);
+    }
+
+    public Pop3Message(int id, long size, String digest, Metadata metadata) {
         this.id = id;
         this.size = size;
         this.digest = digest;
+        this.uid = (null != metadata) ? metadata.get(Metadata.FN_POP3_UID, null) : "";
     }
 
     long getSize() {
@@ -70,5 +86,19 @@ public final class Pop3Message {
 
     String getDigest() {
         return digest;
+    }
+
+    public String getUid(Boolean useCustomPop3UID) {
+        if (false == useCustomPop3UID || null == uid || uid.isEmpty()) {
+            // Classic UID string
+            return id + "." + digest;
+        } else {
+            // Custom UID stored in the metadata
+            return uid;
+        }
+    }
+
+    void setUid(String uid) {
+        this.uid = uid;
     }
 }

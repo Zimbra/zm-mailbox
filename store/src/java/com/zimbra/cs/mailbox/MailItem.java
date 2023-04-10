@@ -776,6 +776,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     protected CustomMetadataList mExtendedData;
     protected ACL                rights;
 
+    /**
+     * value stored in the Metadata.FN_POP3_UID ("p3uid")
+     */
+    protected String mPop3Uid;
+
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
@@ -974,6 +979,17 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *  counter is incremented. */
     public int getVersion() {
         return mVersion;
+    }
+
+    /** Return custom POP3 UID (FN_POP3_UID = "p3uid") if it is not empty.  Otherwise return empty string.
+     *
+     */
+    public String getPop3Uid() {
+        if (null == mPop3Uid || mPop3Uid.isEmpty()) {
+            return "";
+        } else {
+            return mPop3Uid;
+        }
     }
 
     /** Returns the date the item's content was last modified as number of milliseconds since 1970-01-01 00:00:00 UTC.
@@ -1957,6 +1973,30 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         markItemModified(Change.COLOR);
         mRGBColor.set(color);
         saveMetadata();
+    }
+
+    /** Set the item's custom POP3 UID to the metadata.  If the uid is empty (length 0),
+     * the Metadata.FN_POP3_UID ("p3uid") field will be removed.
+     *
+     * @param uid a custom POP3 UID value
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient permissions</ul>
+     */
+    void setPop3Uid(String uid) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_WRITE)) {
+            throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
+        }
+
+        if (null == uid) {
+            return;
+        }
+        markItemModified(Change.POP3UID);
+        Metadata metadata = encodeMetadata();
+        if (!uid.isEmpty()) {
+            metadata.put(Metadata.FN_POP3_UID, uid);
+        }
+        mPop3Uid = uid;
+        saveMetadata(metadata.toString());
     }
 
     /** Changes the item's color.  The server does no value-to-color mapping;
@@ -3490,6 +3530,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         mRGBColor = Color.fromMetadata(meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR));
         mMetaVersion = (int) meta.getLong(Metadata.FN_METADATA_VERSION, 1);
         mVersion = (int) meta.getLong(Metadata.FN_VERSION, 1);
+        mPop3Uid = meta.get(Metadata.FN_POP3_UID, null);
 
         mExtendedData = null;
         for (Map.Entry<String, ?> entry : meta.asMap().entrySet()) {
