@@ -30,6 +30,7 @@ import com.zimbra.cs.service.util.VolumeConfigUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteVolumeRequest;
 import com.zimbra.soap.admin.message.DeleteVolumeResponse;
+import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class DeleteVolume extends AdminDocumentHandler {
 
@@ -43,7 +44,12 @@ public final class DeleteVolume extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         Server server = Provisioning.getInstance().getLocalServer();
         checkRight(zsc, ctx, server, Admin.R_manageVolume);
+        boolean isUnifiedVolume = VolumeConfigUtil.isUnifiedVolume(req.getId());
         VolumeConfigUtil.parseDeleteVolumeRequest(req, server.getId());
+
+        if (isUnifiedVolume) {
+            ExternalVolumeInfoHandler.flushConfigLevelCacheOnAllServers(this, ctx);
+        }
         return new DeleteVolumeResponse();
     }
 

@@ -288,7 +288,7 @@ public class VolumeConfigUtil {
      * Perform required actions for processing parseDeleteVolumeRequest
      *
      * @param DeleteVolumeRequest
-     * @return
+     * @return nothing
      * @throws ServiceException
      */
     public static void parseDeleteVolumeRequest(DeleteVolumeRequest req, String serverId) throws ServiceException {
@@ -387,5 +387,17 @@ public class VolumeConfigUtil {
             }
         }
         mgr.update(builder.build());
+    }
+
+    /**
+     * Checks if volume is unified or not
+     * @param volumeId
+     * @return if true if volume is unified else false
+     */
+    public static boolean isUnifiedVolume(int volumeId) {
+        boolean isUnifiedVolume = false;
+        ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+        isUnifiedVolume = extVolInfoHandler.isUnifiedVolume(volumeId);
+        return isUnifiedVolume;
     }
 }
