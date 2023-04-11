@@ -6,6 +6,8 @@
  */
 package com.zimbra.util;
 
+import java.util.Map;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,6 +19,11 @@ import com.zimbra.common.soap.GlobalExternalStoreConfigConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.admin.AdminDocumentHandler;
+import com.zimbra.cs.service.admin.FlushCache;
+import com.zimbra.soap.admin.message.FlushCacheRequest;
+import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.soap.admin.type.CacheSelector;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
@@ -72,7 +79,7 @@ public class ExternalVolumeInfoHandler {
     /**
      * Delete server level external volume properties
      * @param volumeId
-     * @param server
+     * @param serverId
      * @throws JSONException, ServiceException
      */
     public void deleteServerProperties(int volumeId, String serverId) throws ServiceException, JSONException {
@@ -81,6 +88,7 @@ public class ExternalVolumeInfoHandler {
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
             JSONObject currentJsonObject = new JSONObject(serverExternalStoreConfigJson);
             JSONArray currentJsonArray = currentJsonObject.getJSONArray("server/stores");
+            boolean isUnifiedVolume = isUnifiedVolume(volumeId);
 
             // step 2: Create new/empty updated JSON state array
             JSONArray updatedJsonArray = new JSONArray();
@@ -102,8 +110,10 @@ public class ExternalVolumeInfoHandler {
             // step 6: Set ldap attribute
             provisioning.getLocalServer().setServerExternalStoreConfig(currentJsonObject.toString());
 
-            editGlobalConfigOnDeleteVolume(volumeId, serverId);
-
+            //if volume is unified, then only we should call the below method to modify global external store
+            if (isUnifiedVolume) {
+                editGlobalConfigOnDeleteVolume(volumeId, serverId);
+            }
         } catch (JSONException e) {
             throw e;
         }
@@ -111,8 +121,8 @@ public class ExternalVolumeInfoHandler {
 
     /**
      * Add server level external volume properties
-     * @param volumeId
-     * @param server
+     * @param volInfo
+     * @param serverId
      * @throws JSONException, ServiceException
      */
     public void addServerProperties(VolumeInfo volInfo, String serverId) throws ServiceException, JSONException {
@@ -158,7 +168,6 @@ public class ExternalVolumeInfoHandler {
                     && volInfo.getVolumeExternalInfo().isUnified()) {
                 editGlobalConfigOnAddVolume(volInfo, serverId);
             }
-
         } catch (JSONException e) {
             throw e;
         }
@@ -274,6 +283,7 @@ public class ExternalVolumeInfoHandler {
            }
         }
     }
+
     /**
      * Modify server level external volume properties
      * @param volumeId
@@ -359,5 +369,42 @@ public class ExternalVolumeInfoHandler {
             }
         }
         return false;
+    }
+
+    /**
+     * Performs flush cache at config level on all the server
+     * @param adminDocumentHandler, context
+     * @return nothing
+     */
+    public static void flushConfigLevelCacheOnAllServers(AdminDocumentHandler adminDocumentHandler, Map<String, Object> context) {
+        CacheSelector cacheSelector = new CacheSelector(true, CacheEntryType.config.toString());
+        try {
+            FlushCache.doFlushCache(adminDocumentHandler, context, new FlushCacheRequest(cacheSelector));
+        } catch (ServiceException se) {
+            ZimbraLog.misc.error("Encountered exception during FlushCache: ", se);
+        }
+    }
+
+    /**
+     * Checks if volume is unified or not
+     * @param volumeId
+     * @return true if volume is unified else false
+     */
+    public boolean isUnifiedVolume(int volumeId){
+        boolean isUnifiedVolume = false;
+        try {
+            JSONObject currentJsonObject = new JSONObject(provisioning.getLocalServer().getServerExternalStoreConfig());
+            JSONArray serverStoreJsonArray = currentJsonObject.getJSONArray("server/stores");
+            for (int i = 0; i < serverStoreJsonArray.length(); i++) {
+                JSONObject tempJsonObj = serverStoreJsonArray.getJSONObject(i);
+                if (volumeId == tempJsonObj.getInt(AdminConstants.A_VOLUME_ID)) {
+                    isUnifiedVolume = Boolean.valueOf(tempJsonObj.optString(AdminConstants.A_VOLUME_UNIFIED));
+                    break;
+                }
+            }
+        } catch (JSONException | ServiceException e) {
+            ZimbraLog.misc.error("Failed to find the unified volume to perform flush cache: ", e);
+        }
+        return isUnifiedVolume;
     }
 }

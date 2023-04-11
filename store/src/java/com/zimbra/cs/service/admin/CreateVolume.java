@@ -35,6 +35,7 @@ import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
 import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
 import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class CreateVolume extends AdminDocumentHandler {
 
@@ -63,6 +64,10 @@ public final class CreateVolume extends AdminDocumentHandler {
         if (volInfoRequest.isCurrent() && volInfoRequest.getType() == Volume.TYPE_MESSAGE) {
             StoreManagerRuntimeSwitchResult runtimeSwitchResult = StoreManagerResetHelper.setNewStoreManager(volInfoRequest.getStoreManagerClass());
             createVolumeResponse.setRuntimeSwitchResult(runtimeSwitchResult);
+        }
+
+        if (volInfoRequest != null && volInfoRequest.getVolumeExternalInfo() != null && volInfoRequest.getVolumeExternalInfo().isUnified()) {
+            ExternalVolumeInfoHandler.flushConfigLevelCacheOnAllServers(this, ctx);
         }
 
         return new CreateVolumeResponse(volInfoResponse);
