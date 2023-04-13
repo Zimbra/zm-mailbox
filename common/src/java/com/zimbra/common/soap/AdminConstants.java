@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021, 2022 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021, 2022, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -253,6 +253,8 @@ public final class AdminConstants {
 
     public static final String E_REINDEX_REQUEST = "ReIndexRequest";
     public static final String E_REINDEX_RESPONSE = "ReIndexResponse";
+    public static final String E_MANAGE_INDEX_REQUEST = "ManageIndexRequest";
+    public static final String E_MANAGE_INDEX_RESPONSE = "ManageIndexResponse";
     public static final String E_COMPACT_INDEX_REQUEST = "CompactIndexRequest";
     public static final String E_COMPACT_INDEX_RESPONSE = "CompactIndexResponse";
     public static final String E_GET_INDEX_STATS_REQUEST = "GetIndexStatsRequest";
@@ -760,6 +762,8 @@ public final class AdminConstants {
 
     public static final QName REINDEX_REQUEST = QName.get(E_REINDEX_REQUEST, NAMESPACE);
     public static final QName REINDEX_RESPONSE = QName.get(E_REINDEX_RESPONSE, NAMESPACE);
+    public static final QName MANAGE_INDEX_REQUEST = QName.get(E_MANAGE_INDEX_REQUEST, NAMESPACE);
+    public static final QName MANAGE_INDEX_RESPONSE = QName.get(E_MANAGE_INDEX_RESPONSE, NAMESPACE);
     public static final QName COMPACT_INDEX_REQUEST = QName.get(E_COMPACT_INDEX_REQUEST, NAMESPACE);
     public static final QName COMPACT_INDEX_RESPONSE = QName.get(E_COMPACT_INDEX_RESPONSE, NAMESPACE);
     public static final QName GET_INDEX_STATS_REQUEST = QName.get(E_GET_INDEX_STATS_REQUEST, NAMESPACE);
@@ -1615,4 +1619,5 @@ public final class AdminConstants {
             "com_zextras_client", "com_zimbra_connect_classic", "com_zimbra_connect_modern", "com_zextras_docs",
             "com_zimbra_docs_modern", "com_zimbra_drive_modern", "com_zextras_drive", "com_zextras_drive_open",
             "com_zextras_chat_open", "com_zextras_talk", "zimbra-zimlet-briefcase-edit-lool");
+
 }

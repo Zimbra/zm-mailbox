@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -222,6 +222,8 @@ import com.zimbra.soap.admin.message.GetUCServiceResponse;
 import com.zimbra.soap.admin.message.HABOrgUnitRequest;
 import com.zimbra.soap.admin.message.HABOrgUnitRequest.HabOp;
 import com.zimbra.soap.admin.message.HABOrgUnitResponse;
+import com.zimbra.soap.admin.message.ManageIndexRequest;
+import com.zimbra.soap.admin.message.ManageIndexResponse;
 import com.zimbra.soap.admin.message.ModifyHABGroupRequest;
 import com.zimbra.soap.admin.message.PurgeMessagesRequest;
 import com.zimbra.soap.admin.message.PurgeMessagesResponse;
@@ -1440,6 +1442,23 @@ public class SoapProvisioning extends Provisioning {
                     progInfo.getNumRemaining());
         }
         return new ReIndexInfo(resp.getStatus(), progress);
+    }
+
+    public static enum ManageIndexType {
+        disableIndexing, enableIndexing;
+    }
+
+    public String manageIndex(Account acct, ManageIndexType type)
+    throws ServiceException {
+        Server server = getServer(acct);
+        MailboxByAccountIdSelector mbox = new MailboxByAccountIdSelector(acct.getId());
+        String action = null;
+        if (type != null) {
+            action = type.toString();
+        }
+        ManageIndexRequest req = new ManageIndexRequest(action, mbox);
+        ManageIndexResponse resp = this.invokeJaxb(req, server.getAttr(A_zimbraServiceHostname));
+        return resp.getStatus();
     }
 
     public String compactIndex(Account acct, String action)

@@ -59,6 +59,7 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning.DelayedIndexStatus;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -95,6 +96,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
@@ -1775,6 +1778,13 @@ public abstract class ImapHandler {
         if (!account.getName().equalsIgnoreCase(LC.zimbra_ldap_user.value())) {
             credentials.getImapMailboxStore().beginTrackingImap();
         }
+
+        if (account.isFeatureDelayedIndexEnabled()
+                && !DelayedIndexStatus.indexing.equals(account.getDelayedIndexStatus())) {
+            SoapProvisioning sp = SoapProvisioning.getAdminInstance();
+            sp.manageIndex(account, ManageIndexType.enableIndexing);
+        }
+
         mailboxSize = getMailboxSize();
         inboxNumMessages = getInboxNumMessages();
         trashNumMessages = getTrashNumMessages();

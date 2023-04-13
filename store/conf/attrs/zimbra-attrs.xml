@@ -10342,7 +10342,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="9004" name="zimbraDelayedIndexStatus" type="enum" value="suppressed,waitingForSearch,indexing" cardinality="single" optionalIn="account" flags="accountInfo" since="11.0.0">
-  <desc>Whether MBS generates index data of the account's mailbox. The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+ <desc>The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
     suppressed       - Not generate index. (default)
                        When administrator accesses the account via admin console, it changes to "waitingForSearch".
                        When the account logs in via SOAP, IMAP or MobileSync protocol, it changes to "indexing".

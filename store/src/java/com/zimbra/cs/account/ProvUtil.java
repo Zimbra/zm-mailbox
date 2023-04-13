@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2022 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2022, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -111,6 +111,7 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.IndexStatsInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
 import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
@@ -720,6 +721,9 @@ public class ProvUtil implements HttpDebugListener {
         HELP("help", "?", "commands",
                Category.MISC, 0, 1),
         LDAP(".ldap", ".l"),
+        MANAGE_MAILBOX_INDEX(
+                "manageMailboxIndex", "mmi",
+                "{name@domain|id} {disableIndexing|enableIndexing}", Category.MAILBOX, 2, 2),
         MODIFY_ACCOUNT("modifyAccount", "ma",
                "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
         MODIFY_ALWAYSONCLUSTER(
@@ -1537,6 +1541,9 @@ public class ProvUtil implements HttpDebugListener {
         case REINDEX_MAILBOX:
             doReIndexMailbox(args);
             break;
+        case MANAGE_MAILBOX_INDEX:
+            doManageMailboxIndex(args);
+            break;
         case COMPACT_INBOX_MAILBOX:
             doCompactIndexMailbox(args);
             break;
@@ -1990,6 +1997,22 @@ public class ProvUtil implements HttpDebugListener {
             console.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n", progress.getNumSucceeded(),
                     progress.getNumFailed(), progress.getNumRemaining());
         }
+    }
+
+    private void doManageMailboxIndex(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        SoapProvisioning sp = (SoapProvisioning) prov;
+        Account acct = lookupAccount(args[1]);
+        ManageIndexType type = null;
+        try {
+            type = ManageIndexType.valueOf(args[2]);
+        } catch (IllegalArgumentException e) {
+            throw ServiceException.INVALID_REQUEST("invalid argument", null);
+        }
+        String status = sp.manageIndex(acct, type);
+        console.printf("status: %s\n", status);
     }
 
     private void doCompactIndexMailbox(String[] args) throws ServiceException {
