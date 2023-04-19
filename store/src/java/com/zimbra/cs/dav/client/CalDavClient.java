@@ -71,7 +71,7 @@ public class CalDavClient extends WebDavClient {
     }
 
     private String getCurrentUserPrincipal() {
-        DavRequest propfind = DavRequest.PROPFIND("/.well-known/caldav");
+        DavRequest propfind = DavRequest.PROPFIND("/caldav/v2");
         propfind.addRequestProp(DavElements.E_CURRENT_USER_PRINCIPAL);
         HttpResponse response = null;
         try {

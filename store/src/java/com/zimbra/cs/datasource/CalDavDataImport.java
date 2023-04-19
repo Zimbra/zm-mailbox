@@ -154,7 +154,10 @@ public class CalDavDataImport extends MailItemImport {
             url.append("http://");
         break;
         }
-        url.append(ds.getHost()).append(":").append(ds.getPort());
+        url.append(ds.getHost());
+        if (ds.getPort() != null) {
+            url.append(":").append(ds.getPort());
+        }
         return url.toString();
     }
 
