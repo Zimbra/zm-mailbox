@@ -49,7 +49,6 @@ public class BUG_76427 extends UpgradeOp {
         standardZimlets.add("com_zimbra_cert_manager");
         standardZimlets.add("com_zimbra_click2call_cisco");
         standardZimlets.add("com_zimbra_click2call_mitel");
-        standardZimlets.add("com_zimbra_clientuploader");
         standardZimlets.add("com_zimbra_convertd");
         standardZimlets.add("com_zimbra_date");
         standardZimlets.add("com_zimbra_delegatedadmin");
