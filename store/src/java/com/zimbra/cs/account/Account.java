@@ -537,11 +537,4 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         getProvisioning().refreshUserCredentials(this);
     }
 
-    /**
-     * Returns whether username is allowed within password.
-     * @return true if username is allowed within password; otherwise, false.
-     */
-    public boolean getAllowUsernameWithinPassword() {
-        return LC.allow_username_within_password.booleanValue();
-    }
 }
