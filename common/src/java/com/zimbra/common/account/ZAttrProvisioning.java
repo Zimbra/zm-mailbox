@@ -6706,6 +6706,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAdvancedSearchEnabled = "zimbraFeatureAdvancedSearchEnabled";
 
     /**
+     * To restrict/allow the use of username in the password when user reset
+     * or change their password to achieve greater password security.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4098)
+    public static final String A_zimbraFeatureAllowUsernameInPassword = "zimbraFeatureAllowUsernameInPassword";
+
+    /**
      * whether or not to enable rerouting spam messages to Junk folder in
      * ZCS, exposing Junk folder and actions in the web UI, and exposing Junk
      * folder to IMAP clients.
