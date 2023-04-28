@@ -10426,6 +10426,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * To restrict/allow the use of username in the password when user reset
+     * or change their password to achieve greater password security.
+     *
+     * @return zimbraFeatureAllowUsernameInPassword, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4098)
+    public boolean isFeatureAllowUsernameInPassword() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureAllowUsernameInPassword, false, true);
+    }
+
+    /**
+     * To restrict/allow the use of username in the password when user reset
+     * or change their password to achieve greater password security.
+     *
+     * @param zimbraFeatureAllowUsernameInPassword new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4098)
+    public void setFeatureAllowUsernameInPassword(boolean zimbraFeatureAllowUsernameInPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAllowUsernameInPassword, zimbraFeatureAllowUsernameInPassword ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * To restrict/allow the use of username in the password when user reset
+     * or change their password to achieve greater password security.
+     *
+     * @param zimbraFeatureAllowUsernameInPassword new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4098)
+    public Map<String,Object> setFeatureAllowUsernameInPassword(boolean zimbraFeatureAllowUsernameInPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAllowUsernameInPassword, zimbraFeatureAllowUsernameInPassword ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * To restrict/allow the use of username in the password when user reset
+     * or change their password to achieve greater password security.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4098)
+    public void unsetFeatureAllowUsernameInPassword() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAllowUsernameInPassword, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * To restrict/allow the use of username in the password when user reset
+     * or change their password to achieve greater password security.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4098)
+    public Map<String,Object> unsetFeatureAllowUsernameInPassword(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAllowUsernameInPassword, "");
+        return attrs;
+    }
+
+    /**
      * whether receiving reminders on the designated device for appointments
      * and tasks is enabled
      *
