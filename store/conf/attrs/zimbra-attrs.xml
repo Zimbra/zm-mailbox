@@ -10379,6 +10379,7 @@ TODO: delete them permanently from here
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable/disable the modern web client option on the login screen. Default value is FALSE, which makes the modern client option available.</desc>
 </attr>
+
 <attr id="4098" name="zimbraFeatureAllowUsernameInPassword" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="10.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>To restrict/allow the use of username in the password when user reset or change their password to achieve greater password security.</desc>

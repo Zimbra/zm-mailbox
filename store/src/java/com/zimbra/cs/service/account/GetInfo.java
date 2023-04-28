@@ -363,9 +363,6 @@ public class GetInfo extends AccountDocumentHandler  {
 
             ToXML.encodeAttr(response, key, value);
         }
-        // ZCS-10678: Include Local config change for zimbraPasswordAllowUsername in getinfo response
-        ToXML.encodeAttr(response, "zimbraPasswordAllowUsername",
-                Boolean.toString(LC.allow_username_within_password.booleanValue()).toUpperCase());
     }
 
     private static void doZimlets(Element response, Account acct) {
