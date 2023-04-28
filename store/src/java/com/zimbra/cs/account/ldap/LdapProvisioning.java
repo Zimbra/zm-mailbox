@@ -6159,10 +6159,16 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         // userName is passed from createAccount() and else condition is invoked 
         // when called from other Api's Changepassword and Resetpassword Api
-        if (userName != null) {
-            checkPasswordHasUsername(password, userName);
+        boolean isFeatureAllowUsernameInPassword;
+        if (acct == null) {
+            isFeatureAllowUsernameInPassword = cos.isFeatureAllowUsernameInPassword();
         } else {
-            checkPasswordHasUsername(password, acct.getUCUsername());
+            isFeatureAllowUsernameInPassword = acct.isFeatureAllowUsernameInPassword();
+        }
+        if (userName != null) {
+            checkPasswordHasUsername(password, userName, isFeatureAllowUsernameInPassword);
+        } else {
+            checkPasswordHasUsername(password, acct.getUCUsername(), isFeatureAllowUsernameInPassword);
         }
 
         if (getBoolean(acct, cos, entry, Provisioning.A_zimbraPasswordBlockCommonEnabled, false)
@@ -6270,8 +6276,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
     }
 
-    private void checkPasswordHasUsername(String password, String userName) throws ServiceException {
-        if (!LC.allow_username_within_password.booleanValue() && StringUtils.containsIgnoreCase(password, userName)) {
+    private void checkPasswordHasUsername(String password, String userName, boolean isFeatureAllowUsernameInPassword) throws ServiceException {
+        if (!isFeatureAllowUsernameInPassword && StringUtils.containsIgnoreCase(password, userName)) {
             throw AccountServiceException.INVALID_PASSWORD("password contains username",
                     new Argument("zimbraPasswordAllowUsername", "", Argument.Type.STR));
         }
