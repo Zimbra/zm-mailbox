@@ -655,6 +655,13 @@ public class AccountConstants {
     public static final String E_SKIN_FAVICON = "zimbraSkinFavicon";
     public static final String E_HOSTNAME = "hostname";
 
+    // MailRecall Uses
+    public static final String E_MAIL_RECALL_REQUEST = "MailRecallRequest";
+    public static final String E_MAIL_RECALL_RESPONSE = "MailRecallResponse";
+    public static final QName MAIL_RECALL_REQUEST = QName.get(E_MAIL_RECALL_REQUEST, NAMESPACE);
+    public static final QName MAIL_RECALL_RESPONSE = QName.get(E_MAIL_RECALL_RESPONSE, NAMESPACE);
+    public static final String ITEM_ID = "itemId";
+
     // 2FA attributes
     public static final String E_TWO_FACTOR_AUTH_METHOD_ALLOWED = "zimbraTwoFactorAuthMethodAllowed";
     public static final String E_TWO_FACTOR_AUTH_METHOD_ENABLED = "zimbraTwoFactorAuthMethodEnabled";
