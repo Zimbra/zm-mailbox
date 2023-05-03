@@ -10363,8 +10363,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether MBS generates index data of the account&#039;s mailbox. The
-     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
      * suppressed - Not generate index. (default) When administrator accesses
      * the account via admin console, it changes to
      * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
@@ -10386,8 +10385,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether MBS generates index data of the account&#039;s mailbox. The
-     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
      * suppressed - Not generate index. (default) When administrator accesses
      * the account via admin console, it changes to
      * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
@@ -10409,8 +10407,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether MBS generates index data of the account&#039;s mailbox. The
-     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
      * suppressed - Not generate index. (default) When administrator accesses
      * the account via admin console, it changes to
      * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
@@ -10435,8 +10432,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether MBS generates index data of the account&#039;s mailbox. The
-     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
      * suppressed - Not generate index. (default) When administrator accesses
      * the account via admin console, it changes to
      * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
@@ -10462,8 +10458,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether MBS generates index data of the account&#039;s mailbox. The
-     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
      * suppressed - Not generate index. (default) When administrator accesses
      * the account via admin console, it changes to
      * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
@@ -10488,8 +10483,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether MBS generates index data of the account&#039;s mailbox. The
-     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
      * suppressed - Not generate index. (default) When administrator accesses
      * the account via admin console, it changes to
      * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
@@ -10515,8 +10509,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether MBS generates index data of the account&#039;s mailbox. The
-     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
      * suppressed - Not generate index. (default) When administrator accesses
      * the account via admin console, it changes to
      * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
@@ -10540,8 +10533,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether MBS generates index data of the account&#039;s mailbox. The
-     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
      * suppressed - Not generate index. (default) When administrator accesses
      * the account via admin console, it changes to
      * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
