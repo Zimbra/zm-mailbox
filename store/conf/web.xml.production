@@ -764,7 +764,6 @@
     <url-pattern>/spnego/error401.jsp</url-pattern>
     <url-pattern>/error/403.jsp</url-pattern>
     <url-pattern>/error/attachment_blocked.jsp</url-pattern>
-    <url-pattern>/error/sfdc_preauth.jsp</url-pattern>
     <url-pattern>/document/editor.jsp</url-pattern>
   </servlet-mapping>
   <env-entry>
