@@ -9805,15 +9805,18 @@ TODO: delete them permanently from here
     <desc>Account Suspension reason. It describes the actual cause for account suspension if any and it must be updated with account status.</desc>
 </attr>
 
-<attr id="3084" name="zimbraFeaturePowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited,domainAdminModifiable" optionalIn="account,cos" since="10.0.0">
+<attr id="3084" name="zimbraFeaturePowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited,domainAdminModifiable" optionalIn="account,cos" since="10.0.0" deprecatedSince="10.1.0">
     <defaultCOSValue>TRUE</defaultCOSValue>
+    <deprecateDesc>PowerPaste feature is removed</deprecateDesc>
     <desc>Whether Powerpaste Feature is enabled or not</desc>
 </attr>
 
-<attr id="3085" name="zimbraPrefPowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited" optionalIn="account,cos" since="10.0.0">
+<attr id="3085" name="zimbraPrefPowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited" optionalIn="account,cos" since="10.0.0" deprecatedSince="10.1.0">
     <defaultCOSValue>TRUE</defaultCOSValue>
+    <deprecateDesc>PowerPaste feature is removed</deprecateDesc>
     <desc>Whether Powerpaste preference is enabled by user or admin</desc>
 </attr>
+
 <attr id="3086" name="zimbraPrefImapEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
