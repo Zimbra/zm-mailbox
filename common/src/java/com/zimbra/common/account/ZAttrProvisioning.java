@@ -8458,6 +8458,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHelpStandardURL = "zimbraHelpStandardURL";
 
     /**
+     * Hide all the aliases from GAL for the user, so it will not be
+     * displayed in the autocomplete.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4099)
+    public static final String A_zimbraHideAliasesInGal = "zimbraHideAliasesInGal";
+
+    /**
      * hide entry in Global Address List
      */
     @ZAttr(id=353)
