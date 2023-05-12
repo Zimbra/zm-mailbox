@@ -10379,4 +10379,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>To restrict/allow the use of username in the password when user reset or change their password to achieve greater password security.</desc>
 </attr>
+<attr id="4099" name="zimbraHideAliasesInGal" type="boolean" cardinality="single" optionalIn="mailRecipient,group" flags="domainAdminModifiable" since="10.1.0">
+  <desc>Hide all the aliases from GAL for the user, so it will not be displayed in the autocomplete.</desc>
+</attr>
 </attrs>
