@@ -37805,6 +37805,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to enable/disable modern ui option on the login screen.
+     *
+     * @return zimbraModernWebClientEnabled, or true if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4100)
+    public boolean isModernWebClientEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraModernWebClientEnabled, true, true);
+    }
+
+    /**
+     * Whether to enable/disable modern ui option on the login screen.
+     *
+     * @param zimbraModernWebClientEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4100)
+    public void setModernWebClientEnabled(boolean zimbraModernWebClientEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernWebClientEnabled, zimbraModernWebClientEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable modern ui option on the login screen.
+     *
+     * @param zimbraModernWebClientEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4100)
+    public Map<String,Object> setModernWebClientEnabled(boolean zimbraModernWebClientEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernWebClientEnabled, zimbraModernWebClientEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable/disable modern ui option on the login screen.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4100)
+    public void unsetModernWebClientEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernWebClientEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable modern ui option on the login screen.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4100)
+    public Map<String,Object> unsetModernWebClientEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernWebClientEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf address_verify_negative_refresh_time
      *
      * @return zimbraMtaAddressVerifyNegativeRefreshTime, or "10m" if unset

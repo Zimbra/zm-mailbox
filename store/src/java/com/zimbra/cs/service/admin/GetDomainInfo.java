@@ -62,7 +62,8 @@ public class GetDomainInfo extends AdminDocumentHandler {
             ZAttrProvisioning.A_zimbraFeatureResetPasswordStatus,
             ZAttrProvisioning.A_zimbraPrefSkin,
             ZAttrProvisioning.A_zimbraDomainLoginPagePath,
-            ZAttrProvisioning.A_zimbraDomainLoginPageFallbackPath);
+            ZAttrProvisioning.A_zimbraDomainLoginPageFallbackPath,
+            ZAttrProvisioning.A_zimbraModernWebClientEnabled);
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
