@@ -222,7 +222,8 @@
       <location>/opt/zimbra/data/tmp</location>
       <max-file-size>%%zimbraFileUploadMaxSize%%</max-file-size>
       <max-request-size>%%zimbraMailContentMaxSize%%</max-request-size>
-      <file-size-threshold>%%zimbraFileUploadMaxSize%%</file-size-threshold>
+      <!-- The file size in bytes after which the file will be temporarily stored on disk -->
+      <file-size-threshold>1048576</file-size-threshold>
     </multipart-config>
   </servlet>
 
