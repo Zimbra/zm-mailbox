@@ -13937,6 +13937,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste Feature is enabled or not
      *
      * @return zimbraFeaturePowerPasteEnabled, or true if unset
@@ -13949,6 +13950,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste Feature is enabled or not
      *
      * @param zimbraFeaturePowerPasteEnabled new value
@@ -13964,6 +13966,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste Feature is enabled or not
      *
      * @param zimbraFeaturePowerPasteEnabled new value
@@ -13980,6 +13983,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste Feature is enabled or not
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13994,6 +13998,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste Feature is enabled or not
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -43049,6 +43054,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste preference is enabled by user or admin
      *
      * @return zimbraPrefPowerPasteEnabled, or true if unset
@@ -43061,6 +43067,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste preference is enabled by user or admin
      *
      * @param zimbraPrefPowerPasteEnabled new value
@@ -43076,6 +43083,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste preference is enabled by user or admin
      *
      * @param zimbraPrefPowerPasteEnabled new value
@@ -43092,6 +43100,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste preference is enabled by user or admin
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -43106,6 +43115,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste preference is enabled by user or admin
      *
      * @param attrs existing map to populate, or null to create a new map
