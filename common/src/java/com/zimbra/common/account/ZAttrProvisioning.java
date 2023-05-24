@@ -7335,6 +7335,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeaturePortalEnabled = "zimbraFeaturePortalEnabled";
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste Feature is enabled or not
      *
      * @since ZCS 10.0.0
@@ -14740,6 +14741,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefPop3IncludeSpam = "zimbraPrefPop3IncludeSpam";
 
     /**
+     * Deprecated since: 10.1.0. PowerPaste feature is removed. Orig desc:
      * Whether Powerpaste preference is enabled by user or admin
      *
      * @since ZCS 10.0.0
