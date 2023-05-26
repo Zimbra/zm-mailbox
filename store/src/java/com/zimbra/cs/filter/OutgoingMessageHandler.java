@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -25,6 +25,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
@@ -32,6 +33,7 @@ import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -73,8 +75,16 @@ public final class OutgoingMessageHandler implements FilterHandler {
 
     @Override
     public int getMessageSize() {
+        int size = 0;
+        MimeMessage mm;
         try {
-            return parsedMessage.getMimeMessage().getSize();
+            mm = parsedMessage.getMimeMessage();
+            size = mm.getSize();
+            if (size == -1) {
+                size = (int) ByteUtil.getDataLength(Mime.getInputStream(mm));
+            }
+            ZimbraLog.filter.debug("OutgoingMessageHandler message size: %d.", size);
+            return size;
         } catch (Exception e) {
             ZimbraLog.filter.warn("Error in determining message size", e);
             return -1;
