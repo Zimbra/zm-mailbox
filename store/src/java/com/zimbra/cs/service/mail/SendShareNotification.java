@@ -606,7 +606,7 @@ public class SendShareNotification extends MailDocumentHandler {
         if (ownerAcctDisplayName == null) {
             ownerAcctDisplayName = ownerAccount.getName();
         }
-        subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(),
+        subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, AccountUtil.getTranslatedFolderName(sid, locale),
             ownerAcctDisplayName);
         String recipient = sid.getGranteeName();
         String extUserShareAcceptUrl = null;
