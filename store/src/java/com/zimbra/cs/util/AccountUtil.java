@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,6 +42,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.common.util.L10nUtil;
 import org.apache.commons.codec.binary.Hex;
 
 import com.sun.mail.smtp.SMTPMessage;
@@ -86,6 +88,8 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.common.mailbox.FolderConstants;
+import com.zimbra.cs.account.ShareInfoData;
 
 public class AccountUtil {
     public static final String FN_SUBSCRIPTIONS = "subs";
@@ -1007,5 +1011,18 @@ public class AccountUtil {
         boolean isAdminAccount = (isDomainAdmin || isAdmin || isDelegatedAdmin);
         if (!isAdminAccount)
             throw ServiceException.PERM_DENIED("not an admin account");
+    }
+    
+    /**
+     * Utils method to translate system folder name
+     * @param shareInfo
+     * @param locale
+     * @return translated or original folder name
+     */
+    public static String getTranslatedFolderName(ShareInfoData shareInfo, Locale locale) {
+        if (shareInfo.getItemId() == FolderConstants.ID_FOLDER_CALENDAR) {
+            return L10nUtil.getMessage(L10nUtil.MsgKey.calendar, locale);
+        }
+        return shareInfo.getName();
     }
 }
