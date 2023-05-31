@@ -677,8 +677,7 @@ public class ShareInfo {
                 msgKey = html ? MsgKey.shareNotifBodyHtml : MsgKey.shareNotifBodyText;
             }
             return sb.append(L10nUtil.getMessage(
-                    msgKey, locale,
-                    sid.getName(),
+                    msgKey, locale, AccountUtil.getTranslatedFolderName(sid.getName(), locale),
                     formatFolderDesc(locale, sid, notifyForDocument),
                     sid.getOwnerNotifName(),
                     sid.getGranteeNotifName(),
@@ -692,7 +691,7 @@ public class ShareInfo {
         private static String genRevokePart(ShareInfoData sid, Locale locale, boolean html, boolean notifyForDocument) {
             return L10nUtil.getMessage(html ? MsgKey.shareRevokeBodyHtml : MsgKey.shareRevokeBodyText,
                     locale,
-                    sid.getName(),
+                    AccountUtil.getTranslatedFolderName(sid.getName(), locale),
                     formatFolderDesc(locale, sid, notifyForDocument),
                     sid.getOwnerNotifName());
         }
@@ -700,7 +699,7 @@ public class ShareInfo {
         private static String genExpirePart(ShareInfoData sid, Locale locale, boolean html, boolean notifyForDocument) {
             return L10nUtil.getMessage((html ? MsgKey.shareExpireBodyHtml : MsgKey.shareExpireBodyText),
                     locale,
-                    sid.getName(),
+                    AccountUtil.getTranslatedFolderName(sid.getName(), locale),
                     formatFolderDesc(locale, sid, notifyForDocument),
                     sid.getOwnerNotifName());
         }

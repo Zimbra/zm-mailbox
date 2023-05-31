@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,6 +42,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.common.util.L10nUtil;
 import org.apache.commons.codec.binary.Hex;
 
 import com.sun.mail.smtp.SMTPMessage;
@@ -1041,5 +1043,12 @@ public class AccountUtil {
         boolean isAdminAccount = (isDomainAdmin || isAdmin || isDelegatedAdmin);
         if (!isAdminAccount)
             throw ServiceException.PERM_DENIED("not an admin account");
+    }
+
+    public static String getTranslatedFolderName(String name, Locale locale) {
+        if ("Calendar".equals(name)) {
+            return L10nUtil.getMessage(L10nUtil.MsgKey.calendar, locale);
+        }
+        return name;
     }
 }
