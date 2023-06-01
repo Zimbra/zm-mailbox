@@ -24,6 +24,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.helper.ClassHelper;
@@ -245,6 +246,10 @@ public class VolumeConfigUtil {
 
                 try {
                     JSONObject properties = extVolInfoHandler.readServerProperties(volInfo.getId());
+                    if (JSONObject.NULL.equals(properties)) {
+                        ZimbraLog.store.warn("Unable to read server properties for volumeId %d", volInfo.getId());
+                        continue;
+                    }
                     String storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
                     if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(storageType)) {
                         volInfo.setVolumeExternalInfo(new VolumeExternalInfo().toExternalInfo(properties));
@@ -272,6 +277,9 @@ public class VolumeConfigUtil {
             ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
             try {
                 JSONObject properties = extVolInfoHandler.readServerProperties(volInfo.getId());
+                if (JSONObject.NULL.equals(properties)) {
+                    throw VolumeServiceException.INVALID_REQUEST("Unable to read server properties", VolumeServiceException.INVALID_REQUEST);
+                }
                 String storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
                 if (storageType.equalsIgnoreCase(AdminConstants.A_VOLUME_S3)) {
                     volInfo.setVolumeExternalInfo(new VolumeExternalInfo().toExternalInfo(properties));

@@ -54,6 +54,9 @@ public class ExternalVolumeInfoHandler {
         try {
             // step 1: Fetch current JSON state object and current JSON state array
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
+            if (serverExternalStoreConfigJson == null) {
+                return null;
+            }
             JSONObject currentJsonObject = new JSONObject(serverExternalStoreConfigJson);
             JSONArray currentJsonArray = currentJsonObject.getJSONArray("server/stores");
 
