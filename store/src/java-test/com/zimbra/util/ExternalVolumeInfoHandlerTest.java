@@ -12,6 +12,9 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import org.json.JSONObject;
+import org.json.JSONException;
+import static org.junit.Assert.assertNull;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
 
@@ -28,6 +31,10 @@ public class ExternalVolumeInfoHandlerTest {
     private static final String TEST_GLOBAL_BUCKETS_UNIFIED_2 = "{\"global/s3BucketConfigurations\":[{\"globalBucketUUID\": \"aaaa-bbbb-cccc-1111\", \"bucketName\": \"AWS_BUCKET1\", \"storeProvider\": \"AWS_S3\", \"protocol\": \"HTTPS\", \"storeType\": \"S3\", \"accessKey\": \"testAccess\", \"secret\": \"testSecret\", \"region\": \"US_EAST_1\", \"destinationPath\": \"somepath\", \"url\": \"https://aws.com\", \"bucketStatus\": \"ACTIVE\"}, {\"globalBucketUUID\": \"aaaa-bbbb-cccc-2222\", \"bucketName\": \"AWS_BUCKET2\", \"storeProvider\": \"AWS_S3\", \"protocol\": \"HTTPS\", \"accessKey\": \"testAccess\", \"secret\": \"testSecret\", \"region\": \"US_EAST_1\", \"destinationPath\": \"somepath\", \"url\": \"https://aws.com\", \"bucketStatus\": \"ACTIVE\"} ],\"unified/volumes\":{\"2da1249b-daa0-40cb-aa80-d90223c8d51b\":[{\"globalBucketUUID\":\"GLOBAL_BUCKET_ID\",\"volumePrefix\":\"/JunitPrefix\",\"volumeId\":18}, {\"globalBucketUUID\":\"GLOBAL_BUCKET_ID_1\",\"volumePrefix\":\"/JunitPrefix\",\"volumeId\":19}]} }";
     // Static JSON having 2 servers and multiple volumes
     private static final String TEST_GLOBAL_BUCKETS_UNIFIED_2Server = "{\"global/s3BucketConfigurations\":[{\"globalBucketUUID\": \"aaaa-bbbb-cccc-1111\", \"bucketName\": \"AWS_BUCKET1\", \"storeProvider\": \"AWS_S3\", \"protocol\": \"HTTPS\", \"storeType\": \"S3\", \"accessKey\": \"testAccess\", \"secret\": \"testSecret\", \"region\": \"US_EAST_1\", \"destinationPath\": \"somepath\", \"url\": \"https://aws.com\", \"bucketStatus\": \"ACTIVE\"}, {\"globalBucketUUID\": \"aaaa-bbbb-cccc-2222\", \"bucketName\": \"AWS_BUCKET2\", \"storeProvider\": \"AWS_S3\", \"protocol\": \"HTTPS\", \"accessKey\": \"testAccess\", \"secret\": \"testSecret\", \"region\": \"US_EAST_1\", \"destinationPath\": \"somepath\", \"url\": \"https://aws.com\", \"bucketStatus\": \"ACTIVE\"} ],\"unified/volumes\":{\"2da1249b-daa0-40cb-aa80-d90223c8d51b\":[{\"globalBucketUUID\":\"GLOBAL_BUCKET_ID\",\"volumePrefix\":\"/JunitPrefix\",\"volumeId\":20}, {\"globalBucketUUID\":\"GLOBAL_BUCKET_ID_1\",\"volumePrefix\":\"/JunitPrefix\",\"volumeId\":21}], \"2da1249b-daa0-40cb-aa80-d90223c8d51b\":[{\"globalBucketUUID_3\":\"GLOBAL_BUCKET_ID\",\"volumePrefix\":\"/JunitPrefix\",\"volumeId\":22}]} }";
+
+    private static final String TEST_SERVER_CONFIG = "{\"server/stores\":[{\"volumePrefix\":\"vp_11471\",\"globalBucketConfigId\":\"glb_8\",\"useIntelligentTiering\":\"false\",\"volumeId\":\"3\",\"useInFrequentAccessThreshold\":\"65536\",\"storageType\":\"S3\",\"useInFrequentAccess\":\"false\"}]}";
+
+    private static final String TEST_SERVER_CONFIG_OPENIO = "{\"server/stores\":[{\"volumePrefix\":\"TEST_CONTAINER\", \"storageType\":\"OPENIO\", \"volumeId\":\"3\", \"url\":\"http://10.139.28.32\", \"proxyPort\":\"6006\", \"accountPort\":\"6000\", \"account\":\"SM_ACCOUNT\", \"nameSpace\":\"OPENIO\"}]}";
 
     private MockProvisioning mockProvisioning;
     private ExternalVolumeInfoHandler externalVolumeInfoHandler = null;
@@ -133,6 +140,66 @@ public class ExternalVolumeInfoHandlerTest {
         String actualServerExternalStoreConfigJson = externalVolumeInfoHandler.editGlobalConfigOnAddVolume(volInfo,
                 serverId, serverExternalStoreConfigJson);
         Assert.assertEquals(expectedServerExternalStoreConfigJson, actualServerExternalStoreConfigJson);
+    }
+
+    /**
+     * Test case if server config details are not exists but reading server property
+     * with volume id
+     *
+     * @throws ServiceException
+     * @throws JSONException
+     */
+    @Test
+    public void testServerConfig_NonExist() throws ServiceException, JSONException {
+        VolumeInfo volInfo = mockVolumeInfo();
+        externalVolumeInfoHandler.editGlobalConfigOnAddVolume(volInfo, serverId, TEST_GLOBAL_BUCKETS);
+        JSONObject actualServerExternalStoreConfigJson = externalVolumeInfoHandler.readServerProperties(100);
+        assertNull(actualServerExternalStoreConfigJson);
+    }
+
+    /**
+     * Test case if server config details are exists but reading server property
+     * with non exist volume id
+     *
+     * @throws ServiceException
+     * @throws JSONException
+     */
+    @Test
+    public void testServerConfig_NonExistExternalVolume() throws ServiceException, JSONException {
+        VolumeInfo volInfo = mockVolumeInfo();
+        externalVolumeInfoHandler.editGlobalConfigOnAddVolume(volInfo, serverId, TEST_GLOBAL_BUCKETS);
+        mockProvisioning.getLocalServer().setServerExternalStoreConfig(TEST_SERVER_CONFIG);
+        JSONObject actualServerExternalStoreConfigJson = externalVolumeInfoHandler.readServerProperties(100);
+        Assert.assertEquals(0, actualServerExternalStoreConfigJson.length());
+    }
+
+    /**
+     * Test case if server config details are exists but reading server property
+     * with volume id
+     *
+     * @throws ServiceException
+     * @throws JSONException
+     */
+    @Test
+    public void testServerConfig_ExternalVolume() throws ServiceException, JSONException {
+        VolumeInfo volInfo = mockVolumeInfo();
+        JSONObject actualServerExternalStoreConfigJson = null;
+        JSONObject expectedServerExternalStoreConfigJson = new JSONObject();
+        externalVolumeInfoHandler.editGlobalConfigOnAddVolume(volInfo, serverId, TEST_GLOBAL_BUCKETS);
+        mockProvisioning.getLocalServer().setServerExternalStoreConfig(TEST_SERVER_CONFIG);
+
+        actualServerExternalStoreConfigJson = externalVolumeInfoHandler.readServerProperties(3);
+        Assert.assertTrue(actualServerExternalStoreConfigJson.length() > 0);
+
+        actualServerExternalStoreConfigJson = externalVolumeInfoHandler.readServerProperties(4);
+        Assert.assertFalse(actualServerExternalStoreConfigJson.length() > 0);
+
+        mockProvisioning.getLocalServer().setServerExternalStoreConfig(TEST_SERVER_CONFIG_OPENIO);
+        actualServerExternalStoreConfigJson = externalVolumeInfoHandler.readServerProperties(3);
+        Assert.assertTrue(actualServerExternalStoreConfigJson.length() > 0);
+
+        actualServerExternalStoreConfigJson = externalVolumeInfoHandler.readServerProperties(4);
+        Assert.assertFalse(actualServerExternalStoreConfigJson.length() > 0);
     }
 
 }
