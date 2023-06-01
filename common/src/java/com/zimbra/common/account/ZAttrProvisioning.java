@@ -9322,6 +9322,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLDAPSchemaVersion = "zimbraLDAPSchemaVersion";
 
     /**
+     * Host server where the license daemon service is hosted
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4097)
+    public static final String A_zimbraLicenseDaemonServerHost = "zimbraLicenseDaemonServerHost";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)
