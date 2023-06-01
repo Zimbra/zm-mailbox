@@ -12,6 +12,9 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import org.json.JSONObject;
+import org.json.JSONException;
+import static org.junit.Assert.assertNull;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
 
