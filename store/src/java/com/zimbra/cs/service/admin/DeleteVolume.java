@@ -44,8 +44,8 @@ public final class DeleteVolume extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         Server server = Provisioning.getInstance().getLocalServer();
         checkRight(zsc, ctx, server, Admin.R_manageVolume);
-        boolean isUnifiedVolume = VolumeConfigUtil.isUnifiedVolume(req.getId());
         VolumeConfigUtil.parseDeleteVolumeRequest(req, server.getId());
+        boolean isUnifiedVolume = VolumeConfigUtil.isUnifiedVolume(req.getId());
 
         if (isUnifiedVolume) {
             ExternalVolumeInfoHandler.flushConfigLevelCacheOnAllServers(this, ctx);
