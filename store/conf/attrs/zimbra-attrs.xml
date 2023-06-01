@@ -10371,6 +10371,10 @@ TODO: delete them permanently from here
   <desc>whether to enable CountObjectsRequest with userAccount/account type on Zimbra Admin Console</desc>
 </attr>
 
+<attr id="4097" name="zimbraLicenseDaemonServerHost" type="string" cardinality="single" optionalIn="globalConfig" since="10.1.0">
+  <desc>Host server where the license daemon service is hosted</desc>
+</attr>
+
 <attr id="4100" name="zimbraModernWebClientDisabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="10.1.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable/disable the modern web client option on the login screen. Default value is FALSE, which makes the modern client option available.</desc>

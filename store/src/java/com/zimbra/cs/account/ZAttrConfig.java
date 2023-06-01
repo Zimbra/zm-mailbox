@@ -28474,6 +28474,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Host server where the license daemon service is hosted
+     *
+     * @return zimbraLicenseDaemonServerHost, or null if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4097)
+    public String getLicenseDaemonServerHost() {
+        return getAttr(Provisioning.A_zimbraLicenseDaemonServerHost, null, true);
+    }
+
+    /**
+     * Host server where the license daemon service is hosted
+     *
+     * @param zimbraLicenseDaemonServerHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4097)
+    public void setLicenseDaemonServerHost(String zimbraLicenseDaemonServerHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseDaemonServerHost, zimbraLicenseDaemonServerHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Host server where the license daemon service is hosted
+     *
+     * @param zimbraLicenseDaemonServerHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4097)
+    public Map<String,Object> setLicenseDaemonServerHost(String zimbraLicenseDaemonServerHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseDaemonServerHost, zimbraLicenseDaemonServerHost);
+        return attrs;
+    }
+
+    /**
+     * Host server where the license daemon service is hosted
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4097)
+    public void unsetLicenseDaemonServerHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseDaemonServerHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Host server where the license daemon service is hosted
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4097)
+    public Map<String,Object> unsetLicenseDaemonServerHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseDaemonServerHost, "");
+        return attrs;
+    }
+
+    /**
      * Whether to bind to port on startup irrespective of whether the server
      * is enabled. Useful when port to bind is privileged and must be bound
      * early.
