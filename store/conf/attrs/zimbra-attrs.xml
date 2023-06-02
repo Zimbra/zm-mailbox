@@ -10371,9 +10371,9 @@ TODO: delete them permanently from here
   <desc>whether to enable CountObjectsRequest with userAccount/account type on Zimbra Admin Console</desc>
 </attr>
 
-<attr id="4100" name="zimbraModernWebClientEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="10.1.0">
-  <globalConfigValue>TRUE</globalConfigValue>
-  <desc>Whether to enable/disable modern ui option on the login screen.</desc>
+<attr id="4100" name="zimbraModernWebClientDisabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="10.1.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to enable/disable the modern web client option on the login screen. Default value is FALSE, which makes the modern client option available.</desc>
 </attr>
 <attr id="4098" name="zimbraFeatureAllowUsernameInPassword" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="10.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
