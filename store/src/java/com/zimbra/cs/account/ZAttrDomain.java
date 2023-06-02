@@ -19105,64 +19105,74 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Whether to enable/disable modern ui option on the login screen.
+     * Whether to enable/disable the modern web client option on the login
+     * screen. Default value is FALSE, which makes the modern client option
+     * available.
      *
-     * @return zimbraModernWebClientEnabled, or true if unset
+     * @return zimbraModernWebClientDisabled, or false if unset
      *
      * @since ZCS 10.1.0
      */
     @ZAttr(id=4100)
-    public boolean isModernWebClientEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraModernWebClientEnabled, true, true);
+    public boolean isModernWebClientDisabled() {
+        return getBooleanAttr(Provisioning.A_zimbraModernWebClientDisabled, false, true);
     }
 
     /**
-     * Whether to enable/disable modern ui option on the login screen.
+     * Whether to enable/disable the modern web client option on the login
+     * screen. Default value is FALSE, which makes the modern client option
+     * available.
      *
-     * @param zimbraModernWebClientEnabled new value
+     * @param zimbraModernWebClientDisabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 10.1.0
      */
     @ZAttr(id=4100)
-    public void setModernWebClientEnabled(boolean zimbraModernWebClientEnabled) throws com.zimbra.common.service.ServiceException {
+    public void setModernWebClientDisabled(boolean zimbraModernWebClientDisabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraModernWebClientEnabled, zimbraModernWebClientEnabled ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraModernWebClientDisabled, zimbraModernWebClientDisabled ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Whether to enable/disable modern ui option on the login screen.
+     * Whether to enable/disable the modern web client option on the login
+     * screen. Default value is FALSE, which makes the modern client option
+     * available.
      *
-     * @param zimbraModernWebClientEnabled new value
+     * @param zimbraModernWebClientDisabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 10.1.0
      */
     @ZAttr(id=4100)
-    public Map<String,Object> setModernWebClientEnabled(boolean zimbraModernWebClientEnabled, Map<String,Object> attrs) {
+    public Map<String,Object> setModernWebClientDisabled(boolean zimbraModernWebClientDisabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraModernWebClientEnabled, zimbraModernWebClientEnabled ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraModernWebClientDisabled, zimbraModernWebClientDisabled ? TRUE : FALSE);
         return attrs;
     }
 
     /**
-     * Whether to enable/disable modern ui option on the login screen.
+     * Whether to enable/disable the modern web client option on the login
+     * screen. Default value is FALSE, which makes the modern client option
+     * available.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 10.1.0
      */
     @ZAttr(id=4100)
-    public void unsetModernWebClientEnabled() throws com.zimbra.common.service.ServiceException {
+    public void unsetModernWebClientDisabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraModernWebClientEnabled, "");
+        attrs.put(Provisioning.A_zimbraModernWebClientDisabled, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Whether to enable/disable modern ui option on the login screen.
+     * Whether to enable/disable the modern web client option on the login
+     * screen. Default value is FALSE, which makes the modern client option
+     * available.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19170,9 +19180,9 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @since ZCS 10.1.0
      */
     @ZAttr(id=4100)
-    public Map<String,Object> unsetModernWebClientEnabled(Map<String,Object> attrs) {
+    public Map<String,Object> unsetModernWebClientDisabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraModernWebClientEnabled, "");
+        attrs.put(Provisioning.A_zimbraModernWebClientDisabled, "");
         return attrs;
     }
 

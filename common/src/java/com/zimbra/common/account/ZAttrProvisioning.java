@@ -11324,12 +11324,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileTombstoneEnabled = "zimbraMobileTombstoneEnabled";
 
     /**
-     * Whether to enable/disable modern ui option on the login screen.
+     * Whether to enable/disable the modern web client option on the login
+     * screen. Default value is FALSE, which makes the modern client option
+     * available.
      *
      * @since ZCS 10.1.0
      */
     @ZAttr(id=4100)
-    public static final String A_zimbraModernWebClientEnabled = "zimbraModernWebClientEnabled";
+    public static final String A_zimbraModernWebClientDisabled = "zimbraModernWebClientDisabled";
 
     /**
      * Value for postconf address_verify_negative_refresh_time
