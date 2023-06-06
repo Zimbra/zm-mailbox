@@ -21,6 +21,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.service.admin.FlushCache;
+import com.zimbra.cs.volume.VolumeServiceException;
 import com.zimbra.soap.admin.message.FlushCacheRequest;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CacheSelector;
@@ -54,6 +55,9 @@ public class ExternalVolumeInfoHandler {
         try {
             // step 1: Fetch current JSON state object and current JSON state array
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
+            if (serverExternalStoreConfigJson == null) {
+                return null;
+            }
             JSONObject currentJsonObject = new JSONObject(serverExternalStoreConfigJson);
             JSONArray currentJsonArray = currentJsonObject.getJSONArray("server/stores");
 
@@ -361,6 +365,9 @@ public class ExternalVolumeInfoHandler {
      */
     public Boolean isVolumePresentInJson(int volumeId) throws ServiceException, JSONException {
         String globalExternalStoreConfig = provisioning.getLocalServer().getServerExternalStoreConfig();
+        if (globalExternalStoreConfig == null) {
+            return false;
+        }
         JSONObject globalS3Configs = new JSONObject(globalExternalStoreConfig);
         JSONArray globalS3ConfigList = globalS3Configs.getJSONArray("server/stores");
         for (int i = 0; i < globalS3ConfigList.length(); i++) {
@@ -394,6 +401,9 @@ public class ExternalVolumeInfoHandler {
         boolean isUnifiedVolume = false;
         try {
             JSONObject currentJsonObject = new JSONObject(provisioning.getLocalServer().getServerExternalStoreConfig());
+            if (JSONObject.NULL.equals(currentJsonObject)) {
+                throw VolumeServiceException.INVALID_REQUEST("Unable to read server properties", VolumeServiceException.INVALID_REQUEST);
+            }
             JSONArray serverStoreJsonArray = currentJsonObject.getJSONArray("server/stores");
             for (int i = 0; i < serverStoreJsonArray.length(); i++) {
                 JSONObject tempJsonObj = serverStoreJsonArray.getJSONObject(i);
