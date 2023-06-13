@@ -7397,6 +7397,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureResetPasswordSuspensionTime = "zimbraFeatureResetPasswordSuspensionTime";
 
     /**
+     * Whether retention policy feature is enabled
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4101)
+    public static final String A_zimbraFeatureRetentionPolicyEnabled = "zimbraFeatureRetentionPolicyEnabled";
+
+    /**
      * Creates unsubscribe system folder
      *
      * @since ZCS 10.0.0

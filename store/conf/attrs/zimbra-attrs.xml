@@ -10383,4 +10383,11 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>To restrict/allow the use of username in the password when user reset or change their password to achieve greater password security.</desc>
 </attr>
+
+<attr id="4101" name="zimbraFeatureRetentionPolicyEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="10.1.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
+  <desc>Whether retention policy feature is enabled</desc>
+</attr>
+
 </attrs>
