@@ -14550,6 +14550,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether retention policy feature is enabled
+     *
+     * @return zimbraFeatureRetentionPolicyEnabled, or true if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4101)
+    public boolean isFeatureRetentionPolicyEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureRetentionPolicyEnabled, true, true);
+    }
+
+    /**
+     * Whether retention policy feature is enabled
+     *
+     * @param zimbraFeatureRetentionPolicyEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4101)
+    public void setFeatureRetentionPolicyEnabled(boolean zimbraFeatureRetentionPolicyEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureRetentionPolicyEnabled, zimbraFeatureRetentionPolicyEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether retention policy feature is enabled
+     *
+     * @param zimbraFeatureRetentionPolicyEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4101)
+    public Map<String,Object> setFeatureRetentionPolicyEnabled(boolean zimbraFeatureRetentionPolicyEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureRetentionPolicyEnabled, zimbraFeatureRetentionPolicyEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether retention policy feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4101)
+    public void unsetFeatureRetentionPolicyEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureRetentionPolicyEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether retention policy feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4101)
+    public Map<String,Object> unsetFeatureRetentionPolicyEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureRetentionPolicyEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
      * this attribute is effective only if SMIME is permitted by license.
      *
