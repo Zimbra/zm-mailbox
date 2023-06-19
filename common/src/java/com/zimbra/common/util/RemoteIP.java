@@ -160,6 +160,7 @@ public class RemoteIP {
 
     public static class TrustedIPs {
         private static final String IP_LOCALHOST = "127.0.0.1";
+        private static final String IPV6_LOCALHOST = "[0:0:0:0:0:0:0:1]";
 
         private Set<String> mTrustedIPs = new HashSet<String>();
 
@@ -177,7 +178,7 @@ public class RemoteIP {
         }
 
         private static boolean isLocalhost(String ip) {
-            return IP_LOCALHOST.equals(ip);
+            return IP_LOCALHOST.equals(ip) || IPV6_LOCALHOST.equals(ip);
         }
 
         @Override
