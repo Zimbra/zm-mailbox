@@ -35,6 +35,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -707,9 +708,18 @@ public class ContactAutoComplete {
             if (Strings.isNullOrEmpty(displayName)) {
                 displayName = Joiner.on(' ').skipNulls().join(first, middle, last);
             }
-
+            Account account;
+            try {
+                account = Provisioning.getInstance().get(Key.AccountBy.name, fullName);
+            } catch (ServiceException e) {
+                throw new RuntimeException(e);
+            }
             for (String emailKey : mEmailKeys) {
                 String email = getFieldAsString(attrs, emailKey);
+
+                if(!emailKey.equals("email") && account.isHideAliasesInGal()){//condition for acount allow
+                    break;
+                }
                 if (email != null && (nameMatches || matchesEmail(tokens, email))) {
                     ContactEntry entry = new ContactEntry();
                     entry.mEmail = email;
@@ -735,11 +745,14 @@ public class ContactAutoComplete {
                         entry.mAttrs = attrs;
                     }
                     addEntry(entry, result);
+
+
                     ZimbraLog.gal.debug("adding %s", entry.getEmail());
                     /*
                 		Previously stopped at first matching email address for GAL contact. 
                 		See ZBUG-1838.
                     */
+
                 }
             }
         } else { // IS a contact group
