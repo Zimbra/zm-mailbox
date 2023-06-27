@@ -70,8 +70,11 @@ public class RemoteIP {
 
     public RemoteIP(HttpServletRequest req, TrustedIPs trustedIPs) {
         mClientIP = req.getRemoteAddr();
+        ZimbraLog.mailbox.info("mClientIP  %s", mClientIP);
         mClientPort = req.getRemotePort();
 
+        ZimbraLog.mailbox.info("trustedIPs %s", trustedIPs.toString());
+        ZimbraLog.mailbox.info("***X_ORIGINATING_IP_HEADER %s", req.getHeader(X_ORIGINATING_IP_HEADER));
         if (trustedIPs.isIpTrusted(mClientIP)) {
             mOrigIP = req.getHeader(X_ORIGINATING_IP_HEADER);
             String origPort = req.getHeader(X_ORIGINATING_PORT_HEADER);
