@@ -170,16 +170,12 @@ public class RemoteIP {
             if (ips != null) {
                 for (String ip : ips) {
                     if (!StringUtil.isNullOrEmpty(ip))
-                    	ZimbraLog.mailbox.info("***  add TrustedIPs ip=  %s",ip);
                         mTrustedIPs.add(ip);
                 }
             }
         }
 
         public boolean isIpTrusted(String ip) {
-        	ZimbraLog.mailbox.info("***  ------    isIpTrusted isLocalhost(ip)  "+ isLocalhost(ip));
-            ZimbraLog.mailbox.info("***  ------    isIpTrusted isLocalhost(ip)  "+ mTrustedIPs.contains(ip) );
-
             return isLocalhost(ip) || mTrustedIPs.contains(ip);
         }
 
