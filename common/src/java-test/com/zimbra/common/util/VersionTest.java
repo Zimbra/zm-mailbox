@@ -151,4 +151,17 @@ public class VersionTest {
         }
     }
 
+    @Test
+    public void checkPatchRelease() throws Exception {
+        Version currentVersion = new Version("10.0.0_GA_4518");
+        Version lastVersion = new Version("10.1.0_GA_4549");
+        Assert.assertFalse(currentVersion.isSameMinorRelease(lastVersion));
+        currentVersion = new Version("10.0.0_GA_4518");
+        lastVersion = new Version("11.0.0_GA_4549");
+        Assert.assertFalse(currentVersion.isSameMinorRelease(lastVersion));
+        currentVersion = new Version("10.0.0_GA_4518");
+        lastVersion = new Version("10.0.1_GA_454");
+        Assert.assertTrue(currentVersion.isSameMinorRelease(lastVersion));
+    }
+
 }
