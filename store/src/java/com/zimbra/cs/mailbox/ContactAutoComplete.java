@@ -716,7 +716,7 @@ public class ContactAutoComplete {
             }
             for (String emailKey : mEmailKeys) {
                 String email = getFieldAsString(attrs, emailKey);
-
+               //account.
                 if(!emailKey.equals("email") && account.isHideAliasesInGal()){//condition for acount allow
                     break;
                 }

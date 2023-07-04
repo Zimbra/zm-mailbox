@@ -18740,6 +18740,13 @@ public class ZAttrProvisioning {
     @ZAttr(id=4082)
     public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
 
+    @ZAttr(id=4100)
+    public static final String A_zimbraShowListOfAliases = "zimbraShowListOfAliases";
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     */
+    @ZAttr(id=4101)
+    public static final String A_zimbraMailAliasesToHide = "zimbraMailAliasesToHide";
     ///// END-AUTO-GEN-REPLACE
 }
 

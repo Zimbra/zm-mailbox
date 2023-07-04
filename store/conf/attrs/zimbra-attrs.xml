@@ -5275,7 +5275,7 @@ TODO: delete them permanently from here
   <desc>sieve script generated from user outgoing filter rules</desc>
 </attr>
 
-<attr id="1131" name="zimbraOAuthConsumerCredentials" type="ostring" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
+    <attr id="1131" name="zimbraOAuthConsumerCredentials" type="ostring" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
   <desc>OAuth Consumer id, secret, and application name.  It is in the format of {consumer-id}:{secret}:{consumer-app-name}</desc>
 </attr>
 
@@ -10370,5 +10370,13 @@ TODO: delete them permanently from here
 <attr id="4099" name="zimbraHideAliasesInGal" type="boolean" cardinality="single" optionalIn="mailRecipient,group" flags="domainAdminModifiable" since="10.1.0">
   <desc>Hide all the aliases from GAL for the user, so it will not be displayed in the autocomplete.</desc>
 </attr>
+
+  <attr id="4100" name="zimbraShowListOfAliases" type="ostring" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="10.0.0">
+    <desc>Multiple email aliases list</desc>
+  </attr>
+
+  <attr id="4101" name="zimbraMailAliasesToHide" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient,group,groupDynamicUnit" flags="accountInfo">
+    <desc>hide email aliases</desc>
+  </attr>
 </attrs>
 

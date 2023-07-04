@@ -2583,7 +2583,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             if (entry != null) {
                 try {
                     HashMap<String, String> attrs = new HashMap<String, String>();
-                    attrs.put("-" + Provisioning.A_mail, alias);
+                    attrs.put("+" + Provisioning.A_zimbraMailDeliveryAddress, alias);
                     attrs.put("-" + Provisioning.A_zimbraMailAlias, alias);
                     modifyAttrsInternal(entry, zlc, attrs);
                 } catch (ServiceException e) {

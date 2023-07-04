@@ -65955,6 +65955,121 @@ public abstract class ZAttrAccount  extends MailTarget {
         return attrs;
     }
 
-    ///// END-AUTO-GEN-REPLACE
 
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     *
+     * @return zimbraMailAlias, or empty array if unset
+     */
+    @ZAttr(id=20)
+    public String[] getMailAliasToHide() {
+        return getMultiAttr(Provisioning.A_zimbraMailAliasesToHide, true, true);
+    }
+
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     *
+     * @param zimbraMailAliasToHide new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=20)
+    public void setMailAliasToHide(String[] zimbraMailAliasToHide) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAliasesToHide, zimbraMailAliasToHide);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     *
+     * @param zimbraMailAliasesToHide new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=20)
+    public Map<String,Object> setMailAliasToHide(String[] zimbraMailAliasesToHide, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAliasesToHide, zimbraMailAliasesToHide);
+        return attrs;
+    }
+
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     *
+     * @param zimbraMailAliasesToHide new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=20)
+    public void addMailAliasToHide(String zimbraMailAliasToHide) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAliasesToHide, zimbraMailAliasToHide);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     *
+     * @param zimbraMailAliasToHide new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=20)
+    public Map<String,Object> addMailAliasToHide(String zimbraMailAliasToHide, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAliasesToHide, zimbraMailAliasToHide);
+        return attrs;
+    }
+
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     *
+     * @param zimbraMailAliasToHide existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=20)
+    public void removeMailAliasToHide(String zimbraMailAliasToHide) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAliasesToHide, zimbraMailAliasToHide);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     *
+     * @param zimbraMailAliasToHide existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=20)
+    public Map<String,Object> removeMailAliasToHide(String zimbraMailAliasToHide, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAliasesToHide, zimbraMailAliasToHide);
+        return attrs;
+    }
+
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=20)
+    public void unsetMailAliasToHide() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAliasesToHide, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC822 email address of this recipient for accepting mail
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=20)
+    public Map<String,Object> unsetMailAliasToHide(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAliasesToHide, "");
+        return attrs;
+    }
+    ///// END-AUTO-GEN-REPLACE
 }
