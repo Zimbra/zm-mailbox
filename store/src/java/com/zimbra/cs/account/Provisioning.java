@@ -391,6 +391,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return getConfig().getProduct() != Product.ZCS;
     }
 
+    public boolean getAllowUsernameWithinPasswordValue(Account account) {
+        return account.isFeatureAllowUsernameInPassword();
+    }
+
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
      * keys that are <code>String</code>s, and values that are either
@@ -2790,6 +2794,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
         throw new UnsupportedOperationException("Currently address list is not supported.");
     }
-    
+
     public abstract String sendMdmEmail(String status, String timeInterval) throws ServiceException;
 }
