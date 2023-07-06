@@ -10322,12 +10322,12 @@ TODO: delete them permanently from here
 <attr id="4093" name="zimbraTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="9.0.0">
   <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
-<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="domainInfo,accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
+<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enables the mail recall functionality</desc>
 </attr>
-<attr id="4095" name="zimbraFeatureMailRecallTime" type="integer" min="1" max="30" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="domainInfo,accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
+<attr id="4095" name="zimbraFeatureMailRecallTime" type="integer" min="1" max="30" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
   <globalConfigValue>30</globalConfigValue>
   <defaultCOSValue>30</defaultCOSValue>
   <desc>Time(in minutes) within which a message can be recalled. The default time is 30 minutes and accepts value from 1 to 30.</desc>
