@@ -1504,6 +1504,9 @@ public final class LC {
 
     // ZBUG-3105: zimbra_allowed_redirect_url is a url that allows in preauth redirectURL
     public static final KnownKey zimbra_allowed_redirect_url = KnownKey.newKey("");
+
+    // PREAPPS-7386 Enable folder retention feature in Modern UI, only for Kepler and 10.0.1 patches
+    public static final KnownKey enable_folder_retention_policy = KnownKey.newKey(true);
     
     static {
         // Automatically set the key name with the variable name.
