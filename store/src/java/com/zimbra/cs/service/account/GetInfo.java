@@ -366,6 +366,10 @@ public class GetInfo extends AccountDocumentHandler  {
         // ZCS-10678: Include Local config change for zimbraPasswordAllowUsername in getinfo response
         ToXML.encodeAttr(response, "zimbraPasswordAllowUsername",
                 Boolean.toString(LC.allow_username_within_password.booleanValue()).toUpperCase());
+
+        // PREAPPS-7386: Enable folder retention feature of Modern UI in Zimbra 9 and 10.0.1
+        ToXML.encodeAttr(response, "zimbraFeatureRetentionPolicyEnabled",
+                Boolean.toString(LC.enable_folder_retention_policy.booleanValue()).toUpperCase());
     }
 
     private static void doZimlets(Element response, Account acct) {
