@@ -827,10 +827,16 @@ public class SoapProvisioning extends Provisioning {
             }
         }
     }
+    @Override public void addAlias(Account acct, String alias) throws ServiceException {
+        invokeJaxb(new AddAccountAliasRequest(acct.getId(), alias));
+        reload(acct);
+
+    }
+
 
     @Override
-    public void addAlias(Account acct, String alias) throws ServiceException {
-        invokeJaxb(new AddAccountAliasRequest(acct.getId(), alias));
+    public void addAlias(Account acct, String alias, boolean isHiddenAlias) throws ServiceException {
+        invokeJaxb(new AddAccountAliasRequest(acct.getId(), alias, isHiddenAlias));
         reload(acct);
     }
 
@@ -1872,6 +1878,7 @@ public class SoapProvisioning extends Provisioning {
     public void checkPasswordStrength(Account acct, String password) throws ServiceException {
         invokeJaxb(new CheckPasswordStrengthRequest(acct.getId(), password));
     }
+
 
     @Override
     public void modifyAttrs(com.zimbra.cs.account.Entry e,

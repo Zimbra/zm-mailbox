@@ -58,7 +58,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -2341,9 +2340,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void addAlias(Account acct, String alias) throws ServiceException {
-        addAliasInternal(acct, alias);
+        addAliasInternal(acct, alias, false);
     }
+    @Override
+    public void addAlias(Account acct, String alias, boolean isHiddenAlias) throws ServiceException {
+        addAliasInternal(acct, alias, isHiddenAlias);
 
+    }
     @Override
     public void removeAlias(Account acct, String alias) throws ServiceException {
         accountCache.remove(acct);
@@ -2352,7 +2355,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void addAlias(DistributionList dl, String alias) throws ServiceException {
-        addAliasInternal(dl, alias);
+        addAliasInternal(dl, alias, false);
         allDLs.addGroup(dl);
     }
 
@@ -2362,7 +2365,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         removeAliasInternal(dl, alias);
         allDLs.removeGroup(alias);
     }
-
     private boolean isEntryAlias(ZAttributes attrs) throws ServiceException {
 
         Map<String, Object> entryAttrs = attrs.getAttrs();
@@ -2378,7 +2380,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return false;
     }
 
-    private void addAliasInternal(NamedEntry entry, String alias) throws ServiceException {
+    private void addAliasInternal(NamedEntry entry, String alias, boolean isHiddenAlias) throws ServiceException {
 
         LdapUsage ldapUsage = null;
 
@@ -2476,7 +2478,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             HashMap<String, String> attrs = new HashMap<String, String>();
             attrs.put("+" + Provisioning.A_zimbraMailAlias, alias);
             attrs.put("+" + Provisioning.A_mail, alias);
-
+            if(isHiddenAlias) {
+                attrs.put("+" + Provisioning.A_zimbraAliasListToHide, alias);
+            }
             // UGH
             modifyAttrsInternal(entry, zlc, attrs);
             removeExternalAddrsFromAllDynamicGroups(aliasedEntry.getAllAddrsSet(), zlc);
@@ -9786,7 +9790,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void addGroupAlias(Group group, String alias) throws ServiceException {
-        addAliasInternal(group, alias);
+        addAliasInternal(group, alias, false);
         allDLs.addGroup(group);
     }
 

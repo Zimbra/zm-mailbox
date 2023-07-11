@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.Arrays;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
@@ -901,6 +901,7 @@ public class RenameDomain {
 
         private void fixupForeignTarget(Account targetEntry,
                 String aliasOldAddr, String aliasNewAddr) {
+            boolean isHiddenAlias = false;
             try {
                 mProv.removeAlias(targetEntry, aliasOldAddr);
             } catch (ServiceException e) {
@@ -908,10 +909,12 @@ public class RenameDomain {
                         "acct=[%s], aliasOldAddr=[%s], aliasNewAddr=[%s]",
                         targetEntry.getName(), aliasOldAddr, aliasNewAddr);
             }
-
+            if (Arrays.asList(targetEntry.getAliasListToHide()).contains(aliasOldAddr)) {
+                isHiddenAlias = true;
+            }
             // we want to continue doing add even if remove failed
             try {
-                mProv.addAlias(targetEntry, aliasNewAddr);
+                mProv.addAlias(targetEntry, aliasNewAddr, isHiddenAlias);
             } catch (ServiceException e) {
                 warn("fixupTargetInOtherDomain", "cannot add alias for account" +
                         "acct=[%s], aliasOldAddr=[%s], aliasNewAddr=[%s]",

@@ -953,7 +953,7 @@ public class TestProvAlias extends LdapTest {
         assertTrue(good);
         
         try {
-            prov.addAlias(acct, dlName);
+            prov.addAlias(acct, dlName, false);
         } catch (ServiceException e) {
             if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode()))
                 good = true;

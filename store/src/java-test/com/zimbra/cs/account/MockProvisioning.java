@@ -406,6 +406,12 @@ public final class MockProvisioning extends Provisioning {
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAlias, alias);
         modifyAttrs(acct, attrs, false);
     }
+    @Override
+    public void addAlias(Account acct, String alias, boolean isHiddenAlias) {
+        HashMap<String, Object> attrs = new HashMap<String, Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAlias, alias);
+        modifyAttrs(acct, attrs, isHiddenAlias);
+    }
 
     @Override
     public void removeAlias(Account acct, String alias) {

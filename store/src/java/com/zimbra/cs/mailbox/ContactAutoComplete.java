@@ -707,7 +707,6 @@ public class ContactAutoComplete {
             if (Strings.isNullOrEmpty(displayName)) {
                 displayName = Joiner.on(' ').skipNulls().join(first, middle, last);
             }
-
             for (String emailKey : mEmailKeys) {
                 String email = getFieldAsString(attrs, emailKey);
                 if (email != null && (nameMatches || matchesEmail(tokens, email))) {

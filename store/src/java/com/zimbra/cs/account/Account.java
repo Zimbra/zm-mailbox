@@ -68,7 +68,10 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     }
 
     public void addAlias(String alias) throws ServiceException {
-        getProvisioning().addAlias(this, alias);
+        getProvisioning().addAlias(this, alias, false);
+    }
+    public void addAlias(String alias, boolean isHiddenAlias) throws ServiceException {
+        getProvisioning().addAlias(this, alias, isHiddenAlias);
     }
 
     public void removeAlias(String alias) throws ServiceException {

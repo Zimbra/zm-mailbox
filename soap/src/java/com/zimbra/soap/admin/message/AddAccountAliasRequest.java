@@ -51,19 +51,35 @@ public class AddAccountAliasRequest {
     @XmlAttribute(name=AdminConstants.E_ALIAS /* alias */, required=true)
     private final String alias;
 
+
+
+    /**
+     * @zm-api-field-tag zimbra alias to be hidden or not
+     * @zm-api-field-description isHiddenAlias
+     */
+    @XmlAttribute(name=AdminConstants.E_IS_HIDDEN_ALIAS /* isHiddenAlias */, required=false)
+    private  boolean isHiddenAlias;
+
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+        this((String)null, (String)null, false);
     }
 
     public AddAccountAliasRequest(String id, String alias) {
         this.id = id;
         this.alias = alias;
     }
+    public AddAccountAliasRequest(String id, String alias, boolean isHiddenAlias) {
+        this.id = id;
+        this.alias = alias;
+        this.isHiddenAlias = isHiddenAlias;
+    }
 
     public String getId() { return id; }
     public String getAlias() { return alias; }
+
+    public boolean isHiddenAlias() { return isHiddenAlias; }
 }

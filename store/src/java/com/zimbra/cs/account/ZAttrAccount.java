@@ -3924,6 +3924,149 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * aliases list to be hidden in autocomplete, this is the list of user
+     * selected aliases to be hidden in the admin console.
+     *
+     * @return zimbraAliasListToHide, or empty array if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public String[] getAliasListToHide() {
+        return getMultiAttr(Provisioning.A_zimbraAliasListToHide, true, true);
+    }
+
+    /**
+     * aliases list to be hidden in autocomplete, this is the list of user
+     * selected aliases to be hidden in the admin console.
+     *
+     * @param zimbraAliasListToHide new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public void setAliasListToHide(String[] zimbraAliasListToHide) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAliasListToHide, zimbraAliasListToHide);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * aliases list to be hidden in autocomplete, this is the list of user
+     * selected aliases to be hidden in the admin console.
+     *
+     * @param zimbraAliasListToHide new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public Map<String,Object> setAliasListToHide(String[] zimbraAliasListToHide, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAliasListToHide, zimbraAliasListToHide);
+        return attrs;
+    }
+
+    /**
+     * aliases list to be hidden in autocomplete, this is the list of user
+     * selected aliases to be hidden in the admin console.
+     *
+     * @param zimbraAliasListToHide new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public void addAliasListToHide(String zimbraAliasListToHide) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAliasListToHide, zimbraAliasListToHide);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * aliases list to be hidden in autocomplete, this is the list of user
+     * selected aliases to be hidden in the admin console.
+     *
+     * @param zimbraAliasListToHide new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public Map<String,Object> addAliasListToHide(String zimbraAliasListToHide, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAliasListToHide, zimbraAliasListToHide);
+        return attrs;
+    }
+
+    /**
+     * aliases list to be hidden in autocomplete, this is the list of user
+     * selected aliases to be hidden in the admin console.
+     *
+     * @param zimbraAliasListToHide existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public void removeAliasListToHide(String zimbraAliasListToHide) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAliasListToHide, zimbraAliasListToHide);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * aliases list to be hidden in autocomplete, this is the list of user
+     * selected aliases to be hidden in the admin console.
+     *
+     * @param zimbraAliasListToHide existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public Map<String,Object> removeAliasListToHide(String zimbraAliasListToHide, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAliasListToHide, zimbraAliasListToHide);
+        return attrs;
+    }
+
+    /**
+     * aliases list to be hidden in autocomplete, this is the list of user
+     * selected aliases to be hidden in the admin console.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public void unsetAliasListToHide() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAliasListToHide, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * aliases list to be hidden in autocomplete, this is the list of user
+     * selected aliases to be hidden in the admin console.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public Map<String,Object> unsetAliasListToHide(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAliasListToHide, "");
+        return attrs;
+    }
+
+    /**
      * Whether this account can use any from address. Not changeable by
      * domain admin to allow arbitrary addresses
      *

@@ -107,7 +107,7 @@ public class TestLdapProvAlias extends LdapTest {
         String ALIAS_LOCALPART = Names.makeAliasNameLocalPart(genAcctNameLocalPart("alias"));
         String ALIAS_NAME = TestUtil.getAddress(ALIAS_LOCALPART, domain.getName());
         
-        prov.addAlias(acct, ALIAS_NAME);
+        prov.addAlias(acct, ALIAS_NAME, false);
         
         prov.flushCache(CacheEntryType.account, null);
         Account acctByAlias = prov.get(AccountBy.name, ALIAS_NAME);
