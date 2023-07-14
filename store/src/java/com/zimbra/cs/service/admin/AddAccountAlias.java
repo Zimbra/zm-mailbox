@@ -85,7 +85,7 @@ public class AddAccountAlias extends AdminDocumentHandler {
         checkDomainRightByEmail(zsc, alias, Admin.R_createAlias);
 
         prov.addAlias(account, alias);
-        if (aliasToBeHidden){
+        if (aliasToBeHidden) {
             util.addAliasHidingInfo(account, alias);
         }
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
