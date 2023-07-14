@@ -140,7 +140,7 @@ public class TestDLMembership extends TestCase {
         try {
             transport = TestUtil.getAdminSoapTransport();
             //add an alias to the account
-            AddAccountAliasResponse addAliasResp = SoapTest.invokeJaxb(transport,new AddAccountAliasRequest(testUser.getId(),TestUtil.getAddress(TEST_ALIAS)));
+            AddAccountAliasResponse addAliasResp = SoapTest.invokeJaxb(transport,new AddAccountAliasRequest(testUser.getId(),TestUtil.getAddress(TEST_ALIAS), false));
             assertNotNull("AddAccountAliasResponse cannot be null", addAliasResp);
             Account acct = Provisioning.getInstance().getAccount(testUser.getId());
             assertNotNull(acct);
@@ -171,7 +171,7 @@ public class TestDLMembership extends TestCase {
         try {
             transport = TestUtil.getAdminSoapTransport();
             //add an alias to the account
-            AddAccountAliasResponse addAliasResp = SoapTest.invokeJaxb(transport,new AddAccountAliasRequest(testUser.getId(),TestUtil.getAddress(TEST_ALIAS)));
+            AddAccountAliasResponse addAliasResp = SoapTest.invokeJaxb(transport,new AddAccountAliasRequest(testUser.getId(),TestUtil.getAddress(TEST_ALIAS), false));
             assertNotNull("AddAccountAliasResponse cannot be null", addAliasResp);
             Account acct = Provisioning.getInstance().getAccount(testUser.getId());
             assertNotNull(acct);
@@ -216,7 +216,7 @@ public class TestDLMembership extends TestCase {
         try {
             transport = TestUtil.getAdminSoapTransport();
             //add an alias to the account
-            AddAccountAliasResponse addAliasResp = SoapTest.invokeJaxb(transport,new AddAccountAliasRequest(testUser.getId(),TestUtil.getAddress(TEST_ALIAS)));
+            AddAccountAliasResponse addAliasResp = SoapTest.invokeJaxb(transport,new AddAccountAliasRequest(testUser.getId(),TestUtil.getAddress(TEST_ALIAS),false));
             assertNotNull("AddAccountAliasResponse cannot be null", addAliasResp);
             Account acct = Provisioning.getInstance().getAccount(testUser.getId());
             assertNotNull(acct);

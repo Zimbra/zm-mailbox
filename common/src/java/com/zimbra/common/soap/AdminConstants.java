@@ -1620,4 +1620,5 @@ public final class AdminConstants {
             "com_zimbra_docs_modern", "com_zimbra_drive_modern", "com_zextras_drive", "com_zextras_drive_open",
             "com_zextras_chat_open", "com_zextras_talk", "zimbra-zimlet-briefcase-edit-lool");
 
+    public static final String E_ALIAS_TO_BE_HIDDEN = "aliasToBeHidden";
 }

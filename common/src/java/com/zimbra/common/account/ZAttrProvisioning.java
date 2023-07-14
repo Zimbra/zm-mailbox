@@ -3277,6 +3277,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAggregateQuotaLastUsage = "zimbraAggregateQuotaLastUsage";
 
     /**
+     * aliases list to be hidden in autocomplete
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4102)
+    public static final String A_zimbraAliasListToHide = "zimbraAliasListToHide";
+
+    /**
      * zimbraId of alias target
      */
     @ZAttr(id=40)

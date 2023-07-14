@@ -32,6 +32,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.mailbox.util.AccountAliasUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.AddAccountAliasRequest;
@@ -68,9 +70,11 @@ public class AddAccountAlias extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         AddAccountAliasRequest req = zsc.elementToJaxb(request);
+        AccountAliasUtil util = new AccountAliasUtil((LdapProvisioning) prov);
 
         String id = req.getId();
         String alias = req.getAlias();
+        boolean aliasToBeHidden = req.isAliasToBeHidden();
 
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
 
@@ -81,6 +85,9 @@ public class AddAccountAlias extends AdminDocumentHandler {
         checkDomainRightByEmail(zsc, alias, Admin.R_createAlias);
 
         prov.addAlias(account, alias);
+        if (aliasToBeHidden){
+            util.addAliasHidingInfo(account, alias);
+        }
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "AddAccountAlias","name", account.getName(), "alias", alias}));
 

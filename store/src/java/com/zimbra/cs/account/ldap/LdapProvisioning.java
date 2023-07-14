@@ -2356,6 +2356,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         allDLs.addGroup(dl);
     }
 
+
+    public void addAliasHidingDetails(Account acct, String alias) throws ServiceException {
+        addAliasHidingDetailsInternal(acct, alias);
+    }
+
+    private void addAliasHidingDetailsInternal(Account acct, String alias) throws ServiceException {
+        ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.ADD_ALIAS_ACCOUNT);
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        attrs.put("+" + Provisioning.A_zimbraAliasListToHide, alias);
+        modifyAttrsInternal(acct, zlc, attrs);
+    }
+
     @Override
     public void removeAlias(DistributionList dl, String alias) throws ServiceException {
         groupCache.remove(dl);

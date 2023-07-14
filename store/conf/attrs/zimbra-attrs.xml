@@ -10390,4 +10390,7 @@ TODO: delete them permanently from here
   <desc>Whether retention policy feature is enabled</desc>
 </attr>
 
+<attr id="4102" name="zimbraAliasListToHide" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient" since="10.1.0">
+  <desc>aliases list to be hidden in autocomplete</desc>
+</attr>
 </attrs>
