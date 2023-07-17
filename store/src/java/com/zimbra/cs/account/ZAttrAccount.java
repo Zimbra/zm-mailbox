@@ -3924,7 +3924,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * aliases list to be hidden in autocomplete
+     * Aliases list to be hidden in autocomplete results of &#039;compose
+     * email&#039; page. Aliases get added in this when user opts to make an
+     * alias hidden in admin&#039;s aliases screen
      *
      * @return zimbraAliasListToHide, or empty array if unset
      *
@@ -3936,7 +3938,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * aliases list to be hidden in autocomplete
+     * Aliases list to be hidden in autocomplete results of &#039;compose
+     * email&#039; page. Aliases get added in this when user opts to make an
+     * alias hidden in admin&#039;s aliases screen
      *
      * @param zimbraAliasListToHide new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3951,7 +3955,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * aliases list to be hidden in autocomplete
+     * Aliases list to be hidden in autocomplete results of &#039;compose
+     * email&#039; page. Aliases get added in this when user opts to make an
+     * alias hidden in admin&#039;s aliases screen
      *
      * @param zimbraAliasListToHide new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3967,7 +3973,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * aliases list to be hidden in autocomplete
+     * Aliases list to be hidden in autocomplete results of &#039;compose
+     * email&#039; page. Aliases get added in this when user opts to make an
+     * alias hidden in admin&#039;s aliases screen
      *
      * @param zimbraAliasListToHide new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3982,7 +3990,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * aliases list to be hidden in autocomplete
+     * Aliases list to be hidden in autocomplete results of &#039;compose
+     * email&#039; page. Aliases get added in this when user opts to make an
+     * alias hidden in admin&#039;s aliases screen
      *
      * @param zimbraAliasListToHide new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -3998,7 +4008,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * aliases list to be hidden in autocomplete
+     * Aliases list to be hidden in autocomplete results of &#039;compose
+     * email&#039; page. Aliases get added in this when user opts to make an
+     * alias hidden in admin&#039;s aliases screen
      *
      * @param zimbraAliasListToHide existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4013,7 +4025,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * aliases list to be hidden in autocomplete
+     * Aliases list to be hidden in autocomplete results of &#039;compose
+     * email&#039; page. Aliases get added in this when user opts to make an
+     * alias hidden in admin&#039;s aliases screen
      *
      * @param zimbraAliasListToHide existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -4029,7 +4043,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * aliases list to be hidden in autocomplete
+     * Aliases list to be hidden in autocomplete results of &#039;compose
+     * email&#039; page. Aliases get added in this when user opts to make an
+     * alias hidden in admin&#039;s aliases screen
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4043,7 +4059,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * aliases list to be hidden in autocomplete
+     * Aliases list to be hidden in autocomplete results of &#039;compose
+     * email&#039; page. Aliases get added in this when user opts to make an
+     * alias hidden in admin&#039;s aliases screen
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
