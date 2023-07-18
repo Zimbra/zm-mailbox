@@ -2340,7 +2340,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void addAlias(Account acct, String alias) throws ServiceException {
-        addAliasInternal(acct, alias, false);
+        this.addAlias(acct, alias, false);
     }
     @Override
     public void addAlias(Account acct, String alias, boolean isHiddenAlias) throws ServiceException {
@@ -2478,7 +2478,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             HashMap<String, String> attrs = new HashMap<String, String>();
             attrs.put("+" + Provisioning.A_zimbraMailAlias, alias);
             attrs.put("+" + Provisioning.A_mail, alias);
-            if(isHiddenAlias) {
+            if (isHiddenAlias) {
                 attrs.put("+" + Provisioning.A_zimbraAliasListToHide, alias);
             }
             // UGH

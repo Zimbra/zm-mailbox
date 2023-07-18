@@ -1090,7 +1090,7 @@ public class ProvUtil implements HttpDebugListener {
         }
         switch (command) {
         case ADD_ACCOUNT_ALIAS:
-            prov.addAlias(lookupAccount(args[1]), args[2], false);
+            prov.addAlias(lookupAccount(args[1]), args[2], convertToBooleanFlag(args[3]));
             break;
         case ADD_ACCOUNT_LOGGER:
             alo = parseAccountLoggerOptions(args);
@@ -1663,6 +1663,15 @@ public class ProvUtil implements HttpDebugListener {
             return false;
         }
         return true;
+    }
+
+    private boolean convertToBooleanFlag(String arg) {
+        if ("TRUE".equalsIgnoreCase(arg)) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     private void doSendMdmEmail(String[] args)  throws ServiceException {
@@ -3563,7 +3572,6 @@ public class ProvUtil implements HttpDebugListener {
     private Account lookupAccount(String key) throws ServiceException {
         return lookupAccount(key, true, true);
     }
-
     private Account lookupAccount(String key, boolean mustFind) throws ServiceException {
         return lookupAccount(key, mustFind, true);
     }

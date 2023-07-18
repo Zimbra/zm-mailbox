@@ -828,12 +828,8 @@ public class SoapProvisioning extends Provisioning {
         }
     }
     @Override public void addAlias(Account acct, String alias) throws ServiceException {
-        invokeJaxb(new AddAccountAliasRequest(acct.getId(), alias));
-        reload(acct);
-
+       addAlias(acct, alias, false);
     }
-
-
     @Override
     public void addAlias(Account acct, String alias, boolean isHiddenAlias) throws ServiceException {
         invokeJaxb(new AddAccountAliasRequest(acct.getId(), alias, isHiddenAlias));
