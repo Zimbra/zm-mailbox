@@ -2479,7 +2479,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             attrs.put("+" + Provisioning.A_zimbraMailAlias, alias);
             attrs.put("+" + Provisioning.A_mail, alias);
             if (isHiddenAlias) {
-                attrs.put("+" + Provisioning.A_zimbraAliasListToHide, alias);
+                attrs.put("+" + Provisioning.A_zimbraMailDeliveryAddress, alias);
             }
             // UGH
             modifyAttrsInternal(entry, zlc, attrs);
@@ -2589,6 +2589,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     HashMap<String, String> attrs = new HashMap<String, String>();
                     attrs.put("-" + Provisioning.A_mail, alias);
                     attrs.put("-" + Provisioning.A_zimbraMailAlias, alias);
+                    attrs.put("-" + Provisioning.A_zimbraMailDeliveryAddress, alias);
                     modifyAttrsInternal(entry, zlc, attrs);
                 } catch (ServiceException e) {
                     ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
