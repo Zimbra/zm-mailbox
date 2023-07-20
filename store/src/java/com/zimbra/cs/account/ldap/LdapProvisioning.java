@@ -2411,7 +2411,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         String aliasDn = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, ldapUsage);
-
             Domain domain = getDomainByAsciiName(aliasDomain, zlc);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(aliasDomain);

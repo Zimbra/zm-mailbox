@@ -519,7 +519,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     public enum Command {
-        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 3),
+        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain} {TRUE|FALSE}", Category.ACCOUNT, 2, 3),
         ADD_ACCOUNT_LOGGER(
                 "addAccountLogger", "aal",
                 "[-s/--server hostname] {name@domain|id} {logging-category} {trace|debug|info|warn|error}",
@@ -1090,7 +1090,7 @@ public class ProvUtil implements HttpDebugListener {
         }
         switch (command) {
         case ADD_ACCOUNT_ALIAS:
-            prov.addAlias(lookupAccount(args[1]), args[2], false);
+            prov.addAlias(lookupAccount(args[1]), args[2], (args[3] == "TRUE") ? true : false);
             break;
         case ADD_ACCOUNT_LOGGER:
             alo = parseAccountLoggerOptions(args);
