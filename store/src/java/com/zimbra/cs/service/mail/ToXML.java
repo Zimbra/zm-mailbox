@@ -186,7 +186,8 @@ public final class ToXML {
     public static enum OutputParticipants {
         PUT_SENDERS(0),
         PUT_RECIPIENTS(1),
-        PUT_BOTH(2);
+        PUT_BOTH(2),
+        PUT_ALL(3);//Add CC and BCC
 
         private int value;
         OutputParticipants(int value) {
@@ -203,6 +204,8 @@ public final class ToXML {
                 return PUT_RECIPIENTS;
             } else if (WantRecipsSetting.PUT_BOTH.equals(jaxb)) {
                 return PUT_BOTH;
+            } else if (WantRecipsSetting.PUT_ALL.equals(jaxb)) {
+                return PUT_ALL;
             }
             return PUT_SENDERS;
         }
@@ -1230,8 +1233,8 @@ public final class ToXML {
             Conversation conv, List<Message> msgs, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
             throws ServiceException {
         boolean addFirstHitRecips  = msgHit != null && (output == OutputParticipants.PUT_RECIPIENTS);
-        boolean addAggregatedRecips  = !addFirstHitRecips && (output == OutputParticipants.PUT_BOTH);
-        boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS)
+        boolean addAggregatedRecips  = !addFirstHitRecips && (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_ALL);
+        boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS || output == OutputParticipants.PUT_ALL)
                                 && needToOutput(fields, Change.SENDERS);
 
         Mailbox mbox = conv.getMailbox();
@@ -2082,13 +2085,18 @@ public final class ToXML {
         if (!needToOutput(fields, Change.CONTENT)) {
             return el;
         }
-        boolean addRecips = (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
-        boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS);
+        boolean addRecips = (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_ALL);
+        boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS || output == OutputParticipants.PUT_ALL);
+        boolean addAll = (output == OutputParticipants.PUT_ALL);
         if (addRecips) {
             addEmails(el, Mime.parseAddressHeader(msg.getRecipients()), EmailType.TO);
         }
         if (addSenders) {
             encodeEmail(el, msg.getSender(), EmailType.FROM);
+        }
+        if (addAll) {
+                addEmails(el, Mime.parseAddressHeader(msg.getMimeMessage(), "Cc"), EmailType.CC);
+                addEmails(el, Mime.parseAddressHeader(msg.getMimeMessage(), "Bcc"), EmailType.BCC);
         }
         el.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()),
                 Element.Disposition.CONTENT);

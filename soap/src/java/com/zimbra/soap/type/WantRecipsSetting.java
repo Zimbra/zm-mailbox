@@ -30,6 +30,7 @@ public enum WantRecipsSetting {
     @XmlEnumValue("0") PUT_SENDERS,
     @XmlEnumValue("1") PUT_RECIPIENTS,
     @XmlEnumValue("2") PUT_BOTH,
+    @XmlEnumValue("3") PUT_ALL,
     @Deprecated @XmlEnumValue("false") LEGACY_PUT_SENDERS,
     @Deprecated @XmlEnumValue("true") LEGACY_PUT_RECIPS;
 
@@ -44,6 +45,8 @@ public enum WantRecipsSetting {
             return PUT_SENDERS;
         } else if (WantRecipsSetting.LEGACY_PUT_RECIPS.equals(setting)) {
             return PUT_RECIPIENTS;
+        } else if (WantRecipsSetting.PUT_ALL.equals(setting)) {
+            return PUT_ALL;
         }
         return setting;
     }
