@@ -419,6 +419,8 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
             recipients = OutputParticipants.PUT_BOTH;
         } else if (1 == value) {
             recipients = OutputParticipants.PUT_RECIPIENTS;
+        } else if (3 == value) {
+            recipients = OutputParticipants.PUT_ALL;
         } else {
             recipients = OutputParticipants.PUT_SENDERS;
         }
