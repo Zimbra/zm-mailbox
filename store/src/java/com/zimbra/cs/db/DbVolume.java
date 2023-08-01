@@ -111,11 +111,22 @@ public final class DbVolume {
     }
 
     public static Volume update(DbConnection conn, Volume volume) throws ServiceException {
+        return update(conn, volume, null);
+    }
+
+    public static Volume update(DbConnection conn, Volume volume, String smClass) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE volume SET type = ?, name = ?, path = ?, " +
-                    "mailbox_group_bits = ?, mailbox_bits = ?, file_group_bits = ?, file_bits = ?, " +
-                    "compress_blobs = ?, compression_threshold = ? , metadata = ? WHERE id = ?");
+            if (smClass == null) {
+                stmt = conn.prepareStatement("UPDATE volume SET type = ?, name = ?, path = ?, " +
+                        "mailbox_group_bits = ?, mailbox_bits = ?, file_group_bits = ?, file_bits = ?, " +
+                        "compress_blobs = ?, compression_threshold = ? , metadata = ? WHERE id = ?");
+            } else {
+                stmt = conn.prepareStatement("UPDATE volume SET type = ?, name = ?, path = ?, " +
+                        "mailbox_group_bits = ?, mailbox_bits = ?, file_group_bits = ?, file_bits = ?, " +
+                        "compress_blobs = ?, compression_threshold = ? , metadata = ? , store_manager_class = ? WHERE id = ?");
+            }
+
             int pos = 1;
             stmt.setShort(pos++, volume.getType());
             stmt.setString(pos++, volume.getName());
@@ -127,7 +138,11 @@ public final class DbVolume {
             stmt.setBoolean(pos++, volume.isCompressBlobs());
             stmt.setLong(pos++, volume.getCompressionThreshold());
             stmt.setString(pos++, volume.getMetadata().toString());
+            if (smClass != null) {
+                stmt.setString(pos++, smClass);
+            }
             stmt.setShort(pos++, volume.getId());
+
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
