@@ -142,6 +142,10 @@ public final class VolumeManager {
     }
 
     public Volume update(Volume update, boolean noRedo) throws ServiceException {
+        return update(update, noRedo, null);
+    }
+
+    public Volume update(Volume update, boolean noRedo, String smClass) throws ServiceException {
         // Don't allow changing type of a current volume. The volume must be first made non-current before its type can
         // be changed. A volume can be made non-current when another volume is made current for the volume type.
         Volume vol = getVolume(update.getId());
@@ -160,7 +164,7 @@ public final class VolumeManager {
         boolean success = false;
         DbConnection conn = DbPool.getConnection();
         try {
-            update = DbVolume.update(conn, update);
+            update = DbVolume.update(conn, update, smClass);
             success = true;
             if (!noRedo) {
                 redoRecorder.log();
