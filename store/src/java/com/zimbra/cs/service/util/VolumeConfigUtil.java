@@ -32,10 +32,13 @@ import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.cs.volume.VolumeServiceException;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.DeleteVolumeRequest;
+import com.zimbra.soap.admin.message.GetAllVolumesInplaceUpgradeRequest;
+import com.zimbra.soap.admin.message.GetAllVolumesInplaceUpgradeResponse;
 import com.zimbra.soap.admin.message.GetAllVolumesRequest;
 import com.zimbra.soap.admin.message.GetAllVolumesResponse;
 import com.zimbra.soap.admin.message.GetVolumeRequest;
 import com.zimbra.soap.admin.message.GetVolumeResponse;
+import com.zimbra.soap.admin.message.ModifyVolumeInplaceUpgradeRequest;
 import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
@@ -230,6 +233,22 @@ public class VolumeConfigUtil {
     }
 
     /**
+     * Add Server Properties if not available
+     *
+     * @param volInfoRequest, serverId
+     * @return
+     * @throws ServiceException
+     */
+    public static void createVolumeJSON(VolumeInfo volInfoRequest, String serverId) throws ServiceException {
+        ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+        try {
+            extVolInfoHandler.addServerProperties(volInfoRequest, serverId);
+        } catch (JSONException e) {
+            throw ServiceException.FAILURE("Error while createVolumeJSON", e);
+        }
+    }
+
+    /**
      * Perform required actions for processing GetAllVolumesRequest
      *
      * @param GetAllVolumesRequest, GetAllVolumesResponse
@@ -399,5 +418,195 @@ public class VolumeConfigUtil {
         ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
         isUnifiedVolume = extVolInfoHandler.isUnifiedVolume(volumeId);
         return isUnifiedVolume;
+    }
+
+    /**
+     * Perform required actions for processing GetAllVolumes
+     *
+     * @param GetAllVolumesInplaceUpgradeRequest, GetAllVolumesInplaceUpgradeResponse
+     * @return
+     * @throws ServiceException
+     */
+    public static void parseGetAllVolumesInplaceUpgradeRequest(GetAllVolumesInplaceUpgradeRequest req,
+            GetAllVolumesInplaceUpgradeResponse resp) throws ServiceException {
+        for (Volume vol : VolumeManager.getInstance().getAllVolumes()) {
+            VolumeInfo volInfo = vol.toJAXB();
+
+            if (Volume.StoreType.EXTERNAL.equals(vol.getStoreType())) {
+                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+
+                try {
+                    JSONObject properties = extVolInfoHandler.readServerProperties(volInfo.getId());
+                    if (!JSONObject.NULL.equals(properties)) {
+                        ZimbraLog.store.info("Unable to read server properties for volumeId %d", volInfo.getId());
+                        String storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
+                        if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(storageType)) {
+                            volInfo.setVolumeExternalInfo(new VolumeExternalInfo().toExternalInfo(properties));
+                        } else {
+                            volInfo.setVolumeExternalOpenIOInfo(
+                                    new VolumeExternalOpenIOInfo().toExternalOpenIoInfo(properties));
+                        }
+                    }
+                    resp.addVolume(volInfo);
+                } catch (JSONException e) {
+                    ZimbraLog.store.error("Unable to read server properties for volumeId %d", volInfo.getId());
+                    throw ServiceException.FAILURE("Error while processing GetAllVolumesRequest", e);
+                }
+            } else {
+                resp.addVolume(volInfo);
+            }
+        }
+    }
+
+    /**
+     * Modify volume data for only in-place upgrade process
+     *
+     * @param modifyVolumeInplaceUpgradeRequest
+     * @param serverId
+     * @throws ServiceException
+     * @throws JSONException
+     */
+    public static void parseModifyVolumeInplaceUpgradeRequest(ModifyVolumeInplaceUpgradeRequest modifyVolumeInplaceUpgradeRequest, String serverId)
+            throws ServiceException, JSONException {
+        VolumeManager mgr = VolumeManager.getInstance();
+        VolumeInfo volInfo = modifyVolumeInplaceUpgradeRequest.getVolumeInfo();
+        Volume vol = mgr.getVolume(modifyVolumeInplaceUpgradeRequest.getId());
+        Volume.Builder builder = Volume.builder(vol);
+
+        if (volInfo == null) {
+            throw VolumeServiceException.INVALID_REQUEST("Must specify a volume Element",
+                    VolumeServiceException.NO_SUCH_VOLUME);
+        }
+
+        StoreManager storeManager = StoreManager.getInstance();
+        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(volInfo.getId()))) {
+            throw VolumeServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to edit this volume",
+                    VolumeServiceException.INVALID_REQUEST);
+        }
+
+        String smClass = null;
+        switch (vol.getStoreType()) {
+            case INTERNAL:
+                parseInternalModifyVolume(vol, builder, volInfo);
+                break;
+            case EXTERNAL:
+                parseExternalModifyVolume(vol, builder, volInfo, serverId, modifyVolumeInplaceUpgradeRequest.getId());
+                smClass = getDefaultStoreManager();
+                break;
+            default:
+                throw new IllegalArgumentException("Unexpected value of volume storeType: " + vol.getStoreType());
+        }
+        mgr.update(builder.build(), false, smClass);
+    }
+
+    /**
+     * This method handles internal volume data
+     *
+     * @param vol
+     * @param builder
+     * @param volInfo
+     * @throws ServiceException
+     */
+    private static void parseInternalModifyVolume(Volume vol, Volume.Builder builder, VolumeInfo volInfo)
+            throws ServiceException {
+        if (volInfo.getType() > 0) {
+            builder.setType(volInfo.getType());
+        }
+        if (!StringUtil.isNullOrEmpty(volInfo.getName())) {
+            builder.setName(volInfo.getName());
+        }
+        if (!StringUtil.isNullOrEmpty(volInfo.getRootPath())) {
+            builder.setPath(volInfo.getRootPath(), true);
+        }
+        if (volInfo.getCompressionThreshold() > 0) {
+            builder.setCompressionThreshold(volInfo.getCompressionThreshold());
+        }
+        builder.setCompressBlobs(volInfo.isCompressBlobs());
+    }
+
+    /**
+     * This method handles external volume data and if there is no server properties
+     * available for request volume it creates first server properties and then go
+     * for modify volume data
+     *
+     * @param vol
+     * @param builder
+     * @param volInfo
+     * @param serverId
+     * @param volumeId
+     * @throws ServiceException
+     * @throws JSONException
+     */
+    private static void parseExternalModifyVolume(Volume vol, Volume.Builder builder, VolumeInfo volInfo,
+            String serverId, short volumeId) throws ServiceException, JSONException {
+        if (!StringUtil.isNullOrEmpty(volInfo.getName())) {
+            ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+            JSONObject properties = extVolInfoHandler.readServerProperties(volumeId);
+            if (JSONObject.NULL.equals(properties)) {
+                ZimbraLog.store.info("Unable to read server properties volumeId %d", volInfo.getId());
+                // Create server properties if not available
+                createVolumeJSON(volInfo, serverId);
+                properties = extVolInfoHandler.readServerProperties(volumeId);
+            }
+            handleS3VolumeValidation(properties, builder, volInfo, volumeId);
+        } else {
+            throw VolumeServiceException.INVALID_REQUEST("Volume Name can't be empty or null for volumeId " + volumeId,
+                    VolumeServiceException.BAD_VOLUME_NAME);
+        }
+    }
+
+    /**
+     * It handles external volume validations
+     *
+     * @param properties
+     * @param builder
+     * @param volInfo
+     * @param volumeId
+     * @throws ServiceException
+     * @throws JSONException
+     */
+    private static void handleS3VolumeValidation(JSONObject properties, Volume.Builder builder, VolumeInfo volInfo,
+            short volumeId) throws ServiceException, JSONException {
+        if (JSONObject.NULL.equals(properties)) {
+            throw VolumeServiceException.INVALID_REQUEST("Unable to read server properties",
+                    VolumeServiceException.INVALID_REQUEST);
+        }
+        String storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
+
+        if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(storageType)) {
+            String globalBucketConfigId = null;
+            try {
+                globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
+            } catch (JSONException e) {
+                throw ServiceException.FAILURE("Error while reading json data for external volume: " + volumeId, e);
+            }
+            // storageType should not be null
+            if (StringUtil.isNullOrEmpty(storageType)) {
+                throw VolumeServiceException.INVALID_REQUEST("StorageType Empty for external volume " + volumeId,
+                        VolumeServiceException.INVALID_REQUEST);
+            }
+            builder.setName(volInfo.getName());
+            String extRootPath = ZMailbox.PATH_SEPARATOR + storageType + ROOT_PATH_ELE_SEPARATOR + volInfo.getName();
+            // append global bucket id as well in case it is available
+            if (!StringUtil.isNullOrEmpty(globalBucketConfigId)) {
+                extRootPath = extRootPath + ROOT_PATH_ELE_SEPARATOR + globalBucketConfigId;
+            }
+            builder.setPath(extRootPath, false);
+        } else {
+            builder.setName(volInfo.getName());
+        }
+    }
+
+    /**
+     * Set default StoreManager for volume
+     * @param volInfoRequest
+     * @param storeType
+     */
+    private static String getDefaultStoreManager() throws ServiceException {
+        if (!ClassHelper.isClassExist(DEFAULT_EXTERNAL_STORE_MANAGER)) {
+            throw VolumeServiceException.UNSUPPORTED_CONFIG("StoreManager for external volumes not available in this version");
+        }
+        // set default StoreManager
+        return DEFAULT_EXTERNAL_STORE_MANAGER;
     }
 }
