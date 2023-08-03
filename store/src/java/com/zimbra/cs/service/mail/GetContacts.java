@@ -148,13 +148,6 @@ public final class GetContacts extends MailDocumentHandler  {
         if (req.getWantImapUid()) {
             fields |= Change.IMAP_UID;
         }
-        // for perf reason, derefContactGroupMember is not supported in this mode
-        if (derefContactGroupMember) {
-            if (ids == null) {
-                throw ServiceException.INVALID_REQUEST(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER +
-                        " is supported only when specific contact ids are specified", null);
-            }
-        }
 
         if (ids != null) {
             ArrayList<Integer> local = new ArrayList<Integer>();
@@ -199,7 +192,15 @@ public final class GetContacts extends MailDocumentHandler  {
         } else {
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
                 if (con != null) {
-                    ToXML.encodeContact(response, ifmt, octxt, con, null, null,
+                    ContactGroup contactGroup = null;
+                    if (derefContactGroupMember) {
+                        contactGroup = ContactGroup.init(con, false);
+                        if (contactGroup != null) {
+                            contactGroup.derefAllMembers(con.getMailbox(), octxt,
+                                    zsc.getResponseProtocol());
+                        }
+                    }
+                    ToXML.encodeContact(response, ifmt, octxt, con, contactGroup, null,
                             false /* summary */, attrs, fields, null, returnHiddenAttrs, maxMembers, returnCertInfo,
                             ContactMemberOfMap.setOfMemberOf(zsc.getRequestedAccountId(), con.getId(), memberOfMap));
                 }

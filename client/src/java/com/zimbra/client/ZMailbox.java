@@ -2118,6 +2118,21 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @throws ServiceException on error
      */
     public List<ZContact> getContactsForFolder(String folderid, String ids, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
+        return getContactsForFolder(folderid, ids, sortBy, sync, attrs, false);
+    }
+
+    /**
+     * Fetch contacts for a given folder or contacts ids
+     * @param folderid folder id of the contact folder
+     * @param ids comma-separated list of contact ids
+     * @param attrs limit attrs returns to given list
+     * @param sortBy sort results (null for no sorting)
+     * @param sync if true, return modified date on contacts
+     * @param forceDerefGroupMember if true and if ids is empty or null, derefGroupMember is set
+     * @return list of contacts
+     * @throws ServiceException on error
+     */
+    public List<ZContact> getContactsForFolder(String folderid, String ids, ContactSortBy sortBy, boolean sync, List<String> attrs, boolean forceDerefGroupMember) throws ServiceException {
         List<ZContact> result = new ArrayList<ZContact>();
         int batchSize = LC.zimbra_activesync_remote_sync_batch_size.intValue();
         if (!StringUtil.isNullOrEmpty(ids)) {
@@ -2129,8 +2144,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 String[] temp = Arrays.copyOfRange(arr, start, end);
                 String subIds = String.join(",", temp);
 
-                Element req = getGetContactsRequest(folderid, sortBy, sync, attrs);
-                req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
+                Element req = getGetContactsRequest(folderid, sortBy, sync, attrs, true);
                 req.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, subIds);
                 for (Element cn : invoke(req).listElements(MailConstants.E_CONTACT)) {
                     result.add(new ZContact(cn, this));
@@ -2140,7 +2154,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 end = max <= end + batchSize ? max : end + batchSize;
             }
         } else {
-            Element req = getGetContactsRequest(folderid, sortBy, sync, attrs);
+            Element req = getGetContactsRequest(folderid, sortBy, sync, attrs, forceDerefGroupMember);
             for (Element cn : invoke(req).listElements(MailConstants.E_CONTACT)) {
                 result.add(new ZContact(cn, this));
             }
@@ -2148,7 +2162,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return result;
     }
 
-    private Element getGetContactsRequest(String folderid, ContactSortBy sortBy, boolean sync, List<String> attrs) {
+    private Element getGetContactsRequest(String folderid, ContactSortBy sortBy, boolean sync, List<String> attrs, boolean derefGroupMember) {
         Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
         if (!StringUtil.isNullOrEmpty(folderid)) {
             req.addAttribute(MailConstants.A_FOLDER, folderid);
@@ -2164,6 +2178,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             for (String name : attrs) {
                 req.addNonUniqueElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
             }
+        }
+        if (derefGroupMember) {
+            req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
         }
         return req;
     }

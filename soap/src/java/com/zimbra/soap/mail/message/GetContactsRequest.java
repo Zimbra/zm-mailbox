@@ -45,6 +45,7 @@ import com.zimbra.soap.type.ZmBoolean;
  * <br />
  * If derefGroupMember is set, group members are returned ordered by the "key" of member.
  * <br />
+ * Note that enabling derefGroupMember may cause a problem on performance.
  * Key is:
  * <ul>
  * <li> for contact ref (type="C"): the fileAs field of the Contact
