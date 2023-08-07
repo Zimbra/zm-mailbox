@@ -1094,6 +1094,7 @@ public final class LC {
     @Supported
     public static final KnownKey contact_ranking_enabled = KnownKey.newKey(true);
 
+    public static final KnownKey contact_allow_deref_group_member = KnownKey.newKey(true);
 
     public static final KnownKey jdbc_results_streaming_enabled = KnownKey.newKey(true);
 

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -190,10 +191,13 @@ public final class GetContacts extends MailDocumentHandler  {
                 }
             }
         } else {
+            boolean isDerefGroupMemberAllowed = LC.contact_allow_deref_group_member.booleanValue();
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
                 if (con != null) {
                     ContactGroup contactGroup = null;
-                    if (derefContactGroupMember) {
+                    // derefContactGroupMember with no ids may cause performance issue.
+                    // It can be blocked using localconfig contact_allow_deref_group_member
+                    if (derefContactGroupMember && isDerefGroupMemberAllowed) {
                         contactGroup = ContactGroup.init(con, false);
                         if (contactGroup != null) {
                             contactGroup.derefAllMembers(con.getMailbox(), octxt,
