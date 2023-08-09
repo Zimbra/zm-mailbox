@@ -494,8 +494,11 @@ public class VolumeConfigUtil {
                     VolumeServiceException.INVALID_REQUEST);
         }
 
+        Volume.StoreType storeType = (volInfo.getStoreType() == 1) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
+        builder.setStoreType(storeType);
+
         String smClass = null;
-        switch (vol.getStoreType()) {
+        switch (storeType) {
             case INTERNAL:
                 parseInternalModifyVolume(vol, builder, volInfo);
                 break;
@@ -552,11 +555,16 @@ public class VolumeConfigUtil {
         if (!StringUtil.isNullOrEmpty(volInfo.getName())) {
             ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
             JSONObject properties = extVolInfoHandler.readServerProperties(volumeId);
-            if (JSONObject.NULL.equals(properties)) {
-                ZimbraLog.store.info("Unable to read server properties volumeId %d", volInfo.getId());
+            if (JSONObject.NULL.equals(properties) || properties.length() == 0) {
                 // Create server properties if not available
                 createVolumeJSON(volInfo, serverId);
-                properties = extVolInfoHandler.readServerProperties(volumeId);
+            } else {
+                extVolInfoHandler.modifyServerProperties(volInfo);
+            }
+            properties = extVolInfoHandler.readServerProperties(volumeId);
+            if (JSONObject.NULL.equals(properties)) {
+                ZimbraLog.store.error("Unable to read server properties volumeId %d", volumeId);
+                throw VolumeServiceException.INVALID_REQUEST("Unable to read server properties", VolumeServiceException.INVALID_REQUEST);
             }
             handleS3VolumeValidation(properties, builder, volInfo, volumeId);
         } else {
@@ -600,6 +608,13 @@ public class VolumeConfigUtil {
             // append global bucket id as well in case it is available
             if (!StringUtil.isNullOrEmpty(globalBucketConfigId)) {
                 extRootPath = extRootPath + ROOT_PATH_ELE_SEPARATOR + globalBucketConfigId;
+            }
+            // if compression threshold is already set for external storage, using same here
+            if (volInfo.getCompressionThreshold() > 0) {
+                builder.setCompressionThreshold(volInfo.getCompressionThreshold());
+            } else {
+             // if compression threshold is not set for external storage, using setting default value
+                builder.setCompressionThreshold(4096);
             }
             builder.setPath(extRootPath, false);
         } else {

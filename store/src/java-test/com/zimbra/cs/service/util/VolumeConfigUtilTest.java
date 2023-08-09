@@ -6,8 +6,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -15,6 +19,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.store.MockStoreManager;
+import com.zimbra.cs.store.helper.ClassHelper;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.cs.volume.VolumeServiceException;
@@ -26,7 +31,9 @@ import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.util.ExternalVolumeInfoHandler;
 
+@RunWith(PowerMockRunner.class)
 @PrepareForTest({VolumeConfigUtil.class})
+@PowerMockIgnore("javax.management.*")
 public class VolumeConfigUtilTest {
 
     private MockProvisioning mockProvisioning;
@@ -48,6 +55,7 @@ public class VolumeConfigUtilTest {
         volInfo.setName(name);
         volInfo.setRootPath("/junit/");
         volInfo.setType((short) 1);
+        volInfo.setStoreType((short) 2);
 
         VolumeExternalInfo volumeExternalInfo = new VolumeExternalInfo();
         volumeExternalInfo.setGlobalBucketConfigurationId("GLOBAL_BUCKET_ID");
@@ -154,13 +162,14 @@ public class VolumeConfigUtilTest {
      * @throws JSONException
      */
     @Test
+    @PrepareForTest({ClassHelper.class})
     public void testParseModifyVolumeInplaceUpgradeRequest() throws ServiceException, JSONException {
         short volumeId = 40;
         String name = "volume40";
         Volume volume = Volume.builder().setId(volumeId)
                 .setName(name)
                 .setPath("/test/40", false)
-                .setType((short) 1)
+                .setType((short) 2)
                 .setStoreType(Volume.StoreType.EXTERNAL)
                 .setStoreManagerClass(MockStoreManager.class.getName()).build();
 
@@ -168,14 +177,15 @@ public class VolumeConfigUtilTest {
         VolumeInfo volumeInfo = mockVolumeInfo(volumeId, name);
         JSONObject properties = new JSONObject();
         properties.put(AdminConstants.A_VOLUME_STORAGE_TYPE, AdminConstants.A_VOLUME_S3);
-        properties = externalVolumeInfoHandler.readServerProperties(volumeId);
-        
+
         ModifyVolumeInplaceUpgradeRequest modifyVolumeInplaceUpgradeRequest = Mockito.mock(ModifyVolumeInplaceUpgradeRequest.class);
         when(modifyVolumeInplaceUpgradeRequest.getVolumeInfo()).thenReturn(volumeInfo);
         when(modifyVolumeInplaceUpgradeRequest.getId()).thenReturn(volumeId);
         properties = externalVolumeInfoHandler.readServerProperties(volumeId);
+
+        PowerMockito.mockStatic(ClassHelper.class);
+        when(ClassHelper.isClassExist(Mockito.anyString())).thenReturn(true);
         VolumeConfigUtil.parseModifyVolumeInplaceUpgradeRequest(modifyVolumeInplaceUpgradeRequest, serverId);
-        
         VolumeManager.getInstance().delete(volume.getId());
     }
 
