@@ -286,8 +286,7 @@ public class ExternalVolumeInfoHandler {
 
     /**
      * Modify server level external volume properties
-     * @param volumeId
-     * @param server
+     * @param volInfo
      * @throws JSONException, ServiceException
      */
     public void modifyServerProperties(VolumeInfo volInfo) throws ServiceException, JSONException {
@@ -296,6 +295,17 @@ public class ExternalVolumeInfoHandler {
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
             JSONObject currentJsonObject = new JSONObject(serverExternalStoreConfigJson);
             JSONArray currentJsonArray = currentJsonObject.getJSONArray("server/stores");
+
+            VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
+            VolumeExternalOpenIOInfo volExtOpenIoInfo = volInfo.getVolumeExternalOpenIOInfo();
+
+            JSONObject volExtInfoObj = new JSONObject();
+            if (volExtInfo != null && AdminConstants.A_VOLUME_S3.equalsIgnoreCase(volExtInfo.getStorageType())) {
+                volExtInfoObj = volExtInfo.toJSON(volInfo);
+            } else if (volExtOpenIoInfo != null
+                    && AdminConstants.A_VOLUME_OPEN_IO.equalsIgnoreCase(volExtOpenIoInfo.getStorageType())) {
+                volExtInfoObj = volExtOpenIoInfo.toJSON(volInfo);
+            }
 
             // step 2: Create new/empty updated JSON state array
             JSONArray updatedJsonArray = new JSONArray();
@@ -306,8 +316,7 @@ public class ExternalVolumeInfoHandler {
                 if (volInfo.getId() != tempJsonObj.getInt(AdminConstants.A_VOLUME_ID)) {
                     updatedJsonArray.put(tempJsonObj);
                 } else {
-                    tempJsonObj.put(AdminConstants.A_VOLUME_NAME, volInfo.getName());
-                    updatedJsonArray.put(tempJsonObj);
+                    updatedJsonArray.put(volExtInfoObj);
                 }
             }
 
