@@ -124,7 +124,7 @@ public final class DbVolume {
             } else {
                 stmt = conn.prepareStatement("UPDATE volume SET type = ?, name = ?, path = ?, " +
                         "mailbox_group_bits = ?, mailbox_bits = ?, file_group_bits = ?, file_bits = ?, " +
-                        "compress_blobs = ?, compression_threshold = ? , metadata = ? , store_manager_class = ? WHERE id = ?");
+                        "compress_blobs = ?, compression_threshold = ? , metadata = ?, store_type = ? , store_manager_class = ? WHERE id = ?");
             }
 
             int pos = 1;
@@ -139,6 +139,7 @@ public final class DbVolume {
             stmt.setLong(pos++, volume.getCompressionThreshold());
             stmt.setString(pos++, volume.getMetadata().toString());
             if (smClass != null) {
+                stmt.setShort(pos++, (short) (volume.getStoreType().getStoreType()));
                 stmt.setString(pos++, smClass);
             }
             stmt.setShort(pos++, volume.getId());
