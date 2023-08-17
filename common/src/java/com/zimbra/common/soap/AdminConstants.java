@@ -1627,5 +1627,12 @@ public final class AdminConstants {
             "com_zextras_client", "com_zimbra_connect_classic", "com_zimbra_connect_modern", "com_zextras_docs",
             "com_zimbra_docs_modern", "com_zimbra_drive_modern", "com_zextras_drive", "com_zextras_drive_open",
             "com_zextras_chat_open", "com_zextras_talk", "zimbra-zimlet-briefcase-edit-lool");
-
+    public static final String E_ACCOUNT_NAME = "accounts";
+    public static final String E_MAIL_BOXES = "mboxNumbers";
+    public static final String E_IS_UPDATE_ALL = "isUpdateAllMailBoxes";
+    public static final String E_ZIMBRA10_LOCATOR_UPGRADE_REQUEST = "Zimbra10LocatorUpgradeRequest";
+    public static final String E_STATUS_NAME = "status";
+    public static final String E_ZIMBRA10_LOCATOR_UPGRADE_RESPONSE = "Zimbra10LocatorUpgradeResponse";
+    public static final QName LOCATOR_UPDATE_ZIMBRA10_REQUEST = QName.get(E_ZIMBRA10_LOCATOR_UPGRADE_REQUEST, NAMESPACE);
+    public static final QName LOCATOR_UPDATE_ZIMBRA10_RESPONSE = QName.get(E_ZIMBRA10_LOCATOR_UPGRADE_RESPONSE, NAMESPACE);
 }

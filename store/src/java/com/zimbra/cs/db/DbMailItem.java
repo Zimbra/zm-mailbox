@@ -19,11 +19,7 @@ package com.zimbra.cs.db;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -5482,5 +5478,105 @@ public class DbMailItem {
         } finally {
             DbPool.closeStatement(stmt);
         }
+    }
+
+    /**
+     * return Ids of all the emails assosiated for a user in a mailbox.These will be populated in the mail page as the user logs in.
+     *
+     * @param mbox
+     * @param senderEmail
+     * @param isUpdated
+     * @param conn
+     * @return
+     * @throws ServiceException
+     */
+    public static List<Integer> getAllRecordsForSentAndRecieved(Mailbox mbox, String senderEmail, boolean isUpdated)
+            throws ServiceException {
+        PreparedStatement preparedStatement = null;
+        ResultSet rs = null;
+        DbConnection conn = null;
+        try {
+             conn = mbox.getOperationConnection();
+            List<Integer> recordIds = new ArrayList<>();
+            String WHERE_CLAUSE_CHECK_UPDATED = "";
+            if (isUpdated) {
+                WHERE_CLAUSE_CHECK_UPDATED = "AND LOCATOR NOT LIKE '%@@%'";
+            }
+             preparedStatement = conn.prepareStatement(" SELECT id FROM " + getMailItemTableName(mbox,
+                    false) + " where ((sender like concat('%',?,'%')) or (recipients like concat('%',?,'%')))  and folder_id in (2,3,4,5,6,9) " + WHERE_CLAUSE_CHECK_UPDATED);
+            preparedStatement.setString(1, senderEmail);
+            preparedStatement.setString(2, senderEmail);
+             rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                recordIds.add(rs.getInt(1));
+            }
+            ZimbraLog.mailbox.info("The records fetched are %s ", recordIds);
+            return recordIds;
+        } catch (Exception e) {
+            ZimbraLog.mailbox.error("error occured while DB update");
+            throw ServiceException.INTERRUPTED("not updated locator");
+        }
+        finally {
+            DbPool.closeStatement(preparedStatement);
+            DbPool.closeResults(rs);
+        }
+    }
+
+    /**
+     * Updates the locator field to zimbra10 compatible version for the applicable records.
+     * @param mbox
+     * @param recordNumbers
+     * @throws ServiceException
+     */
+    public static void updateLocatorFieldZimbra10(Mailbox mbox, List<Integer> recordNumbers) throws ServiceException {
+        PreparedStatement stmt = null;
+        DbConnection conn = null;
+        try {
+             conn = DbPool.getConnection(mbox);
+             stmt = null;
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox,
+                    false) + " SET locator = IF ( LOCATOR LIKE '%@@%' , LOCATOR , CONCAT(LOCATOR,'@@' ,  MAILBOX_ID , '/' , ID , '-', MOD_CONTENT, '.msg'))  " + " WHERE id =? ");
+            for (Integer recordNumber : recordNumbers) {
+                stmt.setInt(1, recordNumber);
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        } catch (SQLException e) {
+            ZimbraLog.mailbox.error("error occured while DB update");
+        }
+        finally {
+            DbPool.closeStatement(stmt);
+        }
+
+    }
+
+    /**
+     * Returns the list of all email senders in a mailbox
+     * @param mbox
+     * @return
+     * @throws ServiceException
+     */
+    public static List<String> getAllSendersList(Mailbox mbox) throws ServiceException {
+        PreparedStatement stmt = null;
+        DbConnection conn = null;
+        ResultSet rs = null;
+        try {
+            List<String> distinctSenderEmailsAddresses = new ArrayList<>();
+            conn = mbox.getOperationConnection();
+            stmt = conn.prepareStatement("SELECT DISTINCT sender from " + getMailItemTableName(mbox, false));
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                distinctSenderEmailsAddresses.add(rs.getString("sender"));
+            }
+            ZimbraLog.mailbox.info("The distinct email addresses are %s ", distinctSenderEmailsAddresses);
+            return distinctSenderEmailsAddresses;
+
+        } catch (SQLException e) {
+            ZimbraLog.mailbox.error("error occured while DB update");
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.closeResults(rs);
+        }
+        return null;
     }
 }

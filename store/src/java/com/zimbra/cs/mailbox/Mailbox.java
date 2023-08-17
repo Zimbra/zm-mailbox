@@ -23,6 +23,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -147,10 +148,8 @@ import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
-import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -10957,6 +10956,82 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    /**
+     * get all records for an account
+     *
+     * @param octxt
+     * @param mbox
+     * @param accountId
+     * @param isUpdated
+     * @param connection
+     * @return
+     * @throws ServiceException
+     */
+    public List<Integer> getAllRecordsForSentAndRecieved(OperationContext octxt, Mailbox mbox, String accountId, boolean isUpdated)
+            throws ServiceException {
+        lock.lock(true );
+        boolean success = false;
+        try {
+            beginReadTransaction("getAllRecordsForSender", null);
+            List<Integer> allRecords = DbMailItem.getAllRecordsForSentAndRecieved(mbox, accountId, isUpdated);
+            DbMailItem.updateLocatorFieldZimbra10(this, allRecords);
+            List<Integer> recordNumbersPending = DbMailItem.getAllRecordsForSentAndRecieved(mbox,
+                    accountId, true);
+            if (recordNumbersPending.size() == 0) {
+                ZimbraLog.account.info("succesfully updated  locator for  %s and record count is  %s ", accountId, recordNumbersPending);
+                // return true;
+            } else {
+                ZimbraLog.account.info("failed updating locator for %s  and %s are not updated ", accountId,(allRecords.size() - recordNumbersPending.size()) );
+                //  return false;
+            }
+            success = true;
+            return allRecords;
+        } finally {
+            endTransaction(success);
+            lock.release();
+        }
+    }
+
+    /**
+     * updates the locator for the seleted records
+     * @param ctx
+     * @param recordNumbers
+     * @throws ServiceException
+     */
+    public void updateLocatorFieldZimbra10(OperationContext ctx, List<Integer> recordNumbers)
+            throws ServiceException {
+        boolean success = false;
+        lock.lock(true);
+
+        try {
+            beginTransaction("getAllRecordsForSender", null);
+            DbMailItem.updateLocatorFieldZimbra10(this, recordNumbers);
+            success = true;
+        } finally {
+            endTransaction(success);
+            lock.release();
+        }
+    }
+
+    /**
+     * gets all senders in a mailbox
+     * @param ctx
+     * @return
+     * @throws ServiceException
+     */
+    public List<String> getAllSendersList(OperationContext ctx) throws ServiceException {
+        boolean success = false;
+        lock.lock(false);
+        try {
+            beginReadTransaction("getAllSendersList", null);
+            List<String> allDistinctSenders = DbMailItem.getAllSendersList(this);
+            success = true;
+            return allDistinctSenders;
+        } finally {
+            endTransaction(success);
+            lock.release();
+        }
+    }
     public static void logDebugXML(Element e) {
         ZimbraLog.sync.debug(e.prettyPrint());
     }

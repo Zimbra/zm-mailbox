@@ -120,7 +120,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.CREATE_VOLUME_REQUEST, new CreateVolume());
         dispatcher.registerHandler(AdminConstants.GET_VOLUME_REQUEST, new GetVolume());
         dispatcher.registerHandler(AdminConstants.GET_ALL_VOLUMES_REQUEST, new GetAllVolumes());
-        dispatcher.registerHandler(AdminConstants.GET_ALL_VOLUMES_INPLACE_UPGRADE_REQUEST, new GetAllVolumesInplaceUpgrade());
+        dispatcher.registerHandler(AdminConstants.LOCATOR_UPDATE_ZIMBRA10_REQUEST, new Zimbra10DBLocatorUpgrade());
+        dispatcher.registerHandler(AdminConstants.MODIFY_VOLUME_INPLACE_UPGRADE_REQUEST, new ModifyVolumeInplaceUpgrade());
         dispatcher.registerHandler(AdminConstants.MODIFY_VOLUME_REQUEST, new ModifyVolume());
         dispatcher.registerHandler(AdminConstants.MODIFY_VOLUME_INPLACE_UPGRADE_REQUEST, new ModifyVolumeInplaceUpgrade());
         dispatcher.registerHandler(AdminConstants.DELETE_VOLUME_REQUEST, new DeleteVolume());
