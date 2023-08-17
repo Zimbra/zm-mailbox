@@ -10957,6 +10957,63 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    /**
+     * get all records for an account
+     * @param octxt
+     * @param mbox
+     * @param accountId
+     * @param isUpdated
+     * @return
+     * @throws ServiceException
+     */
+    public List<Integer> getAllRecordsForSentAndRecieved(OperationContext octxt, Mailbox mbox, String accountId, boolean isUpdated)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            beginReadTransaction("getAllRecordsForSender", octxt);
+            List<Integer> allRecords = DbMailItem.getAllRecordsForSentAndRecieved(mbox, accountId, isUpdated);
+            success = true;
+            return allRecords;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    /**
+     * updates the locator for the seleted records
+     * @param ctx
+     * @param recordNumbers
+     * @throws ServiceException
+     */
+    public void updateLocatorFieldZimbra10(OperationContext ctx, List<Integer> recordNumbers)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getAllRecordsForSender", ctx);
+            DbMailItem.updateLocatorFieldZimbra10(this, recordNumbers);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    /**
+     * gets all senders in a mailbox
+     * @param ctx
+     * @return
+     * @throws ServiceException
+     */
+    public List<String> getAllSendersList(OperationContext ctx) throws ServiceException {
+        boolean success = false;
+        try {
+            beginReadTransaction("getAllSendersList", ctx);
+            List<String> allDistinctSenders = DbMailItem.getAllSendersList(this);
+            success = true;
+            return allDistinctSenders;
+        } finally {
+            endTransaction(success);
+        }
+    }
     public static void logDebugXML(Element e) {
         ZimbraLog.sync.debug(e.prettyPrint());
     }
