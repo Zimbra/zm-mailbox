@@ -29,13 +29,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-@XmlAccessorType(XmlAccessType.NONE) @XmlRootElement(name = AdminConstants.E_ZIMBRA10_LOCATOR_UPGRADE_RESPONSE)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlRootElement(name = AdminConstants.E_ZIMBRA10_LOCATOR_UPGRADE_RESPONSE)
 public final class Zimbra10LocatorUpgradeResponse {
 
     /**
      * @zm-api-field-description Information about the execution status
      */
-    @XmlElement(name = AdminConstants.E_STAT_NAME, required = true)
+    @XmlElement(name = AdminConstants.E_STATUS_NAME, required = true)
     private final boolean status;
     private Zimbra10LocatorUpgradeResponse() {
         this(false);

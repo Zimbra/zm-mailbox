@@ -58,7 +58,6 @@ public class Zimbra10DBLocatorUpgrade extends AdminDocumentHandler {
         Zimbra10MailItemLocatorUpgradeExec locatorUpgradeExec = new Zimbra10MailItemLocatorUpgradeExec();
         return zsc.jaxbToElement(new Zimbra10LocatorUpgradeResponse(locatorUpgradeExec.upgrade(req)));
     }
-
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_addDistributionListMember);
