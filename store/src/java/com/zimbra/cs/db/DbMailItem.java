@@ -5496,17 +5496,17 @@ public class DbMailItem {
         ResultSet rs = null;
         DbConnection conn = null;
         try {
-             conn = mbox.getOperationConnection();
+            conn = mbox.getOperationConnection();
             List<Integer> recordIds = new ArrayList<>();
             String WHERE_CLAUSE_CHECK_UPDATED = "";
             if (isUpdated) {
                 WHERE_CLAUSE_CHECK_UPDATED = "AND LOCATOR NOT LIKE '%@@%'";
             }
-             preparedStatement = conn.prepareStatement(" SELECT id FROM " + getMailItemTableName(mbox,
+            preparedStatement = conn.prepareStatement(" SELECT id FROM " + getMailItemTableName(mbox,
                     false) + " where ((sender like concat('%',?,'%')) or (recipients like concat('%',?,'%')))  and folder_id in (2,3,4,5,6,9) " + WHERE_CLAUSE_CHECK_UPDATED);
             preparedStatement.setString(1, senderEmail);
             preparedStatement.setString(2, senderEmail);
-             rs = preparedStatement.executeQuery();
+            rs = preparedStatement.executeQuery();
             while (rs.next()) {
                 recordIds.add(rs.getInt(1));
             }
@@ -5515,8 +5515,7 @@ public class DbMailItem {
         } catch (Exception e) {
             ZimbraLog.mailbox.error("error occured while DB update");
             throw ServiceException.INTERRUPTED("not updated locator");
-        }
-        finally {
+        } finally {
             DbPool.closeStatement(preparedStatement);
             DbPool.closeResults(rs);
         }
