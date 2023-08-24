@@ -222,6 +222,9 @@ public class VolumeConfigUtil {
                 if (volInfoRequest.getVolumeExternalInfo() != null && AdminConstants.A_VOLUME_S3
                         .equalsIgnoreCase(volInfoRequest.getVolumeExternalInfo().getStorageType())) {
                     volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
+                    if (!AdminConstants.A_MIGRATION.equals(volInfoRequest.getVolumeExternalInfo().getRequestType())) {
+                        appendServerIdInVolumePrefix(volInfoRequest, serverId);
+                    }
                 } else {
                     volInfoResponse.setVolumeExternalOpenIOInfo(volInfoRequest.getVolumeExternalOpenIOInfo());
                 }
@@ -229,6 +232,18 @@ public class VolumeConfigUtil {
             } catch (JSONException e) {
                 throw ServiceException.FAILURE("Error while processing postCreateVolumeActions", e);
             }
+        }
+    }
+
+    /**
+     * Append Server id in Volume prefix if Volume is not Unified
+     * @param volInfoRequest
+     * @param serverId
+     */
+    public static void appendServerIdInVolumePrefix(VolumeInfo volInfoRequest, String serverId) {
+        if (!volInfoRequest.getVolumeExternalInfo().isUnified()) {
+            volInfoRequest.getVolumeExternalInfo().setVolumePrefix(
+                    volInfoRequest.getVolumeExternalInfo().getVolumePrefix() + ROOT_PATH_ELE_SEPARATOR + serverId);
         }
     }
 

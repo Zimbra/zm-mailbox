@@ -1319,6 +1319,8 @@ public final class AdminConstants {
     public static final String A_VOLUME_BUCKET_ID = "bucketId";
     public static final String A_VOLUME_NAME_SPACE = "nameSpace";
     public static final String A_VOLUME_UNIFIED = "unified";
+    public static final String A_VOLUME_REQUEST_TYPE = "requestType";
+    public static final String A_MIGRATION = "ngMigration";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
