@@ -49,7 +49,7 @@ public class Constants {
     public static final String AUTH_HEADER = "Authorization";
     public static final String BEARER= "Bearer";
     public static final String JWT_SALT_SEPARATOR = "|";
-    public static final Integer LOCATOR_UPDATE_THREAD_COUNT  = 10;
+    public static final Integer LOCATOR_UPDATE_THREAD_COUNT  = 1;
 
 
 }

@@ -32,6 +32,6 @@ public class LocatorUpdateExecutor {
     static {
         executor = Executors.newFixedThreadPool(Constants.LOCATOR_UPDATE_THREAD_COUNT);
         pool = (ThreadPoolExecutor) executor;
-        ((ThreadPoolExecutor) executor).prestartAllCoreThreads();
+        //((ThreadPoolExecutor) executor).prestartAllCoreThreads();
     }
 }

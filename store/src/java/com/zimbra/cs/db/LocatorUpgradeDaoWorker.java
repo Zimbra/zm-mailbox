@@ -54,23 +54,10 @@ public class LocatorUpgradeDaoWorker implements Callable<Boolean>{
                 ZimbraLog.account.warn("No records found for  %s ", accountPrimaryEmail);
                 return true;
             }
-
-            ZimbraLog.account.info("No records found for  %s ", accountPrimaryEmail);
-            mbox.updateLocatorFieldZimbra10(ctx, sentRAndRecievedToBeUpdated);
-            List<Integer> recordNumbersPending = mbox.getAllRecordsForSentAndRecieved(ctx, mbox,
-                    this.accountPrimaryEmail, true);
-
-            if (recordNumbersPending.size() == 0) {
-                ZimbraLog.account.info("succesfully updated  locator for  %s and record count is  %s ",
-                        accountPrimaryEmail, recordNumbersPending);
-                return true;
-            } else {
-                ZimbraLog.account.info("failed updating locator for %s ", accountPrimaryEmail);
-                return false;
-            }
         } catch (ServiceException e) {
             ZimbraLog.account.error("Exception occured while updating  %s and error is %s ", accountPrimaryEmail, e);
             return false;
         }
+        return null;
     }
 }

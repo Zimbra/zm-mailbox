@@ -28,6 +28,7 @@ import com.zimbra.soap.admin.message.Zimbra10LocatorUpgradeRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * central class for updating the locator in mail_item
@@ -43,6 +44,7 @@ public class Zimbra10MailItemLocatorUpgradeExec {
 
     public boolean upgrade(Zimbra10LocatorUpgradeRequest locatorUpdateRequest)
             throws ServiceException {
+      LocatorUpdateExecutor.pool.prestartAllCoreThreads();
         if (locatorUpdateRequest.isUpdateAllMailBoxes()) {
             ZimbraLog.account.info("updating locator for all mailboxes");
             List<Mailbox> allLoadedMailboxes = MailboxManager.getInstance().getAllLoadedMailboxes();
@@ -62,6 +64,7 @@ public class Zimbra10MailItemLocatorUpgradeExec {
         } else if (null != locatorUpdateRequest.getAccounts()) {
             return upgrade(locatorUpdateRequest.getAccounts());
         }
+        LocatorUpdateExecutor.executor.shutdown();
         return false;
     }
 
@@ -95,8 +98,11 @@ public class Zimbra10MailItemLocatorUpgradeExec {
                 }
             }
             for (Future<Boolean> resultFlag : resultFlags) {
-                if (!resultFlag.get()) {
+               /* if (!resultFlag.get()) {
                     return false;
+                }*/
+                while(!resultFlag.isDone()){
+                    ZimbraLog.account.info("continuning processing for %s", resultFlag.toString());
                 }
             }
             return true;

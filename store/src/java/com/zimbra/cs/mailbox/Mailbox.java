@@ -23,7 +23,6 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -10971,12 +10970,12 @@ public class Mailbox implements MailboxStore {
             throws ServiceException {
         lock.lock(true );
         boolean success = false;
+        DbConnection conn = DbPool.getConnection();
         try {
-            beginReadTransaction("getAllRecordsForSender", null);
-            List<Integer> allRecords = DbMailItem.getAllRecordsForSentAndRecieved(mbox, accountId, isUpdated);
-            DbMailItem.updateLocatorFieldZimbra10(this, allRecords);
-            List<Integer> recordNumbersPending = DbMailItem.getAllRecordsForSentAndRecieved(mbox,
-                    accountId, true);
+            //beginReadTransaction("getAllRecordsForSender", null);
+            List<Integer> allRecords = DbMailItem.getAllRecordsForSentAndRecieved(mbox, accountId, isUpdated, conn);
+            DbMailItem.updateLocatorFieldZimbra10(this, allRecords, conn);
+            List<Integer> recordNumbersPending = DbMailItem.getAllRecordsForSentAndRecieved(mbox, accountId, true, conn);
             if (recordNumbersPending.size() == 0) {
                 ZimbraLog.account.info("succesfully updated  locator for  %s and record count is  %s ", accountId, recordNumbersPending);
                 // return true;
@@ -10985,10 +10984,12 @@ public class Mailbox implements MailboxStore {
                 //  return false;
             }
             success = true;
-            return allRecords;
+            return recordNumbersPending;
         } finally {
-            endTransaction(success);
+            //endTransaction(success);
             lock.release();
+            DbPool.quietClose(conn);
+
         }
     }
 
@@ -11001,16 +11002,21 @@ public class Mailbox implements MailboxStore {
     public void updateLocatorFieldZimbra10(OperationContext ctx, List<Integer> recordNumbers)
             throws ServiceException {
         boolean success = false;
-        lock.lock(true);
+        this.lock.lock();
+        DbConnection conn = DbPool.getConnection();
 
         try {
-            beginTransaction("getAllRecordsForSender", null);
-            DbMailItem.updateLocatorFieldZimbra10(this, recordNumbers);
+            //beginTransaction("getAllRecordsForSender", null);
+            DbMailItem.updateLocatorFieldZimbra10(this, recordNumbers, conn);
             success = true;
         } finally {
-            endTransaction(success);
+            //endTransaction(success);
             lock.release();
+            DbPool.quietClose(conn);
+
         }
+
+        //create a connection and pass tod dao
     }
 
     /**
@@ -11021,15 +11027,17 @@ public class Mailbox implements MailboxStore {
      */
     public List<String> getAllSendersList(OperationContext ctx) throws ServiceException {
         boolean success = false;
-        lock.lock(false);
+        lock.lock();
+        DbConnection conn = DbPool.getConnection();
         try {
-            beginReadTransaction("getAllSendersList", null);
-            List<String> allDistinctSenders = DbMailItem.getAllSendersList(this);
+            //beginReadTransaction("getAllSendersList", null);
+            List<String> allDistinctSenders = DbMailItem.getAllSendersList(this, conn);
             success = true;
             return allDistinctSenders;
         } finally {
-            endTransaction(success);
+            //endTransaction(success);
             lock.release();
+            DbPool.quietClose(conn);
         }
     }
     public static void logDebugXML(Element e) {

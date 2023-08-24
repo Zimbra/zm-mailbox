@@ -5490,13 +5490,12 @@ public class DbMailItem {
      * @return
      * @throws ServiceException
      */
-    public static List<Integer> getAllRecordsForSentAndRecieved(Mailbox mbox, String senderEmail, boolean isUpdated)
+    public static List<Integer> getAllRecordsForSentAndRecieved(Mailbox mbox, String senderEmail, boolean isUpdated,
+            DbConnection conn)
             throws ServiceException {
         PreparedStatement preparedStatement = null;
         ResultSet rs = null;
-        DbConnection conn = null;
         try {
-            conn = mbox.getOperationConnection();
             List<Integer> recordIds = new ArrayList<>();
             String WHERE_CLAUSE_CHECK_UPDATED = "";
             if (isUpdated) {
@@ -5523,20 +5522,21 @@ public class DbMailItem {
 
     /**
      * Updates the locator field to zimbra10 compatible version for the applicable records.
+     *
      * @param mbox
      * @param recordNumbers
+     * @param conn
      * @throws ServiceException
      */
-    public static void updateLocatorFieldZimbra10(Mailbox mbox, List<Integer> recordNumbers) throws ServiceException {
+    public static void updateLocatorFieldZimbra10(Mailbox mbox, List<Integer> recordNumbers, DbConnection conn) throws ServiceException {
         PreparedStatement stmt = null;
-        DbConnection conn = null;
         try {
-             conn = DbPool.getConnection(mbox);
-             stmt = null;
+            stmt = null;
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox,
                     false) + " SET locator = IF ( LOCATOR LIKE '%@@%' , LOCATOR , CONCAT(LOCATOR,'@@' ,  MAILBOX_ID , '/' , ID , '-', MOD_CONTENT, '.msg'))  " + " WHERE id =? ");
-            for (Integer recordNumber : recordNumbers) {
+            for (Integer recordNumber : (recordNumbers.size() < 10)? recordNumbers :recordNumbers.subList(0,8)) {
                 stmt.setInt(1, recordNumber);
+                ZimbraLog.account.info("adding to batch");
                 stmt.addBatch();
             }
             stmt.executeBatch();
@@ -5551,17 +5551,17 @@ public class DbMailItem {
 
     /**
      * Returns the list of all email senders in a mailbox
+     *
      * @param mbox
+     * @param conn
      * @return
      * @throws ServiceException
      */
-    public static List<String> getAllSendersList(Mailbox mbox) throws ServiceException {
+    public static List<String> getAllSendersList(Mailbox mbox, DbConnection conn) throws ServiceException {
         PreparedStatement stmt = null;
-        DbConnection conn = null;
         ResultSet rs = null;
         try {
             List<String> distinctSenderEmailsAddresses = new ArrayList<>();
-            conn = mbox.getOperationConnection();
             stmt = conn.prepareStatement("SELECT DISTINCT sender from " + getMailItemTableName(mbox, false));
             rs = stmt.executeQuery();
             while (rs.next()) {
