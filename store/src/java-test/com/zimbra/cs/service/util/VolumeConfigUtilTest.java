@@ -30,6 +30,7 @@ import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.util.ExternalVolumeInfoHandler;
+import junit.framework.Assert;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({VolumeConfigUtil.class})
@@ -61,6 +62,24 @@ public class VolumeConfigUtilTest {
         volumeExternalInfo.setGlobalBucketConfigurationId("GLOBAL_BUCKET_ID");
         volumeExternalInfo.setVolumePrefix("/JunitPrefix");
         volumeExternalInfo.setUnified(true);
+        volumeExternalInfo.setStorageType(AdminConstants.A_VOLUME_S3);
+
+        volInfo.setVolumeExternalInfo(volumeExternalInfo);
+        return volInfo;
+    }
+
+    private VolumeInfo mockNonUnifiedExternalVolumeInfo(short id, String name) {
+        VolumeInfo volInfo = new VolumeInfo();
+        volInfo.setId(id);
+        volInfo.setName(name);
+        volInfo.setRootPath("/junit/");
+        volInfo.setType((short) 1);
+        volInfo.setStoreType((short) 2);
+
+        VolumeExternalInfo volumeExternalInfo = new VolumeExternalInfo();
+        volumeExternalInfo.setGlobalBucketConfigurationId("GLOBAL_BUCKET_ID");
+        volumeExternalInfo.setVolumePrefix("/JunitPrefix");
+        volumeExternalInfo.setUnified(false);
         volumeExternalInfo.setStorageType(AdminConstants.A_VOLUME_S3);
 
         volInfo.setVolumeExternalInfo(volumeExternalInfo);
@@ -187,6 +206,44 @@ public class VolumeConfigUtilTest {
         when(ClassHelper.isClassExist(Mockito.anyString())).thenReturn(true);
         VolumeConfigUtil.parseModifyVolumeInplaceUpgradeRequest(modifyVolumeInplaceUpgradeRequest, serverId);
         VolumeManager.getInstance().delete(volume.getId());
+    }
+
+    @Test
+    public void testAppendServerIdInUnifiedVolumePrefix() throws ServiceException {
+        short volumeId = 40;
+        String name = "volume40";
+        Volume volume = Volume.builder().setId(volumeId)
+                .setName(name)
+                .setPath("/test/40", false)
+                .setType((short) 1)
+                .setStoreType(Volume.StoreType.EXTERNAL)
+                .setStoreManagerClass(MockStoreManager.class.getName()).build();
+
+        VolumeManager.getInstance().create(volume);
+        VolumeInfo volumeInfo = mockVolumeInfo(volumeId, name);
+        String expectedVolumePrefix = volumeInfo.getVolumeExternalInfo().getVolumePrefix();
+        VolumeConfigUtil.appendServerIdInVolumePrefix(volumeInfo, serverId);
+        String actualVolumePrefix = volumeInfo.getVolumeExternalInfo().getVolumePrefix();
+        Assert.assertEquals(expectedVolumePrefix, actualVolumePrefix);
+    }
+
+    @Test
+    public void testAppendServerIdInNonUnifiedExternalVolumePrefix() throws ServiceException {
+        short volumeId = 50;
+        String name = "volume50";
+        Volume volume = Volume.builder().setId(volumeId)
+                .setName(name)
+                .setPath("/test/50", false)
+                .setType((short) 1)
+                .setStoreType(Volume.StoreType.EXTERNAL)
+                .setStoreManagerClass(MockStoreManager.class.getName()).build();
+
+        VolumeManager.getInstance().create(volume);
+        VolumeInfo volumeInfo = mockNonUnifiedExternalVolumeInfo(volumeId, name);
+        String expectedVolumePrefix = volumeInfo.getVolumeExternalInfo().getVolumePrefix() + "-" + serverId;
+        VolumeConfigUtil.appendServerIdInVolumePrefix(volumeInfo, serverId);
+        String actualVolumePrefix = volumeInfo.getVolumeExternalInfo().getVolumePrefix();
+        Assert.assertEquals(expectedVolumePrefix, actualVolumePrefix);
     }
 
 }
