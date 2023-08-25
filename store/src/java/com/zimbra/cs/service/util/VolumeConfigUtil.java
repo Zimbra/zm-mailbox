@@ -33,13 +33,10 @@ import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.cs.volume.VolumeServiceException;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.DeleteVolumeRequest;
-import com.zimbra.soap.admin.message.GetAllVolumesInplaceUpgradeRequest;
-import com.zimbra.soap.admin.message.GetAllVolumesInplaceUpgradeResponse;
 import com.zimbra.soap.admin.message.GetAllVolumesRequest;
 import com.zimbra.soap.admin.message.GetAllVolumesResponse;
 import com.zimbra.soap.admin.message.GetVolumeRequest;
 import com.zimbra.soap.admin.message.GetVolumeResponse;
-import com.zimbra.soap.admin.message.ModifyVolumeInplaceUpgradeRequest;
 import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
@@ -223,7 +220,9 @@ public class VolumeConfigUtil {
                 if (volInfoRequest.getVolumeExternalInfo() != null && AdminConstants.A_VOLUME_S3
                         .equalsIgnoreCase(volInfoRequest.getVolumeExternalInfo().getStorageType())) {
                     volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
-                    if (!AdminConstants.A_MIGRATION.equals(volInfoRequest.getVolumeExternalInfo().getRequestType())) {
+                    if (!AdminConstants.A_MIGRATION.equals(volInfoRequest.getVolumeExternalInfo().getRequestType())
+                            && !AdminConstants.A_MIGRATION_INPLACE_UPGRADE
+                                    .equals(volInfoRequest.getVolumeExternalInfo().getRequestType())) {
                         appendServerIdInVolumePrefix(volInfoRequest, serverId);
                     }
                 } else {
@@ -448,12 +447,12 @@ public class VolumeConfigUtil {
     /**
      * Perform required actions for processing GetAllVolumes
      *
-     * @param GetAllVolumesInplaceUpgradeRequest, GetAllVolumesInplaceUpgradeResponse
+     * @param GetAllVolumesRequest, GetAllVolumesResponse
      * @return
      * @throws ServiceException
      */
-    public static void parseGetAllVolumesInplaceUpgradeRequest(GetAllVolumesInplaceUpgradeRequest req,
-            GetAllVolumesInplaceUpgradeResponse resp) throws ServiceException {
+    public static void parseGetAllVolumesInplaceUpgradeRequest(GetAllVolumesRequest req, GetAllVolumesResponse resp)
+            throws ServiceException {
         for (Volume vol : VolumeManager.getInstance().getAllVolumes()) {
             VolumeInfo volInfo = vol.toJAXB();
 
@@ -486,12 +485,12 @@ public class VolumeConfigUtil {
     /**
      * Modify volume data for only in-place upgrade process
      *
-     * @param modifyVolumeInplaceUpgradeRequest
+     * @param ModifyVolumeRequest
      * @param serverId
      * @throws ServiceException
      * @throws JSONException
      */
-    public static void parseModifyVolumeInplaceUpgradeRequest(ModifyVolumeInplaceUpgradeRequest modifyVolumeInplaceUpgradeRequest, String serverId)
+    public static void parseModifyVolumeInplaceUpgradeRequest(ModifyVolumeRequest modifyVolumeInplaceUpgradeRequest, String serverId)
             throws ServiceException, JSONException {
         VolumeManager mgr = VolumeManager.getInstance();
         VolumeInfo volInfo = modifyVolumeInplaceUpgradeRequest.getVolumeInfo();

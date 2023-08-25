@@ -23,9 +23,7 @@ import com.zimbra.cs.store.helper.ClassHelper;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.cs.volume.VolumeServiceException;
-import com.zimbra.soap.admin.message.GetAllVolumesInplaceUpgradeResponse;
 import com.zimbra.soap.admin.message.GetAllVolumesResponse;
-import com.zimbra.soap.admin.message.ModifyVolumeInplaceUpgradeRequest;
 import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
@@ -135,7 +133,7 @@ public class VolumeConfigUtilTest {
         JSONObject properties = new JSONObject();
         properties.put(AdminConstants.A_VOLUME_STORAGE_TYPE, AdminConstants.A_VOLUME_S3);
         properties = externalVolumeInfoHandler.readServerProperties(volumeId);
-        GetAllVolumesInplaceUpgradeResponse getAllVolumesInplaceUpgradeResponse = new GetAllVolumesInplaceUpgradeResponse();
+        GetAllVolumesResponse getAllVolumesInplaceUpgradeResponse = new GetAllVolumesResponse();
         VolumeConfigUtil.parseGetAllVolumesInplaceUpgradeRequest(null, getAllVolumesInplaceUpgradeResponse);
         
         VolumeManager.getInstance().delete(volume.getId());
@@ -197,7 +195,7 @@ public class VolumeConfigUtilTest {
         JSONObject properties = new JSONObject();
         properties.put(AdminConstants.A_VOLUME_STORAGE_TYPE, AdminConstants.A_VOLUME_S3);
 
-        ModifyVolumeInplaceUpgradeRequest modifyVolumeInplaceUpgradeRequest = Mockito.mock(ModifyVolumeInplaceUpgradeRequest.class);
+        ModifyVolumeRequest modifyVolumeInplaceUpgradeRequest = Mockito.mock(ModifyVolumeRequest.class);
         when(modifyVolumeInplaceUpgradeRequest.getVolumeInfo()).thenReturn(volumeInfo);
         when(modifyVolumeInplaceUpgradeRequest.getId()).thenReturn(volumeId);
         properties = externalVolumeInfoHandler.readServerProperties(volumeId);

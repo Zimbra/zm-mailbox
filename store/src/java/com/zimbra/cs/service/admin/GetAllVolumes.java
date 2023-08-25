@@ -18,16 +18,14 @@ package com.zimbra.cs.service.admin;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.util.VolumeConfigUtil;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetAllVolumesRequest;
 import com.zimbra.soap.admin.message.GetAllVolumesResponse;
@@ -46,7 +44,11 @@ public final class GetAllVolumes extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         GetAllVolumesResponse resp = new GetAllVolumesResponse();
-        VolumeConfigUtil.parseGetAllVolumesRequest(req, resp);
+        if (AdminConstants.A_MIGRATION_INPLACE_UPGRADE.equals(req.getRequestType())) {
+            VolumeConfigUtil.parseGetAllVolumesInplaceUpgradeRequest(req, resp);
+        } else {
+            VolumeConfigUtil.parseGetAllVolumesRequest(req, resp);
+        }
         return resp;
     }
 
