@@ -222,6 +222,7 @@ public final class VolumeCLI extends SoapCLI {
                 System.out.println("       useIntelligentTiering: " + volumeExternalInfo.isUseIntelligentTiering());
                 System.out.println("         useInFrequentAccess: " + volumeExternalInfo.isUseInFrequentAccess());
                 System.out.println("useInFrequentAccessThreshold: " + volumeExternalInfo.getUseInFrequentAccessThreshold());
+                System.out.println("                     unified: " + volumeExternalInfo.isUnified());
             } else if (AdminConstants.A_VOLUME_OPEN_IO.equals(extractStorageType(vol))) {
                 VolumeExternalOpenIOInfo volumeExternalOpenIOInfo = vol.getVolumeExternalOpenIOInfo();
                 System.out.println("                 storageType: " + volumeExternalOpenIOInfo.getStorageType());
@@ -230,6 +231,7 @@ public final class VolumeCLI extends SoapCLI {
                 System.out.println("                   nameSpace: " + volumeExternalOpenIOInfo.getNameSpace());
                 System.out.println("                   proxyPort: " + volumeExternalOpenIOInfo.getProxyPort());
                 System.out.println("                 accountPort: " + volumeExternalOpenIOInfo.getAccountPort());
+                System.out.println("                     unified: false" );
             }
         }
         System.out.println();

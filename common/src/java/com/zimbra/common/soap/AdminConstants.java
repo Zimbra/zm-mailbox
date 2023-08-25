@@ -194,14 +194,10 @@ public final class AdminConstants {
     public static final String E_GET_VOLUME_RESPONSE = "GetVolumeResponse";
     public static final String E_MODIFY_VOLUME_REQUEST = "ModifyVolumeRequest";
     public static final String E_MODIFY_VOLUME_RESPONSE = "ModifyVolumeResponse";
-    public static final String E_MODIFY_VOLUME_INPLACE_UPGRADE_REQUEST = "ModifyVolumeInplaceUpgradeRequest";
-    public static final String E_MODIFY_VOLUME_INPLACE_UPGRADE_RESPONSE = "ModifyVolumeInplaceUpgradeResponse";
     public static final String E_DELETE_VOLUME_REQUEST = "DeleteVolumeRequest";
     public static final String E_DELETE_VOLUME_RESPONSE = "DeleteVolumeResponse";
     public static final String E_GET_ALL_VOLUMES_REQUEST = "GetAllVolumesRequest";
     public static final String E_GET_ALL_VOLUMES_RESPONSE = "GetAllVolumesResponse";
-    public static final String E_GET_ALL_VOLUMES_INPLACE_UPGRADE_REQUEST = "GetAllVolumesInplaceUpgradeRequest";
-    public static final String E_GET_ALL_VOLUMES_INPLACE_UPGRADE_RESPONSE = "GetAllVolumesInplaceUpgradeResponse";
     public static final String E_GET_CURRENT_VOLUMES_REQUEST = "GetCurrentVolumesRequest";
     public static final String E_GET_CURRENT_VOLUMES_RESPONSE = "GetCurrentVolumesResponse";
     public static final String E_SET_CURRENT_VOLUME_REQUEST = "SetCurrentVolumeRequest";
@@ -705,14 +701,10 @@ public final class AdminConstants {
     public static final QName GET_VOLUME_RESPONSE = QName.get(E_GET_VOLUME_RESPONSE, NAMESPACE);
     public static final QName MODIFY_VOLUME_REQUEST = QName.get(E_MODIFY_VOLUME_REQUEST, NAMESPACE);
     public static final QName MODIFY_VOLUME_RESPONSE = QName.get(E_MODIFY_VOLUME_RESPONSE, NAMESPACE);
-    public static final QName MODIFY_VOLUME_INPLACE_UPGRADE_REQUEST = QName.get(E_MODIFY_VOLUME_INPLACE_UPGRADE_REQUEST, NAMESPACE);
-    public static final QName MODIFY_VOLUME_INPLACE_UPGRADE_RESPONSE = QName.get(E_MODIFY_VOLUME_INPLACE_UPGRADE_RESPONSE, NAMESPACE);
     public static final QName DELETE_VOLUME_REQUEST = QName.get(E_DELETE_VOLUME_REQUEST, NAMESPACE);
     public static final QName DELETE_VOLUME_RESPONSE = QName.get(E_DELETE_VOLUME_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_VOLUMES_REQUEST = QName.get(E_GET_ALL_VOLUMES_REQUEST, NAMESPACE);
     public static final QName GET_ALL_VOLUMES_RESPONSE = QName.get(E_GET_ALL_VOLUMES_RESPONSE, NAMESPACE);
-    public static final QName GET_ALL_VOLUMES_INPLACE_UPGRADE_REQUEST = QName.get(E_GET_ALL_VOLUMES_INPLACE_UPGRADE_REQUEST, NAMESPACE);
-    public static final QName GET_ALL_VOLUMES_INPLACE_UPGRADE_RESPONSE = QName.get(E_GET_ALL_VOLUMES_INPLACE_UPGRADE_RESPONSE, NAMESPACE);
     public static final QName GET_CURRENT_VOLUMES_REQUEST = QName.get(E_GET_CURRENT_VOLUMES_REQUEST, NAMESPACE);
     public static final QName GET_CURRENT_VOLUMES_RESPONSE = QName.get(E_GET_CURRENT_VOLUMES_RESPONSE, NAMESPACE);
     public static final QName SET_CURRENT_VOLUME_REQUEST = QName.get(E_SET_CURRENT_VOLUME_REQUEST, NAMESPACE);
@@ -1320,7 +1312,8 @@ public final class AdminConstants {
     public static final String A_VOLUME_NAME_SPACE = "nameSpace";
     public static final String A_VOLUME_UNIFIED = "unified";
     public static final String A_VOLUME_REQUEST_TYPE = "requestType";
-    public static final String A_MIGRATION = "ngMigration";
+    public static final String A_MIGRATION = "migration";
+    public static final String A_MIGRATION_INPLACE_UPGRADE = "inplaceUpgrade";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
