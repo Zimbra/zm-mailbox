@@ -23,6 +23,7 @@ import java.util.Map;
 import org.json.JSONException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -34,6 +35,7 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.ModifyVolumeResponse;
+import com.zimbra.cs.account.Server;
 
 public final class ModifyVolume extends AdminDocumentHandler {
 
@@ -48,7 +50,14 @@ public final class ModifyVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         try {
-            VolumeConfigUtil.parseModifyVolumeRequest(req);
+            if (req.getVolumeInfo() != null && req.getVolumeInfo().getVolumeExternalInfo() != null
+                    && AdminConstants.A_MIGRATION_INPLACE_UPGRADE
+                            .equals(req.getVolumeInfo().getVolumeExternalInfo().getRequestType())) {
+                Server server = Provisioning.getInstance().getLocalServer();
+                VolumeConfigUtil.parseModifyVolumeInplaceUpgradeRequest(req, server.getId());
+            } else {
+                VolumeConfigUtil.parseModifyVolumeRequest(req);
+            }
         } catch (JSONException e) {
             throw VolumeServiceException.INVALID_REQUEST("Format is not correct Exception", VolumeServiceException.INVALID_REQUEST);
         }

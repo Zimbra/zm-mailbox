@@ -17,6 +17,7 @@
 
 package com.zimbra.soap.admin.message;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
@@ -31,4 +32,19 @@ public class GetAllVolumesRequest {
 
     public GetAllVolumesRequest() {
     }
+
+    /**
+     * @zm-api-field-description Specifies requestType
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_REQUEST_TYPE, required=false)
+    private String requestType;
+
+    public String getRequestType() {
+        return requestType;
+    }
+
+    public void setRequestType(String requestType) {
+        this.requestType = requestType;
+    }
+
 }
