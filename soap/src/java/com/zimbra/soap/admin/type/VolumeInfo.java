@@ -127,6 +127,20 @@ public final class VolumeInfo {
     @XmlElement(name=AdminConstants.E_VOLUME_OPENIO_EXT /* volumeExternalOpenIOInfo */, required=false)
     private VolumeExternalOpenIOInfo volumeExternalOpenIOInfo;
 
+    /**
+     * @zm-api-field-description Specifies requestType
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_REQUEST_TYPE /* requestType */, required=false)
+    private String requestType = "";
+
+    public String getRequestType() {
+        return requestType;
+    }
+
+    public void setRequestType(String requestType) {
+        this.requestType = requestType;
+    }
+
     public void setId(short value) {
         id = value;
     }
