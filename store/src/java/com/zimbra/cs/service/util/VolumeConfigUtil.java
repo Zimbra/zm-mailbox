@@ -219,9 +219,9 @@ public class VolumeConfigUtil {
                 if (volInfoRequest.getVolumeExternalInfo() != null && AdminConstants.A_VOLUME_S3
                         .equalsIgnoreCase(volInfoRequest.getVolumeExternalInfo().getStorageType())) {
                     volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
-                    if (!AdminConstants.A_MIGRATION.equals(volInfoRequest.getVolumeExternalInfo().getRequestType())
+                    if (!AdminConstants.A_MIGRATION.equals(volInfoRequest.getRequestType())
                             && !AdminConstants.A_MIGRATION_INPLACE_UPGRADE
-                                    .equals(volInfoRequest.getVolumeExternalInfo().getRequestType())) {
+                                    .equals(volInfoRequest.getRequestType())) {
                         appendServerIdInVolumePrefix(volInfoRequest, serverId);
                     }
                 } else {

@@ -50,9 +50,9 @@ public final class ModifyVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         try {
-            if (req.getVolumeInfo() != null && req.getVolumeInfo().getVolumeExternalInfo() != null
+            if (req.getVolumeInfo() != null && req.getVolumeInfo() != null
                     && AdminConstants.A_MIGRATION_INPLACE_UPGRADE
-                            .equals(req.getVolumeInfo().getVolumeExternalInfo().getRequestType())) {
+                            .equals(req.getVolumeInfo().getRequestType())) {
                 Server server = Provisioning.getInstance().getLocalServer();
                 VolumeConfigUtil.parseModifyVolumeInplaceUpgradeRequest(req, server.getId());
             } else {

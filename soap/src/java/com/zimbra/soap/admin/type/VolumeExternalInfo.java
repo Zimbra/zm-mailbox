@@ -66,26 +66,12 @@ public class VolumeExternalInfo extends BaseExternalVolume{
     @XmlAttribute(name=AdminConstants.A_VOLUME_UNIFIED /* unified */, required=false)
     private boolean unified = false;
 
-    /**
-     * @zm-api-field-description Specifies requestType
-     */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_REQUEST_TYPE /* requestType */, required=false)
-    private String requestType = "";
-
     public boolean isUnified() {
         return unified;
     }
 
     public void setUnified(boolean unified) {
         this.unified = unified;
-    }
-
-    public String getRequestType() {
-        return requestType;
-    }
-
-    public void setRequestType(String requestType) {
-        this.requestType = requestType;
     }
 
     public void setVolumePrefix(String value) {
