@@ -10391,4 +10391,7 @@ TODO: delete them permanently from here
   <desc>Whether retention policy feature is enabled</desc>
 </attr>
 
+<attr id="4102" name="zimbraAliasListToHide" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient" since="10.1.0">
+  <desc>Aliases list to be hidden in autocomplete results of  'compose email' page. Aliases get added in this when user opts to make an alias hidden in admin's aliases screen </desc>
+</attr>
 </attrs>

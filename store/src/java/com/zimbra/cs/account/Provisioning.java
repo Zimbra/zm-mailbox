@@ -1316,6 +1316,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void addAlias(Account acct, String alias) throws ServiceException;
 
+    public abstract void addAlias(Account acct, String alias, boolean aliasToBeHidden) throws ServiceException;
+
     public abstract void removeAlias(Account acct, String alias) throws ServiceException;
 
     /**
