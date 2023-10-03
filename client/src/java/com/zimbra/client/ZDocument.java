@@ -16,16 +16,15 @@
  */
 package com.zimbra.client;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 import org.json.JSONException;
 
-import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 
 public class ZDocument implements ZItem, ToZJSONObject {
 
@@ -42,6 +41,7 @@ public class ZDocument implements ZItem, ToZJSONObject {
     private final long modifiedDate; /* content last modified - millis since 1970-01-01 00:00 UTC. */
     private final long metadataChangeDate; /* metadata &/or content last modified - millis since 1970-01-01 00:00 UTC */
     private final long size;
+    private Element acl;
     private String contentType;
     private final String tagIds;
     private final String flags;
@@ -68,6 +68,12 @@ public class ZDocument implements ZItem, ToZJSONObject {
         }
         tagIds = e.getAttribute(MailConstants.A_TAGS, null);
         flags = e.getAttribute(MailConstants.A_FLAGS, null);
+        try {
+            acl = e.getElement(MailConstants.E_ACL);
+        } catch (ServiceException se) {
+            // acl not present on doc
+            acl = null;
+        }
     }
 
     @Override
@@ -172,5 +178,13 @@ public class ZDocument implements ZItem, ToZJSONObject {
 
     public String getFlags() {
         return flags;
+    }
+
+    public Element getAcl() {
+        return acl;
+    }
+
+    public void setAcl(Element acl) {
+        this.acl = acl;
     }
 }

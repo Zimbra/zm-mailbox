@@ -748,6 +748,7 @@ public final class MailConstants {
     public static final String E_GRANT = "grant";
     public static final String E_NOTES = "notes";
     public static final String E_SHARE = "share";
+    public static final String E_NODE_ID = "nodeId";
     public static final String E_REVOKE = "revoke";
     public static final String A_EXPIRE = "expire";
     public static final String A_ZIMBRA_ID = "zid";

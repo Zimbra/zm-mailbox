@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2012, 2013, 2014, 2016, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -113,6 +113,13 @@ public class DocumentSpec {
     @XmlElement(name=MailConstants.E_DOC /* doc */, required=false)
     private IdVersion docRevision;
 
+    /**
+     * @zm-api-field-tag node-id
+     * @zm-api-field-description Node ID for zExtras drive migration
+     */
+    @XmlAttribute(name=MailConstants.E_NODE_ID /* nodeId */, required=false)
+    private String nodeId;
+
     public DocumentSpec() {
     }
 
@@ -142,6 +149,7 @@ public class DocumentSpec {
     public void setDocRevision(IdVersion docRevision) { this.docRevision = docRevision; }
     public void setAction(String action) { this.action = action; }
     public void setType(NewFileCreationTypes type) { this.type = type; }
+    public void setNodeId(String nodeId) { this.nodeId = nodeId; }
     public String getName() { return name; }
     public String getContentType() { return contentType; }
     public String getDescription() { return description; }
@@ -156,6 +164,7 @@ public class DocumentSpec {
     public IdVersion getDocRevision() { return docRevision; }
     public String getAction() { return action; }
     public NewFileCreationTypes getType() { return type; }
+    public String getNodeId() { return nodeId; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper

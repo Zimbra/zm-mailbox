@@ -55,6 +55,7 @@ public class GetItem extends MailDocumentHandler {
         String id = target.getAttribute(MailConstants.A_ID, null);
         String folderStr = target.getAttribute(MailConstants.A_FOLDER, null);
         String path = target.getAttribute(MailConstants.A_PATH, target.getAttribute(MailConstants.A_NAME, null));
+        String nodeId = target.getAttribute(MailConstants.E_NODE_ID, null);
 
         if (folderStr != null && path == null)
             throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_PATH, null);
@@ -77,6 +78,8 @@ public class GetItem extends MailDocumentHandler {
                 }
                 throw nsie;
             }
+        } else if (nodeId != null) {
+            item = mbox.getDocumentByUuid(octxt, nodeId);
         } else {
             throw ServiceException.INVALID_REQUEST("must specify 'id' or 'path'", null);
         }
