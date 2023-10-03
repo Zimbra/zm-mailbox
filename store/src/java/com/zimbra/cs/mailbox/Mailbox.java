@@ -9446,6 +9446,66 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
+            int flags, MailItem parent, CustomMetadata custom, boolean indexing, String nodeId)
+    throws IOException, ServiceException {
+        StoreManager sm = StoreManager.getInstance();
+        StagedBlob staged = sm.stage(pd.getBlob(), this);
+
+        SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId, flags);
+
+        boolean success = false;
+        try {
+            long start = System.currentTimeMillis();
+
+            beginTransaction("createDoc", octxt, redoRecorder);
+
+            SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
+            int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+            String uuid = redoPlayer == null ? nodeId : redoPlayer.getUuid();
+
+            Document doc;
+            switch (type) {
+                case DOCUMENT:
+                    doc = Document.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, custom, flags, parent);
+                    break;
+                case WIKI:
+                    doc = WikiItem.create(itemId, uuid, getFolderById(folderId), pd.getFilename(), pd, null);
+                    break;
+                default:
+                    throw MailServiceException.INVALID_TYPE(type.toString());
+            }
+
+            redoRecorder.setMessageId(itemId);
+            redoRecorder.setUuid(doc.getUuid());
+            redoRecorder.setDocument(pd);
+            redoRecorder.setItemType(type);
+            redoRecorder.setDescription(pd.getDescription());
+            redoRecorder.setFlags(doc.getFlagBitmask());
+
+            // Get the redolog data from the mailbox blob.  This is less than ideal in the
+            // HTTP store case because it will result in network access, and possibly an
+            // extra write to local disk.  If this becomes a problem, we should update the
+            // ParsedDocument constructor to take a DataSource instead of an InputStream.
+            MailboxBlob mailboxBlob = doc.setContent(staged, pd);
+            redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
+
+            if (indexing) {
+                index.add(doc);
+            }
+
+            success = true;
+            long elapsed = System.currentTimeMillis() - start;
+            ZimbraLog.mailbox.debug("createDocument elapsed=" + elapsed);
+            return doc;
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("error writing document blob", ioe);
+        } finally {
+            endTransaction(success);
+            sm.quietDelete(staged);
+        }
+    }
+
     public Document addDocumentRevision(OperationContext octxt, int docId, String author, String name,
             String description, InputStream data) throws ServiceException {
         Document doc = getDocumentById(octxt, docId);

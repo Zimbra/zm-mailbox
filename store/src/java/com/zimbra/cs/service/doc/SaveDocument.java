@@ -45,6 +45,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -247,16 +248,22 @@ public class SaveDocument extends DocDocumentHandler {
         }
         boolean descEnabled = false;
         String flags = "";
+        String nodeId = null;
         if (docElem != null) {
             descEnabled = docElem.getAttributeBool(MailConstants.A_DESC_ENABLED, true);
             flags = docElem.getAttribute(MailConstants.A_FLAGS, null);
+            nodeId = docElem.getAttribute(MailConstants.E_NODE_ID, null);
         }
 
         try {
             ParsedDocument pd = new ParsedDocument(is, doc.name, doc.contentType, System.currentTimeMillis(),
                 getAuthor(zsc), doc.description, descEnabled);
 
-            docItem = mbox.createDocument(octxt, folderId, pd, type, Flag.toBitmask(flags), parent, custom, index);
+            if (!StringUtil.isNullOrEmpty(nodeId)) {
+                docItem = mbox.createDocument(octxt, folderId, pd, type, Flag.toBitmask(flags), parent, custom, index, nodeId);
+            } else {
+                docItem = mbox.createDocument(octxt, folderId, pd, type, Flag.toBitmask(flags), parent, custom, index);
+            }
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to create document", e);
         }

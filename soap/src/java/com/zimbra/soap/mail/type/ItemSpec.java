@@ -55,6 +55,14 @@ public class ItemSpec {
     @XmlAttribute(name=MailConstants.A_PATH /* path */, required=false)
     private String path;
 
+    /**
+     * @zm-api-field-tag node-id
+     * @zm-api-field-description Node ID for zExtras drive migration
+     */
+    @XmlAttribute(name=MailConstants.E_NODE_ID /* nodeId */, required=false)
+    private String nodeId;
+
+
     public ItemSpec() {
     }
 
@@ -62,10 +70,12 @@ public class ItemSpec {
     public void setFolder(String folder) { this.folder = folder; }
     public void setName(String name) { this.name = name; }
     public void setPath(String path) { this.path = path; }
+    public void setNodeId(String nodeId) { this.nodeId = nodeId; }
     public String getId() { return id; }
     public String getFolder() { return folder; }
     public String getName() { return name; }
     public String getPath() { return path; }
+    public String getNodeId() { return nodeId; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper

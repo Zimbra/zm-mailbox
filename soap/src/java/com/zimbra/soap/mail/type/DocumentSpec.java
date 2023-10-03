@@ -112,6 +112,14 @@ public class DocumentSpec {
     @XmlElement(name=MailConstants.E_DOC /* doc */, required=false)
     private IdVersion docRevision;
 
+    /**
+     * @zm-api-field-tag node-id
+     * @zm-api-field-description Node ID for zExtras drive migration
+     */
+    @XmlAttribute(name=MailConstants.E_NODE_ID /* nodeId */, required=false)
+    private String nodeId;
+
+
     public DocumentSpec() {
     }
 
@@ -127,6 +135,7 @@ public class DocumentSpec {
     public void setUpload(Id upload) { this.upload = upload; }
     public void setMessagePart(MessagePartSpec messagePart) { this.messagePart = messagePart; }
     public void setDocRevision(IdVersion docRevision) { this.docRevision = docRevision; }
+    public void setNodeId(String nodeId) { this.nodeId = nodeId; }
     public String getName() { return name; }
     public String getContentType() { return contentType; }
     public String getDescription() { return description; }
@@ -139,6 +148,7 @@ public class DocumentSpec {
     public Id getUpload() { return upload; }
     public MessagePartSpec getMessagePart() { return messagePart; }
     public IdVersion getDocRevision() { return docRevision; }
+    public String getNodeId() { return nodeId; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
