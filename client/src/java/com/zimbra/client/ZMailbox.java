@@ -5204,6 +5204,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return new ZDocument(e);
     }
 
+    // used only for migration
+    public ZDocument getDocumentByUuid(String nodeId) throws ServiceException {
+        Element req = newRequestElement(MailConstants.GET_ITEM_REQUEST);
+        Element item = req.addUniqueElement(MailConstants.E_ITEM);
+        item.addAttribute(MailConstants.E_NODE_ID, nodeId);
+        Element e = invoke(req).getElement(MailConstants.E_DOC);
+        return new ZDocument(e);
+    }
+
     /**
      * modify prefs. The key in the map is the pref name, and the value should be a String[],
      * a Collection of String objects, or a single String/Object.toString.
