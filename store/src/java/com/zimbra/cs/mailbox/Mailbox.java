@@ -147,10 +147,8 @@ import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
-import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -9498,6 +9496,12 @@ public class Mailbox implements MailboxStore {
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
             int flags, MailItem parent, CustomMetadata custom, boolean indexing)
     throws IOException, ServiceException {
+        return createDocument(octxt, folderId, pd, type, flags, parent, custom, indexing, null);
+    }
+
+    public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type,
+            int flags, MailItem parent, CustomMetadata custom, boolean indexing, String nodeId)
+    throws IOException, ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(pd.getBlob(), this);
 
@@ -9511,7 +9515,7 @@ public class Mailbox implements MailboxStore {
 
             SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
             int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-            String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
+            String uuid = redoPlayer == null ? (nodeId == null ? UUIDUtil.generateUUID() : nodeId) : redoPlayer.getUuid();
 
             Document doc;
             switch (type) {
