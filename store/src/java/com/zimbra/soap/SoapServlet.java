@@ -17,22 +17,6 @@
 
 package com.zimbra.soap;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import javax.servlet.ServletException;
-import javax.servlet.UnavailableException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.http.HttpVersion;
-import org.apache.http.ParseException;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.message.BasicLineParser;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
@@ -56,6 +40,20 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
+import org.apache.http.HttpVersion;
+import org.apache.http.ParseException;
+import org.apache.http.ProtocolVersion;
+import org.apache.http.message.BasicLineParser;
+
+import javax.servlet.ServletException;
+import javax.servlet.UnavailableException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.EOFException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * The soap service servlet
@@ -204,9 +202,25 @@ public class SoapServlet extends ZimbraServlet {
         }
     }
 
+    public static void removeService(String servletName, RemovableDocumentService service) {
+        synchronized (sExtraServices) {
+            ZimbraServlet servlet = ZimbraServlet.getServlet(servletName);
+            if (servlet != null) {
+                ((SoapServlet) servlet).removeService(service);
+            } else {
+                sLog.info("No servlet found with name: %s", servletName);
+            }
+        }
+    }
+
     private void addService(DocumentService service) {
         ZimbraLog.soap.info("Adding service %s to %s", service.getClass().getSimpleName(), getServletName());
         service.registerHandlers(mEngine.getDocumentDispatcher());
+    }
+
+    private void removeService(RemovableDocumentService service) {
+        ZimbraLog.soap.info("Removing service %s to %s", service.getClass().getSimpleName(), getServletName());
+        service.deregisterHandlers(mEngine.getDocumentDispatcher());
     }
 
     @Override public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {

@@ -16,6 +16,14 @@
  */
 package com.zimbra.cs.extension;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log.Level;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
+import com.zimbra.cs.redolog.op.RedoableOp;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -25,14 +33,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log.Level;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.ephemeral.EphemeralStore;
-import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
-import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class ExtensionUtil {
 
@@ -234,6 +234,18 @@ public class ExtensionUtil {
             }
         }
         sInitializedExtensions.clear();
+    }
+
+    public static synchronized void destroy(String extName) {
+        ZimbraExtension ext = getExtension(extName);
+        try {
+            RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
+            ext.destroy();
+            ZimbraLog.extensions.info("Destroyed extension " + extName + ": " + ext.getClass().getName() + "@" + ext.getClass().getClassLoader());
+            sInitializedExtensions.remove(extName);
+        } catch (Exception e) {
+            ZimbraLog.extensions.warn("exception in " + ext.getClass().getName() + ".destroy()", e);
+        }
     }
 
     public static synchronized Class<?> loadClass(String extensionName, String className) throws ClassNotFoundException {
