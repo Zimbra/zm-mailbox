@@ -39,27 +39,31 @@ public class ActivateLicenseRequest {
     /**
      * @zm-api-field-description Content
      */
-    @XmlElement(name=AdminConstants.E_CONTENT /* content */, required=true)
+    @XmlElement(name=AdminConstants.E_CONTENT /* content */, required=false)
     private final AttachmentIdAttrib content;
+
+    @XmlElement(name=AdminConstants.E_LICENSE_CODE /* content */, required=false)
+    private final String licenseCode;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private ActivateLicenseRequest() {
-        this((AttachmentIdAttrib) null);
+        this((AttachmentIdAttrib) null, null);
     }
 
-    public ActivateLicenseRequest(AttachmentIdAttrib content) {
+    public ActivateLicenseRequest(AttachmentIdAttrib content, String licenseCode) {
         this.content = content;
+        this.licenseCode = licenseCode;
     }
 
     public AttachmentIdAttrib getContent() { return content; }
 
     public MoreObjects.ToStringHelper addToStringInfo(
-                MoreObjects.ToStringHelper helper) {
+            MoreObjects.ToStringHelper helper) {
         return helper
-            .add("content", content);
+                .add("content", content);
     }
 
     @Override
