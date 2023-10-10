@@ -22,17 +22,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
@@ -172,7 +162,7 @@ import com.zimbra.soap.mail.type.XParam;
 import com.zimbra.soap.mail.type.XProp;
 import com.zimbra.soap.type.MsgContent;
 import com.zimbra.soap.type.WantRecipsSetting;
-
+import com.zimbra.cs.lmtpserver.ExternalEmailWarning;
 /**
  * Class containing static methods for encoding various MailItem-derived objects into XML.
  *
@@ -1631,7 +1621,31 @@ public final class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm, getDefaultCharset(msg));
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort, wantContent);
+                if (parts.size() > 1) {
+                    if (ExternalEmailWarning.getInstance().isEnabled()) {
+                        boolean isExternal = ExternalEmailWarning.getInstance().isExternal(msg.getRecipients(), msg.getSender());
+                        // added condition to check if email is external and if it contains warning in html content
+                        if (isExternal) {
+                            String textContent = parts.get(1).getMimePart().getContent().toString();
+                            String htmlContent = parts.get(2).getMimePart().getContent().toString();
+                            String[] textContents = textContent.split("\n", 2);
+                            String baseEmailWarning = "";
+                            if (textContents.length>=0) {
+                                baseEmailWarning = textContents[0];
+                            }
+                            ZimbraLog.lmtp.info("Base Email Warning : "+ baseEmailWarning);
+                            if (!htmlContent.contains(baseEmailWarning) && baseEmailWarning.length()>0 ) {
+                                addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort, wantContent,baseEmailWarning);
+                            }
+                        } else {
+                            addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort, wantContent, "");
+                        }
+                    } else {
+                        addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort, wantContent, "");
+                    }
+                } else {
+                    addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg), bestEffort, wantContent, "");
+                }
             }
 
             if (wantExpandGroupInfo) {
@@ -1803,7 +1817,7 @@ public final class ToXML {
                     throw ServiceException.FAILURE(ex.getMessage(), ex);
                 }
                 if (parts != null && !parts.isEmpty()) {
-                    addParts(ie, parts.get(0), null, "", -1, false, true, getDefaultCharset(cal), true);
+                    addParts(ie, parts.get(0), null, "", -1, false, true, getDefaultCharset(cal), true, "");
                 }
             }
         }
@@ -2022,7 +2036,7 @@ public final class ToXML {
                 List<MPartInfo> parts = Mime.getParts(mm, getDefaultCharset(calItem));
                 if (parts != null && !parts.isEmpty()) {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                    addParts(m, parts.get(0), bodies, part, maxSize, neuter, true, getDefaultCharset(calItem), true);
+                    addParts(m, parts.get(0), bodies, part, maxSize, neuter, true, getDefaultCharset(calItem), true, "");
                 }
             }
 
@@ -2610,13 +2624,13 @@ public final class ToXML {
     private enum VisitPhase { PREVISIT, POSTVISIT }
 
     private static void addParts(Element root, MPartInfo mpiRoot, Set<MPartInfo> bodies, String prefix, int maxSize,
-        boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions)
+        boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions, String warningMsg)
 throws ServiceException {
-        addParts(root, mpiRoot, bodies, prefix, maxSize, neuter, excludeCalendarParts, defaultCharset, swallowContentExceptions, MsgContent.full);
+        addParts(root, mpiRoot, bodies, prefix, maxSize, neuter, excludeCalendarParts, defaultCharset, swallowContentExceptions, MsgContent.full, "");
     }
 
     private static void addParts(Element root, MPartInfo mpiRoot, Set<MPartInfo> bodies, String prefix, int maxSize,
-            boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent)
+            boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent, String warningMsg)
     throws ServiceException {
         MPartInfo mpi = mpiRoot;
         LinkedList<Pair<Element, LinkedList<MPartInfo>>> queue = new LinkedList<Pair<Element, LinkedList<MPartInfo>>>();
@@ -2634,7 +2648,7 @@ throws ServiceException {
 
             mpi = parts.getFirst();
             Element child = addPart(phase, level.getFirst(), root, mpi, bodies, prefix, maxSize, neuter,
-                    excludeCalendarParts, defaultCharset, swallowContentExceptions, wantContent);
+                    excludeCalendarParts, defaultCharset, swallowContentExceptions, wantContent, warningMsg);
             if (phase == VisitPhase.PREVISIT && child != null && mpi.hasChildren()) {
                 queue.addLast(new Pair<Element, LinkedList<MPartInfo>>(child, new LinkedList<MPartInfo>(mpi.getChildren())));
             } else {
@@ -2645,7 +2659,7 @@ throws ServiceException {
 
     private static Element addPart(VisitPhase phase, Element parent, Element root, MPartInfo mpi,
             Set<MPartInfo> bodies, String prefix, int maxSize, boolean neuter, boolean excludeCalendarParts,
-            String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent)
+            String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent, String warningMsg)
     throws ServiceException {
         if (phase == VisitPhase.POSTVISIT) {
             return null;
@@ -2775,7 +2789,13 @@ throws ServiceException {
             }
 
             try {
-                addContent(el, mpi, maxSize, neuter, defaultCharset, wantContent);
+                //checking if content type is html
+                if (mpi.getContentType().equals("text/html") && warningMsg.length()>0 && warningMsg!=null) {
+                    addContent(el, mpi, maxSize, neuter, defaultCharset, wantContent, warningMsg);
+                }else{
+                    addContent(el, mpi, maxSize, neuter, defaultCharset, wantContent, "");
+                }
+
             } catch (IOException e) {
                 if (!swallowContentExceptions) {
                     throw ServiceException.FAILURE("error serializing part content", e);
@@ -2822,7 +2842,7 @@ throws ServiceException {
      * @see HtmlDefang#defang(String, boolean) */
     private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter, String defaultCharset)
     throws IOException, MessagingException {
-        addContent(elt, mpi, maxSize, neuter, defaultCharset, MsgContent.full);
+        addContent(elt, mpi, maxSize, neuter, defaultCharset, MsgContent.full, "");
     }
 
     /** Adds the decoded text content of a message part to the {@link Element}.
@@ -2838,7 +2858,7 @@ throws ServiceException {
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging
      * @see HtmlDefang#defang(String, boolean) */
-    private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter, String defaultCharset, MsgContent wantContent)
+    private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter, String defaultCharset, MsgContent wantContent, String warningMsg)
     throws IOException, MessagingException {
         // TODO: support other parts
         String ctype = mpi.getContentType();
@@ -2959,6 +2979,11 @@ throws ServiceException {
                     data = data.substring(0, maxSize);
                 }
             }
+            if(warningMsg.length()>0 && !data.contains("<html>")) {
+                String bodyContent = data;
+                String htmBodyWithWarning = "<html><body><div><p>"+warningMsg+"</p><hr /></div><div style=\"font-size: 12pt; font-family: arial, helvetica, sans-serif; color: rgb(0, 0, 0);\"><div>&nbsp;</div><div>"+bodyContent+"</div>\n";
+                data = htmBodyWithWarning;
+            }
             elt.addAttribute(MailConstants.E_CONTENT, data, Element.Disposition.CONTENT);
         }
         if (originalContent != null && (wantContent.equals(MsgContent.original) || wantContent.equals(MsgContent.both))) {
@@ -2967,7 +2992,6 @@ throws ServiceException {
         }
         // TODO: CDATA worth the effort?
     }
-
 
     /**
      * @param data
