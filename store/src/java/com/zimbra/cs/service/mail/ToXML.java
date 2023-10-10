@@ -219,7 +219,7 @@ public final class ToXML {
     }
 
     public static Element encodeItem(Element parent, ItemIdFormatter ifmt, OperationContext octxt, MailItem item,
-            int fields) throws ServiceException {
+                                     int fields) throws ServiceException {
         if (item instanceof Folder) {
             return encodeFolder(parent, ifmt, octxt, (Folder) item, fields);
         } else if (item instanceof Tag) {
@@ -276,19 +276,19 @@ public final class ToXML {
     }
 
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder)
-    throws ServiceException {
+            throws ServiceException {
         return encodeFolder(parent, ifmt, octxt, folder, NOTIFY_FIELDS);
     }
 
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Folder folder, int fields)
-    throws ServiceException {
+                                       Folder folder, int fields)
+            throws ServiceException {
         return encodeFolder(parent, ifmt, octxt, folder, fields, false);
     }
 
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Folder folder, int fields, boolean exposeAclAccessKey)
-    throws ServiceException {
+                                       Folder folder, int fields, boolean exposeAclAccessKey)
+            throws ServiceException {
         if (folder instanceof SearchFolder) {
             return encodeSearchFolder(parent, ifmt, (SearchFolder) folder, fields);
         } else if (folder instanceof Mountpoint) {
@@ -436,8 +436,8 @@ public final class ToXML {
 
             Element eGrant = eACL.addNonUniqueElement(MailConstants.E_GRANT);
             eGrant.addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
-                .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(granteeType))
-                .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()));
+                    .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(granteeType))
+                    .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()));
             if (grant.getExpiry() != 0) {
                 eGrant.addAttribute(MailConstants.A_EXPIRY, grant.getExpiry());
             }
@@ -576,12 +576,12 @@ public final class ToXML {
     }
 
     public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx,
-            Mountpoint mpt) throws ServiceException {
+                                           Mountpoint mpt) throws ServiceException {
         return encodeMountpoint(parent, ifmt, octx, mpt, NOTIFY_FIELDS);
     }
 
     public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx,
-            Mountpoint mpt, int fields) throws ServiceException {
+                                           Mountpoint mpt, int fields) throws ServiceException {
 
         Element el = parent.addNonUniqueElement(MailConstants.E_MOUNT);
         encodeFolderCommon(el, ifmt, mpt, fields);
@@ -729,8 +729,8 @@ public final class ToXML {
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
-            boolean summary, Collection<String> attrFilter)
-    throws ServiceException {
+                                        boolean summary, Collection<String> attrFilter)
+            throws ServiceException {
         return encodeContact(parent, ifmt, octxt, contact,
                 (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, summary,
                 attrFilter, NOTIFY_FIELDS, null, false /* returnHiddenAttrs */,
@@ -738,8 +738,8 @@ public final class ToXML {
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
-            boolean summary, Collection<String> attrFilter, int fields)
-    throws ServiceException {
+                                        boolean summary, Collection<String> attrFilter, int fields)
+            throws ServiceException {
         return encodeContact(parent, ifmt, octxt, contact,
                 (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, summary,
                 attrFilter, fields, (String)null /* migratedDlist */, false /* returnHiddenAttrs */,
@@ -747,22 +747,22 @@ public final class ToXML {
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
-            ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
-            Collection<String> attrFilter, int fields, String migratedDlist,
-            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo)
-    throws ServiceException {
+                                        ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
+                                        Collection<String> attrFilter, int fields, String migratedDlist,
+                                        boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo)
+            throws ServiceException {
         return encodeContact(parent, ifmt, octxt, contact, contactGroup, memberAttrFilter, summary, attrFilter,
                 fields, migratedDlist, returnHiddenAttrs, maxMembers, returnCertInfo, (Set<String>) null);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
-        OperationContext octxt, Contact contact, ContactGroup contactGroup,
-        Collection<String> memberAttrFilter, boolean summary, Collection<String> attrFilter,
-        int fields, String migratedDlist, boolean returnHiddenAttrs, long maxMembers,
-        boolean returnCertInfo, Set<String> memberOfIds) throws ServiceException {
+                                        OperationContext octxt, Contact contact, ContactGroup contactGroup,
+                                        Collection<String> memberAttrFilter, boolean summary, Collection<String> attrFilter,
+                                        int fields, String migratedDlist, boolean returnHiddenAttrs, long maxMembers,
+                                        boolean returnCertInfo, Set<String> memberOfIds) throws ServiceException {
         return encodeContact(parent, ifmt, octxt, contact, contactGroup, memberAttrFilter, summary,
-            attrFilter, fields, migratedDlist, returnHiddenAttrs, maxMembers, returnCertInfo,
-            memberOfIds, null, null);
+                attrFilter, fields, migratedDlist, returnHiddenAttrs, maxMembers, returnCertInfo,
+                memberOfIds, null, null);
     }
 
     /**
@@ -771,17 +771,17 @@ public final class ToXML {
      * @param mAuthedAcct authenticated account
      */
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
-        OperationContext octxt, Contact contact, ContactGroup contactGroup,
-        Collection<String> memberAttrFilter, boolean summary, Collection<String> attrFilter,
-        int fields, String migratedDlist, boolean returnHiddenAttrs, long maxMembers,
-        boolean returnCertInfo, Set<String> memberOfIds, Account mRequestedAcct,
-        Account mAuthedAcct)
-    throws ServiceException {
+                                        OperationContext octxt, Contact contact, ContactGroup contactGroup,
+                                        Collection<String> memberAttrFilter, boolean summary, Collection<String> attrFilter,
+                                        int fields, String migratedDlist, boolean returnHiddenAttrs, long maxMembers,
+                                        boolean returnCertInfo, Set<String> memberOfIds, Account mRequestedAcct,
+                                        Account mAuthedAcct)
+            throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.FOLDER)) {
             el.addAttribute(MailConstants.A_FOLDER,
-                ifmt.formatItemId(new ItemId(contact.getMailbox().getAccountId(), contact.getFolderId())));
+                    ifmt.formatItemId(new ItemId(contact.getMailbox().getAccountId(), contact.getFolderId())));
         }
         recordItemTags(el, contact, octxt, fields);
         if (needToOutput(fields, Change.CONFLICT)) {
@@ -906,11 +906,11 @@ public final class ToXML {
     }
 
     public static boolean hasDLViewRight(String email, Account mRequestedAcct,
-        Account mAuthedAcct) {
+                                         Account mAuthedAcct) {
         boolean canExpand = true;
         if (mRequestedAcct != null && mAuthedAcct != null && email != null) {
             GalGroup.GroupInfo groupInfo = GalGroupInfoProvider.getInstance().getGroupInfo(email,
-                true, mRequestedAcct, mAuthedAcct);
+                    true, mRequestedAcct, mAuthedAcct);
             if (groupInfo != null) {
                 canExpand = (GalGroup.GroupInfo.CAN_EXPAND == groupInfo);
             }
@@ -919,7 +919,7 @@ public final class ToXML {
     }
 
     private static void encodeContactAttr(Element elem, String name, String value,
-            Contact contact, boolean encodeContactGroupMembers, OperationContext octxt, boolean returnCertInfo) {
+                                          Contact contact, boolean encodeContactGroupMembers, OperationContext octxt, boolean returnCertInfo) {
         if (Contact.isMultiValueAttr(value)) {
             try {
                 for (String v : Contact.parseMultiValueAttr(value)) {
@@ -972,9 +972,9 @@ public final class ToXML {
     }
 
     private static void encodeContactGroup(Element elem, ContactGroup contactGroup,
-            Collection<String> memberAttrFilter, ItemIdFormatter ifmt,
-            OperationContext octxt, boolean summary, int fields)
-    throws ServiceException {
+                                           Collection<String> memberAttrFilter, ItemIdFormatter ifmt,
+                                           OperationContext octxt, boolean summary, int fields)
+            throws ServiceException {
         for (ContactGroup.Member member : contactGroup.getMembers(true)) {
             Element eMember = elem.addNonUniqueElement(MailConstants.E_CONTACT_GROUP_MEMBER);
             encodeContactGroupMemberBasic(eMember, member);
@@ -1049,12 +1049,12 @@ public final class ToXML {
     }
 
     public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag)
-    throws ServiceException {
+            throws ServiceException {
         return encodeTag(parent, ifmt, octxt, tag, NOTIFY_FIELDS);
     }
 
     public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
-    throws ServiceException {
+            throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_TAG);
         // FIXME: eventually remove tag ID from serialization
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
@@ -1113,14 +1113,14 @@ public final class ToXML {
     }
 
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Conversation conv, SearchParams params) throws ServiceException {
+                                             Conversation conv, SearchParams params) throws ServiceException {
         Mailbox mbox = conv.getMailbox();
         List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
         return encodeConversation(parent, ifmt, octxt, conv, msgs, params);
     }
 
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Conversation conv, List<Message> msgs, SearchParams params) throws ServiceException {
+                                             Conversation conv, List<Message> msgs, SearchParams params) throws ServiceException {
         int fields = NOTIFY_FIELDS;
         Element c = encodeConversationSummary(parent, ifmt, octxt, conv, msgs, null, OutputParticipants.PUT_BOTH, fields, true);
         if (msgs.isEmpty()) {
@@ -1147,7 +1147,7 @@ public final class ToXML {
                 m.addAttribute(MailConstants.A_SIZE, msg.getSize());
                 m.addAttribute(MailConstants.A_SUBJECT, msg.getSubject(), Element.Disposition.CONTENT);;
                 m.addAttribute(MailConstants.A_FOLDER,
-                    ifmt.formatItemId(new ItemId(msg.getMailbox().getAccountId(), msg.getFolderId())));
+                        ifmt.formatItemId(new ItemId(msg.getMailbox().getAccountId(), msg.getFolderId())));
                 recordItemTags(m, msg, octxt, fields);
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
                 encodeEmail(m, msg.getSender(), EmailType.FROM);
@@ -1201,18 +1201,18 @@ public final class ToXML {
      * the conversation date returned and fragment correspond to those of the matched message.
      */
     public static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, int fields)
-    throws ServiceException {
+            throws ServiceException {
         return encodeConversationSummary(parent, ifmt, octxt, conv, null, OutputParticipants.PUT_SENDERS, fields, true);
     }
 
     public static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, Message msgHit,
-            OutputParticipants output)
-    throws ServiceException {
+                                                    OutputParticipants output)
+            throws ServiceException {
         return encodeConversationSummary(parent, ifmt, octxt, conv, msgHit, output, NOTIFY_FIELDS, true);
     }
 
     private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Conversation conv, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
+                                                     Conversation conv, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
             throws ServiceException {
         List<Message> msgs = null;
         Mailbox mbox = conv.getMailbox();
@@ -1230,12 +1230,12 @@ public final class ToXML {
     }
 
     private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Conversation conv, List<Message> msgs, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
+                                                     Conversation conv, List<Message> msgs, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
             throws ServiceException {
         boolean addFirstHitRecips  = msgHit != null && (output == OutputParticipants.PUT_RECIPIENTS);
         boolean addAggregatedRecips  = !addFirstHitRecips && (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_ALL);
         boolean addSenders = (output == OutputParticipants.PUT_BOTH || output == OutputParticipants.PUT_SENDERS || output == OutputParticipants.PUT_ALL)
-                                && needToOutput(fields, Change.SENDERS);
+                && needToOutput(fields, Change.SENDERS);
 
         Mailbox mbox = conv.getMailbox();
 
@@ -1334,7 +1334,7 @@ public final class ToXML {
     }
 
     private static Element encodeConversationCommon(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, List<Message> msgs, int fields)
-    throws ServiceException {
+            throws ServiceException {
         Element c = parent.addNonUniqueElement(MailConstants.E_CONV);
         c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(conv));
 
@@ -1390,21 +1390,21 @@ public final class ToXML {
     }
 
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
-            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean encodeMissingBlobs)
-    throws ServiceException {
+                                            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
+                                            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+                                            boolean encodeMissingBlobs)
+            throws ServiceException {
         return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter,
-            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, MsgContent.full, NOTIFY_FIELDS);
+                headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, MsgContent.full, NOTIFY_FIELDS);
     }
 
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
-            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean encodeMissingBlobs, MsgContent wantContent)
-    throws ServiceException {
+                                            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
+                                            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+                                            boolean encodeMissingBlobs, MsgContent wantContent)
+            throws ServiceException {
         return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter,
-            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, wantContent, NOTIFY_FIELDS);
+                headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, wantContent, NOTIFY_FIELDS);
     }
 
     /** Encodes a Message object into <m> element with <mp> elements for
@@ -1426,10 +1426,10 @@ public final class ToXML {
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
-            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean encodeMissingBlobs, MsgContent wantContent, int fields)
-    throws ServiceException {
+                                            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
+                                            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+                                            boolean encodeMissingBlobs, MsgContent wantContent, int fields)
+            throws ServiceException {
         Mailbox mbox = msg.getMailbox();
         int changeId = msg.getSavedSequence();
         while (true) {
@@ -1483,10 +1483,10 @@ public final class ToXML {
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
     private static Element encodeMessageAsMPHelper(boolean bestEffort, Element parent, ItemIdFormatter ifmt,
-            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean encodeMissingBlobs, MsgContent wantContent, int fields)
-    throws ServiceException {
+                                                   OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
+                                                   boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+                                                   boolean encodeMissingBlobs, MsgContent wantContent, int fields)
+            throws ServiceException {
         Element m = null;
         boolean success = false;
         try {
@@ -1517,7 +1517,7 @@ public final class ToXML {
                     mimePart.addAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_TEXT_PLAIN);
 
                     String errMsg = L10nUtil.getMessage(L10nUtil.MsgKey.errMissingBlob,
-                                    msg.getAccount().getLocale(), ifmt.formatItemId(msg));
+                            msg.getAccount().getLocale(), ifmt.formatItemId(msg));
                     m.addAttribute(MailConstants.E_FRAG, errMsg, Element.Disposition.CONTENT);
                     mimePart.addAttribute(MailConstants.E_CONTENT, errMsg, Element.Disposition.CONTENT);
                     success = true; //not really success, but mark as such so the element is appended correctly
@@ -1657,20 +1657,20 @@ public final class ToXML {
 
             // if the mime it is signed
             if (Mime.isMultipartSigned(mm.getContentType())
-                || Mime.isPKCS7Signed(mm.getContentType())) {
+                    || Mime.isPKCS7Signed(mm.getContentType())) {
                 ZimbraLog.mailbox.debug(
-                    "The message is signed. Forwarding it to SmimeHandler for signature verification.");
+                        "The message is signed. Forwarding it to SmimeHandler for signature verification.");
                 if (SmimeHandler.getHandler() != null) {
                     SmimeHandler.getHandler().verifyMessageSignature(msg, m, mm, octxt);
                 }
-           } else {
+            } else {
                 // if the original mime message was PKCS7-signed and it was
                 // decoded and stored in cache as plain mime
                 if ((mm instanceof Mime.FixedMimeMessage)
-                    && ((Mime.FixedMimeMessage) mm).isPKCS7Signed()) {
+                        && ((Mime.FixedMimeMessage) mm).isPKCS7Signed()) {
                     if (SmimeHandler.getHandler() != null) {
                         SmimeHandler.getHandler().addPKCS7SignedMessageSignatureDetails(
-                            msg.getMailbox().getAccount(), m, mm, octxt.getmResponseProtocol());
+                                msg.getMailbox().getAccount(), m, mm, octxt.getmResponseProtocol());
                     }
                 }
             }
@@ -1688,8 +1688,8 @@ public final class ToXML {
     }
 
     private static Element encodeMsgCommonAndIdInfo(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Message msg, String part, boolean serializeType, int fields)
-                    throws ServiceException {
+                                                    Message msg, String part, boolean serializeType, int fields)
+            throws ServiceException {
         Element m = null;
         boolean wholeMessage = part == null || part.trim().isEmpty();
         if (wholeMessage) {
@@ -1710,14 +1710,14 @@ public final class ToXML {
      * Encodes the basic search / sync fields onto an existing calendar item element
      */
     public static void setCalendarItemFields(Element calItemElem, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem calItem, int fields, boolean encodeInvites, boolean includeContent, boolean neuter)
-    throws ServiceException {
+                                             CalendarItem calItem, int fields, boolean encodeInvites, boolean includeContent, boolean neuter)
+            throws ServiceException {
         recordItemTags(calItemElem, calItem, octxt, fields);
 
         calItemElem.addAttribute(MailConstants.A_UID, calItem.getUid());
         calItemElem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem));
         calItemElem.addAttribute(MailConstants.A_FOLDER,
-            ifmt.formatItemId(new ItemId(calItem.getMailbox().getAccountId(), calItem.getFolderId())));
+                ifmt.formatItemId(new ItemId(calItem.getMailbox().getAccountId(), calItem.getFolderId())));
 
         if (needToOutput(fields, Change.CONTENT) && calItem.getSavedSequence() != 0) {
             calItemElem.addAttribute(MailConstants.A_REVISION, calItem.getSavedSequence());
@@ -1763,19 +1763,19 @@ public final class ToXML {
     }
 
     public static void setCalendarItemFields(Element calItemElem, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem calItem, int fields, boolean encodeInvites, boolean neuter) throws ServiceException {
+                                             CalendarItem calItem, int fields, boolean encodeInvites, boolean neuter) throws ServiceException {
         setCalendarItemFields(calItemElem, ifmt, octxt, calItem, fields, encodeInvites, false, neuter);
     }
 
     public static Element encodeInvite(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem cal, Invite inv, boolean neuter)
-    throws ServiceException {
+                                       CalendarItem cal, Invite inv, boolean neuter)
+            throws ServiceException {
         return encodeInvite(parent, ifmt, octxt, cal, inv, false, neuter);
     }
 
     public static Element encodeInvite(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem cal, Invite inv, boolean includeContent, boolean neuter)
-    throws ServiceException {
+                                       CalendarItem cal, Invite inv, boolean includeContent, boolean neuter)
+            throws ServiceException {
         Element ie = parent.addNonUniqueElement(MailConstants.E_INVITE);
         setCalendarItemType(ie, cal.getType());
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
@@ -1827,7 +1827,7 @@ public final class ToXML {
      * standard mail-message it can be deleted by the user at any time!
      */
     public static Element encodeCalendarItemSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem calItem, int fields, boolean includeInvites, boolean includeContent) throws ServiceException {
+                                                    CalendarItem calItem, int fields, boolean includeInvites, boolean includeContent) throws ServiceException {
         final int MAX_RETRIES = LC.calendar_item_get_max_retries.intValue();
         Element elem = null;
         Mailbox mbox = calItem.getMailbox();
@@ -1876,7 +1876,7 @@ public final class ToXML {
     public static Element encodeCalendarItemSummary(Element parent, ItemIdFormatter ifmt,
                                                     OperationContext octxt, CalendarItem calItem,
                                                     int fields, boolean includeInvites)
-    throws ServiceException {
+            throws ServiceException {
         return encodeCalendarItemSummary(parent, ifmt, octxt, calItem, fields, includeInvites, false);
     }
 
@@ -1926,9 +1926,9 @@ public final class ToXML {
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
     public static Element encodeInviteAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem calItem, String recurIdZ, ItemId iid, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo)
-    throws ServiceException {
+                                           CalendarItem calItem, String recurIdZ, ItemId iid, String part, int maxSize, boolean wantHTML,
+                                           boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo)
+            throws ServiceException {
         int invId = iid.getSubpartId();
         Invite[] invites = calItem.getInvites(invId);
         boolean isPublic = calItem.isPublic();
@@ -2045,9 +2045,9 @@ public final class ToXML {
     private static final String PART_PARAM_STRING   = "&part=";
 
     public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Message msg, String part, boolean mustInline, boolean mustNotInline, boolean serializeType,
-            int fields)
-    throws ServiceException {
+                                              Message msg, String part, boolean mustInline, boolean mustNotInline, boolean serializeType,
+                                              int fields)
+            throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().isEmpty());
         Element m = encodeMsgCommonAndIdInfo(parent, ifmt, octxt, msg, part, serializeType, fields);
         Element content = m.addUniqueElement(MailConstants.E_CONTENT);
@@ -2079,7 +2079,7 @@ public final class ToXML {
     }
 
     public static Element encodeMessageSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Message msg, OutputParticipants output, int fields) throws ServiceException {
+                                               Message msg, OutputParticipants output, int fields) throws ServiceException {
         Element el = encodeMessageCommon(parent, ifmt, octxt, msg, fields, true);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
         if (!needToOutput(fields, Change.CONTENT)) {
@@ -2095,8 +2095,8 @@ public final class ToXML {
             encodeEmail(el, msg.getSender(), EmailType.FROM);
         }
         if (addAll) {
-                addEmails(el, Mime.parseAddressHeader(msg.getMimeMessage(), "Cc"), EmailType.CC);
-                addEmails(el, Mime.parseAddressHeader(msg.getMimeMessage(), "Bcc"), EmailType.BCC);
+            addEmails(el, Mime.parseAddressHeader(msg.getMimeMessage(), "Cc"), EmailType.CC);
+            addEmails(el, Mime.parseAddressHeader(msg.getMimeMessage(), "Bcc"), EmailType.BCC);
         }
         el.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(msg.getSubject()),
                 Element.Disposition.CONTENT);
@@ -2121,7 +2121,7 @@ public final class ToXML {
     }
 
     private static Element encodeMessageCommon(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            MailItem item, int fields, boolean serializeType) throws ServiceException {
+                                               MailItem item, int fields, boolean serializeType) throws ServiceException {
         String name = serializeType && item instanceof Chat ? MailConstants.E_CHAT : MailConstants.E_MSG;
         Element elem = parent.addNonUniqueElement(name);
         // DO NOT encode the item-id here, as some Invite-Messages-In-CalendarItems have special item-id's
@@ -2217,9 +2217,9 @@ public final class ToXML {
     }
 
     public static Element encodeInviteComponent(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            CalendarItem calItem /* may be null */, ItemId calId /* may be null */,
-            Invite invite, int fields, boolean neuter)
-    throws ServiceException {
+                                                CalendarItem calItem /* may be null */, ItemId calId /* may be null */,
+                                                Invite invite, int fields, boolean neuter)
+            throws ServiceException {
         boolean allFields = true;
 
         if (fields != NOTIFY_FIELDS) {
@@ -2465,8 +2465,8 @@ public final class ToXML {
     }
 
     private static Element encodeInvitesForMessage(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Message msg, int fields, boolean neuter)
-    throws ServiceException {
+                                                   Message msg, int fields, boolean neuter)
+            throws ServiceException {
         if (fields != NOTIFY_FIELDS && !needToOutput(fields, Change.INVITE)) {
             return parent;
         }
@@ -2600,7 +2600,7 @@ public final class ToXML {
     }
 
     public static Element encodeGetPop3UID(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Message msg, OutputParticipants output) throws ServiceException {
+                                           Message msg, OutputParticipants output) throws ServiceException {
         Element elem = parent.addNonUniqueElement(MailConstants.E_MSG);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
         elem.addAttribute(MailConstants.A_UID, msg.getPop3Uid());
@@ -2610,14 +2610,14 @@ public final class ToXML {
     private enum VisitPhase { PREVISIT, POSTVISIT }
 
     private static void addParts(Element root, MPartInfo mpiRoot, Set<MPartInfo> bodies, String prefix, int maxSize,
-        boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions)
-throws ServiceException {
+                                 boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions)
+            throws ServiceException {
         addParts(root, mpiRoot, bodies, prefix, maxSize, neuter, excludeCalendarParts, defaultCharset, swallowContentExceptions, MsgContent.full);
     }
 
     private static void addParts(Element root, MPartInfo mpiRoot, Set<MPartInfo> bodies, String prefix, int maxSize,
-            boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent)
-    throws ServiceException {
+                                 boolean neuter, boolean excludeCalendarParts, String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent)
+            throws ServiceException {
         MPartInfo mpi = mpiRoot;
         LinkedList<Pair<Element, LinkedList<MPartInfo>>> queue = new LinkedList<Pair<Element, LinkedList<MPartInfo>>>();
         Pair<Element, LinkedList<MPartInfo>> level = new Pair<Element, LinkedList<MPartInfo>>(root, new LinkedList<MPartInfo>());
@@ -2644,9 +2644,9 @@ throws ServiceException {
     }
 
     private static Element addPart(VisitPhase phase, Element parent, Element root, MPartInfo mpi,
-            Set<MPartInfo> bodies, String prefix, int maxSize, boolean neuter, boolean excludeCalendarParts,
-            String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent)
-    throws ServiceException {
+                                   Set<MPartInfo> bodies, String prefix, int maxSize, boolean neuter, boolean excludeCalendarParts,
+                                   String defaultCharset, boolean swallowContentExceptions, MsgContent wantContent)
+            throws ServiceException {
         if (phase == VisitPhase.POSTVISIT) {
             return null;
         }
@@ -2803,7 +2803,7 @@ throws ServiceException {
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging */
     private static void addContent(Element elt, MPartInfo mpi, int maxSize, String defaultCharset)
-    throws IOException, MessagingException {
+            throws IOException, MessagingException {
         addContent(elt, mpi, maxSize, true, defaultCharset);
     }
 
@@ -2821,7 +2821,7 @@ throws ServiceException {
      * @throws IOException on error during parsing or defanging
      * @see HtmlDefang#defang(String, boolean) */
     private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter, String defaultCharset)
-    throws IOException, MessagingException {
+            throws IOException, MessagingException {
         addContent(elt, mpi, maxSize, neuter, defaultCharset, MsgContent.full);
     }
 
@@ -2839,7 +2839,7 @@ throws ServiceException {
      * @throws IOException on error during parsing or defanging
      * @see HtmlDefang#defang(String, boolean) */
     private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter, String defaultCharset, MsgContent wantContent)
-    throws IOException, MessagingException {
+            throws IOException, MessagingException {
         // TODO: support other parts
         String ctype = mpi.getContentType();
         if (!ctype.matches(MimeConstants.CT_TEXT_WILD) && !ctype.matches(MimeConstants.CT_XML_WILD)) {
@@ -2925,7 +2925,7 @@ throws ServiceException {
                 }
                 if (wantContent.equals(MsgContent.original) || wantContent.equals(MsgContent.both)) {
                     originalContent = TextEnrichedHandler.convertToHTML(removeQuotedText(enriched,
-                        false));
+                            false));
                 }
                 data = TextEnrichedHandler.convertToHTML(enriched);
             } finally {
@@ -3031,7 +3031,7 @@ throws ServiceException {
     }
 
     public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int fields)
-    throws ServiceException {
+            throws ServiceException {
         Element elem = parent.addNonUniqueElement(MailConstants.E_WIKIWORD);
         encodeDocumentCommon(elem, ifmt, octxt, wiki, fields);
         return elem;
@@ -3042,7 +3042,7 @@ throws ServiceException {
     }
 
     public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc,
-            int fields) throws ServiceException {
+                                         int fields) throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_DOC);
         encodeDocumentCommon(el, ifmt, octxt, doc, fields);
         if (needToOutput(fields, Change.LOCK)) {
@@ -3069,7 +3069,7 @@ throws ServiceException {
     }
 
     public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields)
-    throws ServiceException {
+            throws ServiceException {
         if (doc.getFolderId() == FolderConstants.ID_FOLDER_FILE_SHARED_WITH_ME && doc.getOwnerAccountId() != null
                 && doc.getOwnerFileId() != null) {
             m.addAttribute(MailConstants.A_ID, doc.getOwnerAccountId() + ":" + doc.getOwnerFileId()); // accountid:fileid
@@ -3488,12 +3488,12 @@ throws ServiceException {
     }
 
     public static Element encodeGalContact(Element response, GalContact contact,
-        Collection<String> returnAttrs) {
+                                           Collection<String> returnAttrs) {
         return encodeGalContact(response, contact, returnAttrs, true);
     }
 
     public static Element encodeGalContact(Element response, GalContact contact,
-            Collection<String> returnAttrs, boolean canExpand) {
+                                           Collection<String> returnAttrs, boolean canExpand) {
         Element cn = response.addNonUniqueElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
@@ -3530,7 +3530,7 @@ throws ServiceException {
     }
 
     private static void encodeAddrsWithGroupInfo(Element eParent,
-            String emailElem, Account requestedAcct, Account authedAcct) {
+                                                 String emailElem, Account requestedAcct, Account authedAcct) {
         if (requestedAcct.isFeatureGalEnabled()
                 && requestedAcct.isFeatureGalAutoCompleteEnabled()
                 && requestedAcct.isPrefGalAutoCompleteEnabled()) {
@@ -3555,18 +3555,18 @@ throws ServiceException {
             }
         } else if (ZimbraLog.gal.isTraceEnabled()) {
             ZimbraLog.gal.trace("group info bypassed; account [%s] does not have required attributes isFeatureGalEnabled [%s]"
-                    + " isFeatureGalAutoCompleteEnabled [%s] isPrefGalAutoCompleteEnabled [%s]", requestedAcct,
+                            + " isFeatureGalAutoCompleteEnabled [%s] isPrefGalAutoCompleteEnabled [%s]", requestedAcct,
                     requestedAcct.isFeatureGalEnabled(), requestedAcct.isFeatureGalAutoCompleteEnabled(), requestedAcct.isPrefGalAutoCompleteEnabled());
         }
     }
 
     public static Element encodeComment(Element response, ItemIdFormatter ifmt, OperationContext octxt, Comment comment)
-    throws ServiceException {
+            throws ServiceException {
         return encodeComment(response, ifmt, octxt, comment, NOTIFY_FIELDS);
     }
 
     public static Element encodeComment(Element response, ItemIdFormatter ifmt, OperationContext octxt, Comment comment,
-            int fields) throws ServiceException {
+                                        int fields) throws ServiceException {
         Element c = response.addNonUniqueElement(MailConstants.E_COMMENT);
         if (needToOutput(fields, Change.PARENT)) {
             c.addAttribute(MailConstants.A_PARENT_ID, ifmt.formatItemId(comment.getParentId()));
@@ -3616,7 +3616,7 @@ throws ServiceException {
 
     public interface ToXMLExtension {
         Element encodeDocumentAdditionalAttribute(Element elem, ItemIdFormatter ifmt, OperationContext octxt,
-                Document doc, int fields);
+                                                  Document doc, int fields);
     }
 
     private static Set<ToXMLExtension> extensions = new HashSet<ToXMLExtension>();
@@ -3649,9 +3649,9 @@ throws ServiceException {
     }
 
     public static ActivityInfo toActivityInfo(Account account, MailboxOperation op,
-            long timestamp, String itemId, int version, String userAgent, Map<String,String> args) {
+                                              long timestamp, String itemId, int version, String userAgent, Map<String,String> args) {
         ActivityInfo activity =
-            ActivityInfo.fromOperationTimeStampItemId(op.name(), timestamp, itemId);
+                ActivityInfo.fromOperationTimeStampItemId(op.name(), timestamp, itemId);
         if (version > 0)
             activity.setVersion(version);
         if (userAgent != null)
