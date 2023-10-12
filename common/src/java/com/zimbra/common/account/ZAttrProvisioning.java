@@ -14785,6 +14785,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefPowerPasteEnabled = "zimbraPrefPowerPasteEnabled";
 
     /**
+     * what method is primary for 2FA on an account: app or email
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4104)
+    public static final String A_zimbraPrefPrimaryTwoFactorAuthMethod = "zimbraPrefPrimaryTwoFactorAuthMethod";
+
+    /**
      * quick command encoded by the client
      *
      * @since ZCS 8.0.0
@@ -17941,6 +17949,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTwoFactorAuthLockoutMaxFailures = "zimbraTwoFactorAuthLockoutMaxFailures";
 
     /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public static final String A_zimbraTwoFactorAuthMethodAllowed = "zimbraTwoFactorAuthMethodAllowed";
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public static final String A_zimbraTwoFactorAuthMethodEnabled = "zimbraTwoFactorAuthMethodEnabled";
+
+    /**
      * number of scratch codes to generate for two-factor auth
      *
      * @since ZCS 8.7.0,9.0.0
@@ -18029,6 +18053,38 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime = "zimbraTwoFactorAuthTrustedDeviceTokenLifetime";
 
     /**
+     * Define body: field for 2FA email
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4109)
+    public static final String A_zimbraTwoFactorCodeEmailBody = "zimbraTwoFactorCodeEmailBody";
+
+    /**
+     * Define from: field for 2FA email
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4107)
+    public static final String A_zimbraTwoFactorCodeEmailFrom = "zimbraTwoFactorCodeEmailFrom";
+
+    /**
+     * Define subject: field for 2FA email
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4108)
+    public static final String A_zimbraTwoFactorCodeEmailSubject = "zimbraTwoFactorCodeEmailSubject";
+
+    /**
+     * 2FA code for email
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4106)
+    public static final String A_zimbraTwoFactorCodeForEmail = "zimbraTwoFactorCodeForEmail";
+
+    /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
      * for compatability with common TOTP clients.
      *
@@ -18036,6 +18092,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1828)
     public static final String A_zimbraTwoFactorCodeLength = "zimbraTwoFactorCodeLength";
+
+    /**
+     * Duration of 2FA code for email. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4105)
+    public static final String A_zimbraTwoFactorCodeLifetimeForEmail = "zimbraTwoFactorCodeLifetimeForEmail";
 
     /**
      * length of scratch codes

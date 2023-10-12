@@ -10391,4 +10391,37 @@ TODO: delete them permanently from here
   <desc>Whether retention policy feature is enabled</desc>
 </attr>
 
+<attr id="4102" name="zimbraTwoFactorAuthMethodAllowed" type="string" cardinality="multi" optionalIn="domain,cos,account" flags="accountCosDomainInherited,accountInfo" since="11.0.0">
+  <defaultCOSValue>app</defaultCOSValue>
+  <desc>Methods allowed for 2FA: app and/or email</desc>
+</attr>
+
+<attr id="4103" name="zimbraTwoFactorAuthMethodEnabled" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="11.0.0">
+  <desc>What 2FA method is enabled by user: app and/or email</desc>
+</attr>
+
+<attr id="4104" name="zimbraPrefPrimaryTwoFactorAuthMethod" type="string" cardinality="single" optionalIn="domain,cos,account" flags="accountCosDomainInherited,accountInfo" since="11.0.0">
+  <desc>what method is primary for 2FA on an account: app or email</desc>
+</attr>
+
+<attr id="4105" name="zimbraTwoFactorCodeLifetimeForEmail" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="11.0.0">
+  <defaultCOSValue>120s</defaultCOSValue>
+  <desc>Duration of 2FA code for email</desc>
+</attr>
+
+<attr id="4106" name="zimbraTwoFactorCodeForEmail" type="string" cardinality="single" optionalIn="account" since="11.0.0">
+  <desc>2FA code for email</desc>
+</attr>
+
+<attr id="4107" name="zimbraTwoFactorCodeEmailFrom" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="11.0.0">
+  <desc>Define from: field for 2FA email</desc>
+</attr>
+
+<attr id="4108" name="zimbraTwoFactorCodeEmailSubject" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="11.0.0">
+  <desc>Define subject: field for 2FA email</desc>
+</attr>
+
+<attr id="4109" name="zimbraTwoFactorCodeEmailBody" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="11.0.0">
+  <desc>Define body: field for 2FA email</desc>
+</attr>
 </attrs>
