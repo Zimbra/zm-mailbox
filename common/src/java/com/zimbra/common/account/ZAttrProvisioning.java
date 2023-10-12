@@ -8505,6 +8505,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHelpStandardURL = "zimbraHelpStandardURL";
 
     /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public static final String A_zimbraHideAliasesInGal = "zimbraHideAliasesInGal";
+
+    /**
      * hide entry in Global Address List
      */
     @ZAttr(id=353)
