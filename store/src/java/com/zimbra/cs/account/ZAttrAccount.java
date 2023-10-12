@@ -25552,6 +25552,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @return zimbraHideAliasesInGal, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public boolean isHideAliasesInGal() {
+        return getBooleanAttr(Provisioning.A_zimbraHideAliasesInGal, false, true);
+    }
+
+    /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @param zimbraHideAliasesInGal new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public void setHideAliasesInGal(boolean zimbraHideAliasesInGal) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHideAliasesInGal, zimbraHideAliasesInGal ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @param zimbraHideAliasesInGal new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public Map<String,Object> setHideAliasesInGal(boolean zimbraHideAliasesInGal, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHideAliasesInGal, zimbraHideAliasesInGal ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public void unsetHideAliasesInGal() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHideAliasesInGal, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public Map<String,Object> unsetHideAliasesInGal(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHideAliasesInGal, "");
+        return attrs;
+    }
+
+    /**
      * hide entry in Global Address List
      *
      * @return zimbraHideInGal, or false if unset
