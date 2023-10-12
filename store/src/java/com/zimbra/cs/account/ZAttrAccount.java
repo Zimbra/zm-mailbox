@@ -55679,6 +55679,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * what method is primary for 2FA on an account: app or email
+     *
+     * @return zimbraPrefPrimaryTwoFactorAuthMethod, or null if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4104)
+    public String getPrefPrimaryTwoFactorAuthMethod() {
+        return getAttr(Provisioning.A_zimbraPrefPrimaryTwoFactorAuthMethod, null, true);
+    }
+
+    /**
+     * what method is primary for 2FA on an account: app or email
+     *
+     * @param zimbraPrefPrimaryTwoFactorAuthMethod new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4104)
+    public void setPrefPrimaryTwoFactorAuthMethod(String zimbraPrefPrimaryTwoFactorAuthMethod) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPrimaryTwoFactorAuthMethod, zimbraPrefPrimaryTwoFactorAuthMethod);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what method is primary for 2FA on an account: app or email
+     *
+     * @param zimbraPrefPrimaryTwoFactorAuthMethod new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4104)
+    public Map<String,Object> setPrefPrimaryTwoFactorAuthMethod(String zimbraPrefPrimaryTwoFactorAuthMethod, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPrimaryTwoFactorAuthMethod, zimbraPrefPrimaryTwoFactorAuthMethod);
+        return attrs;
+    }
+
+    /**
+     * what method is primary for 2FA on an account: app or email
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4104)
+    public void unsetPrefPrimaryTwoFactorAuthMethod() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPrimaryTwoFactorAuthMethod, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what method is primary for 2FA on an account: app or email
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4104)
+    public Map<String,Object> unsetPrefPrimaryTwoFactorAuthMethod(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPrimaryTwoFactorAuthMethod, "");
+        return attrs;
+    }
+
+    /**
      * quick command encoded by the client
      *
      * @return zimbraPrefQuickCommand, or empty array if unset
@@ -64403,6 +64475,274 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @return zimbraTwoFactorAuthMethodAllowed, or empty array if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public String[] getTwoFactorAuthMethodAllowed() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraTwoFactorAuthMethodAllowed, true, true); return value.length > 0 ? value : new String[] {"app"};
+    }
+
+    /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodAllowed new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public void setTwoFactorAuthMethodAllowed(String[] zimbraTwoFactorAuthMethodAllowed) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthMethodAllowed, zimbraTwoFactorAuthMethodAllowed);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodAllowed new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public Map<String,Object> setTwoFactorAuthMethodAllowed(String[] zimbraTwoFactorAuthMethodAllowed, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthMethodAllowed, zimbraTwoFactorAuthMethodAllowed);
+        return attrs;
+    }
+
+    /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodAllowed new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public void addTwoFactorAuthMethodAllowed(String zimbraTwoFactorAuthMethodAllowed) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthMethodAllowed, zimbraTwoFactorAuthMethodAllowed);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodAllowed new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public Map<String,Object> addTwoFactorAuthMethodAllowed(String zimbraTwoFactorAuthMethodAllowed, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthMethodAllowed, zimbraTwoFactorAuthMethodAllowed);
+        return attrs;
+    }
+
+    /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodAllowed existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public void removeTwoFactorAuthMethodAllowed(String zimbraTwoFactorAuthMethodAllowed) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthMethodAllowed, zimbraTwoFactorAuthMethodAllowed);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodAllowed existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public Map<String,Object> removeTwoFactorAuthMethodAllowed(String zimbraTwoFactorAuthMethodAllowed, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthMethodAllowed, zimbraTwoFactorAuthMethodAllowed);
+        return attrs;
+    }
+
+    /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public void unsetTwoFactorAuthMethodAllowed() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthMethodAllowed, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Methods allowed for 2FA: app and/or email
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4102)
+    public Map<String,Object> unsetTwoFactorAuthMethodAllowed(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthMethodAllowed, "");
+        return attrs;
+    }
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @return zimbraTwoFactorAuthMethodEnabled, or empty array if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public String[] getTwoFactorAuthMethodEnabled() {
+        return getMultiAttr(Provisioning.A_zimbraTwoFactorAuthMethodEnabled, true, true);
+    }
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public void setTwoFactorAuthMethodEnabled(String[] zimbraTwoFactorAuthMethodEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthMethodEnabled, zimbraTwoFactorAuthMethodEnabled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public Map<String,Object> setTwoFactorAuthMethodEnabled(String[] zimbraTwoFactorAuthMethodEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthMethodEnabled, zimbraTwoFactorAuthMethodEnabled);
+        return attrs;
+    }
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodEnabled new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public void addTwoFactorAuthMethodEnabled(String zimbraTwoFactorAuthMethodEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthMethodEnabled, zimbraTwoFactorAuthMethodEnabled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodEnabled new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public Map<String,Object> addTwoFactorAuthMethodEnabled(String zimbraTwoFactorAuthMethodEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthMethodEnabled, zimbraTwoFactorAuthMethodEnabled);
+        return attrs;
+    }
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodEnabled existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public void removeTwoFactorAuthMethodEnabled(String zimbraTwoFactorAuthMethodEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthMethodEnabled, zimbraTwoFactorAuthMethodEnabled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @param zimbraTwoFactorAuthMethodEnabled existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public Map<String,Object> removeTwoFactorAuthMethodEnabled(String zimbraTwoFactorAuthMethodEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthMethodEnabled, zimbraTwoFactorAuthMethodEnabled);
+        return attrs;
+    }
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public void unsetTwoFactorAuthMethodEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthMethodEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * What 2FA method is enabled by user: app and/or email
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4103)
+    public Map<String,Object> unsetTwoFactorAuthMethodEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthMethodEnabled, "");
+        return attrs;
+    }
+
+    /**
      * number of scratch codes to generate for two-factor auth
      *
      * @return zimbraTwoFactorAuthNumScratchCodes, or 10 if unset
@@ -64967,6 +65307,184 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTwoFactorAuthTrustedDevices(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTwoFactorAuthTrustedDevices, "");
+        return attrs;
+    }
+
+    /**
+     * 2FA code for email
+     *
+     * @return zimbraTwoFactorCodeForEmail, or null if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4106)
+    public String getTwoFactorCodeForEmail() {
+        return getAttr(Provisioning.A_zimbraTwoFactorCodeForEmail, null, true);
+    }
+
+    /**
+     * 2FA code for email
+     *
+     * @param zimbraTwoFactorCodeForEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4106)
+    public void setTwoFactorCodeForEmail(String zimbraTwoFactorCodeForEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeForEmail, zimbraTwoFactorCodeForEmail);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * 2FA code for email
+     *
+     * @param zimbraTwoFactorCodeForEmail new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4106)
+    public Map<String,Object> setTwoFactorCodeForEmail(String zimbraTwoFactorCodeForEmail, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeForEmail, zimbraTwoFactorCodeForEmail);
+        return attrs;
+    }
+
+    /**
+     * 2FA code for email
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4106)
+    public void unsetTwoFactorCodeForEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeForEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * 2FA code for email
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4106)
+    public Map<String,Object> unsetTwoFactorCodeForEmail(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeForEmail, "");
+        return attrs;
+    }
+
+    /**
+     * Duration of 2FA code for email. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getTwoFactorCodeLifetimeForEmailAsString to access value as a string.
+     *
+     * @see #getTwoFactorCodeLifetimeForEmailAsString()
+     *
+     * @return zimbraTwoFactorCodeLifetimeForEmail in millseconds, or 120000 (120s)  if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4105)
+    public long getTwoFactorCodeLifetimeForEmail() {
+        return getTimeInterval(Provisioning.A_zimbraTwoFactorCodeLifetimeForEmail, 120000L, true);
+    }
+
+    /**
+     * Duration of 2FA code for email. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraTwoFactorCodeLifetimeForEmail, or "120s" if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4105)
+    public String getTwoFactorCodeLifetimeForEmailAsString() {
+        return getAttr(Provisioning.A_zimbraTwoFactorCodeLifetimeForEmail, "120s", true);
+    }
+
+    /**
+     * Duration of 2FA code for email. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraTwoFactorCodeLifetimeForEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4105)
+    public void setTwoFactorCodeLifetimeForEmail(String zimbraTwoFactorCodeLifetimeForEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeLifetimeForEmail, zimbraTwoFactorCodeLifetimeForEmail);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration of 2FA code for email. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraTwoFactorCodeLifetimeForEmail new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4105)
+    public Map<String,Object> setTwoFactorCodeLifetimeForEmail(String zimbraTwoFactorCodeLifetimeForEmail, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeLifetimeForEmail, zimbraTwoFactorCodeLifetimeForEmail);
+        return attrs;
+    }
+
+    /**
+     * Duration of 2FA code for email. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4105)
+    public void unsetTwoFactorCodeLifetimeForEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeLifetimeForEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration of 2FA code for email. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4105)
+    public Map<String,Object> unsetTwoFactorCodeLifetimeForEmail(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeLifetimeForEmail, "");
         return attrs;
     }
 
