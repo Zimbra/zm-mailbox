@@ -453,6 +453,7 @@ public class AccountConstants {
     public static final String A_LOCAL_NAME = "localName";
     public static final String A_MEMBER_OF = "memberOf";
     public static final String A_MORE = "more";
+    public static final String E_METHOD = "method";
     public static final String A_NEED_IS_OWNER = "needIsOwner";
     public static final String A_NEED_IS_MEMBER = "needIsMember";
     public static final String A_NEED_OWNERS = "needOwners";
@@ -652,4 +653,10 @@ public class AccountConstants {
     public static final String E_SKIN_SELECTION_COLOR = "zimbraSkinSelectionColor";
     public static final String E_SKIN_FAVICON = "zimbraSkinFavicon";
     public static final String E_HOSTNAME = "hostname";
+
+    // 2FA attributes
+    public static final String E_TWO_FACTOR_AUTH_METHOD_ALLOWED = "zimbraTwoFactorAuthMethodAllowed";
+    public static final String E_TWO_FACTOR_AUTH_METHOD_ENABLED = "zimbraTwoFactorAuthMethodEnabled";
+    public static final String E_PREF_PRIMARY_TWO_FACTOR_AUTH_METHOD = "zimbraPrefPrimaryTwoFactorAuthMethod";
+    public static final String E_PREF_PASSWORD_RECOVERY_ADDRESS = "zimbraPrefPasswordRecoveryAddress";
 }

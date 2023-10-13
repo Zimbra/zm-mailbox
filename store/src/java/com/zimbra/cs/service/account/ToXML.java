@@ -350,4 +350,18 @@ public class ToXML {
 
     }
 
+    public static void encodeTFAResponse(Element response, Object value) {
+        if (value instanceof String[]) {
+            String sa[] = (String[]) value;
+            for (int i = 0; i < sa.length; i++) {
+                if (!Strings.isNullOrEmpty(sa[i])) {
+                    response.addNonUniqueElement(AccountConstants.E_METHOD).setText(sa[i]);
+                }
+            }
+        } else if (value instanceof String) {
+            if (!Strings.isNullOrEmpty((String) value)) {
+                response.addNonUniqueElement(AccountConstants.E_METHOD).setText((String) value);
+            }
+        }
+    }
 }

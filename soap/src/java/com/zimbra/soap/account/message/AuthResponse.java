@@ -28,12 +28,15 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.type.ZmBoolean;
@@ -152,6 +155,20 @@ public class AuthResponse {
     @XmlElement(name=AccountConstants.E_TRUSTED_DEVICES_ENABLED, required=false)
     private ZmBoolean trustedDevicesEnabled;
 
+    @XmlElementWrapper(name=AccountConstants.E_TWO_FACTOR_AUTH_METHOD_ALLOWED)
+    @XmlElement(name=AccountConstants.E_METHOD, required=false)
+    private List<String> twoFactorAuthMethodAllowed = Lists.newArrayList();
+
+    @XmlElementWrapper(name=AccountConstants.E_TWO_FACTOR_AUTH_METHOD_ENABLED)
+    @XmlElement(name=AccountConstants.E_METHOD, required=false)
+    private List<String> twoFactorAuthMethodEnabled = Lists.newArrayList();
+
+    @XmlElement(name=AccountConstants.E_PREF_PRIMARY_TWO_FACTOR_AUTH_METHOD, required=false)
+    private String prefPrimaryTwoFactorAuthMethod;
+
+    @XmlElement(name=AccountConstants.E_PREF_PASSWORD_RECOVERY_ADDRESS, required=false)
+    private String prefPasswordRecoveryAddress;
+
     public AuthResponse() {
     }
 
@@ -262,4 +279,52 @@ public class AuthResponse {
     @GraphQLQuery(name="trustedDevicesEnabled", description="Denotes if trusted devices are enabled")
     public ZmBoolean getTrustedDevicesEnabled() { return trustedDevicesEnabled; }
     public AuthResponse setTrustedDevicesEnabled(boolean bool) { this.trustedDevicesEnabled = ZmBoolean.fromBool(bool); return this; }
+
+    public AuthResponse addTwoFactorAuthMethodAllowed(String method) {
+        this.twoFactorAuthMethodAllowed.add(method);
+        return this;
+    }
+
+    public void setTwoFactorAuthMethodAllowed(Iterable <String> twoFactorAuthMethodAllowed) {
+        this.twoFactorAuthMethodAllowed.clear();
+        if (twoFactorAuthMethodAllowed != null) {
+            Iterables.addAll(this.twoFactorAuthMethodAllowed, twoFactorAuthMethodAllowed);
+        }
+    }
+
+    public List<String> getTwoFactorAuthMethodAllowed() {
+        return Collections.unmodifiableList(twoFactorAuthMethodAllowed);
+    }
+
+    public AuthResponse addTwoFactorAuthMethodEnabled(String method) {
+        this.twoFactorAuthMethodEnabled.add(method);
+        return this;
+    }
+
+    public void setTwoFactorAuthMethodEnabled(Iterable <String> twoFactorAuthMethodEnabled) {
+        this.twoFactorAuthMethodEnabled.clear();
+        if (twoFactorAuthMethodEnabled != null) {
+            Iterables.addAll(this.twoFactorAuthMethodEnabled, twoFactorAuthMethodEnabled);
+        }
+    }
+
+    public List<String> getTwoFactorAuthMethodEnabled() {
+        return Collections.unmodifiableList(twoFactorAuthMethodEnabled);
+    }
+
+    public String getPrefPrimaryTwoFactorAuthMethod() {
+        return prefPrimaryTwoFactorAuthMethod;
+    }
+
+    public void setPrefPrimaryTwoFactorAuthMethod(String prefPrimaryTwoFactorAuthMethod) {
+        this.prefPrimaryTwoFactorAuthMethod = prefPrimaryTwoFactorAuthMethod;
+    }
+
+    public String getPrefPasswordRecoveryAddress() {
+        return prefPasswordRecoveryAddress;
+    }
+
+    public void setPrefPasswordRecoveryAddress(String prefPasswordRecoveryAddress) {
+        this.prefPasswordRecoveryAddress = prefPasswordRecoveryAddress;
+    }
 }
