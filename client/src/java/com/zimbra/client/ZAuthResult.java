@@ -33,6 +33,10 @@ public class ZAuthResult {
     private boolean twoFactorAuthRequired;
     private boolean trustedDevicesEnabled;
     private AuthResponse data;
+    private List<String> twoFactorAuthMethodAllowed;
+    private List<String> twoFactorAuthMethodEnabled;
+    private String primaryTwoFactorAuthMethod;
+    private String maskedPasswordRecoveryAddress;
 
     /*
     public ZAuthResult(Element e) throws ServiceException {
@@ -55,6 +59,10 @@ public class ZAuthResult {
         }
         twoFactorAuthRequired = ZmBoolean.toBool(data.getTwoFactorAuthRequired(), false);
         trustedDevicesEnabled = ZmBoolean.toBool(data.getTrustedDevicesEnabled(), false);
+        twoFactorAuthMethodAllowed = data.getTwoFactorAuthMethodAllowed();
+        twoFactorAuthMethodEnabled = data.getTwoFactorAuthMethodEnabled();
+        primaryTwoFactorAuthMethod = data.getPrefPrimaryTwoFactorAuthMethod();
+        maskedPasswordRecoveryAddress = data.getPrefPasswordRecoveryAddress();
     }
 
     public ZAuthToken getAuthToken() {
@@ -124,5 +132,21 @@ public class ZAuthResult {
 
     public boolean getTrustedDevicesEnabled() {
         return trustedDevicesEnabled;
+    }
+
+    public List<String> getTwoFactorAuthMethodAllowed() {
+        return twoFactorAuthMethodAllowed;
+    }
+
+    public List<String> getTwoFactorAuthMethodEnabled() {
+        return twoFactorAuthMethodEnabled;
+    }
+
+    public String getPrimaryTwoFactorAuthMethod() {
+        return primaryTwoFactorAuthMethod;
+    }
+
+    public String getMaskedPasswordRecoveryAddress() {
+        return maskedPasswordRecoveryAddress;
     }
 }
