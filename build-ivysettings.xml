@@ -8,6 +8,14 @@
   <property name="log4j.core.version" value="2.17.1" />
   <property name="log4j.api.version" value="2.17.1" />
   <property name="com.google.guava.version" value="28.1-jre"/>
+  <property name="repo.user" value="admin" />
+  <property name="repo.pass" value="admin@123" />
+  <!-- <property name="repo.host" value="http://${repo.user}:${repo.pass}@platform-ganesh.zimbradev.com:8080/repository/zimbra-pre-compiled-jars" /> -->
+  <property name="repo.host" value="http://platform-ganesh.zimbradev.com:8080/repository/zimbra-pre-compiled-jars" />
+  <!-- Following credentials line does not do anything. 
+  The package uploads are not authenticated with ivy since on archiva we are giving permission to manage repo to the guest user.
+  Find a way to authenticate these uploads using userid and passwd. -->
+  <!-- <credentials host="${repo.host}" realm="zimbra-pre-compiled-jars" username="${repo.user}" passwd="${repo.pass}" /> -->
 <settings defaultResolver="chain-resolver" />
   <caches defaultCacheDir="${dev.home}/.ivy2/cache"/>
   <resolvers>
@@ -26,6 +34,15 @@
       </url>
       <ibiblio name="maven" m2compatible="true" usepoms="false"/>
       <ibiblio name="maven-redhat" root="https://maven.repository.redhat.com/ga/" pattern="[organisation]/[module]/[revision]/[module]-[revision].[ext]"/>
+      <ibiblio name="public" m2compatible="true" root="${repo.host}"/>
+      <url name="zimbra-archiva-resolver">
+        <ivy pattern="${repo.host}/[organisation]/[module]/[revision]/[module]-[revision].[ext]"/>
+        <artifact pattern="${repo.host}/[organisation]/[module]/[revision]/[module]-[revision].[ext]"/>
+      </url>
+      <!-- <ibiblio name="zimbra-archiva-resolver" 
+                m2compatible="true"
+                root="${repo.host}/repository/zimbra-pre-compiled-jars/" 
+                pattern="[organisation]/[module]/[revision]/[module]-[revision].[ext]"/> -->
       <url name="zimbra">
         <artifact pattern="https://files.zimbra.com/repository/[module]/[artifact]-[revision].[ext]" />
         <artifact pattern="https://files.zimbra.com/repository/[module]/[artifact].[ext]" />

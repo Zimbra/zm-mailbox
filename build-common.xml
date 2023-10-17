@@ -19,6 +19,17 @@
     <property name="ivy.deliver.ivy.pattern" value="${dev.home}/.zcs-deps/[organisation]/[module]/[module]-[revision].[ext]" />
     <property name="ivy.module" value="${ant.project.name}" />
 
+    <!-- <property name="ivy.organisation" value="your_organization" /> -->
+    <!-- <property name="ivy.module" value="your_module" /> -->
+    <!-- <property name="ivy.revision" value="1.0" /> -->
+    <property name="ivy.publish.archiva.resolver" value="zimbra-archiva-resolver"/>
+    <!-- <property name="archiva.username" value="admin" />
+    <property name="archiva.password" value="admin@123" /> -->
+    <!-- <property name="archiva.username" value="admin" />
+    <property name="archiva.password" value="admin@123" />
+    <property name="archiva.host" value="http://platform-ganesh.zimbradev.com:8080/repository/zimbra-pre-compiled-jars/" />
+    <property name="archiva.host.port" value="8080" /> -->
+
     <target name="test.if.ivy.available">
       <condition property="ivy.installed">
         <available file="${ivy.jar.file}" type="file"/>
@@ -580,6 +591,31 @@
 
     <target name="publish-local" depends="clean-cache,jar,set-dev-version,init-ivy">
       <ivy:publish settingsRef="dev.settings" pubrevision="${dev.version}" resolver="local" overwrite="true" />
+    </target>
+
+    <target name="publish-archiva" depends="clean-cache,jar,set-dev-version,init-ivy">
+      <!-- <ivy:publish settingsRef="dev.settings" pubrevision="${dev.version}" resolver="local" overwrite="true" /> -->
+      <!-- <ivy:settings file="build-ivysettings.xml">
+        <credentials host="${repo.host}" username="${repo.user}" passwd="${repo.pass}" />
+      </ivy:settings>  -->
+      <!-- <ivy:settings file="../build-ivysettings.xml">
+        <credentials host="${archiva.host}"
+                      realm="zimbra-pre-compiled-jars" 
+                      username="${archiva.username}"
+                      passwd="${archiva.password}" />
+      </ivy:settings> -->
+      <ivy:retrieve/>
+      <ivy:makepom ivyfile="ivy.xml" pomfile="./ivy.pom"/>
+      <ivy:deliver/>  
+      <ivy:publish publishivy="false" 
+                    settingsRef="dev.settings"
+                    organisation="${ivy.organisation}"
+                    module="${ivy.module}"
+                    pubrevision="${dev.version}" 
+                    resolver="${ivy.publish.archiva.resolver}" 
+                    overwrite="true">
+                    <artifacts pattern="./build/[module]-[revision].[ext]" />
+      </ivy:publish>
     </target>
 
     <target name="zmlocalconfig">
