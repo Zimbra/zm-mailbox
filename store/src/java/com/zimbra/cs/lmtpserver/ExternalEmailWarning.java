@@ -154,6 +154,9 @@ public class ExternalEmailWarning {
     private static final String CONTENT_TYPE_TEXT_HTML_REGEX = "Content-Type: text/html.*?\\r\\n\\r\\n.*?<body.*?>";
     private static final Pattern CONTENT_TYPE_TEXT_HTML_PATTERN = Pattern.compile(CONTENT_TYPE_TEXT_HTML_REGEX,
             Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
+    private static final String CONTENT_TYPE_TEXT_HTML_GMAIL_REGEX = "^<div dir.*?>";
+    private static final Pattern CONTENT_TYPE_TEXT_HTML_GMAIL_PATTERN = Pattern.compile(CONTENT_TYPE_TEXT_HTML_GMAIL_REGEX,
+            Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
 
     /**
      * Updates the string representation of a mime message in RFC822 format with the
@@ -190,9 +193,59 @@ public class ExternalEmailWarning {
                     sb.append(getTextHtmlWarning());
                 sb.append(content.substring(end));
                 content = sb.toString();
+            } else if (isIncomingMimeFromGmail(content)) {
+                String htmlContentType="Content-Type: text/html;";
+                String blankLine="\r\n\r\n";
+                int htmlContentStartIndex=content.indexOf(htmlContentType);
+                //condition to check if html content type is present
+                if (htmlContentStartIndex!=-1) {
+                    int blankLineStartIndex = content.indexOf(blankLine,htmlContentStartIndex);
+                    int htmlBodyStartIndex =  blankLineStartIndex + blankLine.length();
+                    final Matcher ctTextHtmlMatcherGmail = CONTENT_TYPE_TEXT_HTML_GMAIL_PATTERN.matcher(content.substring(htmlBodyStartIndex));
+                    //condition to check if the html body contains html tag
+                    if (ctTextHtmlMatcherGmail.find()) {
+                        final int end = ctTextHtmlMatcherGmail.end()+htmlBodyStartIndex;
+                        final StringBuilder sb = new StringBuilder();
+                        sb.append(content.substring(0, end));
+                        if (getTextHtmlWarning() != null)
+                            sb.append(getTextHtmlWarning());
+                        sb.append(content.substring(end));
+                        content = sb.toString();
+                    } else {
+                        final int end = htmlBodyStartIndex;
+                        final StringBuilder sb = new StringBuilder();
+                        sb.append(content.substring(0, end));
+                        if (getTextHtmlWarning() != null)
+                            sb.append(getTextHtmlWarning());
+                        sb.append(content.substring(end));
+                        content = sb.toString();
+                    }
+                }
             }
         }
         return content;
+    }
+    /**
+    * checks the senders email from Return Path header
+     *Extracts the domain from email and checks if the incoming mime is from gmail domain
+     *
+     * @param content
+     *      String representation of Mime
+     * @return
+     *      boolean value
+    * */
+    public boolean isIncomingMimeFromGmail(String content) {
+        String ReturnPathHeaderValue = content.substring(0,content.indexOf("\n"));
+        if (!ReturnPathHeaderValue.isEmpty()) {
+            if (ReturnPathHeaderValue.contains("<") && ReturnPathHeaderValue.contains(">")) {
+                String sender = ReturnPathHeaderValue.substring(ReturnPathHeaderValue.indexOf("<")+1,ReturnPathHeaderValue.indexOf(">"));
+                if (sender.contains("@")) {
+                    String domain = sender.substring(sender.indexOf("@")+1);
+                    return domain.substring(0, domain.indexOf(".")).equalsIgnoreCase("gmail");
+                }
+            }
+        }
+        return false;
     }
 
 }
