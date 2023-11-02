@@ -5,6 +5,7 @@
  <info organisation="zimbra" module="zm-store" status="integration">
  </info>
  <dependencies>
+  <dependency org="commons-codec" name="commons-codec" rev="1.7" />
   <dependency org="org.powermock" name="powermock-module-junit4" rev="1.6.5"/>
   <dependency org="org.powermock" name="powermock-module-junit4-common" rev="1.6.5" />
   <dependency org="org.powermock" name="powermock-api-easymock" rev="1.6.5"/>
