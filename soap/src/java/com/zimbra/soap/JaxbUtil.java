@@ -200,6 +200,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SearchCalendarResourcesResponse.class,
             com.zimbra.soap.account.message.SearchGalRequest.class,
             com.zimbra.soap.account.message.SearchGalResponse.class,
+            com.zimbra.soap.account.message.SendTFACodeRequest.class,
+            com.zimbra.soap.account.message.SendTFACodeResponse.class,
             com.zimbra.soap.account.message.SubscribeDistributionListRequest.class,
             com.zimbra.soap.account.message.SubscribeDistributionListResponse.class,
             com.zimbra.soap.account.message.SyncGalRequest.class,
