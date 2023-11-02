@@ -57,6 +57,8 @@ public class AccountConstants {
     public static final String E_REVOKE_TRUSTED_DEVICE_RESPONSE = "RevokeTrustedDeviceResponse";
     public static final String E_REVOKE_OTHER_TRUSTED_DEVICES_REQUEST = "RevokeOtherTrustedDevicesRequest";
     public static final String E_REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE = "RevokeOtherTrustedDevicesResponse";
+    public static final String E_SEND_TFA_CODE_REQUEST = "SendTFACodeRequest";
+    public static final String E_SEND_TFA_CODE_RESPONSE = "SendTFACodeResponse";
     public static final String E_GET_PREFS_REQUEST = "GetPrefsRequest";
     public static final String E_GET_PREFS_RESPONSE = "GetPrefsResponse";
     public static final String E_GET_INFO_REQUEST = "GetInfoRequest";
@@ -212,6 +214,8 @@ public class AccountConstants {
     public static final QName REVOKE_TRUSTED_DEVICE_RESPONSE = QName.get(E_REVOKE_TRUSTED_DEVICE_RESPONSE, NAMESPACE);
     public static final QName REVOKE_OTHER_TRUSTED_DEVICES_REQUEST = QName.get(E_REVOKE_OTHER_TRUSTED_DEVICES_REQUEST, NAMESPACE);
     public static final QName REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE = QName.get(E_REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE, NAMESPACE);
+    public static final QName SEND_TFA_CODE_REQUEST = QName.get(E_SEND_TFA_CODE_REQUEST, NAMESPACE);
+    public static final QName SEND_TFA_CODE_RESPONSE = QName.get(E_SEND_TFA_CODE_RESPONSE, NAMESPACE);
 
     // prefs
     public static final QName GET_PREFS_REQUEST = QName.get(E_GET_PREFS_REQUEST, NAMESPACE);
