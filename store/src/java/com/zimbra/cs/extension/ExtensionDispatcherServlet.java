@@ -21,21 +21,21 @@
  */
 package com.zimbra.cs.extension;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.servlet.ZimbraServlet;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Registers {@link ExtensionHttpHandler} for extensions and dispatches HTTP requests to them.
@@ -48,6 +48,9 @@ import com.zimbra.cs.servlet.ZimbraServlet;
  */
 public class ExtensionDispatcherServlet extends ZimbraServlet {
     private static Map sHandlers = Collections.synchronizedMap(new HashMap());
+
+    private static Map<String, ArrayList<ExtensionHttpHandler>> EXTENSION_HANDLERS = new ConcurrentHashMap<>(new HashMap());
+
     public static final String EXTENSION_PATH = "/service/extension";
 
     /**
@@ -60,9 +63,14 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         handler.init(ext);
         String name = handler.getPath();
         synchronized (sHandlers) {
-            if (sHandlers.containsKey(name))
+            if (sHandlers.containsKey(name)) {
                 throw ServiceException.FAILURE("HTTP handler already registered: " + name, null);
+            }
             sHandlers.put(name, handler);
+            if (!EXTENSION_HANDLERS.containsKey(ext.getName())) {
+                EXTENSION_HANDLERS.put(ext.getName(), new ArrayList<ExtensionHttpHandler>());
+            }
+            EXTENSION_HANDLERS.get(ext.getName()).add(handler);
             ZimbraLog.extensions.info("registered handler at " + name);
         }
     }
@@ -129,19 +137,17 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
      */
     public static void unregister(ZimbraExtension ext) {
         synchronized(sHandlers) {
-            for (Iterator it = sHandlers.keySet().iterator(); it.hasNext(); ) {
-                String path = (String) it.next();
-                if (path.startsWith("/" + ext.getName())) {
-                    ExtensionHttpHandler handler = (ExtensionHttpHandler) sHandlers.get(path);
-                    try {
-                        handler.destroy();
-                    } catch (Exception e) {
-                        ZimbraLog.extensions.warn("Error in destroy for handler " + handler.getClass(), e);
-                    } finally {
-                        it.remove();
-                    }
+            String extName = ext.getName();
+            for (ExtensionHttpHandler extHandler: EXTENSION_HANDLERS.get(extName)) {
+                try {
+                    extHandler.destroy();
+                } catch (Exception e) {
+                    ZimbraLog.extensions.warn("Error in destroy for handler %s", extHandler.getClass(), e);
+                } finally {
+                    sHandlers.remove(extHandler.getPath());
                 }
             }
+            EXTENSION_HANDLERS.remove(extName);
         }
     }
 
