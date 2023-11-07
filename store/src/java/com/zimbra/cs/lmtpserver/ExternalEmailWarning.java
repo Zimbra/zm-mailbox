@@ -159,17 +159,13 @@ public class ExternalEmailWarning {
     private static final String CONTENT_TYPE_TEXT_HTML_REGEX = "Content-Type: text/html.*?\\r\\n\\r\\n";
     private static final Pattern CONTENT_TYPE_TEXT_HTML_PATTERN = Pattern.compile(CONTENT_TYPE_TEXT_HTML_REGEX,
             Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
-
     private static final String CONTENT_TYPE_TEXT_HTML_BASE64_ENCODED_REGEX = "Content-Type: text/html.*?base64\\r\\n\\r\\n";
     private static final Pattern CONTENT_TYPE_TEXT_HTML_BASE64_ENCODED_PATTERN = Pattern.compile(CONTENT_TYPE_TEXT_HTML_BASE64_ENCODED_REGEX,
             Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
     private static final String CONTAINS_BODY_TAG=".*?<body.*?>";
-
     private static final Pattern CONTAINS_BODY_TAG_PATTERN = Pattern.compile(CONTAINS_BODY_TAG,
             Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
-
     private final String MIME_BOUNDARY_REGEX = "Content-Type: multipart/alternative;.*?boundary=\"";
-
     private final Pattern MIME_BOUNDARY_PATTERN=Pattern.compile(MIME_BOUNDARY_REGEX, Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
 
     /**
