@@ -21,8 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.codec.binary.Base64;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringEscapeUtils;
 
 import com.zimbra.common.localconfig.LC;
@@ -149,11 +149,9 @@ public class ExternalEmailWarning {
     private static final String CONTENT_TYPE_TEXT_PLAIN_REGEX = "Content-Type: text/plain.*?\\r\\n\\r\\n";
     private static final Pattern CONTENT_TYPE_TEXT_PLAIN_PATTERN = Pattern.compile(CONTENT_TYPE_TEXT_PLAIN_REGEX,
             Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
-
     private static final String CONTENT_TYPE_TEXT_PLAIN_BASE64_ENCODED_REGEX = "Content-Type: text/plain.*?base64\\r\\n\\r\\n";
     private static final Pattern CONTENT_TYPE_TEXT_PLAIN_BASE64_ENCODED_PATTERN = Pattern.compile(CONTENT_TYPE_TEXT_PLAIN_BASE64_ENCODED_REGEX,
             Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
-
     // message must be RTF822 compliant: CRLFCRLF sequence is required to determine
     // where does the header meet the body of the text/html part
     private static final String CONTENT_TYPE_TEXT_HTML_REGEX = "Content-Type: text/html.*?\\r\\n\\r\\n";
@@ -218,11 +216,10 @@ public class ExternalEmailWarning {
         }
         return content;
     }
-
     /**
-    * Updates the text/html section of MIME
-    * Checks weather html section contains <body> tag and appends the warning, else appends the warning at start of section
-    * */
+     * Updates the text/html section of MIME
+     * Checks weather html section contains <body> tag and appends the warning, else appends the warning at start of section
+     * */
     public String getUpdatedHtmlSection(String content, int htmlBodyStartIndex) {
         Matcher containsBody = CONTAINS_BODY_TAG_PATTERN.matcher(content.substring(htmlBodyStartIndex));
         if (containsBody.find()) {
@@ -236,8 +233,8 @@ public class ExternalEmailWarning {
     }
 
     /**
-    * Appends HTML warning at a specific index and returns the MIME
-    * */
+     * Appends HTML warning at a specific index and returns the MIME
+     * */
     public String appendHtmlWarning(String content, int index) {
         final StringBuilder sb = new StringBuilder();
         sb.append(content.substring(0, index));
@@ -309,10 +306,9 @@ public class ExternalEmailWarning {
     public String getMimeBoundary(String content) {
         final Matcher boundryMatcher = MIME_BOUNDARY_PATTERN.matcher(content);
         if (boundryMatcher.find()) {
-           int boundaryStart = boundryMatcher.end();
-           return content.substring(boundaryStart,content.indexOf("\"",boundaryStart));
+            int boundaryStart = boundryMatcher.end();
+            return content.substring(boundaryStart,content.indexOf("\"",boundaryStart));
         }
         return null;
     }
-
 }
