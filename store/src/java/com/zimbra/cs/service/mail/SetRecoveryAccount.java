@@ -78,7 +78,7 @@ public class SetRecoveryAccount extends DocumentHandler {
                     throw ServiceException.INVALID_REQUEST("Recovery email address not provided.", null);
                 }
                 validateEmail(recoveryAccount, account);
-                sendCode(recoveryAccount, 0, account, mbox, zsc, octxt, provider);
+                sendCode(recoveryAccount, 0, account, mbox, zsc, octxt, provider, isFromEnableTwoFactorAuth);
                 break;
             case validateCode:
                 String recoveryAccountVerificationCode = req.getRecoveryAccountVerificationCode();
@@ -89,7 +89,7 @@ public class SetRecoveryAccount extends DocumentHandler {
                 provider.validateSetRecoveryAccountCode(recoveryAccountVerificationCode, account, mbox, zsc);
                 break;
             case resendCode:
-                resendCode(account, mbox, zsc, octxt, provider);
+                resendCode(account, mbox, zsc, octxt, provider, isFromEnableTwoFactorAuth);
                 break;
             case reset:
                 reset(mbox, zsc);
@@ -102,7 +102,7 @@ public class SetRecoveryAccount extends DocumentHandler {
     }
 
     protected void sendCode(String email, int resendCount, Account account, Mailbox mbox, ZimbraSoapContext zsc,
-            OperationContext octxt, ChannelProvider provider) throws ServiceException {
+            OperationContext octxt, ChannelProvider provider, boolean isFromEnableTwoFactorAuth) throws ServiceException {
         Map<String, String> recoveryDataMap = provider.getSetRecoveryAccountCodeMap(account);
         if (recoveryDataMap != null && !recoveryDataMap.isEmpty()) {
             String recoveryEmail = recoveryDataMap.get(CodeConstants.EMAIL.toString());
@@ -127,11 +127,15 @@ public class SetRecoveryAccount extends DocumentHandler {
         prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress,
                 recoveryCodeMap.get(CodeConstants.EMAIL.toString()));
         prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, PrefPasswordRecoveryAddressStatus.pending);
-        provider.sendAndStoreSetRecoveryAccountCode(authAccount, mbox, recoveryCodeMap, zsc, octxt, prefs);
+        if (isFromEnableTwoFactorAuth) {
+            provider.sendAndStoreTwoFactorAuthAccountCode(authAccount, mbox, recoveryCodeMap, zsc, octxt, prefs);
+        } else {
+            provider.sendAndStoreSetRecoveryAccountCode(authAccount, mbox, recoveryCodeMap, zsc, octxt, prefs);
+        }
     }
 
     protected void resendCode(Account account, Mailbox mbox, ZimbraSoapContext zsc, OperationContext octxt,
-            ChannelProvider provider) throws ServiceException {
+            ChannelProvider provider, boolean isFromEnableTwoFactorAuth) throws ServiceException {
         Map<String, String> dataMap = provider.getSetRecoveryAccountCodeMap(account);
         if (dataMap == null || dataMap.isEmpty()) {
             throw ForgetPasswordException.CODE_NOT_FOUND("Verification code for recovery email address not found on server.");
@@ -154,14 +158,18 @@ public class SetRecoveryAccount extends DocumentHandler {
             Date now = new Date();
             if (expiryTime < now.getTime()) {
                 // generate new code and send
-                sendCode(email, resendCount + 1, account, mbox, zsc, octxt, provider);
+                sendCode(email, resendCount + 1, account, mbox, zsc, octxt, provider, isFromEnableTwoFactorAuth);
             } else {
                 // send existing code
                 Account authAccount = getAuthenticatedAccount(zsc);
                 // update resend count
                 resendCount = resendCount + 1;
                 dataMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
-                provider.sendAndStoreSetRecoveryAccountCode(authAccount, mbox, dataMap, zsc, octxt, null);
+                if (isFromEnableTwoFactorAuth) {
+                    provider.sendAndStoreTwoFactorAuthAccountCode(authAccount, mbox, dataMap, zsc, octxt, null);
+                } else {
+                    provider.sendAndStoreSetRecoveryAccountCode(authAccount, mbox, dataMap, zsc, octxt, null);
+                }
             }
         } else {
             throw ForgetPasswordException.MAX_ATTEMPTS_REACHED("Re-send code request has reached maximum limit.");

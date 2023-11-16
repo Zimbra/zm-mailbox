@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -307,7 +307,12 @@ public class L10nUtil {
         sendMDMNotificationEmailHtmlTableOpen,
         sendMDMNotificationEmailHtmlTableClose,
         sendMDMNotificationEmailHtmlDeviceTableHeader,
-        sendMDMNotificationEmailNoDevicesFoundMsg
+        sendMDMNotificationEmailNoDevicesFoundMsg,
+
+        // two-factor email address verification
+        twoFactorAuthEmailSubject,
+        twoFactorAuthEmailBodyText,
+        twoFactorAuthEmailBodyHtml
 
         // add other messages in the future...
     }
