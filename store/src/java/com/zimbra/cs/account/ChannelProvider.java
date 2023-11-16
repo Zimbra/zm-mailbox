@@ -89,4 +89,7 @@ public abstract class ChannelProvider {
     public abstract void sendAndStoreSetRecoveryAccountCode(Account account, Mailbox mbox,
             Map<String, String> recoveryCodeMap, ZimbraSoapContext zsc, OperationContext octxt,
             HashMap<String, Object> prefs) throws ServiceException;
+    public abstract void sendAndStoreTwoFactorAuthAccountCode(Account account, Mailbox mbox,
+            Map<String, String> recoveryCodeMap, ZimbraSoapContext zsc, OperationContext octxt,
+            HashMap<String, Object> prefs) throws ServiceException;
 }
