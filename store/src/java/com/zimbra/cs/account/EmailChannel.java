@@ -1,6 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK ***** Zimbra Collaboration Suite Server Copyright
- * (C) 2018 Synacor, Inc.
+ * (C) 2018, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -214,5 +214,51 @@ public class EmailChannel extends ChannelProvider {
                     recoveryCodeMap.get(CodeConstants.EMAIL.toString())), e);
         }
     }
-    
+
+    @Override
+    public void sendAndStoreTwoFactorAuthAccountCode(Account account, Mailbox mbox, Map<String, String> recoveryCodeMap,
+            ZimbraSoapContext zsc, OperationContext octxt, HashMap<String, Object> prefs) throws ServiceException {
+        Locale locale = account.getLocale();
+        String ownerAcctDisplayName = account.getDisplayName();
+        if (ownerAcctDisplayName == null) {
+            ownerAcctDisplayName = account.getName();
+        }
+        String subject = L10nUtil.getMessage(MsgKey.twoFactorAuthEmailSubject, locale, ownerAcctDisplayName);
+        String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
+        try {
+            DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
+            format.setTimeZone(TimeZone.getTimeZone("GMT"));
+            String gmtDate = format.format(Long.valueOf(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString())));
+            if (ZimbraLog.passwordreset.isDebugEnabled()) {
+                ZimbraLog.passwordreset.debug(
+                        "sendTwoFactorAuthEmailVerificationCode: Expiry of two-factor auth email address verification code sent to %s: %s",
+                        recoveryCodeMap.get(CodeConstants.EMAIL.toString()), gmtDate);
+                ZimbraLog.passwordreset.debug(
+                        "sendTwoFactorAuthEmailVerificationCode: Last 3 characters of two-factor auth email verification code sent to %s: %s",
+                        recoveryCodeMap.get(CodeConstants.EMAIL.toString()),
+                        recoveryCodeMap.get(CodeConstants.CODE.toString()).substring(5));
+            }
+            String mimePartText = L10nUtil.getMessage(MsgKey.twoFactorAuthEmailBodyText, locale,
+                    recoveryCodeMap.get(CodeConstants.CODE.toString()), gmtDate);
+            String mimePartHtml = L10nUtil.getMessage(MsgKey.twoFactorAuthEmailBodyHtml, locale,
+                    recoveryCodeMap.get(CodeConstants.CODE.toString()), gmtDate);
+            MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml, null);
+            MimeMessage mm = AccountUtil.generateMimeMessage(account, account, subject, charset, null, null,
+                    recoveryCodeMap.get(CodeConstants.EMAIL.toString()), mmp);
+            mbox.getMailSender().sendMimeMessage(octxt, mbox, false, mm, null, null, null, null, false);
+        } catch (MessagingException e) {
+            ZimbraLog.passwordreset.warn("Failed to send verification code to email ID: '"
+                    + recoveryCodeMap.get(CodeConstants.EMAIL.toString()) + "'", e);
+            throw ServiceException.FAILURE("Failed to send verification code to email ID: "
+                    + recoveryCodeMap.get(CodeConstants.EMAIL.toString()), e);
+        }
+        // store the recovery code
+        if (prefs == null) {
+            prefs = new HashMap<String, Object>();
+        }
+        String verificationDataStr = JWEUtil.getJWE(recoveryCodeMap);
+        prefs.put(Provisioning.A_zimbraRecoveryAccountVerificationData, verificationDataStr);
+        Provisioning.getInstance().modifyAttrs(account, prefs, true, zsc.getAuthToken());
+        account.unsetResetPasswordRecoveryCode();
+    }
 }
