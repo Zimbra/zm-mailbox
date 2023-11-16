@@ -1,6 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK ***** Zimbra Collaboration Suite Server Copyright
- * (C) 2018 Synacor, Inc.
+ * (C) 2018, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -29,6 +29,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -53,8 +54,13 @@ public class SetRecoveryAccount extends DocumentHandler {
         Account account = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
+        boolean isFromEnableTwoFactorAuth = request.getAttributeBool("isFromEnableTwoFactorAuth", false);
         SetRecoveryAccountRequest req = zsc.elementToJaxb(request);
-        ResetPasswordUtil.validateFeatureResetPasswordStatus(account);
+        if (!isFromEnableTwoFactorAuth) {
+            ResetPasswordUtil.validateFeatureResetPasswordStatus(account);
+        } else if (!(account.isFeatureTwoFactorAuthAvailable() && Arrays.asList(account.getTwoFactorAuthMethodAllowed()).contains(AccountConstants.E_TWO_FACTOR_METHOD_EMAIL))) {
+            throw ServiceException.INVALID_REQUEST("email method is not Allowed", null);
+        }
         Op op = req.getOp();
         if (op == null) {
             throw ServiceException.INVALID_REQUEST("Invalid operation received.", null);
