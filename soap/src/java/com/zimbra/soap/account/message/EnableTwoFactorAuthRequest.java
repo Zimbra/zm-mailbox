@@ -2,7 +2,7 @@
  * ***** BEGIN LICENSE BLOCK *****
  *
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2015, 2016, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -51,6 +51,18 @@ public class EnableTwoFactorAuthRequest {
     @XmlElement(name=AccountConstants.E_AUTH_TOKEN, required=false)
     private AuthToken authToken;
 
+    /**
+     * @zm-api-field-description Method to be used for 2FA
+     */
+    @XmlElement(name=AccountConstants.E_METHOD, required=false)
+    private String method;
+
+    /**
+     * @zm-api-field-description Email of account to be used for 2FA
+     */
+    @XmlElement(name=AccountConstants.E_EMAIL, required=false)
+    private String email;
+
     @XmlElement(name=AccountConstants.E_TWO_FACTOR_CODE, required=false)
     private String twoFactorCode;
 
@@ -78,4 +90,13 @@ public class EnableTwoFactorAuthRequest {
         this.csrfSupported = ZmBoolean.fromBool(csrfSupported);
         return this;
     }
+
+    public String getMethod() { return method; }
+
+    public void setMethod(String method) { this.method = method; }
+
+    public String getEmail() { return email; }
+
+    public void setEmail(String email) { this.email = email; }
+
 }

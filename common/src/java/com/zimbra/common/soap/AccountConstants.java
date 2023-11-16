@@ -601,6 +601,8 @@ public class AccountConstants {
     public static final String A_GENERATE_DEVICE_ID = "generateDeviceId";
     public static final String E_TWO_FACTOR_AUTH_REQUIRED = "twoFactorAuthRequired";
     public static final String E_TRUSTED_DEVICES_ENABLED = "trustedDevicesEnabled";
+    public static final String E_TWO_FACTOR_METHOD_APP = "app";
+    public static final String E_TWO_FACTOR_METHOD_EMAIL = "email";
 
     //oauth consumer attributes
     public static final String A_ACCESS_TOKEN = "accessToken";
