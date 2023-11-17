@@ -10424,4 +10424,14 @@ TODO: delete them permanently from here
 <attr id="4109" name="zimbraTwoFactorCodeEmailBody" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="11.0.0">
   <desc>Define body: field for 2FA email</desc>
 </attr>
+
+<attr id="4110" name="zimbraStorageManagementEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether or not licensed to create internal volumes under storage management module</desc>
+</attr>
+
+<attr id="4111" name="zimbraObjectStoreSupportEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether or not licensed to create external volumes under storage management module</desc>
+</attr>
 </attrs>

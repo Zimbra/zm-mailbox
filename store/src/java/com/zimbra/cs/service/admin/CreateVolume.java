@@ -53,6 +53,8 @@ public final class CreateVolume extends AdminDocumentHandler {
 
         VolumeInfo volInfoRequest = request.getVolumeInfo();
         Volume.StoreType enumStoreType = (1 == volInfoRequest.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
+        // checks license eligibility
+        checkLicenseValidityForVolumeCreation(enumStoreType);
         VolumeConfigUtil.validateCreateVolumeRequest(request, volInfoRequest, enumStoreType);
 
         Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest, enumStoreType));
@@ -71,6 +73,24 @@ public final class CreateVolume extends AdminDocumentHandler {
         }
 
         return new CreateVolumeResponse(volInfoResponse);
+    }
+
+    /**
+     * this checks if the license has eligibility to create external or internal volumes
+     * @param enumStoreType
+     */
+    private void checkLicenseValidityForVolumeCreation(Volume.StoreType enumStoreType) throws ServiceException {
+        if (Volume.StoreType.INTERNAL.equals(enumStoreType)) {
+            if (!Provisioning.getInstance().getConfig().isStorageManagementEnabled()) {
+                throw ServiceException.FAILURE("License check : Internal volumes can't be created when Storage Management is disabled; contact zimbra support", null);
+            }
+        }
+        if (Volume.StoreType.EXTERNAL.equals(enumStoreType)) {
+            if (!Provisioning.getInstance().getConfig().isObjectStoreSupportEnabled()
+                    || !Provisioning.getInstance().getConfig().isStorageManagementEnabled()) {
+                throw ServiceException.FAILURE("License check : External volumes can't be created when Storage Management and Object Store Support are disabled; contact zimbra support", null);
+            }
+        }
     }
 
     private Volume toVolume(VolumeInfo vol, Volume.StoreType enumStoreType) throws ServiceException {

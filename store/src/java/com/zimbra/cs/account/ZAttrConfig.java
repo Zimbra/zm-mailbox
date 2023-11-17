@@ -54553,6 +54553,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * whether or not licensed to create external volumes under storage
+     * management module
+     *
+     * @return zimbraObjectStoreSupportEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public boolean isObjectStoreSupportEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraObjectStoreSupportEnabled, false, true);
+    }
+
+    /**
+     * whether or not licensed to create external volumes under storage
+     * management module
+     *
+     * @param zimbraObjectStoreSupportEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public void setObjectStoreSupportEnabled(boolean zimbraObjectStoreSupportEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraObjectStoreSupportEnabled, zimbraObjectStoreSupportEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not licensed to create external volumes under storage
+     * management module
+     *
+     * @param zimbraObjectStoreSupportEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public Map<String,Object> setObjectStoreSupportEnabled(boolean zimbraObjectStoreSupportEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraObjectStoreSupportEnabled, zimbraObjectStoreSupportEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not licensed to create external volumes under storage
+     * management module
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public void unsetObjectStoreSupportEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraObjectStoreSupportEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not licensed to create external volumes under storage
+     * management module
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public Map<String,Object> unsetObjectStoreSupportEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraObjectStoreSupportEnabled, "");
+        return attrs;
+    }
+
+    /**
      * The max number of IMAP messages returned by OpenImapFolderRequest
      * before pagination begins
      *
@@ -77145,6 +77222,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetStatThreadNamePrefix(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraStatThreadNamePrefix, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not licensed to create internal volumes under storage
+     * management module
+     *
+     * @return zimbraStorageManagementEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public boolean isStorageManagementEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraStorageManagementEnabled, false, true);
+    }
+
+    /**
+     * whether or not licensed to create internal volumes under storage
+     * management module
+     *
+     * @param zimbraStorageManagementEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public void setStorageManagementEnabled(boolean zimbraStorageManagementEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStorageManagementEnabled, zimbraStorageManagementEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not licensed to create internal volumes under storage
+     * management module
+     *
+     * @param zimbraStorageManagementEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public Map<String,Object> setStorageManagementEnabled(boolean zimbraStorageManagementEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStorageManagementEnabled, zimbraStorageManagementEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not licensed to create internal volumes under storage
+     * management module
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public void unsetStorageManagementEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStorageManagementEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not licensed to create internal volumes under storage
+     * management module
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public Map<String,Object> unsetStorageManagementEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStorageManagementEnabled, "");
         return attrs;
     }
 

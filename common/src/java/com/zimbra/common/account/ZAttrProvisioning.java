@@ -12911,6 +12911,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraObjectStoreMatched = "zimbraObjectStoreMatched";
 
     /**
+     * whether or not licensed to create external volumes under storage
+     * management module
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public static final String A_zimbraObjectStoreSupportEnabled = "zimbraObjectStoreSupportEnabled";
+
+    /**
      * the object type
      */
     @ZAttr(id=161)
@@ -17731,6 +17740,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=792)
     public static final String A_zimbraStatThreadNamePrefix = "zimbraStatThreadNamePrefix";
+
+    /**
+     * whether or not licensed to create internal volumes under storage
+     * management module
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public static final String A_zimbraStorageManagementEnabled = "zimbraStorageManagementEnabled";
 
     /**
      * The maximum batch size for each ZimbraSync transaction. Default value
