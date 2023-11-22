@@ -18,44 +18,58 @@
  */
 package com.zimbra.soap.account.message;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.AuthToken;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name= AccountConstants.E_SEND_TFA_CODE_REQUEST)
-public class SendTFACodeRequest {
+@XmlRootElement(name= AccountConstants.E_SEND_TWO_FACTOR_AUTH_CODE_REQUEST)
+public class SendTwoFactorAuthCodeRequest {
 
-    public SendTFACodeRequest() {
+    public SendTwoFactorAuthCodeRequest() {
 
     }
 
-    public SendTFACodeRequest(SendTFACodeAction action) {
+    public SendTwoFactorAuthCodeRequest(SendTwoFactorAuthCodeAction action) {
         setAction(action);
     }
 
-    public SendTFACodeAction getAction() {
+    public SendTwoFactorAuthCodeAction getAction() {
         return action;
     }
 
-    public void setAction(SendTFACodeAction action) {
+    public void setAction(SendTwoFactorAuthCodeAction action) {
         this.action = action;
     }
 
     @XmlAttribute(name=AccountConstants.E_ACTION)
-    private SendTFACodeAction action;
+    private SendTwoFactorAuthCodeAction action;
+
+
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
+    private AuthToken authToken;
+
+    public AuthToken getAuthToken() {
+        return authToken;
+    }
+
+    public SendTwoFactorAuthCodeRequest setAuthToken(AuthToken authToken) {
+        this.authToken = authToken;
+        return this;
+    }
 
     @XmlEnum
-    public enum SendTFACodeAction {
+    public enum SendTwoFactorAuthCodeAction {
 
         @XmlEnumValue("email") EMAIL("email"),
         @XmlEnumValue("reset") RESET("reset");
         private final String action;
 
-        private SendTFACodeAction(String action) {
+        private SendTwoFactorAuthCodeAction(String action) {
             this.action = action;
         }
 
