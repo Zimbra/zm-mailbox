@@ -30,18 +30,18 @@ import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name= AccountConstants.E_SEND_TFA_CODE_RESPONSE)
-public class SendTFACodeResponse {
+@XmlRootElement(name= AccountConstants.E_SEND_TWO_FACTOR_AUTH_CODE_RESPONSE)
+public class SendTwoFactorAuthCodeResponse {
 
     @XmlEnum
-    public enum SendTFACodeStatus {
+    public enum SendTwoFactorAuthCodeStatus {
 
         @XmlEnumValue("sent") SENT("sent"),
         @XmlEnumValue("not sent") NOT_SENT("not sent"),
         @XmlEnumValue("reset succeeded") RESET_SUCCEEDED("reset succeeded"),
         @XmlEnumValue("reset failed") RESET_FAILED("reset failed");
         private final String status;
-        private SendTFACodeStatus(String status) {
+        private SendTwoFactorAuthCodeStatus(String status) {
             this.status = status;
         }
 
@@ -50,31 +50,31 @@ public class SendTFACodeResponse {
             return status;
         }
 
-        public static SendTFACodeStatus fromString(String s) throws ServiceException {
+        public static SendTwoFactorAuthCodeStatus fromString(String s) throws ServiceException {
             try {
-                return SendTFACodeStatus.valueOf(s);
+                return SendTwoFactorAuthCodeStatus.valueOf(s);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST("unknown operation: "+s, e);
             }
         }
     }
 
-    public SendTFACodeResponse() {
-        this((SendTFACodeStatus) null);
+    public SendTwoFactorAuthCodeResponse() {
+        this((SendTwoFactorAuthCodeStatus) null);
     }
 
-    public SendTFACodeResponse(SendTFACodeStatus status) {
+    public SendTwoFactorAuthCodeResponse(SendTwoFactorAuthCodeStatus status) {
         setStatus(status);
     }
 
     @XmlAttribute(name=AccountConstants.A_STATUS /* status */, required=true)
-    private SendTFACodeStatus status;
+    private SendTwoFactorAuthCodeStatus status;
 
-    public SendTFACodeStatus getStatus() {
+    public SendTwoFactorAuthCodeStatus getStatus() {
         return status;
     }
 
-    public void setStatus(SendTFACodeStatus status) {
+    public void setStatus(SendTwoFactorAuthCodeStatus status) {
         this.status = status;
     }
 
