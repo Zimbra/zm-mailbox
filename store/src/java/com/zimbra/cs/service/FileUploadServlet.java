@@ -161,11 +161,12 @@ public class FileUploadServlet extends ZimbraServlet {
             } else {
                 mimeType = getMimeType(file);
                 contentType = mimeType.toString();
-
+                extension = filename == null ? "" : FilenameUtils.getExtension(filename).trim();
+                if (MimeConstants.FILE_EXTENSION_P7M.equalsIgnoreCase(extension)
+                        && MimeConstants.CT_APPLICATION_SMIME_SIGNATURE.equalsIgnoreCase(contentType)) {
+                    contentType = MimeConstants.CT_APPLICATION_SMIME;
+                }
                 if (acct.isFeatureFileTypeUploadRestrictionsEnabled()) {
-                    mimeType = getMimeType(file);
-                    contentType = mimeType.toString();
-                    extension = filename == null ? "" : FilenameUtils.getExtension(filename).trim();
                     String [] blockedFileTypes = null;
                     blockedFileTypes = acct.getFileUploadBlockedFileTypes();
                     List<String> blockedExtensionList = new ArrayList<>(Arrays.asList(blockedFileTypes));
