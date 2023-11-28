@@ -127,4 +127,32 @@
         <sub-class-of type="text/x-tika-text-based-message"/>
     </mime-type>
 
+    <mime-type type="application/pkcs7-signature">
+        <glob pattern="*.p7s"/>
+        <sub-class-of type="application/pkcs7-mime"/>
+    </mime-type>
+
+    <mime-type type="application/pkcs7-mime">
+        <glob pattern="*.p7m"/>
+        <glob pattern="*.p7c"/>
+        <glob pattern="*.p7z"/>
+        <magic priority="50">
+            <!-- PEM encoded -->
+            <match value="-----BEGIN PKCS7-----" type="string" offset="0"/>
+            <!-- DER encoded, sequence+length(short), object=id-smime-ct-compressedData -->
+            <match value="0x3000" mask="0xFF80" offset="0">
+                <match value="0x060b2a864886f70d0109100109a0" type="string" offset="2"/>
+            </match>
+            <!-- DER encoded, sequence+length(long/indefinite) -->
+            <match value="0x3080" mask="0xFFF8" offset="0">
+                <!-- object=id-smime-ct-compressedData -->
+                <match value="0x060b2a864886f70d0109100109a0" type="string" offset="2:6"/>
+                <!-- object=pkcs7-signedData -->
+                <match value="0x06092a864886f70d010702a0" type="string" offset="2:6"/>
+                <!-- object=pkcs7-envelopedData -->
+                <match value="0x06092a864886f70d010703a0" type="string" offset="2:6"/>
+            </match>
+        </magic>
+    </mime-type>
+
 </mime-info>

@@ -110,7 +110,6 @@ public class MimeConstants {
     public static final String ERR_USER_CERT_MISMATCH = "USER_CERT_MISMATCH";
     public static final String ERR_DECRYPTION_FAILED = "DECRYPTION_FAILED";
     public static final String ERR_FEATURE_SMIME_DISABLED = "FEATURE_SMIME_DISABLED";
-    public static final String FILE_EXTENSION_P7M = "p7m";
 
     public static final ImmutableSet<String> ZIMBRA_DOC_CT_SET = ImmutableSet.of(
             CT_APPLICATION_ZIMBRA_DOC, CT_APPLICATION_ZIMBRA_SLIDES, CT_APPLICATION_ZIMBRA_SPREADSHEET
