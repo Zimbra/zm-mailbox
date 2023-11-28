@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.account;
 
+import com.zimbra.common.localconfig.LC;
 import io.jsonwebtoken.Claims;
 
 import java.util.HashMap;
@@ -294,6 +295,10 @@ public class Auth extends AccountDocumentHandler {
         }
 
         if (acct == null) {
+            if (LC.zimbra_additional_logging.booleanValue()) {
+                ZimbraLog.security.info(String.format("Error occurred during authentication:" +
+                        " authentication failed for [%s]. Reason: account not found.", acctValue));
+            }
             AuthFailedServiceException e = AuthFailedServiceException.AUTH_FAILED(acctValue,
                 acctValuePassedIn, "account not found");
             AuthListener.invokeOnException(e);
