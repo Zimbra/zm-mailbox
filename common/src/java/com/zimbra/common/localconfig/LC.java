@@ -268,6 +268,9 @@ public final class LC {
     public static final KnownKey zimbra_rights_delegated_admin_supported = KnownKey.newKey(true);
 
     @Supported
+    public static final KnownKey zimbra_additional_logging = KnownKey.newKey(false);
+
+    @Supported
     public static final KnownKey zimbra_spam_report_queue_size = KnownKey.newKey(100);
 
     @Supported
