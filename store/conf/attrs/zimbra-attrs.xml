@@ -10064,14 +10064,15 @@ TODO: delete them permanently from here
         It is ignored when zimbraDomainLoginPageEnabled is not TRUE.
   </desc>
 </attr>
-<attr id="4031" name="zimbraFeatureModernChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="11.0.0">
+<attr id="4031" name="zimbraFeatureBasicOneToOneChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether Chat feature is enabled or not</desc>
 </attr>
 
-<attr id="4032" name="zimbraFeatureModernVideoEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="11.0.0">
+<attr id="4032" name="zimbraFeatureModernVideoEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0" deprecatedSince="10.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether Video feature is enabled or not</desc>
+  <deprecateDesc>Design decision to add a new attribute instead of this</deprecateDesc>
 </attr>
 <attr id="4033" name="zimbraFeatureSearchHistoryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.8.6">
   <desc>Whether to enable Search History</desc>
@@ -10423,5 +10424,20 @@ TODO: delete them permanently from here
 
 <attr id="4109" name="zimbraTwoFactorCodeEmailBody" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="11.0.0">
   <desc>Define body: field for 2FA email</desc>
+</attr>
+
+<attr id="4110" name="zimbraFeatureChatAllFeaturesEnabled" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>When true, users can access all chat features, including private chats, group chats, and sending attachments</desc>
+</attr>
+
+<attr id="4111" name="zimbraFeatureVideoAllFeaturesEnabled" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>When true, users can utilize all video features, such as scheduling meetings, screen sharing, video recording, and the waiting room</desc>
+</attr>
+
+<attr id="4112" name="zimbraFeatureMaxVideoParticipantsForUser" type="integer" min="0" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>This numeric attribute defines the maximum number of participants a user can have in their meetings. For instance, if set to 5, the user can't host a meeting with more than five participants</desc>
 </attr>
 </attrs>
