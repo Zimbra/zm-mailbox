@@ -10503,6 +10503,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Whether Chat feature is enabled or not
+     *
+     * @return zimbraFeatureBasicOneToOneChatEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public boolean isFeatureBasicOneToOneChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, false, true);
+    }
+
+    /**
+     * Whether Chat feature is enabled or not
+     *
+     * @param zimbraFeatureBasicOneToOneChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public void setFeatureBasicOneToOneChatEnabled(boolean zimbraFeatureBasicOneToOneChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, zimbraFeatureBasicOneToOneChatEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether Chat feature is enabled or not
+     *
+     * @param zimbraFeatureBasicOneToOneChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public Map<String,Object> setFeatureBasicOneToOneChatEnabled(boolean zimbraFeatureBasicOneToOneChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, zimbraFeatureBasicOneToOneChatEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether Chat feature is enabled or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public void unsetFeatureBasicOneToOneChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether Chat feature is enabled or not
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public Map<String,Object> unsetFeatureBasicOneToOneChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether receiving reminders on the designated device for appointments
      * and tasks is enabled
      *
@@ -10576,6 +10648,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetFeatureCalendarReminderDeviceEmailEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureCalendarReminderDeviceEmailEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @return zimbraFeatureChatAllFeaturesEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public boolean isFeatureChatAllFeaturesEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureChatAllFeaturesEnabled, false, true);
+    }
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @param zimbraFeatureChatAllFeaturesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public void setFeatureChatAllFeaturesEnabled(boolean zimbraFeatureChatAllFeaturesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChatAllFeaturesEnabled, zimbraFeatureChatAllFeaturesEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @param zimbraFeatureChatAllFeaturesEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public Map<String,Object> setFeatureChatAllFeaturesEnabled(boolean zimbraFeatureChatAllFeaturesEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChatAllFeaturesEnabled, zimbraFeatureChatAllFeaturesEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public void unsetFeatureChatAllFeaturesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChatAllFeaturesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public Map<String,Object> unsetFeatureChatAllFeaturesEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureChatAllFeaturesEnabled, "");
         return attrs;
     }
 
@@ -10980,83 +11129,94 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Whether Chat feature is enabled or not
+     * This numeric attribute defines the maximum number of participants a
+     * user can have in their meetings. For instance, if set to 5, the user
+     * can&#039;t host a meeting with more than five participants
      *
-     * @return zimbraFeatureModernChatEnabled, or false if unset
+     * @return zimbraFeatureMaxVideoParticipantsForUser, or -1 if unset
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
-    public boolean isFeatureModernChatEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureModernChatEnabled, false, true);
+    @ZAttr(id=4112)
+    public int getFeatureMaxVideoParticipantsForUser() {
+        return getIntAttr(Provisioning.A_zimbraFeatureMaxVideoParticipantsForUser, -1, true);
     }
 
     /**
-     * Whether Chat feature is enabled or not
+     * This numeric attribute defines the maximum number of participants a
+     * user can have in their meetings. For instance, if set to 5, the user
+     * can&#039;t host a meeting with more than five participants
      *
-     * @param zimbraFeatureModernChatEnabled new value
+     * @param zimbraFeatureMaxVideoParticipantsForUser new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
-    public void setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled) throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=4112)
+    public void setFeatureMaxVideoParticipantsForUser(int zimbraFeatureMaxVideoParticipantsForUser) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraFeatureMaxVideoParticipantsForUser, Integer.toString(zimbraFeatureMaxVideoParticipantsForUser));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Whether Chat feature is enabled or not
+     * This numeric attribute defines the maximum number of participants a
+     * user can have in their meetings. For instance, if set to 5, the user
+     * can&#039;t host a meeting with more than five participants
      *
-     * @param zimbraFeatureModernChatEnabled new value
+     * @param zimbraFeatureMaxVideoParticipantsForUser new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
-    public Map<String,Object> setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled, Map<String,Object> attrs) {
+    @ZAttr(id=4112)
+    public Map<String,Object> setFeatureMaxVideoParticipantsForUser(int zimbraFeatureMaxVideoParticipantsForUser, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraFeatureMaxVideoParticipantsForUser, Integer.toString(zimbraFeatureMaxVideoParticipantsForUser));
         return attrs;
     }
 
     /**
-     * Whether Chat feature is enabled or not
+     * This numeric attribute defines the maximum number of participants a
+     * user can have in their meetings. For instance, if set to 5, the user
+     * can&#039;t host a meeting with more than five participants
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
-    public void unsetFeatureModernChatEnabled() throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=4112)
+    public void unsetFeatureMaxVideoParticipantsForUser() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
+        attrs.put(Provisioning.A_zimbraFeatureMaxVideoParticipantsForUser, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Whether Chat feature is enabled or not
+     * This numeric attribute defines the maximum number of participants a
+     * user can have in their meetings. For instance, if set to 5, the user
+     * can&#039;t host a meeting with more than five participants
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
-    public Map<String,Object> unsetFeatureModernChatEnabled(Map<String,Object> attrs) {
+    @ZAttr(id=4112)
+    public Map<String,Object> unsetFeatureMaxVideoParticipantsForUser(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
+        attrs.put(Provisioning.A_zimbraFeatureMaxVideoParticipantsForUser, "");
         return attrs;
     }
 
     /**
-     * Whether Video feature is enabled or not
+     * Deprecated since: 10.1.0. Design decision to add a new attribute
+     * instead of this. Orig desc: Whether Video feature is enabled or not
      *
      * @return zimbraFeatureModernVideoEnabled, or false if unset
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4032)
     public boolean isFeatureModernVideoEnabled() {
@@ -11064,12 +11224,13 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Whether Video feature is enabled or not
+     * Deprecated since: 10.1.0. Design decision to add a new attribute
+     * instead of this. Orig desc: Whether Video feature is enabled or not
      *
      * @param zimbraFeatureModernVideoEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4032)
     public void setFeatureModernVideoEnabled(boolean zimbraFeatureModernVideoEnabled) throws com.zimbra.common.service.ServiceException {
@@ -11079,13 +11240,14 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Whether Video feature is enabled or not
+     * Deprecated since: 10.1.0. Design decision to add a new attribute
+     * instead of this. Orig desc: Whether Video feature is enabled or not
      *
      * @param zimbraFeatureModernVideoEnabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4032)
     public Map<String,Object> setFeatureModernVideoEnabled(boolean zimbraFeatureModernVideoEnabled, Map<String,Object> attrs) {
@@ -11095,11 +11257,12 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Whether Video feature is enabled or not
+     * Deprecated since: 10.1.0. Design decision to add a new attribute
+     * instead of this. Orig desc: Whether Video feature is enabled or not
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4032)
     public void unsetFeatureModernVideoEnabled() throws com.zimbra.common.service.ServiceException {
@@ -11109,12 +11272,13 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Whether Video feature is enabled or not
+     * Deprecated since: 10.1.0. Design decision to add a new attribute
+     * instead of this. Orig desc: Whether Video feature is enabled or not
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4032)
     public Map<String,Object> unsetFeatureModernVideoEnabled(Map<String,Object> attrs) {
@@ -11539,6 +11703,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetFeatureSocialName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSocialName, "");
+        return attrs;
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @return zimbraFeatureVideoAllFeaturesEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public boolean isFeatureVideoAllFeaturesEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled, false, true);
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @param zimbraFeatureVideoAllFeaturesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public void setFeatureVideoAllFeaturesEnabled(boolean zimbraFeatureVideoAllFeaturesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled, zimbraFeatureVideoAllFeaturesEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @param zimbraFeatureVideoAllFeaturesEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public Map<String,Object> setFeatureVideoAllFeaturesEnabled(boolean zimbraFeatureVideoAllFeaturesEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled, zimbraFeatureVideoAllFeaturesEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public void unsetFeatureVideoAllFeaturesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public Map<String,Object> unsetFeatureVideoAllFeaturesEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled, "");
         return attrs;
     }
 
