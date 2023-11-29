@@ -6735,6 +6735,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAppSpecificPasswordsEnabled = "zimbraFeatureAppSpecificPasswordsEnabled";
 
     /**
+     * Whether Chat feature is enabled or not
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public static final String A_zimbraFeatureBasicOneToOneChatEnabled = "zimbraFeatureBasicOneToOneChatEnabled";
+
+    /**
      * Docs features enabled in briefcase
      *
      * @since ZCS 6.0.2
@@ -6800,6 +6808,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=141)
     public static final String A_zimbraFeatureChangePasswordEnabled = "zimbraFeatureChangePasswordEnabled";
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public static final String A_zimbraFeatureChatAllFeaturesEnabled = "zimbraFeatureChatAllFeaturesEnabled";
 
     /**
      * Whether to enable chat feature
@@ -7224,6 +7241,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMarkMailForwardedAsRead = "zimbraFeatureMarkMailForwardedAsRead";
 
     /**
+     * This numeric attribute defines the maximum number of participants a
+     * user can have in their meetings. For instance, if set to 5, the user
+     * can&#039;t host a meeting with more than five participants
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4112)
+    public static final String A_zimbraFeatureMaxVideoParticipantsForUser = "zimbraFeatureMaxVideoParticipantsForUser";
+
+    /**
      * Whether to allow a user to access Zimbra mobile App
      *
      * @since ZCS 8.9.0
@@ -7254,14 +7281,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMobileSyncEnabled = "zimbraFeatureMobileSyncEnabled";
 
     /**
-     * Whether Chat feature is enabled or not
-     *
-     * @since ZCS 11.0.0
-     */
-    @ZAttr(id=4031)
-    public static final String A_zimbraFeatureModernChatEnabled = "zimbraFeatureModernChatEnabled";
-
-    /**
      * Whether to allow a user to access Zimbra modern desktop
      *
      * @since ZCS 8.9.0
@@ -7270,9 +7289,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureModernDesktopEnabled = "zimbraFeatureModernDesktopEnabled";
 
     /**
-     * Whether Video feature is enabled or not
+     * Deprecated since: 10.1.0. Design decision to add a new attribute
+     * instead of this. Orig desc: Whether Video feature is enabled or not
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4032)
     public static final String A_zimbraFeatureModernVideoEnabled = "zimbraFeatureModernVideoEnabled";
@@ -7555,6 +7575,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1820)
     public static final String A_zimbraFeatureTwoFactorAuthRequired = "zimbraFeatureTwoFactorAuthRequired";
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4111)
+    public static final String A_zimbraFeatureVideoAllFeaturesEnabled = "zimbraFeatureVideoAllFeaturesEnabled";
 
     /**
      * option to view attachments in html
