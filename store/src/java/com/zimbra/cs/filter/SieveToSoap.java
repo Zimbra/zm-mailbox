@@ -16,11 +16,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.util.Date;
-import java.util.List;
-
-import org.apache.jsieve.parser.generated.Node;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -35,6 +30,9 @@ import com.zimbra.soap.mail.type.FilterTests;
 import com.zimbra.soap.mail.type.FilterVariable;
 import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
+import org.apache.jsieve.parser.generated.Node;
+
+import java.util.List;
 
 /**
  * Converts a Sieve node tree to the SOAP representation of
@@ -232,11 +230,11 @@ public final class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
-            Sieve.DateComparison comparison, Date date) {
+            Sieve.DateComparison comparison, String date) {
         if (phase == VisitPhase.begin) {
             FilterTest.DateTest test = addTest(new FilterTest.DateTest(), props);
             test.setDateComparison(comparison.toString());
-            test.setDate(date.getTime() / 1000L);
+            test.setDate(date);
         }
     }
 

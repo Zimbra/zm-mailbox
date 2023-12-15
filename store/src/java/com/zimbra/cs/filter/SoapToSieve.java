@@ -16,16 +16,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import org.apache.commons.lang.StringUtils;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
@@ -42,6 +32,16 @@ import com.zimbra.soap.mail.type.FilterTests;
 import com.zimbra.soap.mail.type.FilterVariable;
 import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
+import org.apache.commons.lang.StringUtils;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+
 
 public final class SoapToSieve {
 
@@ -269,8 +269,11 @@ public final class SoapToSieve {
         } else if (test instanceof FilterTest.DateTest) {
             FilterTest.DateTest dateTest = (FilterTest.DateTest) test;
             Sieve.DateComparison comp = Sieve.DateComparison.fromString(dateTest.getDateComparison());
-            Date date = new Date(dateTest.getDate() * 1000L);
-            snippet = String.format("date :%s \"%s\"", comp, Sieve.DATE_PARSER.format(date));
+            //previously we were getting the timestamp, but now we are getting date in String so parsing is not needed.
+            //Date date = new Date(dateTest.getDate() * 1000L);
+
+            //snippet = String.format("date :%s \"%s\"", comp, Sieve.DATE_PARSER.format(date));
+            snippet = String.format("date :%s \"%s\"", comp, dateTest.getDate());
         } else if (test instanceof FilterTest.BodyTest) {
             FilterTest.BodyTest bodyTest = (FilterTest.BodyTest) test;
             String format = bodyTest.isCaseSensitive() ?

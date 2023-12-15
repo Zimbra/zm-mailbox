@@ -16,6 +16,13 @@
  */
 package com.zimbra.client;
 
+import com.google.common.base.Joiner;
+import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.mail.type.FilterTest;
+import org.json.JSONException;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,14 +30,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-
-import org.json.JSONException;
-
-import com.google.common.base.Joiner;
-import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.soap.mail.type.FilterTest;
 
 public abstract class ZFilterCondition implements ToZJSONObject {
 
@@ -957,7 +956,12 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
         ZDateCondition(FilterTest.DateTest test) throws ServiceException {
             this.op = DateOp.of(Sieve.DateComparison.fromString(test.getDateComparison()), test.isNegative());
-            this.date = new Date(test.getDate() * 1000);
+            //this.date = new Date(test.getDate() * 1000);
+            try {
+                this.date = new SimpleDateFormat("yyyyMMdd").parse(test.getDate());
+            } catch (ParseException e) {
+                throw ZClientException.CLIENT_ERROR("invalid date: " + test.getDate() + ", should be: YYYYMMDD", e);
+            }
         }
 
         public DateOp getDateOp() {
@@ -987,7 +991,8 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             FilterTest.DateTest test = new FilterTest.DateTest();
             test.setDateComparison(op.toDateComparison().toString());
             test.setNegative(op.isNegative());
-            test.setDate(date.getTime() / 1000);
+            //test.setDate(date.getTime() / 1000);
+            test.setDate(Sieve.DATE_PARSER.format(date));
             return test;
         }
     }

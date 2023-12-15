@@ -17,23 +17,22 @@
 
 package com.zimbra.soap.mail.type;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlEnum;
-
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlEnum;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class FilterTest {
@@ -443,13 +442,13 @@ public class FilterTest {
          * @zm-api-field-description Date
          */
         @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
-        private Long date;
+        private String date;
 
         public void setDateComparison(String dateComparison) {
             this.dateComparison = dateComparison;
         }
 
-        public void setDate(Long date) {
+        public void setDate(String date) {
             this.date = date;
         }
 
@@ -457,7 +456,7 @@ public class FilterTest {
             return dateComparison;
         }
 
-        public Long getDate() {
+        public String getDate() {
             return date;
         }
 

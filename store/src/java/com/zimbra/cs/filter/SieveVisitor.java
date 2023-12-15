@@ -16,21 +16,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.jsieve.TagArgument;
-import org.apache.jsieve.comparators.ComparatorNames;
-import org.apache.jsieve.comparators.MatchTypeTags;
-import org.apache.jsieve.parser.SieveNode;
-import org.apache.jsieve.parser.generated.ASTcommand;
-import org.apache.jsieve.parser.generated.ASTtest;
-import org.apache.jsieve.parser.generated.Node;
-import org.apache.jsieve.tests.ComparatorTags;
-
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
@@ -40,6 +25,19 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.NotifyMailto;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterTest;
+import org.apache.jsieve.TagArgument;
+import org.apache.jsieve.comparators.ComparatorNames;
+import org.apache.jsieve.comparators.MatchTypeTags;
+import org.apache.jsieve.parser.SieveNode;
+import org.apache.jsieve.parser.generated.ASTcommand;
+import org.apache.jsieve.parser.generated.ASTtest;
+import org.apache.jsieve.parser.generated.Node;
+import org.apache.jsieve.tests.ComparatorTags;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Iterates a Sieve node tree and calls callbacks at various
@@ -137,8 +135,8 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
-    protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
-            Sieve.DateComparison comparison, Date date) throws ServiceException {
+    protected void  visitDateTest(Node node, VisitPhase phase, RuleProperties props,
+            Sieve.DateComparison comparison, String date) throws ServiceException {
         // empty method
     }
 
@@ -624,14 +622,15 @@ public abstract class SieveVisitor {
                 String s = stripLeadingColon(getValue(node, 0, 0));
                 Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
                 String dateString = getValue(node, 0, 1, 0, 0);
-                Date date = Sieve.DATE_PARSER.parse(dateString);
-                if (date == null) {
+                //Previously code was sending the timestamp, but now it is sending date in String so no parsing is needed.
+                //Date date = Sieve.DATE_PARSER.parse(dateString);
+                if (dateString == null) {
                     throw ServiceException.PARSE_ERROR("Invalid date value: " + dateString, null);
                 }
 
-                visitDateTest(node, VisitPhase.begin, props, comparison, date);
+                visitDateTest(node, VisitPhase.begin, props, comparison, dateString);
                 accept(node, props);
-                visitDateTest(node, VisitPhase.end, props, comparison, date);
+                visitDateTest(node, VisitPhase.end, props, comparison, dateString);
             } else if ("body".equalsIgnoreCase(nodeName)) {
                 boolean caseSensitive = false;
                 String value;
