@@ -17,9 +17,11 @@
 
 package com.zimbra.cs.filter;
 
+import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.DeliveryServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
@@ -27,8 +29,8 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.filter.ZimbraMailAdapter.KeepType;
+import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -38,7 +40,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.soap.mail.type.FilterRule;
-
 import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.exception.SieveException;
@@ -55,6 +56,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -351,6 +353,8 @@ public final class RuleManager {
     private static void setXMLRules(Account account,List<FilterRule> rules, String sieveScriptAttrName,
             String rulesCacheKey) throws ServiceException {
         SoapToSieve soapToSieve = new SoapToSieve(rules);
+        String tzId = account.getAttr(Provisioning.A_zimbraPrefTimeZoneId);
+        Sieve.DATE_PARSER.setTimezone((StringUtil.isNullOrEmpty(tzId) ? TimeZone.getDefault().getID() : tzId));
         String script = soapToSieve.getSieveScript();
         setRules(account, script, sieveScriptAttrName, rulesCacheKey);
     }
