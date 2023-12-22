@@ -77891,6 +77891,88 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Length of TOTP code required for two-factor authentication for email.
+     * It must be different from zimbraTwoFactorCodeLength and
+     * zimbraTwoFactorScratchCodeLength.
+     *
+     * @return zimbraTwoFactorAuthEmailCodeLength, or 7 if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4110)
+    public int getTwoFactorAuthEmailCodeLength() {
+        return getIntAttr(Provisioning.A_zimbraTwoFactorAuthEmailCodeLength, 7, true);
+    }
+
+    /**
+     * Length of TOTP code required for two-factor authentication for email.
+     * It must be different from zimbraTwoFactorCodeLength and
+     * zimbraTwoFactorScratchCodeLength.
+     *
+     * @param zimbraTwoFactorAuthEmailCodeLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4110)
+    public void setTwoFactorAuthEmailCodeLength(int zimbraTwoFactorAuthEmailCodeLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEmailCodeLength, Integer.toString(zimbraTwoFactorAuthEmailCodeLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Length of TOTP code required for two-factor authentication for email.
+     * It must be different from zimbraTwoFactorCodeLength and
+     * zimbraTwoFactorScratchCodeLength.
+     *
+     * @param zimbraTwoFactorAuthEmailCodeLength new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4110)
+    public Map<String,Object> setTwoFactorAuthEmailCodeLength(int zimbraTwoFactorAuthEmailCodeLength, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEmailCodeLength, Integer.toString(zimbraTwoFactorAuthEmailCodeLength));
+        return attrs;
+    }
+
+    /**
+     * Length of TOTP code required for two-factor authentication for email.
+     * It must be different from zimbraTwoFactorCodeLength and
+     * zimbraTwoFactorScratchCodeLength.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4110)
+    public void unsetTwoFactorAuthEmailCodeLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEmailCodeLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Length of TOTP code required for two-factor authentication for email.
+     * It must be different from zimbraTwoFactorCodeLength and
+     * zimbraTwoFactorScratchCodeLength.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4110)
+    public Map<String,Object> unsetTwoFactorAuthEmailCodeLength(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthEmailCodeLength, "");
+        return attrs;
+    }
+
+    /**
      * Hash algorithm used in TOTP generation. SHA1 is the current accepted
      * standard per RFC 6238. Only consider changing this to another hashing
      * function when working with authenticators that deviate from this
