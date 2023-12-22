@@ -22,6 +22,7 @@ package com.zimbra.common.auth.twofactor;
 public class AuthenticatorConfig {
     private TwoFactorOptions.HashAlgorithm hashAlgorithm;
     private TwoFactorOptions.CodeLength codeLength;
+    private TwoFactorOptions.EmailCodeLength emailCodeLength;
     private long secondsInTimeWindow;
     private int allowedOffset;
 
@@ -36,6 +37,11 @@ public class AuthenticatorConfig {
 
     public AuthenticatorConfig setNumCodeDigits(TwoFactorOptions.CodeLength length) {
         this.codeLength = length;
+        return this;
+    }
+
+    public AuthenticatorConfig setNumCodeDigits(TwoFactorOptions.EmailCodeLength emailCodeLength) {
+        this.emailCodeLength = emailCodeLength;
         return this;
     }
 
@@ -63,7 +69,7 @@ public class AuthenticatorConfig {
     }
 
     public int getNumCodeDigits() {
-        return codeLength.getValue();
+        return codeLength != null ? codeLength.getValue() : emailCodeLength.getValue();
     }
 
     public int getWindowRange() {
