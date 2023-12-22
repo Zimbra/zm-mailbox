@@ -312,7 +312,12 @@ public class L10nUtil {
         // two-factor email address verification
         twoFactorAuthEmailSubject,
         twoFactorAuthEmailBodyText,
-        twoFactorAuthEmailBodyHtml
+        twoFactorAuthEmailBodyHtml,
+
+        // send Two Factor Auth Code for email method
+        twoFactorAuthCodeEmailSubject,
+        twoFactorAuthCodeEmailBodyText,
+        twoFactorAuthCodeEmailBodyHtml
 
         // add other messages in the future...
     }
