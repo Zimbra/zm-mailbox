@@ -13262,13 +13262,13 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * switch for turning external user sharing on/off
      *
-     * @return zimbraExternalSharingEnabled, or true if unset
+     * @return zimbraExternalSharingEnabled, or false if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1261)
     public boolean isExternalSharingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraExternalSharingEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraExternalSharingEnabled, false, true);
     }
 
     /**
@@ -14491,11 +14491,11 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * whether to allow use of briefcase feature
      *
-     * @return zimbraFeatureBriefcasesEnabled, or true if unset
+     * @return zimbraFeatureBriefcasesEnabled, or false if unset
      */
     @ZAttr(id=498)
     public boolean isFeatureBriefcasesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcasesEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcasesEnabled, false, true);
     }
 
     /**
@@ -16070,13 +16070,13 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * Whether or not document editing feature is enabled within briefcase
      *
-     * @return zimbraFeatureDocumentEditingEnabled, or true if unset
+     * @return zimbraFeatureDocumentEditingEnabled, or false if unset
      *
      * @since ZCS 10.0.0
      */
     @ZAttr(id=9016)
     public boolean isFeatureDocumentEditingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureDocumentEditingEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureDocumentEditingEnabled, false, true);
     }
 
     /**
@@ -20518,11 +20518,11 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * enabled sharing
      *
-     * @return zimbraFeatureSharingEnabled, or true if unset
+     * @return zimbraFeatureSharingEnabled, or false if unset
      */
     @ZAttr(id=335)
     public boolean isFeatureSharingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureSharingEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureSharingEnabled, false, true);
     }
 
     /**
@@ -60452,13 +60452,13 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * switch for turning public sharing on/off
      *
-     * @return zimbraPublicSharingEnabled, or true if unset
+     * @return zimbraPublicSharingEnabled, or false if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1351)
     public boolean isPublicSharingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraPublicSharingEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraPublicSharingEnabled, false, true);
     }
 
     /**
