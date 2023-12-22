@@ -10424,4 +10424,9 @@ TODO: delete them permanently from here
 <attr id="4109" name="zimbraTwoFactorCodeEmailBody" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="11.0.0">
   <desc>Define body: field for 2FA email</desc>
 </attr>
+
+<attr id="4110" name="zimbraTwoFactorAuthEmailCodeLength" type="integer" min="5" cardinality="single" optionalIn="globalConfig" callback="TwoFactorAuthEmailCode" since="11.0.0">
+  <globalConfigValue>7</globalConfigValue>
+  <desc>Length of TOTP code required for two-factor authentication for email. It must be different from zimbraTwoFactorCodeLength and zimbraTwoFactorScratchCodeLength.</desc>
+</attr>
 </attrs>
