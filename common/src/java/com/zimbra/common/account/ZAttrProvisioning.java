@@ -17928,6 +17928,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTrialExpirationDate = "zimbraTrialExpirationDate";
 
     /**
+     * Length of TOTP code required for two-factor authentication for email.
+     * It must be different from zimbraTwoFactorCodeLength and
+     * zimbraTwoFactorScratchCodeLength.
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4114)
+    public static final String A_zimbraTwoFactorAuthEmailCodeLength = "zimbraTwoFactorAuthEmailCodeLength";
+
+    /**
      * whether two-factor authentication is enabled by the user
      *
      * @since ZCS 8.7.0,9.0.0

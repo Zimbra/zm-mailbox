@@ -61,6 +61,29 @@ public class TwoFactorOptions {
         }
     }
 
+    public enum EmailCodeLength {
+        FIVE(5), SIX(6), SEVEN(7), EIGHT(8), NINE(9);
+
+        private int num;
+
+        private EmailCodeLength(int n) {
+            this.num = n;
+        }
+
+        public int getValue() {
+            return num;
+        }
+
+        public static EmailCodeLength valueOf(int n) throws ServiceException {
+            for (EmailCodeLength l: EmailCodeLength.values()) {
+                if (l.getValue() == n) {
+                    return l;
+                }
+            }
+            throw ServiceException.FAILURE(String.format("%s is not a valid two-factor email code length. Possible values are %s", n, EmailCodeLength.values()), new Throwable());
+        }
+    }
+
     public enum Encoding {
         BASE32, BASE64;
     }
