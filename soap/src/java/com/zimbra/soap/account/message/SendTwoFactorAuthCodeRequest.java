@@ -21,7 +21,6 @@ package com.zimbra.soap.account.message;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AuthToken;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
@@ -46,7 +45,7 @@ public class SendTwoFactorAuthCodeRequest {
         this.action = action;
     }
 
-    @XmlAttribute(name=AccountConstants.E_ACTION)
+    @XmlElement(name=AccountConstants.E_ACTION)
     private SendTwoFactorAuthCodeAction action;
 
 
