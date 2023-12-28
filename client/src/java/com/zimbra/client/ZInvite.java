@@ -40,6 +40,7 @@ public class ZInvite implements ToZJSONObject {
     private List<ZTimeZone> mTimeZones;
     private List<ZComponent> mComponents;
     private ZInviteType mType;
+    private int invId;
 
     public ZInvite() {
         mTimeZones = new ArrayList<ZTimeZone>();
@@ -49,6 +50,11 @@ public class ZInvite implements ToZJSONObject {
     public ZInvite(Element e) throws ServiceException {
         mTimeZones = new ArrayList<ZTimeZone>();
         mType = ZInviteType.fromString(e.getAttribute(MailConstants.A_TYPE, ZInviteType.appt.name()));
+        try {
+            invId = e.getAttributeInt(MailConstants.A_ID);
+        } catch (ServiceException se) {
+            // missing invite id
+        }
         for (Element tzEl : e.listElements(MailConstants.E_CAL_TZ)) {
             mTimeZones.add(new ZTimeZone(tzEl));
         }
@@ -72,6 +78,14 @@ public class ZInvite implements ToZJSONObject {
     
     public ZInviteType getType() {
         return mType;
+    }
+
+    public int getInvId() {
+        return invId;
+    }
+
+    public void setInvId(int invId) {
+        this.invId = invId;
     }
 
     public void setComponents(List<ZComponent> components) {
