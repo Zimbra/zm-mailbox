@@ -293,6 +293,10 @@ public class ServiceException extends Exception {
         return new ServiceException("system failure: "+message, FAILURE, RECEIVERS_FAULT, cause);
     }
 
+    public static ServiceException ERROR_MESSAGE(String str, Throwable cause){
+        return new ServiceException("error: " + str, null, SENDERS_FAULT, cause);
+    }
+
     public static ServiceException ERROR_WHILE_PARSING_UPLOAD(String message, Throwable cause) {
         return new ServiceException(
                 String.format("ioexception during upload: %s", message), ERROR_WHILE_PARSING_UPLOAD, RECEIVERS_FAULT, cause);

@@ -7158,6 +7158,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMailRecallEnabled = "zimbraFeatureMailRecallEnabled";
 
     /**
+     * Secret key used in Mail Recall to make it more secure from spoof.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4110)
+    public static final String A_zimbraFeatureMailRecallSecretKey = "zimbraFeatureMailRecallSecretKey";
+
+    /**
      * Time(in minutes) within which a message can be recalled. The default
      * time is 30 minutes and accepts value from 1 to 30.
      *
