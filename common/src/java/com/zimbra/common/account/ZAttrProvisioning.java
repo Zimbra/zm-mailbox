@@ -16698,6 +16698,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraServerVersionBuild = "zimbraServerVersionBuild";
 
     /**
+     * whether to show a notification dialog to reload the page when server
+     * version is changed. FALSE is recommended to use server functions
+     * correctly.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4113)
+    public static final String A_zimbraServerVersionChangeNotificationDisabled = "zimbraServerVersionChangeNotificationDisabled";
+
+    /**
      * Current major version of ZCS installed on this server
      *
      * @since ZCS 8.5.0
