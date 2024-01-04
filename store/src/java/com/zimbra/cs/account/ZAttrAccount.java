@@ -61963,6 +61963,88 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether to show a notification dialog to reload the page when server
+     * version is changed. FALSE is recommended to use server functions
+     * correctly.
+     *
+     * @return zimbraServerVersionChangeNotificationDisabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4113)
+    public boolean isServerVersionChangeNotificationDisabled() {
+        return getBooleanAttr(Provisioning.A_zimbraServerVersionChangeNotificationDisabled, false, true);
+    }
+
+    /**
+     * whether to show a notification dialog to reload the page when server
+     * version is changed. FALSE is recommended to use server functions
+     * correctly.
+     *
+     * @param zimbraServerVersionChangeNotificationDisabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4113)
+    public void setServerVersionChangeNotificationDisabled(boolean zimbraServerVersionChangeNotificationDisabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionChangeNotificationDisabled, zimbraServerVersionChangeNotificationDisabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to show a notification dialog to reload the page when server
+     * version is changed. FALSE is recommended to use server functions
+     * correctly.
+     *
+     * @param zimbraServerVersionChangeNotificationDisabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4113)
+    public Map<String,Object> setServerVersionChangeNotificationDisabled(boolean zimbraServerVersionChangeNotificationDisabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionChangeNotificationDisabled, zimbraServerVersionChangeNotificationDisabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to show a notification dialog to reload the page when server
+     * version is changed. FALSE is recommended to use server functions
+     * correctly.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4113)
+    public void unsetServerVersionChangeNotificationDisabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionChangeNotificationDisabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to show a notification dialog to reload the page when server
+     * version is changed. FALSE is recommended to use server functions
+     * correctly.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4113)
+    public Map<String,Object> unsetServerVersionChangeNotificationDisabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServerVersionChangeNotificationDisabled, "");
+        return attrs;
+    }
+
+    /**
      * Subscriber/service account number. Custom attribute for account
      * identity.
      *

@@ -10440,4 +10440,9 @@ TODO: delete them permanently from here
   <defaultCOSValue>0</defaultCOSValue>
   <desc>This numeric attribute defines the maximum number of participants a user can have in their meetings. For instance, if set to 5, the user can't host a meeting with more than five participants</desc>
 </attr>
+
+<attr id="4113" name="zimbraServerVersionChangeNotificationDisabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="10.1.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether to show a notification dialog to reload the page when server version is changed. FALSE is recommended to use server functions correctly.</desc>
+</attr>
 </attrs>
