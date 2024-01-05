@@ -16,19 +16,15 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import java.util.Set;
-
+import com.google.common.base.Strings;
+import com.zimbra.cs.filter.DummyMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.mime.ParsedAddress;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.zimbra.cs.filter.DummyMailAdapter;
-import com.zimbra.cs.filter.ZimbraMailAdapter;
-import com.zimbra.cs.mime.ParsedAddress;
 
 /**
  * SIEVE test for LinkedIn notifications.
@@ -42,8 +38,6 @@ import com.zimbra.cs.mime.ParsedAddress;
  * @author ysasaki
  */
 public final class LinkedInTest extends AbstractTest {
-    private static final Set<String> ADDRESSES = ImmutableSet.of("connections@linkedin.com", "member@linkedin.com", "hit-reply@linkedin.com");
-
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) throws SieveException {
         if (mail instanceof DummyMailAdapter) {
@@ -55,8 +49,12 @@ public final class LinkedInTest extends AbstractTest {
         ZimbraMailAdapter adapter = (ZimbraMailAdapter) mail;
 
         ParsedAddress sender = adapter.getParsedMessage().getParsedSender();
-        if (!Strings.isNullOrEmpty(sender.emailPart) && ADDRESSES.contains(sender.emailPart.toLowerCase())) {
-            return true;
+        if (!Strings.isNullOrEmpty(sender.emailPart)) {
+            String email = sender.emailPart.toLowerCase();
+            if (email.endsWith("@linkedin.com") || email.endsWith("@e.linkedin.com") || email.endsWith(
+                    "@cs.linkedin.com") || email.endsWith("@el.linkedin.com")) {
+                return true;
+            }
         }
         return false;
     }

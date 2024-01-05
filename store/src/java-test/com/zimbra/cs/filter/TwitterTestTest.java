@@ -16,14 +16,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.util.HashMap;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -37,6 +29,13 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Unit test for {@link TwitterTest}.
@@ -66,7 +65,7 @@ public final class TwitterTestTest {
 
         // direct message email: the old way the filter worked
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
-                "From: Twitter <dm-lfnfnxv=mvzoen.pbz-4fa92@postmaster.twitter.com>\n".getBytes(), false),
+                "From: Twitter <dm-lfnfnxv=mvzoen.pbz-4fa92@yx.com>\n".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
@@ -74,7 +73,7 @@ public final class TwitterTestTest {
 
         // mention email : the old way the filter worked
         ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
-                "From: Twitter <mention-lfnfnxv=mvzoen.pbz-4fa92@postmaster.twitter.com>\n".getBytes(), false),
+                "From: Twitter <mention-lfnfnxv=mvzoen.pbz-4fa92@e-x.com>\n".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
@@ -82,7 +81,7 @@ public final class TwitterTestTest {
         
         
         ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
-                "From: sharuki2 (via Twitter) <notify@twitter.com>\n".getBytes(), false),
+                "From: sharuki2 (via Twitter) <notify@x.com>\n".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());

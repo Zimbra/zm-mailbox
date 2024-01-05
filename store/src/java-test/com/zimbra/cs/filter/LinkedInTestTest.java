@@ -16,14 +16,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.util.HashMap;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -37,6 +29,13 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Unit test for {@link LinkedInTest}.
@@ -76,7 +75,25 @@ public final class LinkedInTestTest {
         // deals
         ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage(("Sender: messages-noreply@bounce.linkedin.com\n" +
-                    "From: Yuichi Sasaki via LinkedIn <member@linkedin.com>").getBytes(), false),
+                    "From: Yuichi Sasaki via LinkedIn <member@cs.linkedin.com>").getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals("linkedin", ArrayUtil.getFirstElement(msg.getTags()));
+
+        // connections@e.linkedin.com
+        ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                new ParsedMessage(("Sender: messages-noreply@bounce.linkedin.com\n" +
+                        "From: LinkedIn Connections <connections@e.linkedin.com>").getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals("linkedin", ArrayUtil.getFirstElement(msg.getTags()));
+
+        // connections@el.linkedin.com
+        ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                new ParsedMessage(("Sender: messages-noreply@bounce.linkedin.com\n" +
+                        "From: LinkedIn Connections <connections@el.linkedin.com>").getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
