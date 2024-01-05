@@ -185,7 +185,14 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         LDAP_UPGRADE("LDAP_UPGRADE"),
         ZMCONFIGD("ZMCONFIGD"),
 
-        TODO("TODO");
+        TODO("TODO"),
+
+        /*
+         * Licensing
+         */
+        ACCOUNTS_WITH_MOBILE_SYNC("Filter in " + Provisioning.A_zimbraFeatureMobileSyncEnabled),
+        ACCOUNTS_WITH_EWS("Filter in " + Provisioning.A_zimbraFeatureEwsEnabled),
+        ACCOUNTS_WITH_SMIME("Filter in " + Provisioning.A_zimbraFeatureSMIMEEnabled);
 
         private final String template;
 
@@ -354,6 +361,13 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter CMBSearchAccountsOnly();
     public abstract ZLdapFilter CMBSearchAccountsOnlyWithArchive();
     public abstract ZLdapFilter CMBSearchNonSystemResourceAccountsOnly();
+
+    /*
+     * account licensing
+     */
+    public abstract ZLdapFilter accountsWithSmime();
+    public abstract ZLdapFilter accountsWithEws();
+    public abstract ZLdapFilter accountsWithMobileSync();
 
     /*
      * alias
