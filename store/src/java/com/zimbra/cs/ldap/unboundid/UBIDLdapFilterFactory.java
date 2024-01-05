@@ -83,6 +83,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_WITH_ARCHIVE;
     private static Filter FILTER_ALL_INTERNAL_ACCOUNTS;
     private static Filter FILTER_ALL_ADDRESS_LISTS;
+    private static Filter FILTER_ACCOUNTS_WITH_SMIME;
+    private static Filter FILTER_ACCOUNTS_WITH_EWS;
+    private static Filter FILTER_ACCOUNTS_WITH_MOBILE_SYNC;
 
 
     private static boolean initialized = false;
@@ -274,6 +277,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
         FILTER_ALL_ADDRESS_LISTS = Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraAddressList);
+
+        FILTER_ACCOUNTS_WITH_EWS = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureEwsEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_MOBILE_SYNC = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureMobileSyncEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_SMIME = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureSMIMEEnabled, LdapConstants.LDAP_TRUE);
     }
 
     @Override
@@ -590,6 +602,40 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_ACCOUNTS_ONLY,
                         FILTER_NOT_SYSTEM_RESOURCE,
                         FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH));
+    }
+
+    /*
+     * account licensing
+     */
+    @Override
+    public ZLdapFilter accountsWithSmime() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_SMIME,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_SMIME));
+
+    }
+    @Override
+    public ZLdapFilter accountsWithEws() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_EWS,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_EWS));
+
+    }
+    @Override
+    public ZLdapFilter accountsWithMobileSync() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_MOBILE_SYNC,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_MOBILE_SYNC));
+
     }
 
 
