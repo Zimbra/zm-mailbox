@@ -16,14 +16,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.util.HashMap;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -37,6 +29,13 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Unit test for {@link FacebookTest}.
@@ -74,11 +73,12 @@ public final class FacebookTestTest {
 
         // deals
         ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-                new ParsedMessage("From: \"Facebook Deals\" <deals+mhw1-ivm@facebookmail.com>\n".getBytes(), false),
+                new ParsedMessage("From: \"Facebook Deals\" <deals+mhw1-ivm@xfacebookmail.com>\n".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
         Assert.assertTrue(msg.getTags().length == 0);
+
     }
 
 }
