@@ -9352,6 +9352,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 types.add(ObjectType.domains);
                 filter = filterFactory.domainsOnUCService(ucService.getId());
                 break;
+            case internalUserAccountWithSmime:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithSmime();
+                break;
+            case internalUserAccountWithEws:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithEws();
+                break;
+            case internalUserAccountWithMobileSync:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithMobileSync();
+                break;
             default:
                 throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);
         }

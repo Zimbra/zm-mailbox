@@ -37,7 +37,10 @@ public enum CountObjectsType {
     // for license counting
     internalUserAccount(true, false),
     internalArchivingAccount(true, false),
-    internalUserAccountX(true, false);
+    internalUserAccountX(true, false),
+    internalUserAccountWithMobileSync(false, false),
+    internalUserAccountWithSmime(false, false),
+    internalUserAccountWithEws(false, false);
     
     private boolean allowsDomain;
     private boolean allowsUCService;
