@@ -354,6 +354,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.DeleteDomainResponse.class,
             com.zimbra.soap.admin.message.DeleteGalSyncAccountRequest.class,
             com.zimbra.soap.admin.message.DeleteGalSyncAccountResponse.class,
+            com.zimbra.soap.admin.message.DisableTwoFactorAuthRequest.class,
+            com.zimbra.soap.admin.message.DisableTwoFactorAuthResponse.class,
             com.zimbra.soap.admin.message.DeleteLDAPEntryRequest.class,
             com.zimbra.soap.admin.message.DeleteLDAPEntryResponse.class,
             com.zimbra.soap.admin.message.DeleteMailboxRequest.class,
