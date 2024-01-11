@@ -52,6 +52,8 @@ public final class AdminConstants {
     public static final String E_DELEGATE_AUTH_RESPONSE = "DelegateAuthResponse";
     public static final String E_DELETE_GAL_SYNC_ACCOUNT_REQUEST = "DeleteGalSyncAccountRequest";
     public static final String E_DELETE_GAL_SYNC_ACCOUNT_RESPONSE = "DeleteGalSyncAccountResponse";
+    public static final String E_DISABLE_TWO_FACTOR_AUTH_REQUEST = "DisableTwoFactorAuthRequest";
+    public static final String E_DISABLE_TWO_FACTOR_AUTH_RESPONSE = "DisableTwoFactorAuthResponse";
     public static final String E_GET_ACCOUNT_REQUEST = "GetAccountRequest";
     public static final String E_GET_ACCOUNT_RESPONSE = "GetAccountResponse";
     public static final String E_GET_ACCOUNT_INFO_REQUEST = "GetAccountInfoRequest";
@@ -563,6 +565,8 @@ public final class AdminConstants {
     public static final QName DELEGATE_AUTH_RESPONSE = QName.get(E_DELEGATE_AUTH_RESPONSE, NAMESPACE);
     public static final QName DELETE_GAL_SYNC_ACCOUNT_REQUEST = QName.get(E_DELETE_GAL_SYNC_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName DELETE_GAL_SYNC_ACCOUNT_RESPONSE = QName.get(E_DELETE_GAL_SYNC_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName DISABLE_TWO_FACTOR_AUTH_REQUEST = QName.get(E_DISABLE_TWO_FACTOR_AUTH_REQUEST, NAMESPACE);
+    public static final QName DISABLE_TWO_FACTOR_AUTH_RESPONSE = QName.get(E_DISABLE_TWO_FACTOR_AUTH_RESPONSE, NAMESPACE);
     public static final QName GET_ACCOUNT_REQUEST = QName.get(E_GET_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName GET_ACCOUNT_RESPONSE = QName.get(E_GET_ACCOUNT_RESPONSE, NAMESPACE);
     public static final QName GET_ACCOUNT_INFO_REQUEST = QName.get(E_GET_ACCOUNT_INFO_REQUEST, NAMESPACE);
