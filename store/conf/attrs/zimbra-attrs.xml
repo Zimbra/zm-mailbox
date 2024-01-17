@@ -10401,7 +10401,7 @@ TODO: delete them permanently from here
   <desc>What 2FA method is enabled by user: app and/or email</desc>
 </attr>
 
-<attr id="4104" name="zimbraPrefPrimaryTwoFactorAuthMethod" type="string" cardinality="single" optionalIn="domain,cos,account" flags="accountCosDomainInherited,accountInfo" since="11.0.0">
+<attr id="4104" name="zimbraPrefPrimaryTwoFactorAuthMethod" type="string" cardinality="single" optionalIn="account" flags="accountInfo" since="11.0.0">
   <desc>what method is primary for 2FA on an account: app or email</desc>
 </attr>
 
