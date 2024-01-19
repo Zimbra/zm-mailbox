@@ -53,11 +53,9 @@ public class CreateDataSource extends MailDocumentHandler {
         Element eDataSource = getDataSourceElement(request);
         DataSourceType type = DataSourceType.fromString(eDataSource.getName());
 
-        boolean isAppProvisioned = doZMGAppProvisioningIfReq(zsc, prov, eDataSource, type);
-
         Account account = getRequestedAccount(zsc);
         
-        if (eDataSource.getAttributeBool(MailConstants.A_DS_TEST, false) && !isAppProvisioned) {
+        if (eDataSource.getAttributeBool(MailConstants.A_DS_TEST, false)) {
             TestDataSource.testDataSourceConnection(prov, eDataSource, type, account);
         }
         if (!canModifyOptions(zsc, account))
@@ -180,32 +178,6 @@ public class CreateDataSource extends MailDocumentHandler {
             }
         }
         return name;
-    }
-
-    private static synchronized boolean doZMGAppProvisioningIfReq(ZimbraSoapContext zsc, Provisioning prov,
-            Element eDataSource, DataSourceType type)
-            throws ServiceException {
-        String acctId = zsc.getAuthtokenAccountId();
-        AuthToken authToken = zsc.getAuthToken();
-        if (authToken.isZMGAppBootstrap() && prov.getAccountById(acctId) == null) {
-            // test the data source to make sure it is a valid one
-            TestDataSource.testDataSourceConnection(prov, eDataSource, type, null);
-
-            Account acct = prov.autoProvZMGAppAccount(acctId, authToken.getDigest());
-
-            MailboxManager mailboxManager = MailboxManager.getInstance();
-            if (mailboxManager.getMailboxByAccountId(acctId, false) ==  null) {
-                try {
-                    mailboxManager.createMailbox(null, acct);
-                } catch (ServiceException e) {
-                    // Rollback account creation
-                    prov.deleteAccount(acctId);
-                    throw e;
-                }
-            }
-            return true;
-        }
-        return false;
     }
 
     /**

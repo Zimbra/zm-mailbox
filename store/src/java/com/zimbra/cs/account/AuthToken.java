@@ -129,14 +129,6 @@ public abstract class AuthToken {
 
     public abstract String getCrumb() throws AuthTokenException;
 
-    /**
-     * Returns whether this represents an initial/anticipatory auth token issued to a ZMG app.
-     * @return
-     */
-    public boolean isZMGAppBootstrap() {
-        return false;
-    }
-
     public boolean isCsrfTokenEnabled() {
         return false;
     }

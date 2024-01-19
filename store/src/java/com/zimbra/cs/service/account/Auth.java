@@ -276,25 +276,6 @@ public class Auth extends AccountDocumentHandler {
         }
 
         if (acct == null) {
-            // try ZMG Proxy auto provision if it is enabled
-            if (acctBy == AccountBy.name && password != null) {
-                Pair<Account, Boolean> result = null;
-                try {
-                    result = prov.autoProvZMGProxyAccount(acctValuePassedIn, password);
-                } catch (AuthFailedServiceException e) {
-                    AuthListener.invokeOnException(e);
-                    // Most likely in error with user creds
-                } catch (ServiceException e) {
-                    ZimbraLog.account.info("unable to auto provision acct " + acctValuePassedIn, e);
-                }
-                if (result != null) {
-                    acct = result.getFirst();
-                    acctAutoProvisioned = result.getSecond();
-                }
-            }
-        }
-
-        if (acct == null) {
             if (LC.zimbra_additional_logging.booleanValue()) {
                 ZimbraLog.security.info(String.format("Error occurred during authentication:" +
                         " authentication failed for [%s]. Reason: account not found.", acctValue));
@@ -571,9 +552,6 @@ public class Auth extends AccountDocumentHandler {
         }
         if (deviceId != null) {
             response.addUniqueElement(AccountConstants.E_DEVICE_ID).setText(deviceId);
-        }
-        if (acct.isIsMobileGatewayProxyAccount()) {
-            response.addAttribute(AccountConstants.A_ZMG_PROXY, true);
         }
         return response;
     }

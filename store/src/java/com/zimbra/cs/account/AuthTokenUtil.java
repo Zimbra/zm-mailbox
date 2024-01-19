@@ -43,7 +43,7 @@ public class AuthTokenUtil {
     }
 
     public static boolean isZimbraUser(String type) {
-        return StringUtil.isNullOrEmpty(type) || AuthTokenProperties.C_TYPE_ZIMBRA_USER.equals(type) || AuthTokenProperties.C_TYPE_ZMG_APP.equals(type);
+        return StringUtil.isNullOrEmpty(type) || AuthTokenProperties.C_TYPE_ZIMBRA_USER.equals(type);
     }
 
     public static AuthTokenKey getCurrentKey() throws AuthTokenException {

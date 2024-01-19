@@ -155,7 +155,7 @@ public abstract class DocumentHandler {
         }
 
         Account acct = Provisioning.getInstance().get(AccountBy.id, id, zsc.getAuthToken());
-        if (acct == null && !(at != null && at.isZMGAppBootstrap())) {
+        if (acct == null) {
             throw ServiceException.AUTH_REQUIRED();
         }
         return acct;

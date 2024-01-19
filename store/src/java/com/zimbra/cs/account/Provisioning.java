@@ -1056,31 +1056,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void renameAccount(String zimbraId, String newName) throws ServiceException;
 
     /**
-     * Returns the domain under which ZMG app accounts are created by default.
-     *
-     * @return
-     * @throws ServiceException
-     */
-    public Domain getDefaultZMGDomain() throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
-
-    /**
-     * Creates an account for an app that interfaces with the Mobile Gateway features.
-     *
-     * @param accountId id to use for the new account
-     * @param appCredsDigest a string representing the unique set of credentials of the app
-     * @return
-     */
-    public Account autoProvZMGAppAccount(String accountId, String appCredsDigest) throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
-
-    public Pair<Account, Boolean> autoProvZMGProxyAccount(String emailAddr, String password) throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
-
-    /**
      * Looks up an account by the specified key.
      *
      * @return the <code>Account</code>, or <code>null</code> if no <code>Account</code>
