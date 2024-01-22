@@ -17,14 +17,14 @@ public class GetModifiedItemsIDsRequest {
      * @zm-api-field-description Root folder ID.  If present, we start sync there rather than at folder 11
      */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=true)
-    private final Integer folderId;
+    private String folderId;
 
     /**
      * @zm-api-field-tag CHANGEDSINCE <mod-sequence>
      * @zm-api-field-description mod-sequence value passed by IMAP client in CHANGEDSINCE modifier
      */
     @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=true)
-    private final Integer modSeq;
+    private Integer modSeq;
 
     public GetModifiedItemsIDsRequest() {
         modSeq = null;
@@ -36,8 +36,12 @@ public class GetModifiedItemsIDsRequest {
      * @param folderId
      * @param modSeq
      */
-    public GetModifiedItemsIDsRequest(Integer folderId, Integer modSeq) {
+    public GetModifiedItemsIDsRequest(String folderId, Integer modSeq) {
         this.folderId = folderId;
+        this.modSeq = modSeq;
+    }
+
+    public void setModSeq(Integer modSeq) {
         this.modSeq = modSeq;
     }
 
@@ -45,7 +49,7 @@ public class GetModifiedItemsIDsRequest {
         return modSeq;
     }
 
-    public Integer getFolderId() {
+    public String getFolderId() {
         return folderId;
     }
 }
