@@ -20,6 +20,39 @@
         </magic>
     </mime-type>
 
+    <mime-type type="application/pdf">
+        <alias type="application/x-pdf"/>
+        <acronym>PDF</acronym>
+        <_comment>Portable Document Format</_comment>
+        <tika:link>http://en.wikipedia.org/wiki/PDF</tika:link>
+        <tika:link>http://www.adobe.com/devnet/pdf/pdf_reference_archive.html</tika:link>
+        <tika:uti>com.adobe.pdf</tika:uti>
+        <magic priority="50">
+            <!-- Normally just %PDF- -->
+            <match value="%PDF-" type="string" offset="0"/>
+            <!-- Sometimes has a UTF-8 Byte Order Mark first -->
+            <match value="\xef\xbb\xbf%PDF-" type="string" offset="0"/>
+        </magic>
+        <magic priority="40">
+            <!-- Higher priority than matlab's priority=20 %% match
+            Low priority match for %PDF-#.# near the start of the file -->
+            <!-- Can trigger false positives, so set the priority rather low here -->
+            <match value="%%" type="string" offset="0:128">
+                <match value="%PDF-1." type="string" offset="1:512"/>
+            </match>
+            <match value="%%" type="string" offset="0:128">
+                <match value="%PDF-2." type="string" offset="1:512"/>
+            </match>
+        </magic>
+        <magic priority="20">
+            <!-- Low priority match for %PDF-#.# near the start of the file -->
+            <!-- Can trigger false positives, so set the priority rather low here -->
+            <match value="%PDF-1." type="string" offset="1:512"/>
+            <match value="%PDF-2." type="string" offset="1:512"/>
+        </magic>
+        <glob pattern="*.pdf"/>
+    </mime-type>
+
     <mime-type type="application/xml">
 	    <acronym>XML</acronym>
 	    <_comment>Extensible Markup Language</_comment>
