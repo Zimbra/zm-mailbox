@@ -362,7 +362,7 @@ public class Auth extends AccountDocumentHandler {
                     if (usingTwoFactorAuth) {
                         // check that 2FA has been enabled, in case the client is passing in a twoFactorCode prior to setting up 2FA
                         if (!twoFactorManager.twoFactorAuthEnabled()) {
-                            throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
+                            throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED(getTwoFactorAuthRequiredSetupErrorMessage(acct));
                         }
                         AuthToken twoFactorToken = null;
                         if (password == null) {
@@ -474,7 +474,7 @@ public class Auth extends AccountDocumentHandler {
          *    this can happen if it's required for the account but the user hasn't received a secret yet.
          */
         if (!auth.twoFactorAuthEnabled()) {
-            throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
+            throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED(getTwoFactorAuthRequiredSetupErrorMessage(account));
         } else {
             Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
             AuthToken authToken = AuthProvider.getAuthToken(account, recoveryCode != null ? Usage.RESET_PASSWORD : Usage.TWO_FACTOR_AUTH, tokenType);
@@ -492,6 +492,14 @@ public class Auth extends AccountDocumentHandler {
             addTwoFactorAttributes(response, account);
             return response;
         }
+    }
+
+    private String getTwoFactorAuthRequiredSetupErrorMessage(Account account) {
+        String[] twoFactorAuthMethodAllowed = account.getTwoFactorAuthMethodAllowed();
+        if (twoFactorAuthMethodAllowed == null || twoFactorAuthMethodAllowed.length == 0) {
+            twoFactorAuthMethodAllowed = new String[]{ AccountConstants.E_TWO_FACTOR_METHOD_APP };
+        }
+        return "two-factor authentication setup required. Allowed method:" + Arrays.asList(twoFactorAuthMethodAllowed);
     }
 
     private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
