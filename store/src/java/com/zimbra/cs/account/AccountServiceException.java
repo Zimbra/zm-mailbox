@@ -424,6 +424,10 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("two-factor authentication setup required", TWO_FACTOR_SETUP_REQUIRED, SENDERS_FAULT, null);
     }
 
+    public static AccountServiceException TWO_FACTOR_SETUP_REQUIRED(String message) {
+        return new AccountServiceException(message, TWO_FACTOR_SETUP_REQUIRED, SENDERS_FAULT, null);
+    }
+
     public static AccountServiceException INVALID_TRUSTED_DEVICE_TOKEN() {
         return new AccountServiceException("invalid trusted device token", INVALID_TRUSTED_DEVICE_TOKEN, SENDERS_FAULT, null);
     }
