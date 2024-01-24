@@ -26590,64 +26590,136 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Define body: field for 2FA email
+     * Define body: field for 2FA email in html format
      *
-     * @return zimbraTwoFactorCodeEmailBody, or null if unset
+     * @return zimbraTwoFactorCodeEmailBodyHtml, or null if unset
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=4109)
-    public String getTwoFactorCodeEmailBody() {
-        return getAttr(Provisioning.A_zimbraTwoFactorCodeEmailBody, null, true);
+    @ZAttr(id=4111)
+    public String getTwoFactorCodeEmailBodyHtml() {
+        return getAttr(Provisioning.A_zimbraTwoFactorCodeEmailBodyHtml, null, true);
     }
 
     /**
-     * Define body: field for 2FA email
+     * Define body: field for 2FA email in html format
      *
-     * @param zimbraTwoFactorCodeEmailBody new value
+     * @param zimbraTwoFactorCodeEmailBodyHtml new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=4109)
-    public void setTwoFactorCodeEmailBody(String zimbraTwoFactorCodeEmailBody) throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=4111)
+    public void setTwoFactorCodeEmailBodyHtml(String zimbraTwoFactorCodeEmailBodyHtml) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBody, zimbraTwoFactorCodeEmailBody);
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBodyHtml, zimbraTwoFactorCodeEmailBodyHtml);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Define body: field for 2FA email
+     * Define body: field for 2FA email in html format
      *
-     * @param zimbraTwoFactorCodeEmailBody new value
+     * @param zimbraTwoFactorCodeEmailBodyHtml new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 11.0.0
      */
-    @ZAttr(id=4109)
-    public Map<String,Object> setTwoFactorCodeEmailBody(String zimbraTwoFactorCodeEmailBody, Map<String,Object> attrs) {
+    @ZAttr(id=4111)
+    public Map<String,Object> setTwoFactorCodeEmailBodyHtml(String zimbraTwoFactorCodeEmailBodyHtml, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBody, zimbraTwoFactorCodeEmailBody);
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBodyHtml, zimbraTwoFactorCodeEmailBodyHtml);
         return attrs;
     }
 
     /**
-     * Define body: field for 2FA email
+     * Define body: field for 2FA email in html format
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4111)
+    public void unsetTwoFactorCodeEmailBodyHtml() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBodyHtml, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Define body: field for 2FA email in html format
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4111)
+    public Map<String,Object> unsetTwoFactorCodeEmailBodyHtml(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBodyHtml, "");
+        return attrs;
+    }
+
+    /**
+     * Define body: field for 2FA email in text format
+     *
+     * @return zimbraTwoFactorCodeEmailBodyText, or null if unset
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4109)
+    public String getTwoFactorCodeEmailBodyText() {
+        return getAttr(Provisioning.A_zimbraTwoFactorCodeEmailBodyText, null, true);
+    }
+
+    /**
+     * Define body: field for 2FA email in text format
+     *
+     * @param zimbraTwoFactorCodeEmailBodyText new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4109)
+    public void setTwoFactorCodeEmailBodyText(String zimbraTwoFactorCodeEmailBodyText) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBodyText, zimbraTwoFactorCodeEmailBodyText);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Define body: field for 2FA email in text format
+     *
+     * @param zimbraTwoFactorCodeEmailBodyText new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4109)
+    public Map<String,Object> setTwoFactorCodeEmailBodyText(String zimbraTwoFactorCodeEmailBodyText, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBodyText, zimbraTwoFactorCodeEmailBodyText);
+        return attrs;
+    }
+
+    /**
+     * Define body: field for 2FA email in text format
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 11.0.0
      */
     @ZAttr(id=4109)
-    public void unsetTwoFactorCodeEmailBody() throws com.zimbra.common.service.ServiceException {
+    public void unsetTwoFactorCodeEmailBodyText() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBody, "");
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBodyText, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Define body: field for 2FA email
+     * Define body: field for 2FA email in text format
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -26655,9 +26727,9 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @since ZCS 11.0.0
      */
     @ZAttr(id=4109)
-    public Map<String,Object> unsetTwoFactorCodeEmailBody(Map<String,Object> attrs) {
+    public Map<String,Object> unsetTwoFactorCodeEmailBodyText(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBody, "");
+        attrs.put(Provisioning.A_zimbraTwoFactorCodeEmailBodyText, "");
         return attrs;
     }
 

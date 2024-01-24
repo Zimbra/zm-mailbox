@@ -18063,12 +18063,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTwoFactorAuthTrustedDeviceTokenLifetime = "zimbraTwoFactorAuthTrustedDeviceTokenLifetime";
 
     /**
-     * Define body: field for 2FA email
+     * Define body: field for 2FA email in html format
+     *
+     * @since ZCS 11.0.0
+     */
+    @ZAttr(id=4111)
+    public static final String A_zimbraTwoFactorCodeEmailBodyHtml = "zimbraTwoFactorCodeEmailBodyHtml";
+
+    /**
+     * Define body: field for 2FA email in text format
      *
      * @since ZCS 11.0.0
      */
     @ZAttr(id=4109)
-    public static final String A_zimbraTwoFactorCodeEmailBody = "zimbraTwoFactorCodeEmailBody";
+    public static final String A_zimbraTwoFactorCodeEmailBodyText = "zimbraTwoFactorCodeEmailBodyText";
 
     /**
      * Define from: field for 2FA email
