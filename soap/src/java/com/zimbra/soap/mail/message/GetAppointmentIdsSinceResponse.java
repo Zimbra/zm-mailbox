@@ -32,7 +32,7 @@ import com.zimbra.common.soap.MailConstants;
 public class GetAppointmentIdsSinceResponse {
     @XmlElement(name=MailConstants.A_MODIFIED_IDS /* mids */, required=false)
     private List<Integer> mids;
-    @XmlElement(name=MailConstants.A_MODIFIED_IDS /* dids */, required=false)
+    @XmlElement(name=MailConstants.A_DELETED_IDS /* dids */, required=false)
     private List<Integer> dids;
 
     public GetAppointmentIdsSinceResponse() {

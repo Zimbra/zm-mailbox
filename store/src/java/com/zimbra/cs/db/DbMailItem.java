@@ -4227,7 +4227,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = calendarItemStatement(conn, "ci.item_id, mi.folder_id", mbox, type, lastSync, folderId, excludeFolderIds);
+            stmt = calendarItemStatement(conn, "ci.item_id, mi.folder_id", mbox, type, lastSync, folderId, excludeFolderIds, "ci.item_id");
             rs = stmt.executeQuery();
 
             Map<Integer, Integer> map = new HashMap<Integer, Integer>();
@@ -4293,7 +4293,7 @@ public class DbMailItem {
      * @param lastSync  last synced time of appointment - int - date in seconds from epoch
      */
     private static PreparedStatement calendarItemStatement(DbConnection conn, String fields,
-            Mailbox mbox, MailItem.Type type, int lastSync, int folderId, int[] excludeFolderIds)
+            Mailbox mbox, MailItem.Type type, int lastSync, int folderId, int[] excludeFolderIds, String orderBy)
             throws SQLException {
         boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
 
@@ -4305,11 +4305,14 @@ public class DbMailItem {
             excludeFolderPart = " AND " + DbUtil.whereNotIn("folder_id", excludeFolderIds.length);
         }
 
+        String orderByConstraint = " ORDER BY " + orderBy + " ASC";
+
         PreparedStatement stmt = conn.prepareStatement("SELECT " + fields +
                 " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
                 " WHERE mi.id = ci.item_id" + lastSyncConstraint + " AND mi." + typeConstraint +
                 (DebugConfig.disableMailboxGroups? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
-                (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
+                (folderSpecified ? " AND ( folder_id = ? OR (folder_id = '"+ Mailbox.ID_FOLDER_TRASH + "' AND prev_folders LIKE ? ))" : "") +
+                excludeFolderPart + orderByConstraint);
 
         int pos = 1;
         if (lastSync < 0) {
@@ -4319,6 +4322,7 @@ public class DbMailItem {
         pos = setMailboxId(stmt, mbox, pos);
         if (folderSpecified) {
             stmt.setInt(pos++, folderId);
+            stmt.setString(pos++, "%:"+folderId);
         }
         if (excludeFolderIds != null) {
             for (int id : excludeFolderIds) {
