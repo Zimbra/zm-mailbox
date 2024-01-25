@@ -4196,6 +4196,57 @@ public class DbMailItem {
      * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
      * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
      */
+    public static Map<Integer, Integer> listCalendarItemIdsAndDates(Mailbox mbox, MailItem.Type type, long start, long end, int folderId,
+            int[] excludeFolderIds) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = calendarItemStatement(conn, "ci.item_id, mi.date", mbox, type, start, end, folderId, excludeFolderIds);
+            rs = stmt.executeQuery();
+
+            Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+            while (rs.next()) {
+                map.put(rs.getInt(1), rs.getInt(2));
+            }
+            return map;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("listing calendar items for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    /**
+     * @param lastSync  last synced time of appointment - int - date in seconds from epoch
+     */
+    public static Map<Integer, Integer> listCalendarItemIdsAndDates(Mailbox mbox, MailItem.Type type, int lastSync, int folderId,
+            int[] excludeFolderIds) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = calendarItemStatement(conn, "ci.item_id, mi.folder_id", mbox, type, lastSync, folderId, excludeFolderIds);
+            rs = stmt.executeQuery();
+
+            Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+            while (rs.next()) {
+                map.put(rs.getInt(1), rs.getInt(2));
+            }
+            return map;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("listing calendar items for mailbox " + mbox.getId() + " failed", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    /**
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
     private static PreparedStatement calendarItemStatement(DbConnection conn, String fields,
             Mailbox mbox, MailItem.Type type, long start, long end, int folderId, int[] excludeFolderIds)
             throws SQLException {
@@ -4226,6 +4277,45 @@ public class DbMailItem {
         if (!startConstraint.isEmpty()) {
             stmt.setTimestamp(pos++, new Timestamp(start));
         }
+        pos = setMailboxId(stmt, mbox, pos);
+        if (folderSpecified) {
+            stmt.setInt(pos++, folderId);
+        }
+        if (excludeFolderIds != null) {
+            for (int id : excludeFolderIds) {
+                stmt.setInt(pos++, id);
+            }
+        }
+        return stmt;
+    }
+
+    /**
+     * @param lastSync  last synced time of appointment - int - date in seconds from epoch
+     */
+    private static PreparedStatement calendarItemStatement(DbConnection conn, String fields,
+            Mailbox mbox, MailItem.Type type, int lastSync, int folderId, int[] excludeFolderIds)
+            throws SQLException {
+        boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
+
+        String lastSyncConstraint = " AND mi.change_date > ?";
+        String typeConstraint = type == MailItem.Type.UNKNOWN ? "type IN " + CALENDAR_TYPES : typeIn(type);
+
+        String excludeFolderPart = "";
+        if (excludeFolderIds != null && excludeFolderIds.length > 0) {
+            excludeFolderPart = " AND " + DbUtil.whereNotIn("folder_id", excludeFolderIds.length);
+        }
+
+        PreparedStatement stmt = conn.prepareStatement("SELECT " + fields +
+                " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
+                " WHERE mi.id = ci.item_id" + lastSyncConstraint + " AND mi." + typeConstraint +
+                (DebugConfig.disableMailboxGroups? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
+                (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
+
+        int pos = 1;
+        if (lastSync < 0) {
+            lastSync = 0;
+        }
+        stmt.setInt(pos++, lastSync);
         pos = setMailboxId(stmt, mbox, pos);
         if (folderSpecified) {
             stmt.setInt(pos++, folderId);

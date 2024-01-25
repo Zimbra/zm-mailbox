@@ -169,6 +169,10 @@ public final class MailConstants {
     public static final String E_APPLY_OUTGOING_FILTER_RULES_RESPONSE = "ApplyOutgoingFilterRulesResponse";
     public static final String E_GET_APPT_SUMMARIES_REQUEST = "GetApptSummariesRequest";
     public static final String E_GET_APPOINTMENT_REQUEST = "GetAppointmentRequest";
+    public static final String E_GET_APPOINTMENT_IDS_IN_RANGE_REQUEST = "GetAppointmentIdsInRangeRequest";
+    public static final String E_GET_APPOINTMENT_IDS_IN_RANGE_RESPONSE = "GetAppointmentIdsInRangeResponse";
+    public static final String E_GET_APPOINTMENT_IDS_SINCE_REQUEST = "GetAppointmentIdsSinceRequest";
+    public static final String E_GET_APPOINTMENT_IDS_SINCE_RESPONSE = "GetAppointmentIdsSinceResponse";
     public static final String E_SET_APPOINTMENT_REQUEST = "SetAppointmentRequest";
     public static final String E_CREATE_APPOINTMENT_REQUEST = "CreateAppointmentRequest";
     public static final String E_CREATE_APPOINTMENT_EXCEPTION_REQUEST = "CreateAppointmentExceptionRequest";
@@ -433,6 +437,10 @@ public final class MailConstants {
     // Calendar
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get(E_GET_APPT_SUMMARIES_REQUEST, NAMESPACE);
     public static final QName GET_APPOINTMENT_REQUEST = QName.get(E_GET_APPOINTMENT_REQUEST, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_IN_RANGE_REQUEST = QName.get(E_GET_APPOINTMENT_IDS_IN_RANGE_REQUEST, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_IN_RANGE_RESPONSE = QName.get(E_GET_APPOINTMENT_IDS_IN_RANGE_RESPONSE, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_SINCE_REQUEST = QName.get(E_GET_APPOINTMENT_IDS_SINCE_REQUEST, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_SINCE_RESPONSE = QName.get(E_GET_APPOINTMENT_IDS_SINCE_RESPONSE, NAMESPACE);
     public static final QName SET_APPOINTMENT_REQUEST = QName.get(E_SET_APPOINTMENT_REQUEST, NAMESPACE);
     public static final QName CREATE_APPOINTMENT_REQUEST = QName.get(E_CREATE_APPOINTMENT_REQUEST, NAMESPACE);
     public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get(E_CREATE_APPOINTMENT_EXCEPTION_REQUEST, NAMESPACE);
@@ -773,6 +781,8 @@ public final class MailConstants {
     public static final String A_ID = "id";
     public static final String A_UUID = "uuid";
     public static final String A_IDS = "ids";
+    public static final String A_MODIFIED_IDS = "mids";
+    public static final String A_DELETED_IDS = "dids";
     public static final String A_CONV_ID = "cid";
     public static final String A_DRAFT_ID = "did";
     public static final String A_SEND_FROM_DRAFT = "sfd";
@@ -965,6 +975,7 @@ public final class MailConstants {
 
     // calendar / appointment
     public static final String E_APPOINTMENT = "appt";
+    public static final String E_APPOINTMENT_DATA = "apptData";
     public static final String E_TASK = "task";
     public static final String E_INVITE = "inv";
     public static final String E_INVITE_COMPONENT = "comp";
@@ -1069,6 +1080,7 @@ public final class MailConstants {
     public static final String A_CAL_RECURRENCE_ID = "recurId";
     public static final String A_CAL_RECURRENCE_RANGE_TYPE = "rangeType";
     public static final String A_CAL_RECURRENCE_ID_Z = "ridZ";  // recurrence id in "Z" (UTC) timezone
+    public static final String A_CAL_LAST_SYNC = "lastSync";
     public static final String A_CAL_START_TIME = "s";
     public static final String A_CAL_END_TIME = "e";
     public static final String A_CAL_DURATION = "d";
