@@ -55924,7 +55924,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraPrefPrimaryTwoFactorAuthMethod, or null if unset
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4104)
     public String getPrefPrimaryTwoFactorAuthMethod() {
@@ -55937,7 +55937,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraPrefPrimaryTwoFactorAuthMethod new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4104)
     public void setPrefPrimaryTwoFactorAuthMethod(String zimbraPrefPrimaryTwoFactorAuthMethod) throws com.zimbra.common.service.ServiceException {
@@ -55953,7 +55953,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4104)
     public Map<String,Object> setPrefPrimaryTwoFactorAuthMethod(String zimbraPrefPrimaryTwoFactorAuthMethod, Map<String,Object> attrs) {
@@ -55967,7 +55967,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4104)
     public void unsetPrefPrimaryTwoFactorAuthMethod() throws com.zimbra.common.service.ServiceException {
@@ -55982,7 +55982,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4104)
     public Map<String,Object> unsetPrefPrimaryTwoFactorAuthMethod(Map<String,Object> attrs) {
@@ -64802,7 +64802,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraTwoFactorAuthMethodAllowed, or empty array if unset
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public String[] getTwoFactorAuthMethodAllowed() {
@@ -64815,7 +64815,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTwoFactorAuthMethodAllowed new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public void setTwoFactorAuthMethodAllowed(String[] zimbraTwoFactorAuthMethodAllowed) throws com.zimbra.common.service.ServiceException {
@@ -64831,7 +64831,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public Map<String,Object> setTwoFactorAuthMethodAllowed(String[] zimbraTwoFactorAuthMethodAllowed, Map<String,Object> attrs) {
@@ -64846,7 +64846,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTwoFactorAuthMethodAllowed new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public void addTwoFactorAuthMethodAllowed(String zimbraTwoFactorAuthMethodAllowed) throws com.zimbra.common.service.ServiceException {
@@ -64862,7 +64862,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public Map<String,Object> addTwoFactorAuthMethodAllowed(String zimbraTwoFactorAuthMethodAllowed, Map<String,Object> attrs) {
@@ -64877,7 +64877,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTwoFactorAuthMethodAllowed existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public void removeTwoFactorAuthMethodAllowed(String zimbraTwoFactorAuthMethodAllowed) throws com.zimbra.common.service.ServiceException {
@@ -64893,7 +64893,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public Map<String,Object> removeTwoFactorAuthMethodAllowed(String zimbraTwoFactorAuthMethodAllowed, Map<String,Object> attrs) {
@@ -64907,7 +64907,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public void unsetTwoFactorAuthMethodAllowed() throws com.zimbra.common.service.ServiceException {
@@ -64922,7 +64922,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public Map<String,Object> unsetTwoFactorAuthMethodAllowed(Map<String,Object> attrs) {
@@ -64936,7 +64936,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraTwoFactorAuthMethodEnabled, or empty array if unset
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public String[] getTwoFactorAuthMethodEnabled() {
@@ -64949,7 +64949,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTwoFactorAuthMethodEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public void setTwoFactorAuthMethodEnabled(String[] zimbraTwoFactorAuthMethodEnabled) throws com.zimbra.common.service.ServiceException {
@@ -64965,7 +64965,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public Map<String,Object> setTwoFactorAuthMethodEnabled(String[] zimbraTwoFactorAuthMethodEnabled, Map<String,Object> attrs) {
@@ -64980,7 +64980,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTwoFactorAuthMethodEnabled new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public void addTwoFactorAuthMethodEnabled(String zimbraTwoFactorAuthMethodEnabled) throws com.zimbra.common.service.ServiceException {
@@ -64996,7 +64996,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public Map<String,Object> addTwoFactorAuthMethodEnabled(String zimbraTwoFactorAuthMethodEnabled, Map<String,Object> attrs) {
@@ -65011,7 +65011,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTwoFactorAuthMethodEnabled existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public void removeTwoFactorAuthMethodEnabled(String zimbraTwoFactorAuthMethodEnabled) throws com.zimbra.common.service.ServiceException {
@@ -65027,7 +65027,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public Map<String,Object> removeTwoFactorAuthMethodEnabled(String zimbraTwoFactorAuthMethodEnabled, Map<String,Object> attrs) {
@@ -65041,7 +65041,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public void unsetTwoFactorAuthMethodEnabled() throws com.zimbra.common.service.ServiceException {
@@ -65056,7 +65056,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public Map<String,Object> unsetTwoFactorAuthMethodEnabled(Map<String,Object> attrs) {
@@ -65638,7 +65638,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraTwoFactorCodeForEmail, or null if unset
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4106)
     public String getTwoFactorCodeForEmail() {
@@ -65651,7 +65651,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTwoFactorCodeForEmail new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4106)
     public void setTwoFactorCodeForEmail(String zimbraTwoFactorCodeForEmail) throws com.zimbra.common.service.ServiceException {
@@ -65667,7 +65667,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4106)
     public Map<String,Object> setTwoFactorCodeForEmail(String zimbraTwoFactorCodeForEmail, Map<String,Object> attrs) {
@@ -65681,7 +65681,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4106)
     public void unsetTwoFactorCodeForEmail() throws com.zimbra.common.service.ServiceException {
@@ -65696,7 +65696,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4106)
     public Map<String,Object> unsetTwoFactorCodeForEmail(Map<String,Object> attrs) {
@@ -65717,7 +65717,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraTwoFactorCodeLifetimeForEmail in millseconds, or 120000 (120s)  if unset
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4105)
     public long getTwoFactorCodeLifetimeForEmail() {
@@ -65732,7 +65732,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraTwoFactorCodeLifetimeForEmail, or "120s" if unset
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4105)
     public String getTwoFactorCodeLifetimeForEmailAsString() {
@@ -65748,7 +65748,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTwoFactorCodeLifetimeForEmail new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4105)
     public void setTwoFactorCodeLifetimeForEmail(String zimbraTwoFactorCodeLifetimeForEmail) throws com.zimbra.common.service.ServiceException {
@@ -65767,7 +65767,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4105)
     public Map<String,Object> setTwoFactorCodeLifetimeForEmail(String zimbraTwoFactorCodeLifetimeForEmail, Map<String,Object> attrs) {
@@ -65784,7 +65784,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4105)
     public void unsetTwoFactorCodeLifetimeForEmail() throws com.zimbra.common.service.ServiceException {
@@ -65802,7 +65802,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4105)
     public Map<String,Object> unsetTwoFactorCodeLifetimeForEmail(Map<String,Object> attrs) {
