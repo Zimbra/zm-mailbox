@@ -14816,7 +14816,7 @@ public class ZAttrProvisioning {
     /**
      * what method is primary for 2FA on an account: app or email
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4104)
     public static final String A_zimbraPrefPrimaryTwoFactorAuthMethod = "zimbraPrefPrimaryTwoFactorAuthMethod";
@@ -17932,7 +17932,7 @@ public class ZAttrProvisioning {
      * It must be different from zimbraTwoFactorCodeLength and
      * zimbraTwoFactorScratchCodeLength.
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4114)
     public static final String A_zimbraTwoFactorAuthEmailCodeLength = "zimbraTwoFactorAuthEmailCodeLength";
@@ -18000,7 +18000,7 @@ public class ZAttrProvisioning {
     /**
      * Methods allowed for 2FA: app and/or email
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4102)
     public static final String A_zimbraTwoFactorAuthMethodAllowed = "zimbraTwoFactorAuthMethodAllowed";
@@ -18008,7 +18008,7 @@ public class ZAttrProvisioning {
     /**
      * What 2FA method is enabled by user: app and/or email
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4103)
     public static final String A_zimbraTwoFactorAuthMethodEnabled = "zimbraTwoFactorAuthMethodEnabled";
@@ -18104,15 +18104,15 @@ public class ZAttrProvisioning {
     /**
      * Define body: field for 2FA email in html format
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
-    @ZAttr(id=4111)
+    @ZAttr(id=4115)
     public static final String A_zimbraTwoFactorCodeEmailBodyHtml = "zimbraTwoFactorCodeEmailBodyHtml";
 
     /**
      * Define body: field for 2FA email in text format
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4109)
     public static final String A_zimbraTwoFactorCodeEmailBodyText = "zimbraTwoFactorCodeEmailBodyText";
@@ -18120,7 +18120,7 @@ public class ZAttrProvisioning {
     /**
      * Define from: field for 2FA email
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4107)
     public static final String A_zimbraTwoFactorCodeEmailFrom = "zimbraTwoFactorCodeEmailFrom";
@@ -18128,7 +18128,7 @@ public class ZAttrProvisioning {
     /**
      * Define subject: field for 2FA email
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4108)
     public static final String A_zimbraTwoFactorCodeEmailSubject = "zimbraTwoFactorCodeEmailSubject";
@@ -18136,7 +18136,7 @@ public class ZAttrProvisioning {
     /**
      * 2FA code for email
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4106)
     public static final String A_zimbraTwoFactorCodeForEmail = "zimbraTwoFactorCodeForEmail";
@@ -18156,7 +18156,7 @@ public class ZAttrProvisioning {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @since ZCS 11.0.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4105)
     public static final String A_zimbraTwoFactorCodeLifetimeForEmail = "zimbraTwoFactorCodeLifetimeForEmail";
