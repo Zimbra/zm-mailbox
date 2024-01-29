@@ -222,6 +222,7 @@ import com.zimbra.soap.mail.message.TestDataSourceRequest;
 import com.zimbra.soap.mail.message.TestDataSourceResponse;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.mail.type.CalendarItemInfo;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
@@ -5737,7 +5738,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return new ZAppointment(invoke(req).getElement(MailConstants.E_APPOINTMENT));
     }
 
-    public com.zimbra.soap.mail.type.CalendarItemInfo getRemoteCalItemByUID(String requestedAccountId, String uid,
+    public CalendarItemInfo getRemoteCalItemByUID(String requestedAccountId, String uid,
             boolean includeInvites, boolean includeContent)
                     throws ServiceException {
         GetAppointmentResponse resp = invokeJaxbOnTargetAccount(
@@ -5746,7 +5747,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return resp == null ? null : resp.getItem();
     }
 
-    public com.zimbra.soap.mail.type.CalendarItemInfo getRemoteCalItemByID(String requestedAccountId, String id,
+    public CalendarItemInfo getRemoteCalItemByID(String requestedAccountId, String id,
             boolean includeInvites, boolean includeContent, boolean sync)
                     throws ServiceException {
         GetAppointmentResponse resp = invokeJaxbOnTargetAccount(
