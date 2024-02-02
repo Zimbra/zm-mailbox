@@ -58,4 +58,14 @@ public class GetAppointmentRequest extends GetCalendarItemRequestBase {
         req.setIncludeInvites(includeInvites);
         return req;
     }
+
+    public static GetAppointmentRequest createForIdInvitesContent(String reqId,
+            Boolean includeInvites, Boolean includeContent, Boolean sync) {
+        GetAppointmentRequest req = new GetAppointmentRequest();
+        req.setId(reqId);
+        req.setIncludeContent(includeContent);
+        req.setIncludeInvites(includeInvites);
+        req.setSync(sync);
+        return req;
+    }
 }
