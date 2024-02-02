@@ -178,6 +178,8 @@ import com.zimbra.soap.mail.message.CreateDataSourceResponse;
 import com.zimbra.soap.mail.message.CreateSearchFolderRequest;
 import com.zimbra.soap.mail.message.CreateSearchFolderResponse;
 import com.zimbra.soap.mail.message.DeleteDataSourceRequest;
+import com.zimbra.soap.mail.message.GetAppointmentIdsSinceRequest;
+import com.zimbra.soap.mail.message.GetAppointmentIdsSinceResponse;
 import com.zimbra.soap.mail.message.GetAppointmentRequest;
 import com.zimbra.soap.mail.message.GetAppointmentResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -220,6 +222,7 @@ import com.zimbra.soap.mail.message.TestDataSourceRequest;
 import com.zimbra.soap.mail.message.TestDataSourceResponse;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.mail.type.CalendarItemInfo;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
@@ -5735,11 +5738,20 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return new ZAppointment(invoke(req).getElement(MailConstants.E_APPOINTMENT));
     }
 
-    public com.zimbra.soap.mail.type.CalendarItemInfo getRemoteCalItemByUID(String requestedAccountId, String uid,
+    public CalendarItemInfo getRemoteCalItemByUID(String requestedAccountId, String uid,
             boolean includeInvites, boolean includeContent)
                     throws ServiceException {
         GetAppointmentResponse resp = invokeJaxbOnTargetAccount(
                 GetAppointmentRequest.createForUidInvitesContent(uid, includeInvites, includeContent),
+                requestedAccountId);
+        return resp == null ? null : resp.getItem();
+    }
+
+    public CalendarItemInfo getRemoteCalItemByID(String requestedAccountId, String id,
+            boolean includeInvites, boolean includeContent, boolean sync)
+                    throws ServiceException {
+        GetAppointmentResponse resp = invokeJaxbOnTargetAccount(
+                GetAppointmentRequest.createForIdInvitesContent(id, includeInvites, includeContent, sync),
                 requestedAccountId);
         return resp == null ? null : resp.getItem();
     }
@@ -6567,9 +6579,20 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public List<Integer> getIdsOfModifiedItemsInFolder(OpContext octxt, int lastSync, int folderId)
     throws ServiceException {
-        GetModifiedItemsIDsRequest req = new GetModifiedItemsIDsRequest(folderId, lastSync);
+        GetModifiedItemsIDsRequest req = new GetModifiedItemsIDsRequest(String.valueOf(folderId), lastSync);
         GetModifiedItemsIDsResponse resp = invokeJaxb(req);
-        return resp.getIds();
+        return resp.getMids();
+    }
+
+    /**
+     *  Will not return modified folders or tags
+     * @return a List of IDs of all caller-visible MailItems modified and deleted since the checkpoint
+     */
+    public Pair<List<Integer>, List<Integer>> getIdsOfModifiedAndDeletedItemsInFolder(int lastSync, int folderId)
+    throws ServiceException {
+        GetAppointmentIdsSinceRequest req = new GetAppointmentIdsSinceRequest(String.valueOf(folderId), lastSync);
+        GetAppointmentIdsSinceResponse resp = invokeJaxb(req);
+        return new Pair<List<Integer>, List<Integer>>(resp.getMids(), resp.getDids());
     }
 
     public Set<String> listIMAPSubscriptions() throws ServiceException {
