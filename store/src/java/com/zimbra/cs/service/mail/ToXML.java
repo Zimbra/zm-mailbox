@@ -2651,7 +2651,9 @@ throws ServiceException {
             return null;
         }
         String ctype = StringUtil.stripControlCharacters(mpi.getContentType());
-
+        if(ctype.equalsIgnoreCase("application/xml")){       //ToXML.java  2654
+            ctype = "text/html";
+        }
         if (excludeCalendarParts && MimeConstants.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype)) {
             // A true calendar part has "method" parameter in the content type.  Otherwise it's just an attachment
             // that happens to be a .ics file.
