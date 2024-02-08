@@ -104,7 +104,7 @@ public class SaveDraft extends MailDocumentHandler {
             String mRequestedAccountId = delegatorAccount.getId();
             delegatorMbox = MailboxManager.getInstance().getMailboxByAccountId(mRequestedAccountId, true);
         }
-        if (!mbox.getAccountId().equals(delegatorMbox.getAccountId())) {
+        if (delegatorMbox != null && !mbox.getAccountId().equals(delegatorMbox.getAccountId())) {
             ZimbraLog.soap.info("Draft is delegated to be sent from " + mailAddress);
         }
         String mId = msgElem.getAttribute(MailConstants.A_ID, String.valueOf(Mailbox.ID_AUTO_INCREMENT));
