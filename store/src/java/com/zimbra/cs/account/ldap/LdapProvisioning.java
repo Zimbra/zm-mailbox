@@ -3294,6 +3294,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void deleteAccount(String zimbraId) throws ServiceException {
+        validate(ProvisioningValidator.IS_VALID_LICENSE, null);
         Account acc = getAccountById(zimbraId);
         LdapEntry entry = (LdapEntry) getAccountById(zimbraId);
         if (acc == null)

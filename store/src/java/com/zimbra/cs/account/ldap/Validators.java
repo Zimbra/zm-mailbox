@@ -67,7 +67,7 @@ final public class Validators {
 
         @Override
         public void validate(Provisioning prov, String action, Object... args) throws ServiceException {
-            if (args.length < 1) return;
+            if (null == args || args.length < 1) return;
             if (!(action.equals(CREATE_ACCOUNT) || action.equals(RENAME_ACCOUNT)) || !(args[0] instanceof String))
                 return;
 
