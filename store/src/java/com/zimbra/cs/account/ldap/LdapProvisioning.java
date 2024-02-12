@@ -17,32 +17,6 @@
 
 package com.zimbra.cs.account.ldap;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collectors;
-
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.StringUtils;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -58,7 +32,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -232,6 +205,31 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedValue;
 import com.zimbra.soap.type.TargetBy;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.StringUtils;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 
 /**
@@ -3290,6 +3288,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         Collections.sort(result);
         return result;
+    }
+
+    @Override
+    public void prepareAccountStatusToDelete(Account acct) throws ServiceException{
+        final Map<String, Object> attrs = new HashMap<String, Object>(acct.getAttrs());
+        validate(ProvisioningValidator.DELETE_ACCOUNT, attrs);
+        modifyAccountStatus(acct, AccountStatus.maintenance.name());
     }
 
     @Override

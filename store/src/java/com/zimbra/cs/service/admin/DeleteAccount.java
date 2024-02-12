@@ -20,12 +20,8 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.List;
-import java.util.Map;
-
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -38,10 +34,12 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.listeners.AccountListener;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteAccountRequest;
 import com.zimbra.soap.admin.message.DeleteAccountResponse;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author schemers
@@ -97,7 +95,7 @@ public class DeleteAccount extends AdminDocumentHandler {
          * To prevent this race condition, put the account in "maintenance" mode
          * so mail delivery and any user action is blocked.
          */
-        prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
+        prov.prepareAccountStatusToDelete(account);
         boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
 
         try {
