@@ -101,8 +101,9 @@ public class SaveDraft extends MailDocumentHandler {
         Mailbox delegatorMbox = null;
         if (mailAddress != null) {
             delegatorAccount = prov.get(AccountBy.name, mailAddress, zsc.getAuthToken());
-            String mRequestedAccountId = delegatorAccount.getId();
-            delegatorMbox = MailboxManager.getInstance().getMailboxByAccountId(mRequestedAccountId, true);
+            if (delegatorAccount != null) {
+                delegatorMbox = MailboxManager.getInstance().getMailboxByAccountId(delegatorAccount.getId(), true);
+            }
         }
         if (delegatorMbox != null && !mbox.getAccountId().equals(delegatorMbox.getAccountId())) {
             ZimbraLog.soap.info("Draft is delegated to be sent from " + mailAddress);
