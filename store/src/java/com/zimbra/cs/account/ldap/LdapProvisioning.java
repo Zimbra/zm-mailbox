@@ -5935,17 +5935,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             boolean allowFallback = true;
             if (!authMech.isZimbraAuth()) {
-                allowFallback =
-                    domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
-                    acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
-                    acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+                allowFallback = domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false);
             }
 
             try {
                 authMech.doAuth(this, domain, acct, password, context);
                 AuthMech authedByMech = authMech.getMechanism();
-                // indicate the authed by mech in the auth context
-                // context.put(AuthContext.AC_AUTHED_BY_MECH, authedByMech); TODO
                 return;
             } catch (ServiceException e) {
                 if (!allowFallback || authMech.isZimbraAuth())
@@ -5956,7 +5951,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             // fall back to zimbra default auth
             AuthMechanism.doZimbraAuth(this, domain, acct, password, context);
-            // context.put(AuthContext.AC_AUTHED_BY_MECH, Provisioning.AM_ZIMBRA); // TODO
         }
     }
 
