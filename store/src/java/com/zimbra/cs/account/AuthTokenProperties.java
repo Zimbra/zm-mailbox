@@ -28,7 +28,6 @@ public class AuthTokenProperties implements Cloneable {
 
     public static final String C_TYPE_ZIMBRA_USER = "zimbra";
     public static final String C_TYPE_EXTERNAL_USER = "external";
-    public static final String C_TYPE_ZMG_APP = "zmgapp";
     public static final String C_ID  = "id";
     // original admin id
     public static final String C_AID  = "aid";
@@ -94,12 +93,13 @@ public class AuthTokenProperties implements Cloneable {
         tokenID = new Random().nextInt(Integer.MAX_VALUE-1) + 1;
     }
 
+    //Zimbra Mobile Gateway (zmgApp) has been removed from the product as part of ZBUG-3249, however this Java signature is needed to compile zm-mailbox
     public AuthTokenProperties(String acctId, boolean zmgApp, String externalEmail, String pass, String digest, long expires) {
         accountId = acctId;
         this.expires = expires;
-        externalUserEmail = externalEmail == null && !zmgApp ? "public" : externalEmail;
+        // commented out as part of ZBUG-3249: externalUserEmail = externalEmail == null && !zmgApp ? "public" : externalEmail;
         this.digest = digest != null ? digest : AuthToken.generateDigest(externalEmail, pass);
-        this.type = zmgApp ? C_TYPE_ZMG_APP : C_TYPE_EXTERNAL_USER;
+        this.type = C_TYPE_EXTERNAL_USER;
         tokenID = new Random().nextInt(Integer.MAX_VALUE-1) + 1;
         try {
             Account acct = Provisioning.getInstance().getAccountById(accountId);
