@@ -18,26 +18,20 @@ package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Date;
 import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.AutoSendDraftTask;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -87,29 +81,7 @@ public class SaveDraft extends MailDocumentHandler {
         boolean wantModSeq = request.getAttributeBool(MailConstants.A_WANT_MODIFIED_SEQUENCE, false);
         Element msgElem = request.getElement(MailConstants.E_MSG);
 
-        // fetching the Delegator Account
-        // if mail is not delegated to be Send As, then the delegator account is the same as the account of the mailbox
-        String mailAddress = null;
-        List<Element> elements = msgElem.listElements(MailConstants.E_EMAIL);
-        for (Element element : elements) {
-            if (element.getAttribute(MailConstants.A_ITEM_TYPE, null).equals(MailConstants.A_FLAGS)) {
-                mailAddress = element.getAttribute(MailConstants.A_ADDRESS, null);
-            }
-        }
-        Provisioning prov = Provisioning.getInstance();
-        Account delegatorAccount;
-        Mailbox delegatorMbox = null;
-        if (mailAddress != null) {
-            delegatorAccount = prov.get(AccountBy.name, mailAddress, zsc.getAuthToken());
-            String mRequestedAccountId = delegatorAccount.getId();
-            delegatorMbox = MailboxManager.getInstance().getMailboxByAccountId(mRequestedAccountId, true);
-        }
-        if (!mbox.getAccountId().equals(delegatorMbox.getAccountId())) {
-            ZimbraLog.soap.info("Draft is delegated to be sent from " + mailAddress);
-        }
-        String mId = msgElem.getAttribute(MailConstants.A_ID, String.valueOf(Mailbox.ID_AUTO_INCREMENT));
-        ItemId iidMsg = mId == null ? null : new ItemId(mId, zsc);
-        int id = iidMsg.getId();
+        int id = (int) msgElem.getAttributeLong(MailConstants.A_ID, Mailbox.ID_AUTO_INCREMENT);
         String originalId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
         ItemId iidOrigid = originalId == null ? null : new ItemId(originalId, zsc);
         String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, null);
@@ -198,12 +170,7 @@ public class SaveDraft extends MailDocumentHandler {
             }
             if (autoSendTime != 0) {
                 // schedule a new auto-send-draft task
-                if (delegatorMbox != null) {
-                    AutoSendDraftTask.scheduleTask(msg.getId(), mbox.getId(), delegatorMbox.getId(), autoSendTime);
-                }
-                else {
-                    AutoSendDraftTask.scheduleTask(msg.getId(), mbox.getId(), autoSendTime);
-                }
+                AutoSendDraftTask.scheduleTask(msg.getId(), mbox.getId(), autoSendTime);
             }
         }
 
