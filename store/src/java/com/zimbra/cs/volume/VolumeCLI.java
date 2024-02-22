@@ -330,7 +330,7 @@ public final class VolumeCLI extends SoapCLI {
                 throw new ParseException(AdminConstants.A_PATH + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
             }
             if (!Strings.isNullOrEmpty(compress)) {
-                throw new ParseException(AdminConstants.A_VOLUME_COMPRESS_BLOBS + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
+                volumeInfo.setCompressBlobs(Boolean.parseBoolean(compress));
             }
             if (!Strings.isNullOrEmpty(compressThreshold)) {
                 throw new ParseException(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD + VolumeCLIConstants.NOT_ALLOWED_EXTERNAL);
