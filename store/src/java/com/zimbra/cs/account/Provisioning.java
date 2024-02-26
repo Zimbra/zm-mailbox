@@ -1244,6 +1244,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void prepareAccountStatusToDelete(Account acct) throws ServiceException;
 
+    public abstract void validateS3BucketAccess(Account acct) throws ServiceException;
+
     public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto)
     throws ServiceException;
 
@@ -2630,6 +2632,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             "renameAccountCheckDomainCosAndFeature";
         static final String DELETE_ACCOUNT_SUCCEEDED = "deleteAccountSucceeded";
         static final String DELETE_ACCOUNT = "deleteAccount";
+        static final String ACCESS_S3_STORAGE = "accessS3Storage";
 
         void validate(Provisioning prov, String action, Object... args) throws ServiceException;
         void refresh();

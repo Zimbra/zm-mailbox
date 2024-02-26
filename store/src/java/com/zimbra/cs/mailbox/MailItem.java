@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -62,6 +63,7 @@ import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -71,6 +73,7 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
 
 /**
  * @since Aug 12, 2004
@@ -1380,6 +1383,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * */
     public synchronized MailboxBlob getBlob() throws ServiceException {
         if (mBlob == null && getDigest() != null) {
+            Account account = getAccount();
+            Optional<Short> volumeId = MailItemHelper.findMyVolumeId(getLocator());
+            Volume volume = VolumeManager.getInstance().getVolume(volumeId.get());
+            Provisioning prov = Provisioning.getInstance();
+            if (volume.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+                prov.validateS3BucketAccess(account);
+            }
             StoreManager storeManager = StoreManager.getReaderSMInstance(getLocator());
             ZimbraLog.store.trace("Store Manager for %s MailboxBlob: %s ", storeManager.getClass().getSimpleName(), getId());
             mBlob = storeManager.getMailboxBlob(this);
