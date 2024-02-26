@@ -1383,12 +1383,12 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * */
     public synchronized MailboxBlob getBlob() throws ServiceException {
         if (mBlob == null && getDigest() != null) {
-            Account account = getAccount();
             Optional<Short> volumeId = MailItemHelper.findMyVolumeId(getLocator());
-            Volume volume = VolumeManager.getInstance().getVolume(volumeId.get());
-            Provisioning prov = Provisioning.getInstance();
-            if (volume.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-                prov.validateS3BucketAccess(account);
+            if (volumeId.isPresent()) {
+                Volume volume = VolumeManager.getInstance().getVolume(volumeId.get());
+                if (volume != null && volume.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+                    Provisioning.getInstance().validateS3BucketAccess(getAccount());
+                }
             }
             StoreManager storeManager = StoreManager.getReaderSMInstance(getLocator());
             ZimbraLog.store.trace("Store Manager for %s MailboxBlob: %s ", storeManager.getClass().getSimpleName(), getId());
