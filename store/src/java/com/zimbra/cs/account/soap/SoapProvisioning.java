@@ -1773,6 +1773,12 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
+    public void validateS3BucketAccess(Account acct) throws ServiceException {
+        final Map<String, Object> attrs = new HashMap<String, Object>(acct.getAttrs());
+        validate(ProvisioningValidator.ACCESS_S3_STORAGE, attrs);
+    }
+
+    @Override
     public void preAuthAccount(Account acct, String accountName,
             String accountBy, long timestamp, long expires, String preAuth,
             Map<String, Object> authCtxt)

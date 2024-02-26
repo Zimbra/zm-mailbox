@@ -3314,6 +3314,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
+    public void validateS3BucketAccess(Account acct) throws ServiceException {
+        final Map<String, Object> attrs = new HashMap<String, Object>(acct.getAttrs());
+        validate(ProvisioningValidator.ACCESS_S3_STORAGE, attrs);
+    }
+
+    @Override
     public void deleteAccount(String zimbraId) throws ServiceException {
         Account acc = getAccountById(zimbraId);
         LdapEntry entry = (LdapEntry) getAccountById(zimbraId);
