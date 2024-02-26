@@ -367,12 +367,17 @@ public final class FileBlobStore extends StoreManager {
 
     @Override
     public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) throws ServiceException {
-        short volumeId = Short.valueOf(locator);
-        File file = getMailboxBlobFile(mbox, itemId, revision, volumeId, validate);
-        if (file == null) {
-            return null;
+        try {
+            short volumeId = Short.valueOf(locator);
+            File file = getMailboxBlobFile(mbox, itemId, revision, volumeId, validate);
+            if (file == null) {
+                return null;
+            }
+            return new VolumeMailboxBlob(mbox, itemId, revision, locator, new VolumeBlob(file, volumeId));
+        } catch (NumberFormatException e) {
+            ZimbraLog.store.info("NumberFormatException:", e);
+            throw ServiceException.FAILURE("Operation can not be completed because store is not accessible", null);
         }
-        return new VolumeMailboxBlob(mbox, itemId, revision, locator, new VolumeBlob(file, volumeId));
     }
 
     @Override
