@@ -305,6 +305,9 @@ public final class AdminConstants {
     public static final String E_SEARCH_MULTIPLE_MAILBOXES_REQUEST = "SearchMultiMailboxRequest";
     public static final String E_SEARCH_MULTIPLE_MAILBOXES_RESPONSE = "SearchMultiMailboxResponse";
 
+    public static final String E_SEND_TWO_FACTOR_AUTH_CODE_REQUEST = "SendTwoFactorAuthCodeRequest";
+    public static final String E_SEND_TWO_FACTOR_AUTH_CODE_RESPONSE = "SendTwoFactorAuthCodeResponse";
+
     public static final String E_DUMP_SESSIONS_REQUEST = "DumpSessionsRequest";
     public static final String E_DUMP_SESSIONS_RESPONSE = "DumpSessionsResponse";
     public static final String E_GET_SESSIONS_REQUEST = "GetSessionsRequest";
@@ -817,6 +820,9 @@ public final class AdminConstants {
 
     public static final QName SEARCH_MULTIPLE_MAILBOXES_REQUEST = QName.get(E_SEARCH_MULTIPLE_MAILBOXES_REQUEST, NAMESPACE);
     public static final QName SEARCH_MULTIPLE_MAILBOXES_RESPONSE = QName.get(E_SEARCH_MULTIPLE_MAILBOXES_RESPONSE, NAMESPACE);
+
+    public static final QName SEND_TWO_FACTOR_AUTH_CODE_REQUEST = QName.get(E_SEND_TWO_FACTOR_AUTH_CODE_REQUEST, NAMESPACE);
+    public static final QName SEND_TWO_FACTOR_AUTH_CODE_RESPONSE = QName.get(E_SEND_TWO_FACTOR_AUTH_CODE_RESPONSE, NAMESPACE);
 
     public static final QName DUMP_SESSIONS_REQUEST = QName.get(E_DUMP_SESSIONS_REQUEST, NAMESPACE);
     public static final QName DUMP_SESSIONS_RESPONSE = QName.get(E_DUMP_SESSIONS_RESPONSE, NAMESPACE);
