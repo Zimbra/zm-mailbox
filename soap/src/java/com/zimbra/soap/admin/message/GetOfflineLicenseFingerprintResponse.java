@@ -31,16 +31,16 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @zm-api-command-description gets offline request license request certificate
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name= AdminConstants.E_GET_OFFLINE_LICENSE_CERTIFICATE_RESPONSE)
-public class GetOfflineLicenseCertificateResponse {
+@XmlRootElement(name= AdminConstants.E_GET_OFFLINE_LICENSE_FINGERPRINT_RESPONSE)
+public class GetOfflineLicenseFingerprintResponse {
 
     /**
-     * @zm-api-field-description licenseCode
+     * @zm-api-field-description activationRequestCertificate
      */
     @XmlElement(name=AdminConstants.E_OFFLINE_LICENSE_ACTIVATION_REQUEST_CERTIFICATE /* activationRequestCertificate */, required=true)
     private final String activationRequestCertificate;
 
-    public GetOfflineLicenseCertificateResponse() {
+    public GetOfflineLicenseFingerprintResponse() {
         this.activationRequestCertificate = null;
     }
 
