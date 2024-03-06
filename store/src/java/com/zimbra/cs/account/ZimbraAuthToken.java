@@ -376,7 +376,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     @Override
     public boolean isRegistered() {
         if (!isZimbraUser()) {
-            return false;
+            return true;
         }
         try {
             Provisioning prov = Provisioning.getInstance();

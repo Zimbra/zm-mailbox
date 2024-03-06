@@ -8461,12 +8461,12 @@ TODO: delete them permanently from here
         If configured, all IPs outside this whitelist will be blocked. If unset, all IPs are allowed</desc>  
 </attr>
 
-<attr id="1759" name="zimbraMobileGatewayDefaultAppAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0" deprecatedSince="10.0.7">
+<attr id="1759" name="zimbraMobileGatewayDefaultAppAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0" deprecatedSince="10.1.0">
   <desc>id of the doamin under which (hidden) accounts for apps would be created</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
 
-<attr id="1760" name="zimbraIsMobileGatewayAppAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.7.0" deprecatedSince="10.0.7">
+<attr id="1760" name="zimbraIsMobileGatewayAppAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.7.0" deprecatedSince="10.1.0">
   <desc>whether or not an account represents a Mobile Gateway app</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
@@ -8828,7 +8828,7 @@ TODO: delete them permanently from here
   <desc>Trusted devices currently registered on the account</desc>
 </attr>
 
-<attr id="1952" name="zimbraPrefZmgPushNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="1952" name="zimbraPrefZmgPushNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Option to turn on/off zimbra mobile gateway push notifications</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
@@ -8988,7 +8988,7 @@ TODO: delete them permanently from here
   <desc>maximum number of user properties for zimlet allowed on an account</desc>
 </attr>
 
-<attr id="2029" name="zimbraMobileGatewayDefaultProxyAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="2029" name="zimbraMobileGatewayDefaultProxyAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <desc>
     Id of the domain under which "Proxy" accounts would be created.
     One can configure the system to act as a "Proxy" to another Zimbra system. When the Proxy mode is enabled, some
@@ -8998,42 +8998,42 @@ TODO: delete them permanently from here
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
 
-<attr id="2030" name="zimbraMobileGatewayProxyImapHost" type="astring" max="256" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="2030" name="zimbraMobileGatewayProxyImapHost" type="astring" max="256" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <desc>IMAP host name of the Zimbra system being proxied</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
 
-<attr id="2031" name="zimbraMobileGatewayProxyImapPort" type="port" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="2031" name="zimbraMobileGatewayProxyImapPort" type="port" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <desc>IMAP port of the Zimbra system being proxied</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
 
-<attr id="2032" name="zimbraMobileGatewayProxyImapConnectionType" type="enum" value="cleartext,ssl,tls,tls_if_available" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="2032" name="zimbraMobileGatewayProxyImapConnectionType" type="enum" value="cleartext,ssl,tls,tls_if_available" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <desc>IMAP connection type of the Zimbra system being proxied</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
 
-<attr id="2033" name="zimbraMobileGatewayProxySmtpHost" type="astring" max="256" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="2033" name="zimbraMobileGatewayProxySmtpHost" type="astring" max="256" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <desc>SMTP host name of the Zimbra system being proxied</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
 
-<attr id="2034" name="zimbraMobileGatewayProxySmtpPort" type="port" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="2034" name="zimbraMobileGatewayProxySmtpPort" type="port" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <desc>SMTP port of the Zimbra system being proxied</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
 
-<attr id="2035" name="zimbraMobileGatewayProxySmtpConnectionType" type="enum" value="cleartext,ssl" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="2035" name="zimbraMobileGatewayProxySmtpConnectionType" type="enum" value="cleartext,ssl" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <desc>SMTP connection type of the Zimbra system being proxied</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
 
-<attr id="2036" name="zimbraIsMobileGatewayProxyAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.7.0, 9.0.0" deprecatedSince="10.0.7">
+<attr id="2036" name="zimbraIsMobileGatewayProxyAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.7.0, 9.0.0" deprecatedSince="10.1.0">
   <desc>whether or not an account represents a Mobile Gateway Proxy account</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
 
-<attr id="2037" name="zimbraDataSourceIsZmgProxy" type="boolean" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="2037" name="zimbraDataSourceIsZmgProxy" type="boolean" cardinality="single" optionalIn="dataSource" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <desc>whether this data source corresponds to an account on the Zimbra system being proxied</desc>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
 </attr>
@@ -9115,7 +9115,7 @@ TODO: delete them permanently from here
   <desc>ID of trash folder of IMAP account</desc>
 </attr>
 
-<attr id="2063" name="zimbraFeatureMobileGatewayEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0" deprecatedSince="10.0.7">
+<attr id="2063" name="zimbraFeatureMobileGatewayEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.7.0,9.0.0" deprecatedSince="10.1.0">
   <desc>Whether to enable Zimbra Mobile Gateway feature</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <deprecateDesc>unfinished feature removed</deprecateDesc>
