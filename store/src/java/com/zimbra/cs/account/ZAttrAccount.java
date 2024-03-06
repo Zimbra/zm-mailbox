@@ -18816,6 +18816,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @return zimbraFeatureMobileGatewayEnabled, or false if unset
@@ -18828,6 +18829,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @param zimbraFeatureMobileGatewayEnabled new value
@@ -18843,6 +18845,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @param zimbraFeatureMobileGatewayEnabled new value
@@ -18859,6 +18862,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -18873,6 +18877,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -27066,6 +27071,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway app
      *
      * @return zimbraIsMobileGatewayAppAccount, or false if unset
@@ -27078,6 +27084,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway app
      *
      * @param zimbraIsMobileGatewayAppAccount new value
@@ -27093,6 +27100,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway app
      *
      * @param zimbraIsMobileGatewayAppAccount new value
@@ -27109,6 +27117,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway app
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27123,6 +27132,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway app
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -27138,6 +27148,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway Proxy account
      *
      * @return zimbraIsMobileGatewayProxyAccount, or false if unset
@@ -27150,6 +27161,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway Proxy account
      *
      * @param zimbraIsMobileGatewayProxyAccount new value
@@ -27165,6 +27177,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway Proxy account
      *
      * @param zimbraIsMobileGatewayProxyAccount new value
@@ -27181,6 +27194,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway Proxy account
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -27195,6 +27209,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway Proxy account
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -60251,6 +60266,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Option to turn on/off zimbra mobile gateway push notifications
      *
      * @return zimbraPrefZmgPushNotificationEnabled, or false if unset
@@ -60263,6 +60279,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Option to turn on/off zimbra mobile gateway push notifications
      *
      * @param zimbraPrefZmgPushNotificationEnabled new value
@@ -60278,6 +60295,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Option to turn on/off zimbra mobile gateway push notifications
      *
      * @param zimbraPrefZmgPushNotificationEnabled new value
@@ -60294,6 +60312,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Option to turn on/off zimbra mobile gateway push notifications
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -60308,6 +60327,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Option to turn on/off zimbra mobile gateway push notifications
      *
      * @param attrs existing map to populate, or null to create a new map
