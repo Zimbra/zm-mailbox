@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -32,6 +33,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.activation.DataHandler;
 import javax.mail.Address;
@@ -42,7 +45,9 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.cs.service.admin.ToXML;
 import org.apache.commons.codec.binary.Hex;
 
 import com.sun.mail.smtp.SMTPMessage;
@@ -956,7 +961,7 @@ public class AccountUtil {
      */
     public static Account getAccount(AccountBy by, String acctName, String virtualHost, AuthToken at, Provisioning prov) throws ServiceException{
         Account acct = null;
-        if (by == AccountBy.name && acctName.indexOf("@") == -1) {
+        if (by == AccountBy.name && acctName != null && acctName.indexOf("@") == -1) {
             // first try to get by adminName, which resolves the account under cn=admins,cn=zimbra
             // and does not need a domain
             acct = prov.get(AccountBy.adminName, acctName, at);
@@ -985,11 +990,13 @@ public class AccountUtil {
     public static Map<String, Object> getAdminAuthContext(Map<String, Object> context, String valuePassedIn,
             ZimbraSoapContext zsc) {
         Map<String, Object> authCtxt = new HashMap<String, Object>();
-        authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
-        authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
-        authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
-        authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
-        authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);
+        if (context != null && zsc != null && valuePassedIn != null) {
+            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
+            authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
+            authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
+            authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
+            authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);
+        }
         return authCtxt;
     }
     
@@ -1001,7 +1008,7 @@ public class AccountUtil {
      * @throws ServiceException
      */
     public static boolean isTwoFactorAccount(Account acct) throws ServiceException {
-        if (!acct.isIsSystemResource() && !acct.isIsSystemAccount()) {
+        if (acct != null && !acct.isIsSystemResource() && !acct.isIsSystemAccount()) {
             TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
             if (twoFactorManager.twoFactorAuthRequired() && !twoFactorManager.twoFactorAuthEnabled()) {
                 throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
@@ -1020,6 +1027,10 @@ public class AccountUtil {
      * @throws ServiceException
      */
     public static void authenticateTwoFactorCode(String twoFactorCode, Account acct) throws ServiceException{
+        if (acct == null) {
+            ZimbraLog.account.error("Account can't be null.");
+            return;
+        }
         TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
         if (twoFactorCode != null) {
             ZimbraLog.account.debug("Verifying the Two Factor Code for account %s ", acct.getName());
@@ -1039,14 +1050,46 @@ public class AccountUtil {
      * @throws ServiceException
      */
     public static void isAdminAccount(Account acct) throws ServiceException {
+        if (acct == null) {
+            ZimbraLog.account.error("Account can't be null.");
+            return;
+        }
         boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
         boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
         boolean isDelegatedAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false);
         boolean isAdminAccount = (isDomainAdmin || isAdmin || isDelegatedAdmin);
-        if (!isAdminAccount)
+        if (!isAdminAccount) {
             throw ServiceException.PERM_DENIED("not an admin account");
+        }
     }
-    
+
+    /**
+     * This method is used to add Two Factor Attributes in response
+     * @param response
+     * @param acct
+     */
+    public static void addTwoFactorAttributes(Element response, Account acct) {
+        if (acct == null) {
+            ZimbraLog.account.error("Account can't be null.");
+            return;
+        }
+        String[] twoFactorAuthMethodAllowedArray = acct.getTwoFactorAuthMethodAllowed();
+        String[] twoFactorAuthMethodEnabledArray =  acct.getTwoFactorAuthMethodEnabled();
+        String prefPwdRecoveryAddressStatus = acct.getPrefPasswordRecoveryAddressStatusAsString();
+        Element twoFactorAuthMethodAllowed = response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_METHOD_ALLOWED);
+        ToXML.encodeTFAResponse(twoFactorAuthMethodAllowed, twoFactorAuthMethodAllowedArray);
+        Element twoFactorAuthMethodEnabled = response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_METHOD_ENABLED);
+        ToXML.encodeTFAResponse(twoFactorAuthMethodEnabled, twoFactorAuthMethodEnabledArray);
+        response.addUniqueElement(AccountConstants.E_PREF_PRIMARY_TWO_FACTOR_AUTH_METHOD).setText(acct.getPrefPrimaryTwoFactorAuthMethod());
+        String recoveryAddress = acct.getPrefPasswordRecoveryAddress();
+        if ((twoFactorAuthMethodAllowedArray != null && Arrays.asList(twoFactorAuthMethodAllowedArray).contains(AccountConstants.E_EMAIL))
+                && (twoFactorAuthMethodEnabledArray != null && Arrays.asList(twoFactorAuthMethodEnabledArray).contains(AccountConstants.E_EMAIL))
+                && (!StringUtil.isNullOrEmpty(prefPwdRecoveryAddressStatus) && prefPwdRecoveryAddressStatus.equals(AccountConstants.E_VERIFIED))
+                && !StringUtil.isNullOrEmpty(recoveryAddress)) {
+            String prefPwdRecoveryAddress = Stream.of(recoveryAddress.split(",")).map(add -> StringUtil.maskEmail(add)).collect(Collectors.joining(","));
+            response.addUniqueElement(AccountConstants.E_PREF_PASSWORD_RECOVERY_ADDRESS).setText(prefPwdRecoveryAddress);
+        }
+    }
     /**
      * Utils method to translate system folder name
      * @param shareInfo
