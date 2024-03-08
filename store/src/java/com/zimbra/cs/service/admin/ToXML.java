@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -179,6 +180,21 @@ public class ToXML {
             e.setText(IDNUtil.toUnicode(value, idnType));
         } else {
             e.addAttribute(AccountConstants.A_PERM_DENIED, true);
+        }
+    }
+
+    public static void encodeTFAResponse(Element response, Object value) {
+        if (value instanceof String[]) {
+            String sa[] = (String[]) value;
+            for (int i = 0; i < sa.length; i++) {
+                if (!Strings.isNullOrEmpty(sa[i])) {
+                    response.addNonUniqueElement(AccountConstants.E_METHOD).setText(sa[i]);
+                }
+            }
+        } else if (value instanceof String) {
+            if (!Strings.isNullOrEmpty((String) value)) {
+                response.addNonUniqueElement(AccountConstants.E_METHOD).setText((String) value);
+            }
         }
     }
 }
