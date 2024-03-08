@@ -489,7 +489,7 @@ public class Auth extends AccountDocumentHandler {
                 authToken.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
             }
             response.addUniqueElement(AccountConstants.E_TRUSTED_DEVICES_ENABLED).setText(account.isFeatureTrustedDevicesEnabled() ? "true" : "false");
-            addTwoFactorAttributes(response, account);
+            AccountUtil.addTwoFactorAttributes(response, account);
             return response;
         }
     }
@@ -604,29 +604,5 @@ public class Auth extends AccountDocumentHandler {
         String aid = at.getAdminAccountId();
         if (aid != null && !aid.equals(id))
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
-    }
-
-    /**
-     * This method is used to add Two Factor Attributes in response
-     * @param response
-     * @param acct
-     */
-    private void addTwoFactorAttributes(Element response, Account acct) {
-        String[] twoFactorAuthMethodAllowedArray = acct.getTwoFactorAuthMethodAllowed();
-        String[] twoFactorAuthMethodEnabledArray =  acct.getTwoFactorAuthMethodEnabled();
-        String prefPwdRecoveryAddressStatus = acct.getPrefPasswordRecoveryAddressStatusAsString();
-        Element twoFactorAuthMethodAllowed = response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_METHOD_ALLOWED);
-        ToXML.encodeTFAResponse(twoFactorAuthMethodAllowed, twoFactorAuthMethodAllowedArray);
-        Element twoFactorAuthMethodEnabled = response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_METHOD_ENABLED);
-        ToXML.encodeTFAResponse(twoFactorAuthMethodEnabled, twoFactorAuthMethodEnabledArray);
-        response.addUniqueElement(AccountConstants.E_PREF_PRIMARY_TWO_FACTOR_AUTH_METHOD).setText(acct.getPrefPrimaryTwoFactorAuthMethod());
-        String recoveryAddress = acct.getPrefPasswordRecoveryAddress();
-        if ((twoFactorAuthMethodAllowedArray != null && Arrays.asList(twoFactorAuthMethodAllowedArray).contains(AccountConstants.E_EMAIL))
-                && (twoFactorAuthMethodEnabledArray != null && Arrays.asList(twoFactorAuthMethodEnabledArray).contains(AccountConstants.E_EMAIL))
-                && (!StringUtil.isNullOrEmpty(prefPwdRecoveryAddressStatus) && prefPwdRecoveryAddressStatus.equals(AccountConstants.E_VERIFIED))
-                && !StringUtil.isNullOrEmpty(recoveryAddress)) {
-            String prefPwdRecoveryAddress = Stream.of(recoveryAddress.split(",")).map(add -> StringUtil.maskEmail(add)).collect(Collectors.joining(","));
-            response.addUniqueElement(AccountConstants.E_PREF_PASSWORD_RECOVERY_ADDRESS).setText(prefPwdRecoveryAddress);
-        }
     }
 }
