@@ -192,7 +192,17 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
          */
         ACCOUNTS_WITH_MOBILE_SYNC("Filter in " + Provisioning.A_zimbraFeatureMobileSyncEnabled),
         ACCOUNTS_WITH_EWS("Filter in " + Provisioning.A_zimbraFeatureEwsEnabled),
-        ACCOUNTS_WITH_SMIME("Filter in " + Provisioning.A_zimbraFeatureSMIMEEnabled);
+        ACCOUNTS_WITH_SMIME("Filter in " + Provisioning.A_zimbraFeatureSMIMEEnabled),
+        ACCOUNTS_WITH_ZIMLETS("Filter in " + Provisioning.A_zimbraFeatureManageZimlets),
+        ACCOUNTS_WITH_CONVERSIONS("Filter in " + Provisioning.A_zimbraFeatureConversationsEnabled),
+        ACCOUNTS_WITH_TAGGING("Filter in " + Provisioning.A_zimbraFeatureTaggingEnabled),
+        ACCOUNTS_WITH_CALENDAR("Filter in " + Provisioning.A_zimbraFeatureCalendarEnabled),
+        ACCOUNTS_WITH_GROUP_CALENDAR("Filter in " + Provisioning.A_zimbraFeatureGroupCalendarEnabled),
+        ACCOUNTS_WITH_TASKS("Filter in " + Provisioning.A_zimbraFeatureTasksEnabled),
+        ACCOUNTS_WITH_SHARING("Filter in " + Provisioning.A_zimbraFeatureSharingEnabled),
+        ACCOUNTS_WITH_BRIEFCASES("Filter in " + Provisioning.A_zimbraFeatureBriefcasesEnabled),
+        ACCOUNTS_WITH_VIEW_IN_HTML("Filter in " + Provisioning.A_zimbraFeatureViewInHtmlEnabled),
+        ;
 
         private final String template;
 
@@ -368,6 +378,15 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter accountsWithSmime();
     public abstract ZLdapFilter accountsWithEws();
     public abstract ZLdapFilter accountsWithMobileSync();
+    public abstract ZLdapFilter accountsWithZimlets();
+    public abstract ZLdapFilter accountsWithConversions();
+    public abstract ZLdapFilter accountsWithTagging();
+    public abstract ZLdapFilter accountsWithCalendar();
+    public abstract ZLdapFilter accountsWithGroupCalendar();
+    public abstract ZLdapFilter accountsWithTasks();
+    public abstract ZLdapFilter accountsWithSharing();
+    public abstract ZLdapFilter accountsWithBriefcases();
+    public abstract ZLdapFilter accountsWithViewInHtml();
 
     /*
      * alias
