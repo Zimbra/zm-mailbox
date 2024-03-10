@@ -9364,6 +9364,42 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 types.add(ObjectType.accounts);
                 filter = filterFactory.accountsWithMobileSync();
                 break;
+            case internalUserAccountWithZimlets:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithZimlets();
+                break;
+            case internalUserAccountWithConversions:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithConversions();
+                break;
+            case internalUserAccountWithTagging:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithTagging();
+                break;
+            case internalUserAccountWithCalendar:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithCalendar();
+                break;
+            case internalUserAccountWithGroupCalendar:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithGroupCalendar();
+                break;
+            case internalUserAccountWithTasks:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithTasks();
+                break;
+            case internalUserAccountWithSharing:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithSharing();
+                break;
+            case internalUserAccountWithBriefcases:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithBriefcases();
+                break;
+            case internalUserAccountWithViewInHtml:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithViewInHtml();
+                break;
             default:
                 throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);
         }
