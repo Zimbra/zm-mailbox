@@ -1086,6 +1086,10 @@ public class CalendarUtils {
         String name = element.getAttribute(MailConstants.A_NAME, "");
         String location = element.getAttribute(MailConstants.A_CAL_LOCATION, "");
 
+        // Tag related data
+        String operationType = element.getAttribute(MailConstants.E_OPERATION_TYPE, "");
+        String tagColour = element.getAttribute(MailConstants.E_TAG_COLOUR, "");
+
         // CATEGORIES
         for (Iterator<Element> catIter = element.elementIterator(MailConstants.E_CAL_CATEGORY); catIter.hasNext(); ) {
             String cat = catIter.next().getText();
@@ -1121,6 +1125,8 @@ public class CalendarUtils {
 
         // SUMMARY (aka Name or Subject)
         newInv.setName(name);
+        newInv.setOperationType(operationType);
+        newInv.setTagColour(tagColour);
 
         // DESCRIPTION
         Element descElem = element.getOptionalElement(MailConstants.E_CAL_DESCRIPTION);
