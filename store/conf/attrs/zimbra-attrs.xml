@@ -10455,7 +10455,7 @@ TODO: delete them permanently from here
   <desc>Define body: field for 2FA email in html format</desc>
 </attr>
 
-<attr id="4110" name="zimbraHideAliasesInGal" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="10.1.0">
+<attr id="4116" name="zimbraHideAliasesInGal" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="10.1.0">
   <desc>When set to True, all aliases will be hidden for particular account</desc>
 </attr>
 
