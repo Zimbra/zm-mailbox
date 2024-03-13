@@ -25558,7 +25558,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4110)
+    @ZAttr(id=4116)
     public boolean isHideAliasesInGal() {
         return getBooleanAttr(Provisioning.A_zimbraHideAliasesInGal, false, true);
     }
@@ -25571,7 +25571,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4110)
+    @ZAttr(id=4116)
     public void setHideAliasesInGal(boolean zimbraHideAliasesInGal) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHideAliasesInGal, zimbraHideAliasesInGal ? TRUE : FALSE);
@@ -25587,7 +25587,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4110)
+    @ZAttr(id=4116)
     public Map<String,Object> setHideAliasesInGal(boolean zimbraHideAliasesInGal, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHideAliasesInGal, zimbraHideAliasesInGal ? TRUE : FALSE);
@@ -25601,7 +25601,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4110)
+    @ZAttr(id=4116)
     public void unsetHideAliasesInGal() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHideAliasesInGal, "");
@@ -25616,7 +25616,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4110)
+    @ZAttr(id=4116)
     public Map<String,Object> unsetHideAliasesInGal(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHideAliasesInGal, "");
