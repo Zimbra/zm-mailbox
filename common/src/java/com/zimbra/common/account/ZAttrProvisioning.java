@@ -4906,6 +4906,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraClamAVSafeBrowsing = "zimbraClamAVSafeBrowsing";
 
     /**
+     * Whether to enable/disable classic ui option on the login screen.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public static final String A_zimbraClassicWebClientDisabled = "zimbraClassicWebClientDisabled";
+
+    /**
      * Regex for identifying client types
      *
      * @since ZCS 8.0.0
