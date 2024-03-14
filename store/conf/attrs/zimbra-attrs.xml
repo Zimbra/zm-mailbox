@@ -10491,4 +10491,9 @@ TODO: delete them permanently from here
   <desc>Temporary data to update two-factor authentication settings</desc>
 </attr>
 
+<attr id="4125" name="zimbraClassicWebClientDisabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="10.1.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to enable/disable the classic web client option on the login screen. Default value is FALSE, which makes the classic client option available.</desc>
+</attr>
+
 </attrs>
