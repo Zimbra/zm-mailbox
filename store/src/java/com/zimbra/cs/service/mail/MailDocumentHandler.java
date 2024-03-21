@@ -59,7 +59,8 @@ public abstract class MailDocumentHandler extends DocumentHandler {
 
             // if the "target item" is remote, proxy.
             ItemId iidTarget = getProxyTarget(zsc, octxt, iid, checkMountpointProxy(request));
-            if (iidTarget != null) {
+            boolean isProxy = request.getAttributeBool("isProxy", false);
+            if (iidTarget != null && isProxy == false) {
                 return proxyRequest(request, context, iid, iidTarget);
             }
         }
