@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -33,12 +34,14 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.AutoSendDraftTask;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -48,8 +51,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.MsgContent;
 
 /**
- * @since Jun 11, 2005
  * @author dkarp
+ * @since Jun 11, 2005
  */
 public class SaveDraft extends MailDocumentHandler {
 
@@ -68,11 +71,16 @@ public class SaveDraft extends MailDocumentHandler {
     }
 
     @Override
-    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+    protected String[] getResponseItemPath() {
+        return RESPONSE_ITEM_PATH;
+    }
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        boolean isDelegatedReq = request.getAttributeBool("isDelegatedReq", false);
+        String delegateeAccountId = request.getAttribute("delegateeAccountId", null);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
@@ -81,7 +89,18 @@ public class SaveDraft extends MailDocumentHandler {
         boolean wantModSeq = request.getAttributeBool(MailConstants.A_WANT_MODIFIED_SEQUENCE, false);
         Element msgElem = request.getElement(MailConstants.E_MSG);
 
-        int id = (int) msgElem.getAttributeLong(MailConstants.A_ID, Mailbox.ID_AUTO_INCREMENT);
+        // fetching the Delegator Account
+        // if mail is not delegated to be Send As, then the delegator account is the same as the account of the mailbox
+        String mailAddress = null;
+        List<Element> elements = msgElem.listElements(MailConstants.E_EMAIL);
+        for (Element element : elements) {
+            if (element.getAttribute(MailConstants.A_ITEM_TYPE, null).equals(MailConstants.A_FLAGS)) {
+                mailAddress = element.getAttribute(MailConstants.A_ADDRESS, null);
+            }
+        }
+        String mId = msgElem.getAttribute(MailConstants.A_ID, String.valueOf(Mailbox.ID_AUTO_INCREMENT));
+        ItemId iidMsg = mId == null ? null : new ItemId(mId, zsc);
+        int id = iidMsg.getId();
         String originalId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
         ItemId iidOrigid = originalId == null ? null : new ItemId(originalId, zsc);
         String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, null);
@@ -106,6 +125,10 @@ public class SaveDraft extends MailDocumentHandler {
 
         ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
         Message msg;
+        Server serverName = null;
+        Provisioning prov = Provisioning.getInstance();
+        Account delegatorAccount = null;
+        Mailbox delegatorMbox = null;
         try {
             MimeMessage mm;
             if (attachment != null) {
@@ -119,7 +142,8 @@ public class SaveDraft extends MailDocumentHandler {
                 Date d = new Date();
                 mm.setSentDate(d);
                 date = d.getTime();
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+            }
 
             try {
                 mm.saveChanges();
@@ -134,8 +158,51 @@ public class SaveDraft extends MailDocumentHandler {
             }
 
             String origid = iidOrigid == null ? null : iidOrigid.toString(account == null ? mbox.getAccountId() : account);
+            if (mailAddress != null) {
+                delegatorAccount = prov.get(AccountBy.name, mailAddress, zsc.getAuthToken());
+            }
 
-            msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
+            // Directly Sending the mail if it is a Delegated Request from a different Server.
+            if (isDelegatedReq) {
+                delegatorMbox = MailboxManager.getInstance().getMailboxByAccountId(delegatorAccount.getId());
+                Account delegateeAccount = null;
+                OperationContext oct = null;
+                if (delegateeAccountId != null) {
+                    delegateeAccount = prov.getAccountById(delegateeAccountId);
+                    oct = new OperationContext(delegateeAccount);
+                } else {
+                    oct = new OperationContext(delegatorMbox);
+                }
+                mm = ParseMimeMessage.parseMimeMsgSoap(zsc, oct, delegatorMbox, msgElem, null, mimeData);
+                SendMsg.doSendMessage(oct, delegatorMbox, mm, mimeData.uploads, null, "r", null, null, false,
+                        false, false, false);
+                Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
+                response.addElement(MailConstants.E_MSG);
+                return response;
+            }
+
+            if (mailAddress != null) {
+                delegatorAccount = prov.get(AccountBy.name, mailAddress, zsc.getAuthToken());
+                delegatorMbox = mbox;
+                if (Provisioning.onLocalServer(delegatorAccount)) {
+                    msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
+                    /* For a request in which delegator resides on local server, we can fetch the delegatorMbox object and
+                    use it during sendMime function. */
+                    delegatorMbox = MailboxManager.getInstance().getMailboxByAccountId(delegatorAccount.getId());
+                } else {
+                    /* For a request in which delegator resides on different server,
+                    we need to invoke a separate request on that server. */
+                    msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
+                    request.addAttribute("isProxy", true);
+                    serverName = getServer(delegatorAccount.getId());
+                    // Setting the delegator server as the target server in yhe request
+                    request.getParent().getParent().getElement("Header").getElement(HeaderConstants.E_CONTEXT)
+                            .addNonUniqueElement(HeaderConstants.E_TARGET_SERVER).setText(getServer(delegatorAccount.getId()).getName());
+                }
+            } else {
+                msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
+            }
+
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while saving draft", e);
         } finally {
@@ -155,7 +222,7 @@ public class SaveDraft extends MailDocumentHandler {
             try {
                 // best not to fail if there's an error here...
                 ItemActionHelper.UPDATE(octxt, mbox, zsc.getResponseProtocol(), Arrays.asList(msg.getId()),
-                        MailItem.Type.MESSAGE, null, null, iidFolder, flags, tags, color);
+                            MailItem.Type.MESSAGE, null, null, iidFolder, flags, tags, color);
                 // and make sure the Message object reflects post-update reality
                 msg = mbox.getMessageById(octxt, msg.getId());
             } catch (ServiceException e) {
@@ -170,10 +237,14 @@ public class SaveDraft extends MailDocumentHandler {
             }
             if (autoSendTime != 0) {
                 // schedule a new auto-send-draft task
-                AutoSendDraftTask.scheduleTask(msg.getId(), mbox.getId(), autoSendTime);
-            }
+                if (delegatorMbox != null) {
+                    AutoSendDraftTask.scheduleTask(msg.getId(), mbox.getId(), delegatorAccount.getId(), autoSendTime, request, serverName);
+                } else {
+                    AutoSendDraftTask.scheduleTask(msg.getId(), mbox.getId(), autoSendTime);
+                }
+          }
         }
-
+        
         return generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
     }
 
