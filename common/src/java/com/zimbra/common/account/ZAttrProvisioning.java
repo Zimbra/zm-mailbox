@@ -8735,6 +8735,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapAdvertisedName = "zimbraImapAdvertisedName";
 
     /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public static final String A_zimbraImapAllowedIPs = "zimbraImapAllowedIPs";
+
+    /**
      * interface address on which IMAP server should listen; if empty, binds
      * to all interfaces
      */
@@ -10394,6 +10402,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailWhitelistMaxNumEntries = "zimbraMailWhitelistMaxNumEntries";
 
     /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public static final String A_zimbraMapiAllowedIPs = "zimbraMapiAllowedIPs";
+
+    /**
      * maximum number of application-specific passwords allowed for an
      * account
      *
@@ -10645,6 +10661,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3089)
     public static final String A_zimbraMobileAllowedDevices = "zimbraMobileAllowedDevices";
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public static final String A_zimbraMobileAllowedIPs = "zimbraMobileAllowedIPs";
 
     /**
      * whether mobile sync should zip the skipped item and attach it to the
@@ -13233,6 +13258,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=93)
     public static final String A_zimbraPop3AdvertisedName = "zimbraPop3AdvertisedName";
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public static final String A_zimbraPop3AllowedIPs = "zimbraPop3AllowedIPs";
 
     /**
      * interface address on which POP3 server should listen; if empty, binds
@@ -18471,6 +18504,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientAdminReference = "zimbraWebClientAdminReference";
 
     /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public static final String A_zimbraWebClientAllowedIPs = "zimbraWebClientAllowedIPs";
+
+    /**
      * login URL for web client to send the user to upon failed login, auth
      * expired, or no/invalid auth
      */
@@ -18715,6 +18756,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=658)
     public static final String A_zimbraYahooId = "zimbraYahooId";
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public static final String A_zimbraZDAllowedIPs = "zimbraZDAllowedIPs";
 
     /**
      * List of Zimlets available to this COS Values can be prefixed with ! or
