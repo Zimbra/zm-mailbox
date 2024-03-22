@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2023 Synacor, Inc.
+ * Copyright (C) 2024 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -25,18 +25,17 @@ import com.zimbra.cs.account.Provisioning;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TwoFactorAuthEmailCode extends AttributeCallback {
-
+public class TwoFactorScratchCode extends AttributeCallback {
     @Override
     public void preModify(CallbackContext context, String attrName, Object attrValue, Map attrsToModify, Entry entry) throws ServiceException {
         String value = (String) attrValue;
         if (StringUtil.isNullOrEmpty(value)) {
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraTwoFactorAuthEmailCodeLength + " cannot set to empty.", null);
+            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraTwoFactorScratchCodeLength + " cannot set to empty.", null);
         }
         Provisioning prov = Provisioning.getInstance();
         Map<String, Integer> attrs = new HashMap<String, Integer>() {{
             put(Provisioning.A_zimbraTwoFactorCodeLength, prov.getConfig().getTwoFactorCodeLength());
-            put(Provisioning.A_zimbraTwoFactorScratchCodeLength, prov.getConfig().getTwoFactorScratchCodeLength());
+            put(Provisioning.A_zimbraTwoFactorAuthEmailCodeLength, prov.getConfig().getTwoFactorAuthEmailCodeLength());
         }};
         CallbackUtil.validateTwoFactorAuthAttributeValue(attrName, Integer.valueOf(value), attrs, 10);
     }
