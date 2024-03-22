@@ -4,7 +4,7 @@
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
  <info organisation="zimbra" module="zm-soap" status="integration" />
  <dependencies>
-  <dependency org="junit" name="junit" rev="4.8.2" />
+  <dependency org="junit" name="junit" rev="4.13.2" />
   <dependency org="xmlunit" name="xmlunit" rev="1.6"/>
   <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
   <dependency org="com.google.guava" name="guava" rev="${com.google.guava.version}"/>

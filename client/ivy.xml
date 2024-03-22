@@ -5,7 +5,7 @@
  <info organisation="zimbra" module="zm-client" status="integration">
  </info>
  <dependencies>
-  <dependency org="junit" name="junit" rev="4.8.2" />
+  <dependency org="junit" name="junit" rev="4.13.2" />
   <dependency org="javax.mail" name="mail" rev="1.4.5" />
   <dependency org="jaxen" name="jaxen" rev="1.1-beta-10"/>
   <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
