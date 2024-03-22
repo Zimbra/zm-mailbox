@@ -638,6 +638,11 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
+    public List getAllNonSystemAccounts(Domain domain, Server server) throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void getAllAccounts(Domain d, Visitor visitor) {
         throw new UnsupportedOperationException();
     }

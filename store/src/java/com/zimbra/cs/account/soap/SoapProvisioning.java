@@ -2050,6 +2050,12 @@ public class SoapProvisioning extends Provisioning {
         return getAllAccounts(d, (Server)null);
     }
 
+    @Override
+    public List <Account>getAllNonSystemAccounts(Domain domain,  Server server)
+            throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     public List <Account> getAllAccounts(Domain d, Server s)
     throws ServiceException {
         ArrayList<Account> result = new ArrayList<Account>();
