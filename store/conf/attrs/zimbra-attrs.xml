@@ -9927,7 +9927,7 @@ TODO: delete them permanently from here
       If set as 14.1, all device types android/ios connecting to this account will use 14.1 version.
       If the added values don't match the user agent/device Id/device type default zimbra_activesync_versions on the local config will be used.
   </desc>
-</attr>    
+</attr>
 
 <attr id="4009" name="zimbraGlobalBackupEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="10.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
@@ -10159,7 +10159,7 @@ TODO: delete them permanently from here
     2) SolrCloud backend. Format is "solrcloud:[ZooKeeper URL]"
      </desc>
 </attr>
-<attr id="4051" name="zimbraEventLoggingNumThreads" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6"> 
+<attr id="4051" name="zimbraEventLoggingNumThreads" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
   <globalConfigValue>10</globalConfigValue>
   <desc>Number of consumer threads used to process the event logging queue</desc>
 </attr>
@@ -10457,6 +10457,30 @@ TODO: delete them permanently from here
 
 <attr id="4116" name="zimbraHideAliasesInGal" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="10.1.0">
   <desc>When set to True, all aliases will be hidden for particular account</desc>
+</attr>
+
+<attr id="4117" name="zimbraWebClientAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for Web Client</desc>
+</attr>
+
+<attr id="4118" name="zimbraImapAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for IMAP protocol</desc>
+</attr>
+
+<attr id="4119" name="zimbraPop3AllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for POP3 protocol</desc>
+</attr>
+
+<attr id="4120" name="zimbraMobileAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for ActiveSync protocol.</desc>
+</attr>
+
+<attr id="4121" name="zimbraMapiAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc> Attribute to allow IP/IP Range to access email for ZCO</desc>
+</attr>
+
+<attr id="4122" name="zimbraZDAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for Zimbra Desktop</desc>
 </attr>
 
 </attrs>
