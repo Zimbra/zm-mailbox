@@ -2036,6 +2036,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract List getAllAccounts(Domain d) throws ServiceException;
 
+    public abstract List getAllNonSystemAccounts(Domain domain, Server server) throws ServiceException;
+
     public abstract void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException;
 
     public abstract void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException;

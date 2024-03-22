@@ -72,6 +72,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ALL_NON_SYSTEM_ACCOUNTS(SINGLETON.allNonSystemAccounts()),
         ALL_NON_SYSTEM_ARCHIVING_ACCOUNTS(SINGLETON.allNonSystemArchivingAccounts()),
         ALL_NON_SYSTEM_INTERNAL_ACCOUNTS(SINGLETON.allNonSystemInternalAccounts()),
+        ALL_NON_SYSTEM_INTERNAL_ACCOUNTS_ON_SERVER(SINGLETON.allNonSystemInternalAccountsOnServer("{SERVER-SERVICE-HOSTNAME}")),
         ALL_SERVERS(SINGLETON.allServers()),
         ALL_ALWAYSONCLUSTERS(SINGLETON.allAlwaysOnClusters()),
         ALL_UC_SERVICES(SINGLETON.allUCServices()),
@@ -202,6 +203,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNTS_WITH_SHARING("Filter in " + Provisioning.A_zimbraFeatureSharingEnabled),
         ACCOUNTS_WITH_BRIEFCASES("Filter in " + Provisioning.A_zimbraFeatureBriefcasesEnabled),
         ACCOUNTS_WITH_VIEW_IN_HTML("Filter in " + Provisioning.A_zimbraFeatureViewInHtmlEnabled),
+        ACCOUNTS_WITH_CHAT_ALL("Filter in " + Provisioning.A_zimbraFeatureChatAllFeaturesEnabled),
+        ACCOUNTS_WITH_VIDEO_ALL("Filter in " + Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled),
+        ACCOUNTS_WITH_DOCUMENT_EDITING("Filter in " + Provisioning.A_zimbraFeatureDocumentEditingEnabled),
         ;
 
         private final String template;
@@ -353,6 +357,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allNonSystemAccounts();
     public abstract ZLdapFilter allNonSystemArchivingAccounts();
     public abstract ZLdapFilter allNonSystemInternalAccounts();
+    public abstract ZLdapFilter allNonSystemInternalAccountsOnServer(String serverServiceHostname);
     public abstract ZLdapFilter accountByForeignPrincipal(String foreignPrincipal);
     public abstract ZLdapFilter accountById(String id);
     public abstract ZLdapFilter accountByMemberOf(String dynGroupId);
@@ -387,6 +392,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter accountsWithSharing();
     public abstract ZLdapFilter accountsWithBriefcases();
     public abstract ZLdapFilter accountsWithViewInHtml();
+    public abstract  ZLdapFilter accountsWithChatAll();
+    public abstract ZLdapFilter accountsWithVideoAll();
+    public abstract ZLdapFilter accountsWithDocumentEditing();
 
     /*
      * alias

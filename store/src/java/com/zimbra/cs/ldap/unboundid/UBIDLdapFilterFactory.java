@@ -95,6 +95,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ACCOUNTS_WITH_SHARING;
     private static Filter FILTER_ACCOUNTS_WITH_BRIEFCASES;
     private static Filter FILTER_ACCOUNTS_WITH_VIEW_IN_HTML;
+    private static Filter FILTER_ACCOUNTS_WITH_CHAT_ALL;
+    private static Filter FILTER_ACCOUNTS_WITH_VIDEO_ALL;
+    private static Filter FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING;
 
 
     private static boolean initialized = false;
@@ -322,6 +325,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
         FILTER_ACCOUNTS_WITH_VIEW_IN_HTML = Filter.createEqualityFilter(
                 Provisioning.A_zimbraFeatureViewInHtmlEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_CHAT_ALL = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureChatAllFeaturesEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_VIDEO_ALL = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureDocumentEditingEnabled, LdapConstants.LDAP_TRUE);
     }
 
     @Override
@@ -480,6 +492,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 FilterId.ALL_NON_SYSTEM_INTERNAL_ACCOUNTS,
                 FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS);
+    }
+
+    @Override
+    public ZLdapFilter allNonSystemInternalAccountsOnServer(String serverServiceHostname) {
+        return new UBIDLdapFilter(
+                FilterId.ALL_NON_SYSTEM_INTERNAL_ACCOUNTS_ON_SERVER,
+                Filter.createANDFilter(
+                        FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS,
+                        homedOnServerFilter(serverServiceHostname)));
     }
 
     @Override
@@ -798,6 +819,45 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_ACCOUNTS_ONLY,
                         FILTER_NOT_SYSTEM_RESOURCE,
                         FILTER_ACCOUNTS_WITH_VIEW_IN_HTML));
+    }
+
+    /**
+     * Accounts with Chat
+     */
+    @Override
+    public ZLdapFilter accountsWithChatAll() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_CHAT_ALL,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_CHAT_ALL));
+    }
+
+    /**
+     * Accounts with Video
+     */
+    @Override
+    public ZLdapFilter accountsWithVideoAll() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_VIDEO_ALL,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_VIDEO_ALL));
+    }
+
+    /**
+     * Accounts with Document Editing
+     */
+    @Override
+    public ZLdapFilter accountsWithDocumentEditing() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_DOCUMENT_EDITING,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING));
     }
 
     /*
