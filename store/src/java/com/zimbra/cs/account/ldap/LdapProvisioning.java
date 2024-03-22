@@ -1747,6 +1747,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             filter = mDIT.filterAccountsByDomainAndServer(domain, server);
         } else if (includeType == IncludeType.ACCOUNTS_ONLY) {
             filter = mDIT.filterAccountsOnlyByDomainAndServer(domain, server);
+        } else if (includeType == IncludeType.NON_SYSTEM_ACCOUNTS_ONLY){
+            filter = mDIT.filterAllNonSystemAccountsOnlyByDomainAndServer(domain, server);
         } else {
             filter = mDIT.filterCalendarResourceByDomainAndServer(domain, server);
         }
@@ -7052,6 +7054,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return searchDirectory(opts);
     }
 
+    /**
+     * Fetching all the non system internal accounts by domain and server
+     * @param domain
+     * @param server
+     * @return List<Accounts>
+     * @throws ServiceException
+     */
+    @Override
+    public List<?> getAllNonSystemAccounts(Domain domain, Server server) throws ServiceException {
+        SearchAccountsOptions opts = new SearchAccountsOptions(domain);
+        opts.setIncludeType(IncludeType.NON_SYSTEM_ACCOUNTS_ONLY);
+        opts.setSortOpt(SortOpt.SORT_ASCENDING);
+        return searchAccountsOnServerInternal(server, opts, null);
+    }
+
     @Override
     public void getAllAccounts(Domain domain, NamedEntry.Visitor visitor)
     throws ServiceException {
@@ -9399,6 +9416,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             case internalUserAccountWithViewInHtml:
                 types.add(ObjectType.accounts);
                 filter = filterFactory.accountsWithViewInHtml();
+                break;
+            case internalUserAccountWithChatAll:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithChatAll();
+                break;
+            case internalUserAccountWithVideoAll:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithVideoAll();
+                break;
+            case internalUserAccountWithDocumentEditing:
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithDocumentEditing();
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);

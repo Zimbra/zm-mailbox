@@ -49,7 +49,10 @@ public enum CountObjectsType {
     internalUserAccountWithTasks(false, false),
     internalUserAccountWithSharing(false, false),
     internalUserAccountWithBriefcases(false, false),
-    internalUserAccountWithViewInHtml(false, false);
+    internalUserAccountWithViewInHtml(false, false),
+    internalUserAccountWithChatAll(false, false),
+    internalUserAccountWithVideoAll(false, false),
+    internalUserAccountWithDocumentEditing(false, false);
 
     private boolean allowsDomain;
     private boolean allowsUCService;

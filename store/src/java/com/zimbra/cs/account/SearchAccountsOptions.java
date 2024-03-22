@@ -34,7 +34,9 @@ public class SearchAccountsOptions extends SearchDirectoryOptions {
     public static enum IncludeType {
         ACCOUNTS_AND_CALENDAR_RESOURCES,
         ACCOUNTS_ONLY,
-        CALENDAR_RESOURCES_ONLY;
+        CALENDAR_RESOURCES_ONLY,
+        NON_SYSTEM_ACCOUNTS_ONLY;
+
     };
     
     private SearchAccountsOptions.IncludeType includeType;
