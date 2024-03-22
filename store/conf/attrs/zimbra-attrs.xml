@@ -10459,12 +10459,12 @@ TODO: delete them permanently from here
   <desc>When set to True, all aliases will be hidden for particular account</desc>
 </attr>
 
-  <attr id="4123" name="zimbraFeatureResetTwoFactorAuthEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="10.1.0">
-    <desc>Whether to enable a function to reconfigure two factor authentication without disabling the existing one</desc>
-  </attr>
+<attr id="4123" name="zimbraFeatureResetTwoFactorAuthEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="10.1.0">
+  <desc>Whether to enable a function to reconfigure two factor authentication without disabling the existing one</desc>
+</attr>
 
-  <attr id="4124" name="zimbraTwoFactorAuthTemporaryData" type="string" cardinality="multi" optionalIn="account" since="10.1.0">
-    <desc>Temporary data to update two-factor authentication settings</desc>
-  </attr>
+<attr id="4124" name="zimbraTwoFactorAuthTemporaryData" type="string" cardinality="multi" optionalIn="account" since="10.1.0">
+  <desc>Temporary data to update two-factor authentication settings</desc>
+</attr>
 
 </attrs>
