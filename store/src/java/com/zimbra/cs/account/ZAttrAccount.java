@@ -20325,6 +20325,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether to enable a function to reconfigure two factor authentication
+     * without disabling the existing one
+     *
+     * @return zimbraFeatureResetTwoFactorAuthEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public boolean isFeatureResetTwoFactorAuthEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, false, true);
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two factor authentication
+     * without disabling the existing one
+     *
+     * @param zimbraFeatureResetTwoFactorAuthEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public void setFeatureResetTwoFactorAuthEnabled(boolean zimbraFeatureResetTwoFactorAuthEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, zimbraFeatureResetTwoFactorAuthEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two factor authentication
+     * without disabling the existing one
+     *
+     * @param zimbraFeatureResetTwoFactorAuthEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public Map<String,Object> setFeatureResetTwoFactorAuthEnabled(boolean zimbraFeatureResetTwoFactorAuthEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, zimbraFeatureResetTwoFactorAuthEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two factor authentication
+     * without disabling the existing one
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public void unsetFeatureResetTwoFactorAuthEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two factor authentication
+     * without disabling the existing one
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public Map<String,Object> unsetFeatureResetTwoFactorAuthEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether retention policy feature is enabled
      *
      * @return zimbraFeatureRetentionPolicyEnabled, or true if unset
@@ -65895,6 +65972,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTwoFactorAuthSecret(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTwoFactorAuthSecret, "");
+        return attrs;
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @return zimbraTwoFactorAuthTemporaryData, or empty array if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public String[] getTwoFactorAuthTemporaryData() {
+        return getMultiAttr(Provisioning.A_zimbraTwoFactorAuthTemporaryData, true, true);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public void setTwoFactorAuthTemporaryData(String[] zimbraTwoFactorAuthTemporaryData) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public Map<String,Object> setTwoFactorAuthTemporaryData(String[] zimbraTwoFactorAuthTemporaryData, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        return attrs;
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public void addTwoFactorAuthTemporaryData(String zimbraTwoFactorAuthTemporaryData) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public Map<String,Object> addTwoFactorAuthTemporaryData(String zimbraTwoFactorAuthTemporaryData, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        return attrs;
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public void removeTwoFactorAuthTemporaryData(String zimbraTwoFactorAuthTemporaryData) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public Map<String,Object> removeTwoFactorAuthTemporaryData(String zimbraTwoFactorAuthTemporaryData, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        return attrs;
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public void unsetTwoFactorAuthTemporaryData() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTemporaryData, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public Map<String,Object> unsetTwoFactorAuthTemporaryData(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTemporaryData, "");
         return attrs;
     }
 

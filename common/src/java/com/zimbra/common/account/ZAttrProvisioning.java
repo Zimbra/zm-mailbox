@@ -7417,6 +7417,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureResetPasswordSuspensionTime = "zimbraFeatureResetPasswordSuspensionTime";
 
     /**
+     * Whether to enable a function to reconfigure two factor authentication
+     * without disabling the existing one
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public static final String A_zimbraFeatureResetTwoFactorAuthEnabled = "zimbraFeatureResetTwoFactorAuthEnabled";
+
+    /**
      * Whether retention policy feature is enabled
      *
      * @since ZCS 10.1.0
@@ -18102,6 +18111,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1824)
     public static final String A_zimbraTwoFactorAuthSecretLength = "zimbraTwoFactorAuthSecretLength";
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public static final String A_zimbraTwoFactorAuthTemporaryData = "zimbraTwoFactorAuthTemporaryData";
 
     /**
      * Lifetime of auth tokens provisioned for completing the 2nd stage of
