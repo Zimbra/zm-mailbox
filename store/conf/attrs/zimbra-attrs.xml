@@ -8540,14 +8540,14 @@ TODO: delete them permanently from here
   <desc>Shared secret encoding. Keep at BASE32 for compatability with common TOTP clients.</desc>
 </attr>
 
-<attr id="1827" name="zimbraTwoFactorScratchCodeLength" type="integer" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+<attr id="1827" name="zimbraTwoFactorScratchCodeLength" type="integer" cardinality="single" optionalIn="globalConfig" callback="TwoFactorScratchCode" since="8.7.0,9.0.0">
   <globalConfigValue>8</globalConfigValue>
-  <desc>length of scratch codes</desc>
+  <desc>Length of scratch codes. It must be different from zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength</desc>
 </attr>
 
-<attr id="1828" name="zimbraTwoFactorCodeLength" type="integer" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+<attr id="1828" name="zimbraTwoFactorCodeLength" type="integer" cardinality="single" optionalIn="globalConfig" callback="TwoFactorCode" since="8.7.0,9.0.0">
   <globalConfigValue>6</globalConfigValue>
-  <desc>Length of TOTP code required for two-factor authentication. Keep at 6 for compatability with common TOTP clients.</desc>
+  <desc>Length of TOTP code required for two-factor authentication. Keep at 6 for compatibility with common TOTP clients, and it must be different from zimbraTwoFactorScratchCodeLength and zimbraTwoFactorAuthEmailCodeLength.</desc>
 </attr>
 
 <attr id="1829" name="zimbraTwoFactorTimeWindowLength" type="duration" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
