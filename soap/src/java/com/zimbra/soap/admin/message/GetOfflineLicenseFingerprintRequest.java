@@ -46,9 +46,16 @@ public class GetOfflineLicenseFingerprintRequest {
     @XmlElement(name=AdminConstants.E_PRODUCT_LICENSE_CODE /* productLicenseCode */, required=true)
     private final String productLicenseCode;
 
+    /**
+     * @zm-api-field-description certActionType
+     */
+    @XmlElement(name=AdminConstants.E_CERT_ACTION_TYPE /* certActionType */, required=true)
+    private final String certActionType;
+
     public GetOfflineLicenseFingerprintRequest() {
         this.networkLicenseCode = null;
         this.productLicenseCode = null;
+        this.certActionType = null;
     }
 
     public String getNetworkLicenseCode() {
@@ -57,5 +64,9 @@ public class GetOfflineLicenseFingerprintRequest {
 
     public String getProductLicenseCode() {
         return productLicenseCode;
+    }
+
+    public String getCertActionType() {
+        return certActionType;
     }
 }
