@@ -1554,6 +1554,7 @@ public final class AdminConstants {
     public static final String E_LICENSE_CODE = "licenseCode";
     public static final String E_NETWORK_LICENSE_CODE = "networkLicenseCode";
     public static final String E_PRODUCT_LICENSE_CODE = "productLicenseCode";
+    public static final String E_CERT_ACTION_TYPE = "certActionType";
     public static final String E_OFFLINE_LICENSE_ACTIVATION_REQUEST_CERTIFICATE = "activationRequestCertificate";
     public static final String E_ACTIVATION = "activation";
     public static final String E_INFO = "info";
