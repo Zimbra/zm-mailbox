@@ -14714,6 +14714,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @return zimbraFeatureResetTwoFactorAuthEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public boolean isFeatureResetTwoFactorAuthEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, false, true);
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @param zimbraFeatureResetTwoFactorAuthEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public void setFeatureResetTwoFactorAuthEnabled(boolean zimbraFeatureResetTwoFactorAuthEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, zimbraFeatureResetTwoFactorAuthEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @param zimbraFeatureResetTwoFactorAuthEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public Map<String,Object> setFeatureResetTwoFactorAuthEnabled(boolean zimbraFeatureResetTwoFactorAuthEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, zimbraFeatureResetTwoFactorAuthEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public void unsetFeatureResetTwoFactorAuthEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public Map<String,Object> unsetFeatureResetTwoFactorAuthEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether retention policy feature is enabled
      *
      * @return zimbraFeatureRetentionPolicyEnabled, or true if unset
