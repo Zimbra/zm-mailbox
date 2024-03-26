@@ -1639,4 +1639,11 @@ public final class AdminConstants {
             "com_zimbra_docs_modern", "com_zimbra_drive_modern", "com_zextras_drive", "com_zextras_drive_open",
             "com_zextras_chat_open", "com_zextras_talk", "zimbra-zimlet-briefcase-edit-lool");
 
+    public static final String LICENSE_CACHE_REFRESHED = "cacheRefreshed";
+
+    public static final String E_LICENSE_CACHE_SOAP_SERVICE_REQUEST = "LicenseCacheSoapServiceRequest";
+    public static final String E_LICENSE_CACHE_SOAP_SERVICE_RESPONSE = "LicenseCacheSoapServiceResponse";
+    public static final QName LICENSE_CACHE_SOAP_SERVICE_REQUEST = QName.get(E_LICENSE_CACHE_SOAP_SERVICE_REQUEST, NAMESPACE);
+    public static final QName LICENSE_CACHE_SOAP_SERVICE_RESPONSE = QName.get(E_LICENSE_CACHE_SOAP_SERVICE_RESPONSE, NAMESPACE);
+
 }
