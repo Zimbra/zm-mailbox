@@ -511,6 +511,11 @@ sub make_package($)
       "--pkg-summary=$pkg_info->{summary}"
    );
 
+   if ($pkg_name eq "zimbra-mbox-war") {
+    push @cmd, "--pkg-pre-install-script=scripts/preinst.sh";
+    push @cmd, "--pkg-post-install-script=scripts/postinst.sh";
+   }
+
    if ( $pkg_info->{file_list} )
    {
       foreach my $expr ( @{ $pkg_info->{file_list} } )
