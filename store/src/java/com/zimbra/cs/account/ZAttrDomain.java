@@ -5126,6 +5126,88 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @return zimbraClassicWebClientDisabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public boolean isClassicWebClientDisabled() {
+        return getBooleanAttr(Provisioning.A_zimbraClassicWebClientDisabled, false, true);
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @param zimbraClassicWebClientDisabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public void setClassicWebClientDisabled(boolean zimbraClassicWebClientDisabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, zimbraClassicWebClientDisabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @param zimbraClassicWebClientDisabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public Map<String,Object> setClassicWebClientDisabled(boolean zimbraClassicWebClientDisabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, zimbraClassicWebClientDisabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public void unsetClassicWebClientDisabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public Map<String,Object> unsetClassicWebClientDisabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, "");
+        return attrs;
+    }
+
+    /**
      * API Client ID for accessing with Zimbra Community API
      *
      * @return zimbraCommunityAPIClientID, or null if unset
@@ -10509,7 +10591,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public boolean isFeatureBasicOneToOneChatEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, false, true);
     }
@@ -10522,7 +10604,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public void setFeatureBasicOneToOneChatEnabled(boolean zimbraFeatureBasicOneToOneChatEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, zimbraFeatureBasicOneToOneChatEnabled ? TRUE : FALSE);
@@ -10538,7 +10620,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public Map<String,Object> setFeatureBasicOneToOneChatEnabled(boolean zimbraFeatureBasicOneToOneChatEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, zimbraFeatureBasicOneToOneChatEnabled ? TRUE : FALSE);
@@ -10552,7 +10634,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public void unsetFeatureBasicOneToOneChatEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, "");
@@ -10567,7 +10649,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public Map<String,Object> unsetFeatureBasicOneToOneChatEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, "");
@@ -11207,6 +11289,88 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetFeatureMaxVideoParticipantsForUser(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMaxVideoParticipantsForUser, "");
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @return zimbraFeatureModernChatEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public boolean isFeatureModernChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureModernChatEnabled, false, true);
+    }
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @param zimbraFeatureModernChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public void setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @param zimbraFeatureModernChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public Map<String,Object> setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public void unsetFeatureModernChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public Map<String,Object> unsetFeatureModernChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
         return attrs;
     }
 
@@ -19578,88 +19742,6 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetModernWebClientDisabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraModernWebClientDisabled, "");
-        return attrs;
-    }
-
-    /**
-     * Whether to enable/disable the classic web client option on the login
-     * screen. Default value is FALSE, which makes the classic client option
-     * available.
-     *
-     * @return zimbraClassicWebClientDisabled, or false if unset
-     *
-     * @since ZCS 10.1.0
-     */
-    @ZAttr(id=4125)
-    public boolean isClassicWebClientDisabled() {
-        return getBooleanAttr(Provisioning.A_zimbraClassicWebClientDisabled, false, true);
-    }
-
-    /**
-     * Whether to enable/disable the classic web client option on the login
-     * screen. Default value is FALSE, which makes the classic client option
-     * available.
-     *
-     * @param zimbraClassicWebClientDisabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.0
-     */
-    @ZAttr(id=4125)
-    public void setClassicWebClientDisabled(boolean zimbraClassicWebClientDisabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, zimbraClassicWebClientDisabled ? TRUE : FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable/disable the classic web client option on the login
-     * screen. Default value is FALSE, which makes the classic client option
-     * available.
-     *
-     * @param zimbraClassicWebClientDisabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.0
-     */
-    @ZAttr(id=4125)
-    public Map<String,Object> setClassicWebClientDisabled(boolean zimbraClassicWebClientDisabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, zimbraClassicWebClientDisabled ? TRUE : FALSE);
-        return attrs;
-    }
-
-    /**
-     * Whether to enable/disable the classic web client option on the login
-     * screen. Default value is FALSE, which makes the classic client option
-     * available.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.0
-     */
-    @ZAttr(id=4125)
-    public void unsetClassicWebClientDisabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Whether to enable/disable the classic web client option on the login
-     * screen. Default value is FALSE, which makes the classic client option
-     * available.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.0
-     */
-    @ZAttr(id=4125)
-    public Map<String,Object> unsetClassicWebClientDisabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, "");
         return attrs;
     }
 

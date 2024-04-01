@@ -4906,7 +4906,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraClamAVSafeBrowsing = "zimbraClamAVSafeBrowsing";
 
     /**
-     * Whether to enable/disable classic ui option on the login screen.
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
      *
      * @since ZCS 10.1.0
      */
@@ -6747,7 +6749,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public static final String A_zimbraFeatureBasicOneToOneChatEnabled = "zimbraFeatureBasicOneToOneChatEnabled";
 
     /**
@@ -7287,6 +7289,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=347)
     public static final String A_zimbraFeatureMobileSyncEnabled = "zimbraFeatureMobileSyncEnabled";
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public static final String A_zimbraFeatureModernChatEnabled = "zimbraFeatureModernChatEnabled";
 
     /**
      * Whether to allow a user to access Zimbra modern desktop
@@ -18209,7 +18221,9 @@ public class ZAttrProvisioning {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -18228,7 +18242,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTwoFactorCodeLifetimeForEmail = "zimbraTwoFactorCodeLifetimeForEmail";
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @since ZCS 8.7.0,9.0.0
      */
