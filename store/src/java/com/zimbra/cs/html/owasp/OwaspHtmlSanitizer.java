@@ -95,7 +95,6 @@ public class OwaspHtmlSanitizer implements Callable<String> {
                 .toFactory().apply(new StyleTagReceiver(renderer));*/
         Function<HtmlStreamEventReceiver, HtmlSanitizer.Policy> policy
                 = new HtmlPolicyBuilder()
-                .allowElements("a", "p")
                 .allowAttributes("href").onElements("a")
                 .toFactory();
 
