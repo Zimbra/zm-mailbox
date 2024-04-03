@@ -22,12 +22,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 
-import org.owasp.html.Handler;
-import org.owasp.html.HtmlSanitizer;
+import org.owasp.html.*;
 import org.owasp.html.HtmlSanitizer.Policy;
-import org.owasp.html.ExtensibleHtmlStreamRenderer;
-import org.owasp.html.PolicyFactory;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
@@ -89,7 +87,13 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         instantiatePolicy();
         final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));
         // run the html through the sanitizer
-        HtmlSanitizer.sanitize(html, policy);
+       // Function<HtmlStreamEventReceiver, Policy> policy1
+        Policy policy1
+                = new HtmlPolicyBuilder()
+                .allowElements("a", "p")
+                .allowAttributes("href").onElements("a")
+                .toFactory().apply(new StyleTagReceiver(renderer));
+        HtmlSanitizer.sanitize(html, policy1);
         // return the resulting HTML from the builder
         OwaspHtmlSanitizer.zThreadLocal.remove();
         return htmlBuilder.toString();
