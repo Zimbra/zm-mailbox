@@ -817,7 +817,7 @@ public abstract class AuthProvider {
         if (null != authProviderExp) {
             throw authProviderExp;
         }
-        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", account.getName()));
+        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account %s", account.getName()));
     }
 
     /**
@@ -840,8 +840,7 @@ public abstract class AuthProvider {
                 logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
             }
         }
-
-        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", account.getName()));
+        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account %s", account.getName()));
     }
 
     protected AuthToken authToken(Account acct, Usage usage) throws AuthProviderException {

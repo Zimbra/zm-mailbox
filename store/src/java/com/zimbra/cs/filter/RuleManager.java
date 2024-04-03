@@ -17,18 +17,23 @@
 
 package com.zimbra.cs.filter;
 
+import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.DeliveryServiceException;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.filter.ZimbraMailAdapter.KeepType;
+import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -38,7 +43,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.soap.mail.type.FilterRule;
-
 import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.exception.SieveException;
@@ -51,10 +55,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,6 +88,9 @@ public final class RuleManager {
     private static final String ADMIN_OUTGOING_FILTER_RULES_AFTER_CACHE_KEY =
             RuleManager.class.getSimpleName() + ".ADMIN_OUTGOING_FILTER_RULES_AFTER_CACHE";
     public static final String editHeaderUserScriptError = "EDIT_HEADER_NOT_SUPPORTED_FOR_USER_SCRIPT";
+
+    // See RFC 5228 Section 3.2
+    private static final Pattern PAT_REQUIRE = Pattern.compile("^\\s*require.+?\"\\s*\\]?\\s*;", Pattern.CASE_INSENSITIVE);
 
     public static enum FilterType {INCOMING, OUTGOING};
     public static enum AdminFilterType {
@@ -134,7 +144,7 @@ public final class RuleManager {
         if (entry instanceof Account) {
             ZimbraLog.filter.debug("Setting filter rules for account %s:\n%s", ((Account)entry).getName(), script);
         } else if (entry instanceof Domain) {
-            ZimbraLog.filter.debug("Setting filter rules for domian %s:\n%s", ((Domain)entry).getName(), script);
+            ZimbraLog.filter.debug("Setting filter rules for domain %s:\n%s", ((Domain)entry).getName(), script);
         } else if (entry instanceof Cos) {
             ZimbraLog.filter.debug("Setting filter rules for cos %s:\n%s", ((Cos)entry).getName(), script);
         } else if (entry instanceof Server) {
@@ -143,6 +153,9 @@ public final class RuleManager {
         if (script == null) {
             script = "";
         }
+
+        rejectSieveScriptExceedingMaxSize(entry, script, sieveScriptAttrName);
+
         try {
             Node node = parse(script);
             // evaluate against dummy mail adapter to catch more errors
@@ -161,6 +174,80 @@ public final class RuleManager {
         } catch (SieveException e) {
             ZimbraLog.filter.error("Unable to evaluate script:\n" + script);
             throw ServiceException.PARSE_ERROR("evaluating Sieve script", e);
+        }
+    }
+
+    /**
+     * Reject the sieve script by throwing a ServiceException if its size exceeds
+     * the limit in the {@code zimbraMailSieveScriptMaxSize} attribute. If the new sieve
+     * script exceeds the limit, but is smaller than before, then the new script is not
+     * rejected.
+     *
+     * If the value of the attribute is not set, or if the attribute getter is not
+     * defined for the entry type, then the limit defined in the global config is used.
+     *
+     * @param entry the account/domain/cos/server for which the rules are to be saved
+     * @param newSieveScript the new sieve script, or an empty string
+     * @param sieveScriptAttrName the name of the sieve script attribute
+     * @throws ServiceException if the sieve script exceeds the value of the max size attribute
+     */
+    private static void rejectSieveScriptExceedingMaxSize(Entry entry, String newSieveScript, String sieveScriptAttrName)
+            throws ServiceException {
+        long sieveScriptMaxSize;
+        String zimbraMailSieveScriptMaxSize = entry.getAttr(Provisioning.A_zimbraMailSieveScriptMaxSize);
+        if (zimbraMailSieveScriptMaxSize != null && !zimbraMailSieveScriptMaxSize.isEmpty() && !zimbraMailSieveScriptMaxSize.equals("0")) {
+            sieveScriptMaxSize = Long.parseLong(zimbraMailSieveScriptMaxSize);
+        } else {
+            return;
+        }
+
+        long newSieveScriptSize = newSieveScript.getBytes(StandardCharsets.UTF_8).length;
+        long oldSieveScriptSize = 0;
+        String oldSieveScript = entry.getAttr(sieveScriptAttrName);
+        if (oldSieveScript != null && !oldSieveScript.isEmpty()) {
+            oldSieveScriptSize = oldSieveScript.getBytes(StandardCharsets.UTF_8).length;
+        }
+
+        ZimbraLog.filter.debug("Old sieve script size: " + oldSieveScriptSize);
+        ZimbraLog.filter.debug("New sieve script size: " + newSieveScriptSize);
+
+        long oldSieveScriptRequireSize = 0;
+        long newSieveScriptRequireSize = 0;
+        long requireSizeDiff = 0;
+
+        Matcher matcher;
+        if (oldSieveScript != null) {
+            matcher = PAT_REQUIRE.matcher(oldSieveScript);
+            if (matcher.find()) {
+                String oldSieveScriptRequire = matcher.group();
+                oldSieveScriptRequireSize = oldSieveScriptRequire.length();
+                ZimbraLog.filter.debug("require in old sieve script: " + oldSieveScriptRequire + " Size: " + oldSieveScriptRequireSize);
+            }
+        }
+
+        if (newSieveScript != null) {
+            matcher = PAT_REQUIRE.matcher(newSieveScript);
+            if (matcher.find()) {
+                String newSieveScriptRequire = matcher.group();
+                newSieveScriptRequireSize = newSieveScriptRequire.length();
+                ZimbraLog.filter.debug("require in new sieve script: " + newSieveScriptRequire + " Size: " + newSieveScriptRequireSize);
+            }
+        }
+
+        if (oldSieveScriptRequireSize < newSieveScriptRequireSize) {
+            requireSizeDiff = newSieveScriptRequireSize - oldSieveScriptRequireSize;
+        }
+
+        if (sieveScriptMaxSize < newSieveScriptSize && (oldSieveScriptSize + requireSizeDiff) <= newSieveScriptSize) {
+            Locale locale = entry.getLocale();
+            StringBuilder msg = new StringBuilder();
+            msg.append(L10nUtil.getMessage(MsgKey.sieveScriptMaxSizeErrorMsg, locale))
+                .append(": ")
+                .append(newSieveScriptSize)
+                .append(" bytes exceeds the limit of ")
+                .append(sieveScriptMaxSize)
+                .append(" bytes");
+            throw ServiceException.SIEVE_SCRIPT_MAX_SIZE_EXCEPTION(msg.toString(), null);
         }
     }
 
@@ -351,6 +438,8 @@ public final class RuleManager {
     private static void setXMLRules(Account account,List<FilterRule> rules, String sieveScriptAttrName,
             String rulesCacheKey) throws ServiceException {
         SoapToSieve soapToSieve = new SoapToSieve(rules);
+        String tzId = account.getAttr(Provisioning.A_zimbraPrefTimeZoneId);
+        Sieve.DATE_PARSER.setTimezone((StringUtil.isNullOrEmpty(tzId) ? TimeZone.getDefault().getID() : tzId));
         String script = soapToSieve.getSieveScript();
         setRules(account, script, sieveScriptAttrName, rulesCacheKey);
     }

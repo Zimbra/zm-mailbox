@@ -31,21 +31,42 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @zm-api-command-description Get Offline License Certificate
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name= AdminConstants.E_GET_OFFLINE_LICENSE_CERTIFICATE_REQUEST)
-public class GetOfflineLicenseCertificateRequest {
+@XmlRootElement(name= AdminConstants.E_GET_OFFLINE_LICENSE_FINGERPRINT_REQUEST)
+public class GetOfflineLicenseFingerprintRequest {
 
     /**
-     * @zm-api-field-description licenseCode
+     * @zm-api-field-description networkLicenseCode
      */
-    @XmlElement(name=AdminConstants.E_LICENSE_CODE /* licenseCode */, required=true)
-    private final String licenseCode;
+    @XmlElement(name=AdminConstants.E_NETWORK_LICENSE_CODE /* networkLicenseCode */, required=true)
+    private final String networkLicenseCode;
 
-    public GetOfflineLicenseCertificateRequest() {
-        this.licenseCode = null;
+    /**
+     * @zm-api-field-description productLicenseCode
+     */
+    @XmlElement(name=AdminConstants.E_PRODUCT_LICENSE_CODE /* productLicenseCode */, required=true)
+    private final String productLicenseCode;
+
+    /**
+     * @zm-api-field-description certActionType
+     */
+    @XmlElement(name=AdminConstants.E_CERT_ACTION_TYPE /* certActionType */, required=true)
+    private final String certActionType;
+
+    public GetOfflineLicenseFingerprintRequest() {
+        this.networkLicenseCode = null;
+        this.productLicenseCode = null;
+        this.certActionType = null;
     }
 
+    public String getNetworkLicenseCode() {
+        return networkLicenseCode;
+    }
 
-    public String getLicenseCode() {
-        return licenseCode;
+    public String getProductLicenseCode() {
+        return productLicenseCode;
+    }
+
+    public String getCertActionType() {
+        return certActionType;
     }
 }

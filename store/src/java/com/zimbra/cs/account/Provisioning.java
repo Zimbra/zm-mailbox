@@ -16,18 +16,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import javax.mail.internet.InternetAddress;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -72,6 +60,17 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedElement;
 import com.zimbra.soap.type.TargetBy;
+
+import javax.mail.internet.InternetAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @since Sep 23, 2004
@@ -1218,6 +1217,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void modifyAccountStatus(Account acct, String newStatus) throws ServiceException;
 
+    public abstract void prepareAccountStatusToDelete(Account acct) throws ServiceException;
+
     public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto)
     throws ServiceException;
 
@@ -2010,6 +2011,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract List getAllAccounts(Domain d) throws ServiceException;
 
+    public abstract List getAllNonSystemAccounts(Domain domain, Server server) throws ServiceException;
+
     public abstract void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException;
 
     public abstract void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException;
@@ -2603,6 +2606,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         static final String RENAME_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE =
             "renameAccountCheckDomainCosAndFeature";
         static final String DELETE_ACCOUNT_SUCCEEDED = "deleteAccountSucceeded";
+        static final String DELETE_ACCOUNT = "deleteAccount";
 
         void validate(Provisioning prov, String action, Object... args) throws ServiceException;
         void refresh();

@@ -15,7 +15,7 @@
   <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="${httpclient.httpcore.version}"/>
   <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
   <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
-  <dependency org="junit" name="junit" rev="4.8.2" />
+  <dependency org="junit" name="junit" rev="4.13.2" />
   <dependency org="org.apache.logging.log4j" name="log4j-core" rev="${log4j.core.version}" />
   <dependency org="org.apache.logging.log4j" name="log4j-api" rev="${log4j.api.version}" />
   <dependency org="javax.mail" name="mail" rev="1.4.5" />

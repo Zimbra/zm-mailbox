@@ -14279,7 +14279,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public boolean isFeatureBasicOneToOneChatEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, false, true);
     }
@@ -14292,7 +14292,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public void setFeatureBasicOneToOneChatEnabled(boolean zimbraFeatureBasicOneToOneChatEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, zimbraFeatureBasicOneToOneChatEnabled ? TRUE : FALSE);
@@ -14308,7 +14308,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public Map<String,Object> setFeatureBasicOneToOneChatEnabled(boolean zimbraFeatureBasicOneToOneChatEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, zimbraFeatureBasicOneToOneChatEnabled ? TRUE : FALSE);
@@ -14322,7 +14322,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public void unsetFeatureBasicOneToOneChatEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, "");
@@ -14337,7 +14337,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public Map<String,Object> unsetFeatureBasicOneToOneChatEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureBasicOneToOneChatEnabled, "");
@@ -19027,6 +19027,88 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @return zimbraFeatureModernChatEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public boolean isFeatureModernChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureModernChatEnabled, false, true);
+    }
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @param zimbraFeatureModernChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public void setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @param zimbraFeatureModernChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public Map<String,Object> setFeatureModernChatEnabled(boolean zimbraFeatureModernChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, zimbraFeatureModernChatEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public void unsetFeatureModernChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public Map<String,Object> unsetFeatureModernChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernChatEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to allow a user to access Zimbra modern desktop
      *
      * @return zimbraFeatureModernDesktopEnabled, or false if unset
@@ -20326,6 +20408,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureResetPasswordSuspensionTime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureResetPasswordSuspensionTime, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @return zimbraFeatureResetTwoFactorAuthEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public boolean isFeatureResetTwoFactorAuthEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, false, true);
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @param zimbraFeatureResetTwoFactorAuthEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public void setFeatureResetTwoFactorAuthEnabled(boolean zimbraFeatureResetTwoFactorAuthEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, zimbraFeatureResetTwoFactorAuthEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @param zimbraFeatureResetTwoFactorAuthEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public Map<String,Object> setFeatureResetTwoFactorAuthEnabled(boolean zimbraFeatureResetTwoFactorAuthEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, zimbraFeatureResetTwoFactorAuthEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public void unsetFeatureResetTwoFactorAuthEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public Map<String,Object> unsetFeatureResetTwoFactorAuthEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetTwoFactorAuthEnabled, "");
         return attrs;
     }
 
@@ -25557,6 +25716,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @return zimbraHideAliasesInGal, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4116)
+    public boolean isHideAliasesInGal() {
+        return getBooleanAttr(Provisioning.A_zimbraHideAliasesInGal, false, true);
+    }
+
+    /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @param zimbraHideAliasesInGal new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4116)
+    public void setHideAliasesInGal(boolean zimbraHideAliasesInGal) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHideAliasesInGal, zimbraHideAliasesInGal ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @param zimbraHideAliasesInGal new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4116)
+    public Map<String,Object> setHideAliasesInGal(boolean zimbraHideAliasesInGal, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHideAliasesInGal, zimbraHideAliasesInGal ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4116)
+    public void unsetHideAliasesInGal() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHideAliasesInGal, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4116)
+    public Map<String,Object> unsetHideAliasesInGal(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHideAliasesInGal, "");
+        return attrs;
+    }
+
+    /**
      * hide entry in Global Address List
      *
      * @return zimbraHideInGal, or false if unset
@@ -26030,6 +26261,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetIdentityMaxNumEntries(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIdentityMaxNumEntries, "");
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @return zimbraImapAllowedIPs, or empty array if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public String[] getImapAllowedIPs() {
+        return getMultiAttr(Provisioning.A_zimbraImapAllowedIPs, true, true);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @param zimbraImapAllowedIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public void setImapAllowedIPs(String[] zimbraImapAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapAllowedIPs, zimbraImapAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @param zimbraImapAllowedIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public Map<String,Object> setImapAllowedIPs(String[] zimbraImapAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapAllowedIPs, zimbraImapAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @param zimbraImapAllowedIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public void addImapAllowedIPs(String zimbraImapAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraImapAllowedIPs, zimbraImapAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @param zimbraImapAllowedIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public Map<String,Object> addImapAllowedIPs(String zimbraImapAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraImapAllowedIPs, zimbraImapAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @param zimbraImapAllowedIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public void removeImapAllowedIPs(String zimbraImapAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraImapAllowedIPs, zimbraImapAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @param zimbraImapAllowedIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public Map<String,Object> removeImapAllowedIPs(String zimbraImapAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraImapAllowedIPs, zimbraImapAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public void unsetImapAllowedIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapAllowedIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public Map<String,Object> unsetImapAllowedIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapAllowedIPs, "");
         return attrs;
     }
 
@@ -31296,6 +31661,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @return zimbraMapiAllowedIPs, or empty array if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public String[] getMapiAllowedIPs() {
+        return getMultiAttr(Provisioning.A_zimbraMapiAllowedIPs, true, true);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @param zimbraMapiAllowedIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public void setMapiAllowedIPs(String[] zimbraMapiAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMapiAllowedIPs, zimbraMapiAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @param zimbraMapiAllowedIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public Map<String,Object> setMapiAllowedIPs(String[] zimbraMapiAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMapiAllowedIPs, zimbraMapiAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @param zimbraMapiAllowedIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public void addMapiAllowedIPs(String zimbraMapiAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMapiAllowedIPs, zimbraMapiAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @param zimbraMapiAllowedIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public Map<String,Object> addMapiAllowedIPs(String zimbraMapiAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMapiAllowedIPs, zimbraMapiAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @param zimbraMapiAllowedIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public void removeMapiAllowedIPs(String zimbraMapiAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMapiAllowedIPs, zimbraMapiAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @param zimbraMapiAllowedIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public Map<String,Object> removeMapiAllowedIPs(String zimbraMapiAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMapiAllowedIPs, zimbraMapiAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public void unsetMapiAllowedIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMapiAllowedIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public Map<String,Object> unsetMapiAllowedIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMapiAllowedIPs, "");
+        return attrs;
+    }
+
+    /**
      * maximum number of application-specific passwords allowed for an
      * account
      *
@@ -31725,6 +32224,149 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @return zimbraMobileAllowedIPs, or empty array if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public String[] getMobileAllowedIPs() {
+        return getMultiAttr(Provisioning.A_zimbraMobileAllowedIPs, true, true);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @param zimbraMobileAllowedIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public void setMobileAllowedIPs(String[] zimbraMobileAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedIPs, zimbraMobileAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @param zimbraMobileAllowedIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public Map<String,Object> setMobileAllowedIPs(String[] zimbraMobileAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedIPs, zimbraMobileAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @param zimbraMobileAllowedIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public void addMobileAllowedIPs(String zimbraMobileAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileAllowedIPs, zimbraMobileAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @param zimbraMobileAllowedIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public Map<String,Object> addMobileAllowedIPs(String zimbraMobileAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileAllowedIPs, zimbraMobileAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @param zimbraMobileAllowedIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public void removeMobileAllowedIPs(String zimbraMobileAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileAllowedIPs, zimbraMobileAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @param zimbraMobileAllowedIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public Map<String,Object> removeMobileAllowedIPs(String zimbraMobileAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileAllowedIPs, zimbraMobileAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public void unsetMobileAllowedIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public Map<String,Object> unsetMobileAllowedIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedIPs, "");
+        return attrs;
+    }
+
+    /**
      * whether mobile sync should zip the skipped item and attach it to the
      * notification mail
      *
@@ -31876,13 +32518,13 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * Whether to force Samsung devices using Active Sync 2.5
      *
-     * @return zimbraMobileForceSamsungProtocol25, or false if unset
+     * @return zimbraMobileForceSamsungProtocol25, or true if unset
      *
      * @since ZCS 8.0.7
      */
     @ZAttr(id=1572)
     public boolean isMobileForceSamsungProtocol25() {
-        return getBooleanAttr(Provisioning.A_zimbraMobileForceSamsungProtocol25, false, true);
+        return getBooleanAttr(Provisioning.A_zimbraMobileForceSamsungProtocol25, true, true);
     }
 
     /**
@@ -40501,6 +41143,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPhoneticLastName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPhoneticLastName, "");
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @return zimbraPop3AllowedIPs, or empty array if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public String[] getPop3AllowedIPs() {
+        return getMultiAttr(Provisioning.A_zimbraPop3AllowedIPs, true, true);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @param zimbraPop3AllowedIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public void setPop3AllowedIPs(String[] zimbraPop3AllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3AllowedIPs, zimbraPop3AllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @param zimbraPop3AllowedIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public Map<String,Object> setPop3AllowedIPs(String[] zimbraPop3AllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3AllowedIPs, zimbraPop3AllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @param zimbraPop3AllowedIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public void addPop3AllowedIPs(String zimbraPop3AllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPop3AllowedIPs, zimbraPop3AllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @param zimbraPop3AllowedIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public Map<String,Object> addPop3AllowedIPs(String zimbraPop3AllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPop3AllowedIPs, zimbraPop3AllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @param zimbraPop3AllowedIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public void removePop3AllowedIPs(String zimbraPop3AllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPop3AllowedIPs, zimbraPop3AllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @param zimbraPop3AllowedIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public Map<String,Object> removePop3AllowedIPs(String zimbraPop3AllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPop3AllowedIPs, zimbraPop3AllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public void unsetPop3AllowedIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3AllowedIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public Map<String,Object> unsetPop3AllowedIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3AllowedIPs, "");
         return attrs;
     }
 
@@ -65302,6 +66078,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @return zimbraTwoFactorAuthTemporaryData, or empty array if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public String[] getTwoFactorAuthTemporaryData() {
+        return getMultiAttr(Provisioning.A_zimbraTwoFactorAuthTemporaryData, true, true);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public void setTwoFactorAuthTemporaryData(String[] zimbraTwoFactorAuthTemporaryData) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public Map<String,Object> setTwoFactorAuthTemporaryData(String[] zimbraTwoFactorAuthTemporaryData, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        return attrs;
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public void addTwoFactorAuthTemporaryData(String zimbraTwoFactorAuthTemporaryData) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public Map<String,Object> addTwoFactorAuthTemporaryData(String zimbraTwoFactorAuthTemporaryData, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        return attrs;
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public void removeTwoFactorAuthTemporaryData(String zimbraTwoFactorAuthTemporaryData) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param zimbraTwoFactorAuthTemporaryData existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public Map<String,Object> removeTwoFactorAuthTemporaryData(String zimbraTwoFactorAuthTemporaryData, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTwoFactorAuthTemporaryData, zimbraTwoFactorAuthTemporaryData);
+        return attrs;
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public void unsetTwoFactorAuthTemporaryData() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTemporaryData, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public Map<String,Object> unsetTwoFactorAuthTemporaryData(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraTwoFactorAuthTemporaryData, "");
+        return attrs;
+    }
+
+    /**
      * Lifetime of auth tokens provisioned for completing the 2nd stage of
      * two-factor authentication. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -66264,6 +67174,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @return zimbraWebClientAllowedIPs, or empty array if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public String[] getWebClientAllowedIPs() {
+        return getMultiAttr(Provisioning.A_zimbraWebClientAllowedIPs, true, true);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @param zimbraWebClientAllowedIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public void setWebClientAllowedIPs(String[] zimbraWebClientAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientAllowedIPs, zimbraWebClientAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @param zimbraWebClientAllowedIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public Map<String,Object> setWebClientAllowedIPs(String[] zimbraWebClientAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientAllowedIPs, zimbraWebClientAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @param zimbraWebClientAllowedIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public void addWebClientAllowedIPs(String zimbraWebClientAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientAllowedIPs, zimbraWebClientAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @param zimbraWebClientAllowedIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public Map<String,Object> addWebClientAllowedIPs(String zimbraWebClientAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientAllowedIPs, zimbraWebClientAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @param zimbraWebClientAllowedIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public void removeWebClientAllowedIPs(String zimbraWebClientAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientAllowedIPs, zimbraWebClientAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @param zimbraWebClientAllowedIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public Map<String,Object> removeWebClientAllowedIPs(String zimbraWebClientAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientAllowedIPs, zimbraWebClientAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public void unsetWebClientAllowedIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientAllowedIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public Map<String,Object> unsetWebClientAllowedIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientAllowedIPs, "");
+        return attrs;
+    }
+
+    /**
      * limit for the number of days that the web client would use to sync any
      * mail folder&#039;s data for offline use
      *
@@ -66481,6 +67525,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetYahooId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraYahooId, "");
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @return zimbraZDAllowedIPs, or empty array if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public String[] getZDAllowedIPs() {
+        return getMultiAttr(Provisioning.A_zimbraZDAllowedIPs, true, true);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @param zimbraZDAllowedIPs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public void setZDAllowedIPs(String[] zimbraZDAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZDAllowedIPs, zimbraZDAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @param zimbraZDAllowedIPs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public Map<String,Object> setZDAllowedIPs(String[] zimbraZDAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZDAllowedIPs, zimbraZDAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @param zimbraZDAllowedIPs new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public void addZDAllowedIPs(String zimbraZDAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZDAllowedIPs, zimbraZDAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @param zimbraZDAllowedIPs new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public Map<String,Object> addZDAllowedIPs(String zimbraZDAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZDAllowedIPs, zimbraZDAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @param zimbraZDAllowedIPs existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public void removeZDAllowedIPs(String zimbraZDAllowedIPs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraZDAllowedIPs, zimbraZDAllowedIPs);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @param zimbraZDAllowedIPs existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public Map<String,Object> removeZDAllowedIPs(String zimbraZDAllowedIPs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraZDAllowedIPs, zimbraZDAllowedIPs);
+        return attrs;
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public void unsetZDAllowedIPs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZDAllowedIPs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public Map<String,Object> unsetZDAllowedIPs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZDAllowedIPs, "");
         return attrs;
     }
 

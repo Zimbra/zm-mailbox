@@ -11077,6 +11077,88 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @return zimbraClassicWebClientDisabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public boolean isClassicWebClientDisabled() {
+        return getBooleanAttr(Provisioning.A_zimbraClassicWebClientDisabled, false, true);
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @param zimbraClassicWebClientDisabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public void setClassicWebClientDisabled(boolean zimbraClassicWebClientDisabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, zimbraClassicWebClientDisabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @param zimbraClassicWebClientDisabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public Map<String,Object> setClassicWebClientDisabled(boolean zimbraClassicWebClientDisabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, zimbraClassicWebClientDisabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public void unsetClassicWebClientDisabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public Map<String,Object> unsetClassicWebClientDisabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, "");
+        return attrs;
+    }
+
+    /**
      * Regex for identifying client types
      *
      * @return zimbraClientTypeRegex, or empty array if unset
@@ -78940,7 +79022,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @return zimbraTwoFactorCodeLength, or 6 if unset
      *
@@ -78953,7 +79037,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @param zimbraTwoFactorCodeLength new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -78969,7 +79055,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @param zimbraTwoFactorCodeLength new value
      * @param attrs existing map to populate, or null to create a new map
@@ -78986,7 +79074,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -79001,7 +79091,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -79122,7 +79214,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @return zimbraTwoFactorScratchCodeLength, or 8 if unset
      *
@@ -79134,7 +79227,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @param zimbraTwoFactorScratchCodeLength new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -79149,7 +79243,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @param zimbraTwoFactorScratchCodeLength new value
      * @param attrs existing map to populate, or null to create a new map
@@ -79165,7 +79260,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -79179,7 +79275,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

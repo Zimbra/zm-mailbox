@@ -305,6 +305,9 @@ public final class AdminConstants {
     public static final String E_SEARCH_MULTIPLE_MAILBOXES_REQUEST = "SearchMultiMailboxRequest";
     public static final String E_SEARCH_MULTIPLE_MAILBOXES_RESPONSE = "SearchMultiMailboxResponse";
 
+    public static final String E_SEND_TWO_FACTOR_AUTH_CODE_REQUEST = "SendTwoFactorAuthCodeRequest";
+    public static final String E_SEND_TWO_FACTOR_AUTH_CODE_RESPONSE = "SendTwoFactorAuthCodeResponse";
+
     public static final String E_DUMP_SESSIONS_REQUEST = "DumpSessionsRequest";
     public static final String E_DUMP_SESSIONS_RESPONSE = "DumpSessionsResponse";
     public static final String E_GET_SESSIONS_REQUEST = "GetSessionsRequest";
@@ -504,8 +507,8 @@ public final class AdminConstants {
     public static final String E_INSTALL_LICENSE_REQUEST = "InstallLicenseRequest";
     public static final String E_INSTALL_LICENSE_RESPONSE = "InstallLicenseResponse";
     public static final String E_ACTIVATE_LICENSE_REQUEST = "ActivateLicenseRequest";
-    public static final String E_GET_OFFLINE_LICENSE_CERTIFICATE_REQUEST = "GetOfflineLicenseCertificateRequest";
-    public static final String E_GET_OFFLINE_LICENSE_CERTIFICATE_RESPONSE = "GetOfflineLicenseCertificateResponse";
+    public static final String E_GET_OFFLINE_LICENSE_FINGERPRINT_REQUEST = "GetOfflineLicenseFingerprintRequest";
+    public static final String E_GET_OFFLINE_LICENSE_FINGERPRINT_RESPONSE = "GetOfflineLicenseFingerprintResponse";
     public static final String E_ACTIVATE_LICENSE_RESPONSE = "ActivateLicenseResponse";
     public static final String E_GET_LICENSE_REQUEST = "GetLicenseRequest";
     public static final String E_GET_LICENSE_RESPONSE = "GetLicenseResponse";
@@ -818,6 +821,9 @@ public final class AdminConstants {
     public static final QName SEARCH_MULTIPLE_MAILBOXES_REQUEST = QName.get(E_SEARCH_MULTIPLE_MAILBOXES_REQUEST, NAMESPACE);
     public static final QName SEARCH_MULTIPLE_MAILBOXES_RESPONSE = QName.get(E_SEARCH_MULTIPLE_MAILBOXES_RESPONSE, NAMESPACE);
 
+    public static final QName SEND_TWO_FACTOR_AUTH_CODE_REQUEST = QName.get(E_SEND_TWO_FACTOR_AUTH_CODE_REQUEST, NAMESPACE);
+    public static final QName SEND_TWO_FACTOR_AUTH_CODE_RESPONSE = QName.get(E_SEND_TWO_FACTOR_AUTH_CODE_RESPONSE, NAMESPACE);
+
     public static final QName DUMP_SESSIONS_REQUEST = QName.get(E_DUMP_SESSIONS_REQUEST, NAMESPACE);
     public static final QName DUMP_SESSIONS_RESPONSE = QName.get(E_DUMP_SESSIONS_RESPONSE, NAMESPACE);
     public static final QName GET_SESSIONS_REQUEST = QName.get(E_GET_SESSIONS_REQUEST, NAMESPACE);
@@ -1021,8 +1027,8 @@ public final class AdminConstants {
     public static final QName ACTIVATE_LICENSE_RESPONSE = QName.get(E_ACTIVATE_LICENSE_RESPONSE, NAMESPACE);
     public static final QName GET_LICENSE_REQUEST = QName.get(E_GET_LICENSE_REQUEST, NAMESPACE);
     public static final QName GET_LICENSE_RESPONSE = QName.get(E_GET_LICENSE_RESPONSE, NAMESPACE);
-    public static final QName GET_OFFLINE_LICENSE_CERTIFICATE_REQUEST = QName.get(E_GET_OFFLINE_LICENSE_CERTIFICATE_REQUEST, NAMESPACE);
-    public static final QName GET_OFFLINE_LICENSE_CERTIFICATE_RESPONSE = QName.get(E_GET_OFFLINE_LICENSE_CERTIFICATE_RESPONSE, NAMESPACE);
+    public static final QName GET_OFFLINE_LICENSE_CERTIFICATE_REQUEST = QName.get(E_GET_OFFLINE_LICENSE_FINGERPRINT_REQUEST, NAMESPACE);
+    public static final QName GET_OFFLINE_LICENSE_CERTIFICATE_RESPONSE = QName.get(E_GET_OFFLINE_LICENSE_FINGERPRINT_RESPONSE, NAMESPACE);
 
     // Auto provision
     public static final QName AUTO_PROV_ACCOUNT_REQUEST = QName.get(E_AUTO_PROV_ACCOUNT_REQUEST, NAMESPACE);
@@ -1546,6 +1552,9 @@ public final class AdminConstants {
     public static final String A_ATTACHMENT_ID = "aid";
     public static final String E_LICENSE = "license";
     public static final String E_LICENSE_CODE = "licenseCode";
+    public static final String E_NETWORK_LICENSE_CODE = "networkLicenseCode";
+    public static final String E_PRODUCT_LICENSE_CODE = "productLicenseCode";
+    public static final String E_CERT_ACTION_TYPE = "certActionType";
     public static final String E_OFFLINE_LICENSE_ACTIVATION_REQUEST_CERTIFICATE = "activationRequestCertificate";
     public static final String E_ACTIVATION = "activation";
     public static final String E_INFO = "info";
@@ -1632,5 +1641,12 @@ public final class AdminConstants {
             "com_zextras_client", "com_zimbra_connect_classic", "com_zimbra_connect_modern", "com_zextras_docs",
             "com_zimbra_docs_modern", "com_zimbra_drive_modern", "com_zextras_drive", "com_zextras_drive_open",
             "com_zextras_chat_open", "com_zextras_talk", "zimbra-zimlet-briefcase-edit-lool");
+
+    public static final String LICENSE_CACHE_REFRESHED = "cacheRefreshed";
+
+    public static final String E_LICENSE_CACHE_SOAP_SERVICE_REQUEST = "LicenseCacheSoapServiceRequest";
+    public static final String E_LICENSE_CACHE_SOAP_SERVICE_RESPONSE = "LicenseCacheSoapServiceResponse";
+    public static final QName LICENSE_CACHE_SOAP_SERVICE_REQUEST = QName.get(E_LICENSE_CACHE_SOAP_SERVICE_REQUEST, NAMESPACE);
+    public static final QName LICENSE_CACHE_SOAP_SERVICE_RESPONSE = QName.get(E_LICENSE_CACHE_SOAP_SERVICE_RESPONSE, NAMESPACE);
 
 }

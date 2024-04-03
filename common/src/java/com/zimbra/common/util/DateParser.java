@@ -19,6 +19,7 @@ package com.zimbra.common.util;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Wrapper around {@link SimpleDateFormat} that allows it to be used in a
@@ -30,6 +31,7 @@ public class DateParser {
 
     private ThreadLocal<SimpleDateFormat> mFormatterHolder = new ThreadLocal<SimpleDateFormat>();
     private String mDatePattern;
+    private String timezone;
     
     public DateParser(String datePattern) {
         mDatePattern = datePattern;
@@ -38,17 +40,27 @@ public class DateParser {
     public Date parse(String s) {
         return getFormatter().parse(s, new ParsePosition(0));
     }
-    
+
     public String format(Date date) {
         return getFormatter().format(date);
     }
-    
+
     private SimpleDateFormat getFormatter() {
         SimpleDateFormat formatter = mFormatterHolder.get();
         if (formatter == null) {
             formatter = new SimpleDateFormat(mDatePattern);
             mFormatterHolder.set(formatter);
         }
+
+        formatter.setTimeZone(TimeZone.getTimeZone(timezone));
         return formatter;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }

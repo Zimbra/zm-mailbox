@@ -83,6 +83,21 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_WITH_ARCHIVE;
     private static Filter FILTER_ALL_INTERNAL_ACCOUNTS;
     private static Filter FILTER_ALL_ADDRESS_LISTS;
+    private static Filter FILTER_ACCOUNTS_WITH_SMIME;
+    private static Filter FILTER_ACCOUNTS_WITH_EWS;
+    private static Filter FILTER_ACCOUNTS_WITH_MOBILE_SYNC;
+    private static Filter FILTER_ACCOUNTS_WITH_ZIMLETS;
+    private static Filter FILTER_ACCOUNTS_WITH_CONVERSIONS;
+    private static Filter FILTER_ACCOUNTS_WITH_TAGGING;
+    private static Filter FILTER_ACCOUNTS_WITH_CALENDAR;
+    private static Filter FILTER_ACCOUNTS_WITH_GROUP_CALENDAR;
+    private static Filter FILTER_ACCOUNTS_WITH_TASKS;
+    private static Filter FILTER_ACCOUNTS_WITH_SHARING;
+    private static Filter FILTER_ACCOUNTS_WITH_BRIEFCASES;
+    private static Filter FILTER_ACCOUNTS_WITH_VIEW_IN_HTML;
+    private static Filter FILTER_ACCOUNTS_WITH_CHAT_ALL;
+    private static Filter FILTER_ACCOUNTS_WITH_VIDEO_ALL;
+    private static Filter FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING;
 
 
     private static boolean initialized = false;
@@ -274,6 +289,51 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
         FILTER_ALL_ADDRESS_LISTS = Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraAddressList);
+
+        FILTER_ACCOUNTS_WITH_EWS = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureEwsEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_MOBILE_SYNC = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureMobileSyncEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_SMIME = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureSMIMEEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_ZIMLETS = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureManageZimlets, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_CONVERSIONS = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureConversationsEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_TAGGING = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureTaggingEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_CALENDAR = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureCalendarEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_GROUP_CALENDAR = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureGroupCalendarEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_TASKS = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureTasksEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_SHARING = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureSharingEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_BRIEFCASES = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureBriefcasesEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_VIEW_IN_HTML = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureViewInHtmlEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_CHAT_ALL = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureChatAllFeaturesEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_VIDEO_ALL = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING = Filter.createEqualityFilter(
+                Provisioning.A_zimbraFeatureDocumentEditingEnabled, LdapConstants.LDAP_TRUE);
     }
 
     @Override
@@ -435,6 +495,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
 
     @Override
+    public ZLdapFilter allNonSystemInternalAccountsOnServer(String serverServiceHostname) {
+        return new UBIDLdapFilter(
+                FilterId.ALL_NON_SYSTEM_INTERNAL_ACCOUNTS_ON_SERVER,
+                Filter.createANDFilter(
+                        FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS,
+                        homedOnServerFilter(serverServiceHostname)));
+    }
+
+    @Override
     public ZLdapFilter accountByForeignPrincipal(String foreignPrincipal) {
         return new UBIDLdapFilter(
                 FilterId.ACCOUNT_BY_FOREIGN_PRINCIPAL,
@@ -592,6 +661,204 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH));
     }
 
+    /*
+     * account licensing
+     */
+
+    /**
+     * Accounts with SMIME
+     */
+    @Override
+    public ZLdapFilter accountsWithSmime() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_SMIME,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_SMIME));
+    }
+
+    /**
+     * Accounts with EWS
+     */
+    @Override
+    public ZLdapFilter accountsWithEws() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_EWS,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_EWS));
+    }
+
+    /**
+     * Accounts with Mobile Sync
+     */
+    @Override
+    public ZLdapFilter accountsWithMobileSync() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_MOBILE_SYNC,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_MOBILE_SYNC));
+    }
+
+    /**
+     * Accounts with Zimlets
+     */
+    @Override
+    public ZLdapFilter accountsWithZimlets() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_ZIMLETS,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_ZIMLETS));
+    }
+
+    /**
+     * Accounts with Conversions
+     */
+    @Override
+    public ZLdapFilter accountsWithConversions() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_CONVERSIONS,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_CONVERSIONS));
+    }
+
+    /**
+     * Accounts with Tagging
+     */
+    @Override
+    public ZLdapFilter accountsWithTagging() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_TAGGING,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_TAGGING));
+    }
+
+    /**
+     * Accounts with Calendar
+     */
+    @Override
+    public ZLdapFilter accountsWithCalendar() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_CALENDAR,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_CALENDAR));
+    }
+
+    /**
+     * Accounts with Group Calendar
+     */
+    @Override
+    public ZLdapFilter accountsWithGroupCalendar() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_GROUP_CALENDAR,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_GROUP_CALENDAR));
+    }
+
+    /**
+     * Accounts with Tasks
+     */
+    @Override
+    public ZLdapFilter accountsWithTasks() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_TASKS,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_TASKS));
+    }
+
+    /**
+     * Accounts with Sharing
+     */
+    @Override
+    public ZLdapFilter accountsWithSharing() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_SHARING,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_SHARING));
+    }
+
+    /**
+     * Accounts with BriefCases
+     */
+    @Override
+    public ZLdapFilter accountsWithBriefcases() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_BRIEFCASES,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_BRIEFCASES));
+    }
+
+    /**
+     * Accounts with View In HTML
+     */
+    @Override
+    public ZLdapFilter accountsWithViewInHtml() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_VIEW_IN_HTML,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_VIEW_IN_HTML));
+    }
+
+    /**
+     * Accounts with Chat
+     */
+    @Override
+    public ZLdapFilter accountsWithChatAll() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_CHAT_ALL,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_CHAT_ALL));
+    }
+
+    /**
+     * Accounts with Video
+     */
+    @Override
+    public ZLdapFilter accountsWithVideoAll() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_VIDEO_ALL,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_VIDEO_ALL));
+    }
+
+    /**
+     * Accounts with Document Editing
+     */
+    @Override
+    public ZLdapFilter accountsWithDocumentEditing() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_DOCUMENT_EDITING,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING));
+    }
 
     /*
      * alias

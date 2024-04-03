@@ -19,6 +19,7 @@ package com.zimbra.cs.account.callback;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -110,5 +111,26 @@ public class CallbackUtil {
     public static boolean isLocalServer (Server server) throws ServiceException {
         Server local = Provisioning.getInstance().getLocalServer();
         return server.getId().equals(local.getId());
+    }
+
+    /**
+     * This method is used to validate attribute value
+     * @param attrName
+     * @param attrValue
+     * @param attrs
+     * @throws ServiceException
+     */
+    public static void validateTwoFactorAuthAttributeValue(String attrName, int attrValue, Map<String, Integer> attrs, int maxCodeLength) throws ServiceException {
+        if (attrValue > maxCodeLength) {
+            throw ServiceException.INVALID_REQUEST(attrName + " cannot set above " + maxCodeLength, null);
+        }
+        if (attrs == null || attrs.size() < 2) {
+            throw ServiceException.INVALID_REQUEST(attrs + " cannot be null or size less than 2", null);
+
+        }
+        String[] keys = attrs.keySet().stream().toArray(String[]::new);
+        if ((attrValue == attrs.get(keys[0])) || (attrValue == attrs.get(keys[1]))) {
+            throw ServiceException.INVALID_REQUEST(attrName + " must be different from " + keys[0] + " and " + keys[1], null);
+        }
     }
 }
