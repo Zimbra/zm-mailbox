@@ -77,7 +77,7 @@ public class HtmlDefang extends AbstractDefang
         // create HTML parser
         XMLParserConfiguration parser = new HTMLConfiguration();
         parser.setProperty("http://cyberneko.org/html/properties/filters", filters);
-       // parser.setProperty("http://cyberneko.org/html/properties/names/elems", "match");
+         // parser.setProperty("http://cyberneko.org/html/properties/names/elems", "match");
         parser.setProperty( "http://cyberneko.org/html/properties/names/attrs ", "no-change");
         parser.setFeature("http://cyberneko.org/html/features/balance-tags", false);
         parser.setFeature("http://xml.org/sax/features/namespaces", false);
