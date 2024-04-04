@@ -12744,7 +12744,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMyoneloginSamlSigningCert = "zimbraMyoneloginSamlSigningCert";
 
     /**
-     * A signed activation key that authorizes this installation.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: A signed activation key that authorizes this
+     * installation.
      */
     @ZAttr(id=375)
     public static final String A_zimbraNetworkActivation = "zimbraNetworkActivation";
@@ -12769,7 +12771,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
 
     /**
-     * Contents of a signed Zimbra license key - an XML string.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: Contents of a signed Zimbra license key - an
+     * XML string.
      */
     @ZAttr(id=374)
     public static final String A_zimbraNetworkLicense = "zimbraNetworkLicense";
@@ -12792,6 +12796,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2117)
     public static final String A_zimbraNetworkModulesNGEnabled = "zimbraNetworkModulesNGEnabled";
+
+    /**
+     * Zimbra product license information
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4128)
+    public static final String A_zimbraNetworkRealtimeActivation = "zimbraNetworkRealtimeActivation";
+
+    /**
+     * Zimbra product license code
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4127)
+    public static final String A_zimbraNetworkRealtimeLicense = "zimbraNetworkRealtimeLicense";
 
     /**
      * Template used to construct the body of an email notification message.
@@ -13006,6 +13026,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=161)
     public static final String A_zimbraObjectType = "zimbraObjectType";
+
+    /**
+     * Zimbra offline network license code
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4129)
+    public static final String A_zimbraOfflineNetworkRealtimeLicense = "zimbraOfflineNetworkRealtimeLicense";
 
     /**
      * temporary RFC822 email address of this recipient for accepting mail
