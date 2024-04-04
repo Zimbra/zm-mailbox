@@ -2006,12 +2006,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether end-user wants auto-complete from GAL. Feature must also be enabled.</desc>
 </attr>
 
-<attr id="374" name="zimbraNetworkLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox">
+<attr id="374" name="zimbraNetworkLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" deprecatedSince="10.1.0">
   <desc>Contents of a signed Zimbra license key - an XML string.</desc>
+  <deprecateDesc>deprecated in favor for new realtime license attributes</deprecateDesc>
 </attr>
 
-<attr id="375" name="zimbraNetworkActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1">
+<attr id="375" name="zimbraNetworkActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" deprecatedSince="10.1.0">
   <desc>A signed activation key that authorizes this installation.</desc>
+  <deprecateDesc>deprecated in favor for new realtime license attributes</deprecateDesc>
 </attr>
 
 <attr id="376" name="zimbraIsSystemResource" type="boolean" cardinality="single" optionalIn="account">
@@ -10500,6 +10502,18 @@ TODO: delete them permanently from here
 <attr id="4126" name="zimbraFeatureBasicOneToOneChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether Chat feature is enabled or not</desc>
+</attr>
+
+<attr id="4127" name="zimbraNetworkRealtimeLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.0">
+  <desc>Zimbra product license code</desc>
+</attr>
+
+<attr id="4128" name="zimbraNetworkRealtimeActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.0">
+  <desc>Zimbra product license information</desc>
+</attr>
+
+<attr id="4129" name="zimbraOfflineNetworkRealtimeLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.0">
+  <desc>Zimbra offline network license code</desc>
 </attr>
 
 </attrs>
