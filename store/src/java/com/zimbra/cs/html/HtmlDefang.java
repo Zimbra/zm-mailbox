@@ -81,6 +81,8 @@ public class HtmlDefang extends AbstractDefang
         parser.setProperty("http://cyberneko.org/html/properties/names/attrs", "upper");
         parser.setFeature("http://cyberneko.org/html/features/balance-tags", false);
         parser.setFeature("http://xml.org/sax/features/namespaces", false);
+        parser.setFeature("http://cyberneko.org/html/features/scanner/ignore-specified-charset", true);
+
         // parse document
 
         parser.parse(source);
