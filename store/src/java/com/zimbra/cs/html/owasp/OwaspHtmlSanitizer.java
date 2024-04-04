@@ -85,22 +85,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         }, zimbraStrictUnclosedCommentTag, zimbraSkipTagsWithUnclosedCdata);
         // create a thread-specific policy
         instantiatePolicy();
-      //  final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));
+        final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));
         // run the html through the sanitizer
-       // Function<HtmlStreamEventReceiver, Policy> policy1
-/*        Policy policy1
-                = new HtmlPolicyBuilder()
-                .allowElements("a", "p")
-                .allowAttributes("href").onElements("a")
-                .toFactory().apply(new StyleTagReceiver(renderer));*/
-        Function<HtmlStreamEventReceiver, HtmlSanitizer.Policy> policy
-                = new HtmlPolicyBuilder()
-                .allowAttributes("href").onElements("a")
-                .toFactory();
-
-        // Sanitize your output.
-        HtmlSanitizer.sanitize(html, policy.apply(renderer));
-      //  HtmlSanitizer.sanitize(html, policy1);
+        HtmlSanitizer.sanitize(html, policy);
         // return the resulting HTML from the builder
         OwaspHtmlSanitizer.zThreadLocal.remove();
         return htmlBuilder.toString();
