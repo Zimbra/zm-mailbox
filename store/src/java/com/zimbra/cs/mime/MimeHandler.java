@@ -177,11 +177,14 @@ public abstract class MimeHandler {
      */
     public final String getContent() throws MimeHandlerException {
         if (!DebugConfig.disableMimePartExtraction) {
-            String toRet = getContentImpl();
-            if (toRet == null)
-                return "";
-            else
-                return toRet;
+            String toRet = "";
+            try {
+                toRet = getContentImpl();
+            } catch (OutOfMemoryError e) {
+                // java.lang.OutOfMemoryError: Java heap space handled here
+                ZimbraLog.index.warn("File %s is corrupted causing OOM", filename);
+            }
+            return toRet;
         } else {
             if (dataSource != null && !mDrainedContent) {
                 InputStream is = null;
