@@ -44,6 +44,9 @@ public class LdapConnUtil {
     static LDAPConnectionOptions getConnectionOptions(LdapServerConfig ldapConfig) {
         LDAPConnectionOptions connOpts = new LDAPConnectionOptions();
 
+        // allowConcurrentSocketFactoryUse indicates whether to allow a socket factory
+        // instance to be used to create multiple sockets concurrently
+        connOpts.setAllowConcurrentSocketFactoryUse(true);
         connOpts.setUseSynchronousMode(true); // TODO: expose in LC?
         connOpts.setFollowReferrals(true);   // TODO: expose in LC?
         connOpts.setConnectTimeoutMillis(ldapConfig.getConnectTimeoutMillis());
