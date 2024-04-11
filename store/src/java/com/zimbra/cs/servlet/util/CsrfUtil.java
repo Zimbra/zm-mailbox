@@ -534,9 +534,18 @@ public final class CsrfUtil {
         return false;
     }
 
+    /**
+     * This method generate CSRF token and then set in response
+     * @param httpReq
+     * @param httpResp
+     * @param authToken
+     * @param csrfSupport
+     * @param response
+     * @throws ServiceException
+     */
     public static void setCSRFToken(HttpServletRequest httpReq, HttpServletResponse httpResp, AuthToken authToken, 
         boolean csrfSupport, Element response) throws ServiceException {
-        if (csrfSupport && httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null 
+        if (csrfSupport && authToken != null && httpReq != null && httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null
                 && ((Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled))) {
             String accountId = authToken.getAccountId();
             long authTokenExpiration = authToken.getExpires();

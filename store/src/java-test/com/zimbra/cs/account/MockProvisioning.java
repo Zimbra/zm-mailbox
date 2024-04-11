@@ -361,6 +361,11 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
+    public void prepareAccountStatusToDelete(Account acct) throws ServiceException {
+        modifyAccountStatus(acct, AccountStatus.maintenance.name());
+    }
+
+    @Override
     public void authAccount(Account acct, String password, Protocol proto) {
         throw new UnsupportedOperationException();
     }
@@ -629,6 +634,11 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public List<?> getAllAccounts(Domain d) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List getAllNonSystemAccounts(Domain domain, Server server) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 

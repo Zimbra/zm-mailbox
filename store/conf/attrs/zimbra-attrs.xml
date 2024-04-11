@@ -2006,12 +2006,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether end-user wants auto-complete from GAL. Feature must also be enabled.</desc>
 </attr>
 
-<attr id="374" name="zimbraNetworkLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox">
+<attr id="374" name="zimbraNetworkLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" deprecatedSince="10.1.0">
   <desc>Contents of a signed Zimbra license key - an XML string.</desc>
+  <deprecateDesc>deprecated in favor for new realtime license attributes</deprecateDesc>
 </attr>
 
-<attr id="375" name="zimbraNetworkActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1">
+<attr id="375" name="zimbraNetworkActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" deprecatedSince="10.1.0">
   <desc>A signed activation key that authorizes this installation.</desc>
+  <deprecateDesc>deprecated in favor for new realtime license attributes</deprecateDesc>
 </attr>
 
 <attr id="376" name="zimbraIsSystemResource" type="boolean" cardinality="single" optionalIn="account">
@@ -7912,7 +7914,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1572" name="zimbraMobileForceSamsungProtocol25" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.0.7">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether to force Samsung devices using Active Sync 2.5</desc>
 </attr>
 
@@ -8540,14 +8542,14 @@ TODO: delete them permanently from here
   <desc>Shared secret encoding. Keep at BASE32 for compatability with common TOTP clients.</desc>
 </attr>
 
-<attr id="1827" name="zimbraTwoFactorScratchCodeLength" type="integer" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+<attr id="1827" name="zimbraTwoFactorScratchCodeLength" type="integer" cardinality="single" optionalIn="globalConfig" callback="TwoFactorScratchCode" since="8.7.0,9.0.0">
   <globalConfigValue>8</globalConfigValue>
-  <desc>length of scratch codes</desc>
+  <desc>Length of scratch codes. It must be different from zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength</desc>
 </attr>
 
-<attr id="1828" name="zimbraTwoFactorCodeLength" type="integer" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
+<attr id="1828" name="zimbraTwoFactorCodeLength" type="integer" cardinality="single" optionalIn="globalConfig" callback="TwoFactorCode" since="8.7.0,9.0.0">
   <globalConfigValue>6</globalConfigValue>
-  <desc>Length of TOTP code required for two-factor authentication. Keep at 6 for compatability with common TOTP clients.</desc>
+  <desc>Length of TOTP code required for two-factor authentication. Keep at 6 for compatibility with common TOTP clients, and it must be different from zimbraTwoFactorScratchCodeLength and zimbraTwoFactorAuthEmailCodeLength.</desc>
 </attr>
 
 <attr id="1829" name="zimbraTwoFactorTimeWindowLength" type="duration" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
@@ -9927,7 +9929,7 @@ TODO: delete them permanently from here
       If set as 14.1, all device types android/ios connecting to this account will use 14.1 version.
       If the added values don't match the user agent/device Id/device type default zimbra_activesync_versions on the local config will be used.
   </desc>
-</attr>    
+</attr>
 
 <attr id="4009" name="zimbraGlobalBackupEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="10.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
@@ -10064,9 +10066,10 @@ TODO: delete them permanently from here
         It is ignored when zimbraDomainLoginPageEnabled is not TRUE.
   </desc>
 </attr>
-<attr id="4031" name="zimbraFeatureBasicOneToOneChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+<attr id="4031" name="zimbraFeatureModernChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0" deprecatedSince="10.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether Chat feature is enabled or not</desc>
+  <deprecateDesc>Added zimbraFeatureBasicOneToOneChatEnabled attribute from 10.1.0 for same functionality</deprecateDesc>
 </attr>
 
 <attr id="4032" name="zimbraFeatureModernVideoEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0" deprecatedSince="10.1.0">
@@ -10159,7 +10162,7 @@ TODO: delete them permanently from here
     2) SolrCloud backend. Format is "solrcloud:[ZooKeeper URL]"
      </desc>
 </attr>
-<attr id="4051" name="zimbraEventLoggingNumThreads" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6"> 
+<attr id="4051" name="zimbraEventLoggingNumThreads" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
   <globalConfigValue>10</globalConfigValue>
   <desc>Number of consumer threads used to process the event logging queue</desc>
 </attr>
@@ -10334,7 +10337,7 @@ TODO: delete them permanently from here
   <desc>Time(in minutes) within which a message can be recalled. The default time is 30 minutes and accepts value from 1 to 30.</desc>
 </attr>
 
-<attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited" since="11.0.0">
+<attr id="9001" name="zimbraMailSieveScriptMaxSize" type="long" min="0" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainInherited" since="11.0.0">
   <globalConfigValue>0</globalConfigValue>
   <defaultCOSValue>0</defaultCOSValue>
   <desc>Maximum size in bytes for sieve script attributes. When it is set to 0, the size is not limited.</desc>
@@ -10454,4 +10457,63 @@ TODO: delete them permanently from here
 <attr id="4115" name="zimbraTwoFactorCodeEmailBodyHtml" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="10.1.0">
   <desc>Define body: field for 2FA email in html format</desc>
 </attr>
+
+<attr id="4116" name="zimbraHideAliasesInGal" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="10.1.0">
+  <desc>When set to True, all aliases will be hidden for particular account</desc>
+</attr>
+
+<attr id="4117" name="zimbraWebClientAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for Web Client</desc>
+</attr>
+
+<attr id="4118" name="zimbraImapAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for IMAP protocol</desc>
+</attr>
+
+<attr id="4119" name="zimbraPop3AllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for POP3 protocol</desc>
+</attr>
+
+<attr id="4120" name="zimbraMobileAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for ActiveSync protocol.</desc>
+</attr>
+
+<attr id="4121" name="zimbraMapiAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc> Attribute to allow IP/IP Range to access email for ZCO</desc>
+</attr>
+
+<attr id="4122" name="zimbraZDAllowedIPs" type="string" cardinality="multi" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <desc>Attribute to allow IP/IP Range to access email for Zimbra Desktop</desc>
+</attr>
+
+<attr id="4123" name="zimbraFeatureResetTwoFactorAuthEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="10.1.0">
+  <desc>Whether to enable a function to reconfigure two-factor authentication without disabling the existing one</desc>
+</attr>
+
+<attr id="4124" name="zimbraTwoFactorAuthTemporaryData" type="string" cardinality="multi" optionalIn="account" since="10.1.0">
+  <desc>Temporary data to update two-factor authentication settings</desc>
+</attr>
+
+<attr id="4125" name="zimbraClassicWebClientDisabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="10.1.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to enable/disable the classic web client option on the login screen. Default value is FALSE, which makes the classic client option available.</desc>
+</attr>
+
+<attr id="4126" name="zimbraFeatureBasicOneToOneChatEnabled" type="boolean" callback="ModernChatVideoEnabled" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether Chat feature is enabled or not</desc>
+</attr>
+
+<attr id="4127" name="zimbraNetworkRealtimeLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.0">
+  <desc>Zimbra product license code</desc>
+</attr>
+
+<attr id="4128" name="zimbraNetworkRealtimeActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.0">
+  <desc>Zimbra product license information</desc>
+</attr>
+
+<attr id="4129" name="zimbraOfflineNetworkRealtimeLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.0">
+  <desc>Zimbra offline network license code</desc>
+</attr>
+
 </attrs>

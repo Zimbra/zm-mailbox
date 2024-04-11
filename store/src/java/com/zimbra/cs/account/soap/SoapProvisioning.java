@@ -1766,6 +1766,13 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
+    public void prepareAccountStatusToDelete(Account acct) throws ServiceException{
+        final Map<String, Object> attrs = new HashMap<String, Object>(acct.getAttrs());
+        validate(ProvisioningValidator.DELETE_ACCOUNT, attrs);
+        modifyAccountStatus(acct, AccountStatus.maintenance.name());
+    }
+
+    @Override
     public void preAuthAccount(Account acct, String accountName,
             String accountBy, long timestamp, long expires, String preAuth,
             Map<String, Object> authCtxt)
@@ -2041,6 +2048,12 @@ public class SoapProvisioning extends Provisioning {
     public List <Account> getAllAccounts(Domain d)
     throws ServiceException {
         return getAllAccounts(d, (Server)null);
+    }
+
+    @Override
+    public List <Account>getAllNonSystemAccounts(Domain domain,  Server server)
+            throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
     }
 
     public List <Account> getAllAccounts(Domain d, Server s)

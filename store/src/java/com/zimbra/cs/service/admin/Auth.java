@@ -35,16 +35,20 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AuthMode;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.extension.ZimbraExtensionNotification;
+import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.servlet.util.AuthUtil;
@@ -120,7 +124,7 @@ public class Auth extends AdminDocumentHandler {
             }
             at = AuthUtil.getAuthToken(acct, true, usage, tokenType, authedByMech);
         } else {
-            at = AuthUtil.getAuthToken(request, prov, zsc);
+            at = AuthUtil.getAuthToken(request, zsc);
 
             acct = AuthProvider.validateAuthToken(prov, at, true, at.getUsage());
 
@@ -131,7 +135,7 @@ public class Auth extends AdminDocumentHandler {
 
             if (at.getUsage() == Usage.TWO_FACTOR_AUTH && !StringUtil.isNullOrEmpty(twoFactorCode)) {
                 if (acctEl != null && authTokenEl != null && authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false)) {
-                    AuthUtil.validateAuthTokenWithNamedAccount(authTokenEl, acctEl, request, acct, prov, at);
+                    validateAuthTokenWithNamedAccount(acctEl, request, acct, prov, at);
                 }
 
                 // validation of TOTP will be performed here.
@@ -155,6 +159,7 @@ public class Auth extends AdminDocumentHandler {
         at.setCsrfTokenEnabled(csrfSupport);
         if (at.getUsage() == Usage.TWO_FACTOR_AUTH) {
             response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
+            AccountUtil.addTwoFactorAttributes(response, acct);
         } else {
             boolean rememberMe = request.getAttributeBool(AdminConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
             at.encode(httpResp, true, ZimbraCookie.secureCookie(httpReq), rememberMe);
@@ -195,6 +200,38 @@ public class Auth extends AdminDocumentHandler {
             Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
             csrfResponse.addText(token);
             httpResp.setHeader(Constants.CSRF_TOKEN, token);
+        }
+    }
+
+    /**
+     * In this method, account in the auth token is compared to the named account.
+     * This method will only call when verifyAccount="1"
+     * @param acctEl
+     * @param request
+     * @param twoFactorTokenAcct
+     * @param prov
+     * @param at
+     * @throws ServiceException
+     */
+    private void validateAuthTokenWithNamedAccount(Element acctEl, Element request, Account twoFactorTokenAcct, Provisioning prov, AuthToken at) throws ServiceException {
+        AccountBy by = AccountBy.fromString(acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name()));
+        String virtualHost = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST) == null ? null :
+                request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST).getText().toLowerCase();
+        Account acct = AccountUtil.getAccount(by, acctEl.getText(), virtualHost, at, prov);
+        if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
+            throw ServiceException.PERM_DENIED("Error in Authentication");
+        }
+        AccountUtil.isAdminAccount(acct);
+        try {
+            if (!twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
+                throw new AuthTokenException("two-factor auth token doesn't match the named account");
+            }
+            ZimbraLog.account.debug("two-factor auth token has matched with the named account");
+        } catch (AuthTokenException e) {
+            ZimbraLog.account.error(e.getMessage());
+            AccountServiceException.AuthFailedServiceException exception = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("invalid auth token");
+            AuthListener.invokeOnException(exception);
+            throw exception;
         }
     }
 

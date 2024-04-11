@@ -690,6 +690,10 @@ public class LdapDIT {
         return ZLdapFilterFactory.getInstance().accountsHomedOnServerAccountsOnly(server.getServiceHostname());
     }
 
+    public ZLdapFilter filterAllNonSystemAccountsOnlyByDomainAndServer(Domain domain, Server server) {
+        return ZLdapFilterFactory.getInstance().allNonSystemInternalAccountsOnServer(server.getServiceHostname());
+    }
+
     public ZLdapFilter filterCalendarResourceByDomainAndServer(Domain domain, Server server) {
         return ZLdapFilterFactory.getInstance().calendarResourcesHomedOnServer(server.getServiceHostname());
     }

@@ -394,7 +394,6 @@ public class VolumeConfigUtil {
             if (volInfo.getCompressionThreshold() > 0) {
                 builder.setCompressionThreshold(volInfo.getCompressionThreshold());
             }
-            builder.setCompressBlobs(volInfo.isCompressBlobs());
         }
         // store type == 2, allow modification of only volume name
         else if (Volume.StoreType.EXTERNAL.equals(vol.getStoreType())) {
@@ -429,6 +428,7 @@ public class VolumeConfigUtil {
                 }
             }
         }
+        builder.setCompressBlobs(volInfo.isCompressBlobs());
         mgr.update(builder.build());
     }
 

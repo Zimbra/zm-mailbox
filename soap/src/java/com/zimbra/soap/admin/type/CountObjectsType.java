@@ -37,11 +37,26 @@ public enum CountObjectsType {
     // for license counting
     internalUserAccount(true, false),
     internalArchivingAccount(true, false),
-    internalUserAccountX(true, false);
-    
+    internalUserAccountX(true, false),
+    internalUserAccountWithMobileSync(false, false),
+    internalUserAccountWithSmime(false, false),
+    internalUserAccountWithEws(false, false),
+    internalUserAccountWithZimlets(false, false),
+    internalUserAccountWithConversions(false, false),
+    internalUserAccountWithTagging(false, false),
+    internalUserAccountWithCalendar(false, false),
+    internalUserAccountWithGroupCalendar(false, false),
+    internalUserAccountWithTasks(false, false),
+    internalUserAccountWithSharing(false, false),
+    internalUserAccountWithBriefcases(false, false),
+    internalUserAccountWithViewInHtml(false, false),
+    internalUserAccountWithChatAll(false, false),
+    internalUserAccountWithVideoAll(false, false),
+    internalUserAccountWithDocumentEditing(false, false);
+
     private boolean allowsDomain;
     private boolean allowsUCService;
-    
+
     private CountObjectsType(boolean allowsDomain, boolean allowsUCService) {
         this.allowsDomain = allowsDomain;
         this.allowsUCService = allowsUCService;
@@ -64,11 +79,11 @@ public enum CountObjectsType {
         Joiner joiner = Joiner.on(separator);
         return joiner.join(CountObjectsType.values());
     }
-    
+
     public boolean allowsDomain() {
         return allowsDomain;
     }
-    
+
     public boolean allowsUCService() {
         return allowsUCService;
     }

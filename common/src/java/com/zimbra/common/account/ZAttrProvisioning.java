@@ -4906,6 +4906,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraClamAVSafeBrowsing = "zimbraClamAVSafeBrowsing";
 
     /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public static final String A_zimbraClassicWebClientDisabled = "zimbraClassicWebClientDisabled";
+
+    /**
      * Regex for identifying client types
      *
      * @since ZCS 8.0.0
@@ -6739,7 +6749,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4031)
+    @ZAttr(id=4126)
     public static final String A_zimbraFeatureBasicOneToOneChatEnabled = "zimbraFeatureBasicOneToOneChatEnabled";
 
     /**
@@ -7281,6 +7291,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMobileSyncEnabled = "zimbraFeatureMobileSyncEnabled";
 
     /**
+     * Deprecated since: 10.1.0. Added zimbraFeatureBasicOneToOneChatEnabled
+     * attribute from 10.1.0 for same functionality. Orig desc: Whether Chat
+     * feature is enabled or not
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4031)
+    public static final String A_zimbraFeatureModernChatEnabled = "zimbraFeatureModernChatEnabled";
+
+    /**
      * Whether to allow a user to access Zimbra modern desktop
      *
      * @since ZCS 8.9.0
@@ -7415,6 +7435,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2142)
     public static final String A_zimbraFeatureResetPasswordSuspensionTime = "zimbraFeatureResetPasswordSuspensionTime";
+
+    /**
+     * Whether to enable a function to reconfigure two-factor authentication
+     * without disabling the existing one
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4123)
+    public static final String A_zimbraFeatureResetTwoFactorAuthEnabled = "zimbraFeatureResetTwoFactorAuthEnabled";
 
     /**
      * Whether retention policy feature is enabled
@@ -8505,6 +8534,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHelpStandardURL = "zimbraHelpStandardURL";
 
     /**
+     * When set to True, all aliases will be hidden for particular account
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4116)
+    public static final String A_zimbraHideAliasesInGal = "zimbraHideAliasesInGal";
+
+    /**
      * hide entry in Global Address List
      */
     @ZAttr(id=353)
@@ -8725,6 +8762,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=178)
     public static final String A_zimbraImapAdvertisedName = "zimbraImapAdvertisedName";
+
+    /**
+     * Attribute to allow IP/IP Range to access email for IMAP protocol
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4118)
+    public static final String A_zimbraImapAllowedIPs = "zimbraImapAllowedIPs";
 
     /**
      * interface address on which IMAP server should listen; if empty, binds
@@ -10386,6 +10431,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailWhitelistMaxNumEntries = "zimbraMailWhitelistMaxNumEntries";
 
     /**
+     * Attribute to allow IP/IP Range to access email for ZCO
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4121)
+    public static final String A_zimbraMapiAllowedIPs = "zimbraMapiAllowedIPs";
+
+    /**
      * maximum number of application-specific passwords allowed for an
      * account
      *
@@ -10637,6 +10690,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3089)
     public static final String A_zimbraMobileAllowedDevices = "zimbraMobileAllowedDevices";
+
+    /**
+     * Attribute to allow IP/IP Range to access email for ActiveSync
+     * protocol.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4120)
+    public static final String A_zimbraMobileAllowedIPs = "zimbraMobileAllowedIPs";
 
     /**
      * whether mobile sync should zip the skipped item and attach it to the
@@ -12682,7 +12744,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMyoneloginSamlSigningCert = "zimbraMyoneloginSamlSigningCert";
 
     /**
-     * A signed activation key that authorizes this installation.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: A signed activation key that authorizes this
+     * installation.
      */
     @ZAttr(id=375)
     public static final String A_zimbraNetworkActivation = "zimbraNetworkActivation";
@@ -12707,7 +12771,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
 
     /**
-     * Contents of a signed Zimbra license key - an XML string.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: Contents of a signed Zimbra license key - an
+     * XML string.
      */
     @ZAttr(id=374)
     public static final String A_zimbraNetworkLicense = "zimbraNetworkLicense";
@@ -12730,6 +12796,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2117)
     public static final String A_zimbraNetworkModulesNGEnabled = "zimbraNetworkModulesNGEnabled";
+
+    /**
+     * Zimbra product license information
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4128)
+    public static final String A_zimbraNetworkRealtimeActivation = "zimbraNetworkRealtimeActivation";
+
+    /**
+     * Zimbra product license code
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4127)
+    public static final String A_zimbraNetworkRealtimeLicense = "zimbraNetworkRealtimeLicense";
 
     /**
      * Template used to construct the body of an email notification message.
@@ -12944,6 +13026,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=161)
     public static final String A_zimbraObjectType = "zimbraObjectType";
+
+    /**
+     * Zimbra offline network license code
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4129)
+    public static final String A_zimbraOfflineNetworkRealtimeLicense = "zimbraOfflineNetworkRealtimeLicense";
 
     /**
      * temporary RFC822 email address of this recipient for accepting mail
@@ -13225,6 +13315,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=93)
     public static final String A_zimbraPop3AdvertisedName = "zimbraPop3AdvertisedName";
+
+    /**
+     * Attribute to allow IP/IP Range to access email for POP3 protocol
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4119)
+    public static final String A_zimbraPop3AllowedIPs = "zimbraPop3AllowedIPs";
 
     /**
      * interface address on which POP3 server should listen; if empty, binds
@@ -18063,6 +18161,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTwoFactorAuthSecretLength = "zimbraTwoFactorAuthSecretLength";
 
     /**
+     * Temporary data to update two-factor authentication settings
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4124)
+    public static final String A_zimbraTwoFactorAuthTemporaryData = "zimbraTwoFactorAuthTemporaryData";
+
+    /**
      * Lifetime of auth tokens provisioned for completing the 2nd stage of
      * two-factor authentication. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -18143,7 +18249,9 @@ public class ZAttrProvisioning {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -18162,7 +18270,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTwoFactorCodeLifetimeForEmail = "zimbraTwoFactorCodeLifetimeForEmail";
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -18463,6 +18572,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientAdminReference = "zimbraWebClientAdminReference";
 
     /**
+     * Attribute to allow IP/IP Range to access email for Web Client
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4117)
+    public static final String A_zimbraWebClientAllowedIPs = "zimbraWebClientAllowedIPs";
+
+    /**
      * login URL for web client to send the user to upon failed login, auth
      * expired, or no/invalid auth
      */
@@ -18707,6 +18824,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=658)
     public static final String A_zimbraYahooId = "zimbraYahooId";
+
+    /**
+     * Attribute to allow IP/IP Range to access email for Zimbra Desktop
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4122)
+    public static final String A_zimbraZDAllowedIPs = "zimbraZDAllowedIPs";
 
     /**
      * List of Zimlets available to this COS Values can be prefixed with ! or

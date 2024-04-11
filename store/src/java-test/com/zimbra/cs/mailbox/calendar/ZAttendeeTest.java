@@ -25,7 +25,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.internal.matchers.StringContains;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
 
@@ -45,6 +44,8 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.util.ZTestWatchman;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ZAttendeeTest {
 
@@ -130,6 +131,6 @@ public class ZAttendeeTest {
         TimeZoneMap tzMap = new TimeZoneMap(WellKnownTimeZones.getTimeZoneById("JST"));
         Invite inv = new Invite(MailItem.Type.APPOINTMENT, ICalTok.ACCEPTED.toString(),
                 tzMap, false);
-        Assert.assertThat(inv.toString(), StringContains.containsString("rsvp: (not specified)"));
+        assertThat(inv.toString()).contains("rsvp: (not specified)");
     }
 }

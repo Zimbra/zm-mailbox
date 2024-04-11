@@ -11077,6 +11077,88 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @return zimbraClassicWebClientDisabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public boolean isClassicWebClientDisabled() {
+        return getBooleanAttr(Provisioning.A_zimbraClassicWebClientDisabled, false, true);
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @param zimbraClassicWebClientDisabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public void setClassicWebClientDisabled(boolean zimbraClassicWebClientDisabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, zimbraClassicWebClientDisabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @param zimbraClassicWebClientDisabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public Map<String,Object> setClassicWebClientDisabled(boolean zimbraClassicWebClientDisabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, zimbraClassicWebClientDisabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public void unsetClassicWebClientDisabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable the classic web client option on the login
+     * screen. Default value is FALSE, which makes the classic client option
+     * available.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4125)
+    public Map<String,Object> unsetClassicWebClientDisabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraClassicWebClientDisabled, "");
+        return attrs;
+    }
+
+    /**
      * Regex for identifying client types
      *
      * @return zimbraClientTypeRegex, or empty array if unset
@@ -52864,7 +52946,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * A signed activation key that authorizes this installation.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: A signed activation key that authorizes this
+     * installation.
      *
      * @return zimbraNetworkActivation, or null if unset
      */
@@ -52874,7 +52958,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * A signed activation key that authorizes this installation.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: A signed activation key that authorizes this
+     * installation.
      *
      * @param zimbraNetworkActivation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -52887,7 +52973,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * A signed activation key that authorizes this installation.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: A signed activation key that authorizes this
+     * installation.
      *
      * @param zimbraNetworkActivation new value
      * @param attrs existing map to populate, or null to create a new map
@@ -52901,7 +52989,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * A signed activation key that authorizes this installation.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: A signed activation key that authorizes this
+     * installation.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -52913,7 +53003,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * A signed activation key that authorizes this installation.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: A signed activation key that authorizes this
+     * installation.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -53085,7 +53177,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Contents of a signed Zimbra license key - an XML string.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: Contents of a signed Zimbra license key - an
+     * XML string.
      *
      * @return zimbraNetworkLicense, or null if unset
      */
@@ -53095,7 +53189,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Contents of a signed Zimbra license key - an XML string.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: Contents of a signed Zimbra license key - an
+     * XML string.
      *
      * @param zimbraNetworkLicense new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -53108,7 +53204,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Contents of a signed Zimbra license key - an XML string.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: Contents of a signed Zimbra license key - an
+     * XML string.
      *
      * @param zimbraNetworkLicense new value
      * @param attrs existing map to populate, or null to create a new map
@@ -53122,7 +53220,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Contents of a signed Zimbra license key - an XML string.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: Contents of a signed Zimbra license key - an
+     * XML string.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -53134,7 +53234,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Contents of a signed Zimbra license key - an XML string.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: Contents of a signed Zimbra license key - an
+     * XML string.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -53302,6 +53404,150 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetNetworkModulesNGEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNetworkModulesNGEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Zimbra product license information
+     *
+     * @return zimbraNetworkRealtimeActivation, or null if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4128)
+    public String getNetworkRealtimeActivation() {
+        return getAttr(Provisioning.A_zimbraNetworkRealtimeActivation, null, true);
+    }
+
+    /**
+     * Zimbra product license information
+     *
+     * @param zimbraNetworkRealtimeActivation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4128)
+    public void setNetworkRealtimeActivation(String zimbraNetworkRealtimeActivation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkRealtimeActivation, zimbraNetworkRealtimeActivation);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra product license information
+     *
+     * @param zimbraNetworkRealtimeActivation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4128)
+    public Map<String,Object> setNetworkRealtimeActivation(String zimbraNetworkRealtimeActivation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkRealtimeActivation, zimbraNetworkRealtimeActivation);
+        return attrs;
+    }
+
+    /**
+     * Zimbra product license information
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4128)
+    public void unsetNetworkRealtimeActivation() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkRealtimeActivation, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra product license information
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4128)
+    public Map<String,Object> unsetNetworkRealtimeActivation(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkRealtimeActivation, "");
+        return attrs;
+    }
+
+    /**
+     * Zimbra product license code
+     *
+     * @return zimbraNetworkRealtimeLicense, or null if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4127)
+    public String getNetworkRealtimeLicense() {
+        return getAttr(Provisioning.A_zimbraNetworkRealtimeLicense, null, true);
+    }
+
+    /**
+     * Zimbra product license code
+     *
+     * @param zimbraNetworkRealtimeLicense new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4127)
+    public void setNetworkRealtimeLicense(String zimbraNetworkRealtimeLicense) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkRealtimeLicense, zimbraNetworkRealtimeLicense);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra product license code
+     *
+     * @param zimbraNetworkRealtimeLicense new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4127)
+    public Map<String,Object> setNetworkRealtimeLicense(String zimbraNetworkRealtimeLicense, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkRealtimeLicense, zimbraNetworkRealtimeLicense);
+        return attrs;
+    }
+
+    /**
+     * Zimbra product license code
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4127)
+    public void unsetNetworkRealtimeLicense() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkRealtimeLicense, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra product license code
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4127)
+    public Map<String,Object> unsetNetworkRealtimeLicense(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkRealtimeLicense, "");
         return attrs;
     }
 
@@ -54549,6 +54795,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetOAuthConsumerRedirectUri(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerRedirectUri, "");
+        return attrs;
+    }
+
+    /**
+     * Zimbra offline network license code
+     *
+     * @return zimbraOfflineNetworkRealtimeLicense, or null if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4129)
+    public String getOfflineNetworkRealtimeLicense() {
+        return getAttr(Provisioning.A_zimbraOfflineNetworkRealtimeLicense, null, true);
+    }
+
+    /**
+     * Zimbra offline network license code
+     *
+     * @param zimbraOfflineNetworkRealtimeLicense new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4129)
+    public void setOfflineNetworkRealtimeLicense(String zimbraOfflineNetworkRealtimeLicense) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOfflineNetworkRealtimeLicense, zimbraOfflineNetworkRealtimeLicense);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra offline network license code
+     *
+     * @param zimbraOfflineNetworkRealtimeLicense new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4129)
+    public Map<String,Object> setOfflineNetworkRealtimeLicense(String zimbraOfflineNetworkRealtimeLicense, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOfflineNetworkRealtimeLicense, zimbraOfflineNetworkRealtimeLicense);
+        return attrs;
+    }
+
+    /**
+     * Zimbra offline network license code
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4129)
+    public void unsetOfflineNetworkRealtimeLicense() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOfflineNetworkRealtimeLicense, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra offline network license code
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4129)
+    public Map<String,Object> unsetOfflineNetworkRealtimeLicense(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOfflineNetworkRealtimeLicense, "");
         return attrs;
     }
 
@@ -78893,7 +79211,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @return zimbraTwoFactorCodeLength, or 6 if unset
      *
@@ -78906,7 +79226,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @param zimbraTwoFactorCodeLength new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -78922,7 +79244,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @param zimbraTwoFactorCodeLength new value
      * @param attrs existing map to populate, or null to create a new map
@@ -78939,7 +79263,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -78954,7 +79280,9 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Length of TOTP code required for two-factor authentication. Keep at 6
-     * for compatability with common TOTP clients.
+     * for compatibility with common TOTP clients, and it must be different
+     * from zimbraTwoFactorScratchCodeLength and
+     * zimbraTwoFactorAuthEmailCodeLength.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -79075,7 +79403,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @return zimbraTwoFactorScratchCodeLength, or 8 if unset
      *
@@ -79087,7 +79416,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @param zimbraTwoFactorScratchCodeLength new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -79102,7 +79432,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @param zimbraTwoFactorScratchCodeLength new value
      * @param attrs existing map to populate, or null to create a new map
@@ -79118,7 +79449,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -79132,7 +79464,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * length of scratch codes
+     * Length of scratch codes. It must be different from
+     * zimbraTwoFactorCodeLength and zimbraTwoFactorAuthEmailCodeLength
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
