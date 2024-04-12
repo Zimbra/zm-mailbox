@@ -27,6 +27,7 @@ import java.util.Locale;
 import javax.activation.DataSource;
 import javax.mail.internet.MimeUtility;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.document.Document;
 
 import com.google.common.base.Strings;
@@ -177,11 +178,14 @@ public abstract class MimeHandler {
      */
     public final String getContent() throws MimeHandlerException {
         if (!DebugConfig.disableMimePartExtraction) {
-            String toRet = getContentImpl();
-            if (toRet == null)
-                return "";
-            else
-                return toRet;
+            String toRet = StringUtils.EMPTY;
+            try {
+                toRet = getContentImpl();
+            } catch (OutOfMemoryError e) {
+                // java.lang.OutOfMemoryError: Java heap space handled here
+                ZimbraLog.index.warn("File %s is corrupted causing OOM", filename);
+            }
+            return toRet;
         } else {
             if (dataSource != null && !mDrainedContent) {
                 InputStream is = null;
