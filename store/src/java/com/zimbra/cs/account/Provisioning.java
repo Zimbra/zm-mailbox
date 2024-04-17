@@ -2632,6 +2632,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             "renameAccountCheckDomainCosAndFeature";
         static final String DELETE_ACCOUNT_SUCCEEDED = "deleteAccountSucceeded";
         static final String DELETE_ACCOUNT = "deleteAccount";
+        static final String CREATE_COS = "createCos";
 
         void validate(Provisioning prov, String action, Object... args) throws ServiceException;
         void refresh();
