@@ -541,6 +541,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE,
                     acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
         }
+
+        // validating the cos attributes while modifying
+        // restricting the COS modification, if any of the feature status or
+        // license status is in grace period
+        if (entry instanceof LdapCos) {
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, null, attrs);
+        }
+
         if (!storeEphemeralInLdap) {
             Map<String, AttributeInfo> ephemeralAttrMap = AttributeManager.getInstance().getEphemeralAttrs();
             Map<String, Object> ephemeralAttrs = new HashMap<String, Object>();
@@ -1250,7 +1258,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String[] additionalObjectClasses,
             boolean restoring, Map<String, Object> origAttrs)
     throws ServiceException {
-
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
 
@@ -1267,7 +1274,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         emailAddress = localPart + "@" + domain;
 
         validEmailAddress(emailAddress);
-
         if (restoring) {
             validate(ProvisioningValidator.CREATE_ACCOUNT,
                     emailAddress, additionalObjectClasses, origAttrs);
@@ -1286,7 +1292,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
         callbackContext.setCreatingEntryName(emailAddress);
         AttributeManager.getInstance().preModify(acctAttrs, null, callbackContext, true);
-
         Account acct = null;
         String dn = null;
         ZLdapContext zlc = null;
@@ -1509,7 +1514,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } catch (AccountServiceException e) {
             throw e;
         } catch (ServiceException e) {
-           throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
+            if (ServiceException.LICENSE_ERROR.equalsIgnoreCase(e.getCode())
+                    && null != acct) {
+                modifyAccountStatus(acct, AccountStatus.maintenance.name());
+                deleteAccount(acct.getId());
+            }
+            throw ServiceException.FAILURE("unable to create account: " + emailAddress, e);
         } finally {
             LdapClient.closeContext(zlc);
 
@@ -3113,6 +3123,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         allAttrs.remove(Provisioning.A_cn);
         allAttrs.remove(Provisioning.A_description);
         if (cosAttrs != null) {
+            // validating the cos attributes while creating a COS
+            // restricting the COS creation, if any of the feature status or
+            // license status is in grace period
+            validate(ProvisioningValidator.CREATE_COS, cosAttrs);
             for (Map.Entry<String, Object> e : cosAttrs.entrySet()) {
                 String attr = e.getKey();
                 Object value = e.getValue();
