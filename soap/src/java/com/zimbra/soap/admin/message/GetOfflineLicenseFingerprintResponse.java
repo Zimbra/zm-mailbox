@@ -35,16 +35,26 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class GetOfflineLicenseFingerprintResponse {
 
     /**
-     * @zm-api-field-description activationRequestCertificate
+     * @zm-api-field-description networkActivationFingerprint
      */
-    @XmlElement(name=AdminConstants.E_OFFLINE_LICENSE_ACTIVATION_REQUEST_CERTIFICATE /* activationRequestCertificate */, required=true)
-    private final String activationRequestCertificate;
+    @XmlElement(name=AdminConstants.E_OFFLINE_NETWORK_LICENSE_ACTIVATION_FINGERPRINT /* networkActivationFingerprint */, required=false)
+    private final String networkActivationFingerprint;
+
+    /**
+     * @zm-api-field-description productActivationFingerprint
+     */
+    @XmlElement(name=AdminConstants.E_OFFLINE_PRODUCT_LICENSE_ACTIVATION_FINGERPRINT /* productActivationFingerprint */, required=false)
+    private final String productActivationFingerprint;
 
     public GetOfflineLicenseFingerprintResponse() {
-        this.activationRequestCertificate = null;
+        this.networkActivationFingerprint = null;
+        this.productActivationFingerprint = null;
     }
 
     public String getActivationRequestCertificate() {
-        return activationRequestCertificate;
+        return networkActivationFingerprint;
+    }
+    public String getProductActivationFingerprint() {
+        return productActivationFingerprint;
     }
 }
