@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
+import com.zimbra.cs.service.AuthProvider;
 import org.apache.commons.lang.RandomStringUtils;
 
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
@@ -52,6 +53,10 @@ public class SetRecoveryAccount extends DocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
+        if (!Provisioning.onLocalServer(account)) {
+            ZimbraLog.account.debug("account= %s doesn't exist so proxying request to account's server", account.getName());
+            return proxyRequest(request, context, AuthProvider.getAuthToken(account), account.getId());
+        }
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         boolean isFromEnableTwoFactorAuth = request.getAttributeBool("isFromEnableTwoFactorAuth", false);
