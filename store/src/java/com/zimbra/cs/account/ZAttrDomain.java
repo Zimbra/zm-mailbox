@@ -10508,6 +10508,160 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @return zimbraFeatureAdvancedChatEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4130)
+    public boolean isFeatureAdvancedChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureAdvancedChatEnabled, false, true);
+    }
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @param zimbraFeatureAdvancedChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4130)
+    public void setFeatureAdvancedChatEnabled(boolean zimbraFeatureAdvancedChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedChatEnabled, zimbraFeatureAdvancedChatEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @param zimbraFeatureAdvancedChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4130)
+    public Map<String,Object> setFeatureAdvancedChatEnabled(boolean zimbraFeatureAdvancedChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedChatEnabled, zimbraFeatureAdvancedChatEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4130)
+    public void unsetFeatureAdvancedChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4130)
+    public Map<String,Object> unsetFeatureAdvancedChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedChatEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @return zimbraFeatureAdvancedChatVideoEnabled, or false if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4131)
+    public boolean isFeatureAdvancedChatVideoEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureAdvancedChatVideoEnabled, false, true);
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @param zimbraFeatureAdvancedChatVideoEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4131)
+    public void setFeatureAdvancedChatVideoEnabled(boolean zimbraFeatureAdvancedChatVideoEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedChatVideoEnabled, zimbraFeatureAdvancedChatVideoEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @param zimbraFeatureAdvancedChatVideoEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4131)
+    public Map<String,Object> setFeatureAdvancedChatVideoEnabled(boolean zimbraFeatureAdvancedChatVideoEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedChatVideoEnabled, zimbraFeatureAdvancedChatVideoEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4131)
+    public void unsetFeatureAdvancedChatVideoEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedChatVideoEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4131)
+    public Map<String,Object> unsetFeatureAdvancedChatVideoEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAdvancedChatVideoEnabled, "");
+        return attrs;
+    }
+
+    /**
      * To restrict/allow the use of username in the password when user reset
      * or change their password to achieve greater password security.
      *
@@ -10734,8 +10888,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can access all chat features, including private
-     * chats, group chats, and sending attachments
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatEnabled. Orig desc: When true, users can
+     * access all chat features, including private chats, group chats, and
+     * sending attachments
      *
      * @return zimbraFeatureChatAllFeaturesEnabled, or false if unset
      *
@@ -10747,8 +10903,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can access all chat features, including private
-     * chats, group chats, and sending attachments
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatEnabled. Orig desc: When true, users can
+     * access all chat features, including private chats, group chats, and
+     * sending attachments
      *
      * @param zimbraFeatureChatAllFeaturesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10763,8 +10921,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can access all chat features, including private
-     * chats, group chats, and sending attachments
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatEnabled. Orig desc: When true, users can
+     * access all chat features, including private chats, group chats, and
+     * sending attachments
      *
      * @param zimbraFeatureChatAllFeaturesEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10780,8 +10940,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can access all chat features, including private
-     * chats, group chats, and sending attachments
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatEnabled. Orig desc: When true, users can
+     * access all chat features, including private chats, group chats, and
+     * sending attachments
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -10795,8 +10957,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can access all chat features, including private
-     * chats, group chats, and sending attachments
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatEnabled. Orig desc: When true, users can
+     * access all chat features, including private chats, group chats, and
+     * sending attachments
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11211,8 +11375,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * This numeric attribute defines the maximum number of participants a
-     * user can have in their meetings. For instance, if set to 5, the user
+     * Deprecated since: 10.1.0. design decision to ensure that there is no
+     * limit on the number of video participants per user. Orig desc: This
+     * numeric attribute defines the maximum number of participants a user
+     * can have in their meetings. For instance, if set to 5, the user
      * can&#039;t host a meeting with more than five participants
      *
      * @return zimbraFeatureMaxVideoParticipantsForUser, or -1 if unset
@@ -11225,8 +11391,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * This numeric attribute defines the maximum number of participants a
-     * user can have in their meetings. For instance, if set to 5, the user
+     * Deprecated since: 10.1.0. design decision to ensure that there is no
+     * limit on the number of video participants per user. Orig desc: This
+     * numeric attribute defines the maximum number of participants a user
+     * can have in their meetings. For instance, if set to 5, the user
      * can&#039;t host a meeting with more than five participants
      *
      * @param zimbraFeatureMaxVideoParticipantsForUser new value
@@ -11242,8 +11410,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * This numeric attribute defines the maximum number of participants a
-     * user can have in their meetings. For instance, if set to 5, the user
+     * Deprecated since: 10.1.0. design decision to ensure that there is no
+     * limit on the number of video participants per user. Orig desc: This
+     * numeric attribute defines the maximum number of participants a user
+     * can have in their meetings. For instance, if set to 5, the user
      * can&#039;t host a meeting with more than five participants
      *
      * @param zimbraFeatureMaxVideoParticipantsForUser new value
@@ -11260,8 +11430,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * This numeric attribute defines the maximum number of participants a
-     * user can have in their meetings. For instance, if set to 5, the user
+     * Deprecated since: 10.1.0. design decision to ensure that there is no
+     * limit on the number of video participants per user. Orig desc: This
+     * numeric attribute defines the maximum number of participants a user
+     * can have in their meetings. For instance, if set to 5, the user
      * can&#039;t host a meeting with more than five participants
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11276,8 +11448,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * This numeric attribute defines the maximum number of participants a
-     * user can have in their meetings. For instance, if set to 5, the user
+     * Deprecated since: 10.1.0. design decision to ensure that there is no
+     * limit on the number of video participants per user. Orig desc: This
+     * numeric attribute defines the maximum number of participants a user
+     * can have in their meetings. For instance, if set to 5, the user
      * can&#039;t host a meeting with more than five participants
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -11948,8 +12122,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can utilize all video features, such as scheduling
-     * meetings, screen sharing, video recording, and the waiting room
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatVideoEnabled. Orig desc: When true, users can
+     * utilize all video features, such as scheduling meetings, screen
+     * sharing, video recording, and the waiting room
      *
      * @return zimbraFeatureVideoAllFeaturesEnabled, or false if unset
      *
@@ -11961,8 +12137,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can utilize all video features, such as scheduling
-     * meetings, screen sharing, video recording, and the waiting room
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatVideoEnabled. Orig desc: When true, users can
+     * utilize all video features, such as scheduling meetings, screen
+     * sharing, video recording, and the waiting room
      *
      * @param zimbraFeatureVideoAllFeaturesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11977,8 +12155,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can utilize all video features, such as scheduling
-     * meetings, screen sharing, video recording, and the waiting room
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatVideoEnabled. Orig desc: When true, users can
+     * utilize all video features, such as scheduling meetings, screen
+     * sharing, video recording, and the waiting room
      *
      * @param zimbraFeatureVideoAllFeaturesEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11994,8 +12174,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can utilize all video features, such as scheduling
-     * meetings, screen sharing, video recording, and the waiting room
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatVideoEnabled. Orig desc: When true, users can
+     * utilize all video features, such as scheduling meetings, screen
+     * sharing, video recording, and the waiting room
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -12009,8 +12191,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * When true, users can utilize all video features, such as scheduling
-     * meetings, screen sharing, video recording, and the waiting room
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatVideoEnabled. Orig desc: When true, users can
+     * utilize all video features, such as scheduling meetings, screen
+     * sharing, video recording, and the waiting room
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
