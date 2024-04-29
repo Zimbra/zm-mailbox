@@ -327,10 +327,10 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Provisioning.A_zimbraFeatureViewInHtmlEnabled, LdapConstants.LDAP_TRUE);
 
         FILTER_ACCOUNTS_WITH_CHAT_ALL = Filter.createEqualityFilter(
-                Provisioning.A_zimbraFeatureChatAllFeaturesEnabled, LdapConstants.LDAP_TRUE);
+                Provisioning.A_zimbraFeatureAdvancedChatEnabled, LdapConstants.LDAP_TRUE);
 
         FILTER_ACCOUNTS_WITH_VIDEO_ALL = Filter.createEqualityFilter(
-                Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled, LdapConstants.LDAP_TRUE);
+                Provisioning.A_zimbraFeatureAdvancedChatVideoEnabled, LdapConstants.LDAP_TRUE);
 
         FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING = Filter.createEqualityFilter(
                 Provisioning.A_zimbraFeatureDocumentEditingEnabled, LdapConstants.LDAP_TRUE);

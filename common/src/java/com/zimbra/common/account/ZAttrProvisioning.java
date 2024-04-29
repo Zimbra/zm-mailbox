@@ -6709,6 +6709,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAdminPreferencesEnabled = "zimbraFeatureAdminPreferencesEnabled";
 
     /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4130)
+    public static final String A_zimbraFeatureAdvancedChatEnabled = "zimbraFeatureAdvancedChatEnabled";
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4131)
+    public static final String A_zimbraFeatureAdvancedChatVideoEnabled = "zimbraFeatureAdvancedChatVideoEnabled";
+
+    /**
      * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      */
@@ -6820,8 +6838,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureChangePasswordEnabled = "zimbraFeatureChangePasswordEnabled";
 
     /**
-     * When true, users can access all chat features, including private
-     * chats, group chats, and sending attachments
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatEnabled. Orig desc: When true, users can
+     * access all chat features, including private chats, group chats, and
+     * sending attachments
      *
      * @since ZCS 10.1.0
      */
@@ -7251,8 +7271,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMarkMailForwardedAsRead = "zimbraFeatureMarkMailForwardedAsRead";
 
     /**
-     * This numeric attribute defines the maximum number of participants a
-     * user can have in their meetings. For instance, if set to 5, the user
+     * Deprecated since: 10.1.0. design decision to ensure that there is no
+     * limit on the number of video participants per user. Orig desc: This
+     * numeric attribute defines the maximum number of participants a user
+     * can have in their meetings. For instance, if set to 5, the user
      * can&#039;t host a meeting with more than five participants
      *
      * @since ZCS 10.1.0
@@ -7606,8 +7628,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureTwoFactorAuthRequired = "zimbraFeatureTwoFactorAuthRequired";
 
     /**
-     * When true, users can utilize all video features, such as scheduling
-     * meetings, screen sharing, video recording, and the waiting room
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatVideoEnabled. Orig desc: When true, users can
+     * utilize all video features, such as scheduling meetings, screen
+     * sharing, video recording, and the waiting room
      *
      * @since ZCS 10.1.0
      */

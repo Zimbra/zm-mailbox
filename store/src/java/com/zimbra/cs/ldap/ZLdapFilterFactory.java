@@ -203,8 +203,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNTS_WITH_SHARING("Filter in " + Provisioning.A_zimbraFeatureSharingEnabled),
         ACCOUNTS_WITH_BRIEFCASES("Filter in " + Provisioning.A_zimbraFeatureBriefcasesEnabled),
         ACCOUNTS_WITH_VIEW_IN_HTML("Filter in " + Provisioning.A_zimbraFeatureViewInHtmlEnabled),
-        ACCOUNTS_WITH_CHAT_ALL("Filter in " + Provisioning.A_zimbraFeatureChatAllFeaturesEnabled),
-        ACCOUNTS_WITH_VIDEO_ALL("Filter in " + Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled),
+        ACCOUNTS_WITH_CHAT_ALL("Filter in " + Provisioning.A_zimbraFeatureAdvancedChatEnabled),
+        ACCOUNTS_WITH_VIDEO_ALL("Filter in " + Provisioning.A_zimbraFeatureAdvancedChatVideoEnabled),
         ACCOUNTS_WITH_DOCUMENT_EDITING("Filter in " + Provisioning.A_zimbraFeatureDocumentEditingEnabled),
         ;
 
