@@ -175,7 +175,7 @@ public class Mountpoint extends Folder implements MountpointStore {
         data.setFlags(flags & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
-        data.metadata = encodeMetadata(color, 1, 1, custom, view, ownerId, remoteId, remoteUuid, reminderEnabled);
+        data.metadata = encodeMetadata(color, 1, 1, custom, view, ownerId, remoteId, remoteUuid, reminderEnabled, true);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Mountpoint %s: id=%d, parentId=%d, parentName=%s.",
                 name, data.id, parent.getId(), parent.getName());
@@ -205,23 +205,23 @@ public class Mountpoint extends Folder implements MountpointStore {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, attributes, defaultView, mOwnerId, mRemoteId, mRemoteUuid, mReminderEnabled);
+        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, attributes, defaultView, mOwnerId, mRemoteId, mRemoteUuid, mReminderEnabled, isActiveSyncDisabled());
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Type view, String owner,
-            int remoteId, String remoteUuid, boolean reminderEnabled) {
+            int remoteId, String remoteUuid, boolean reminderEnabled, boolean activeSyncDisabled) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, (byte) 0, view, owner, remoteId, remoteUuid, reminderEnabled).toString();
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, (byte) 0, view, owner, remoteId, remoteUuid, reminderEnabled, activeSyncDisabled).toString();
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, byte attrs,
-            Type view, String owner, int remoteId, String remoteUuid, boolean reminderEnabled) {
+            Type view, String owner, int remoteId, String remoteUuid, boolean reminderEnabled, boolean activeSyncDisabled) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
         meta.put(Metadata.FN_REMOTE_UUID, remoteUuid);
         if (reminderEnabled)
             meta.put(Metadata.FN_REMINDER_ENABLED, reminderEnabled);
-        return Folder.encodeMetadata(meta, color, metaVersion, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0, 0, 0, null, false, -1);
+        return Folder.encodeMetadata(meta, color, metaVersion, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0, 0, 0, null, activeSyncDisabled, -1);
     }
 
     @Override
@@ -318,7 +318,7 @@ public class Mountpoint extends Folder implements MountpointStore {
         data.setFlags(flags & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
-        data.metadata = encodeMetadata(color, 1, 1, custom, view, ownerId, remoteId, remoteUuid, reminderEnabled);
+        data.metadata = encodeMetadata(color, 1, 1, custom, view, ownerId, remoteId, remoteUuid, reminderEnabled, false);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Mountpoint %s: id=%d, parentId=%d, parentName=%s.",
                 name, data.id, parent.getId(), parent.getName());
