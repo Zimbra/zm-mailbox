@@ -10529,4 +10529,8 @@ TODO: delete them permanently from here
   <desc>When true, users can utilize all video features, such as scheduling meetings, screen sharing, video recording, and the waiting room</desc>
 </attr>
 
+<attr id="4132" name="zimbraLicenseNotificationEmail" type="email" cardinality="single" optionalIn="globalConfig" since="10.1.0">
+  <desc>Email address for receiving Zimbra license notifications</desc>
+</attr>
+
 </attrs>
