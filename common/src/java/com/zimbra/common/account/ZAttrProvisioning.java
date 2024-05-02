@@ -9436,6 +9436,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLicenseDaemonServerHost = "zimbraLicenseDaemonServerHost";
 
     /**
+     * Email address for receiving Zimbra license notifications
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4132)
+    public static final String A_zimbraLicenseNotificationEmail = "zimbraLicenseNotificationEmail";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)
