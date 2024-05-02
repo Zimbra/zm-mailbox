@@ -28628,6 +28628,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Email address for receiving Zimbra license notifications
+     *
+     * @return zimbraLicenseNotificationEmail, or null if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4132)
+    public String getLicenseNotificationEmail() {
+        return getAttr(Provisioning.A_zimbraLicenseNotificationEmail, null, true);
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications
+     *
+     * @param zimbraLicenseNotificationEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4132)
+    public void setLicenseNotificationEmail(String zimbraLicenseNotificationEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseNotificationEmail, zimbraLicenseNotificationEmail);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications
+     *
+     * @param zimbraLicenseNotificationEmail new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4132)
+    public Map<String,Object> setLicenseNotificationEmail(String zimbraLicenseNotificationEmail, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseNotificationEmail, zimbraLicenseNotificationEmail);
+        return attrs;
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4132)
+    public void unsetLicenseNotificationEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseNotificationEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4132)
+    public Map<String,Object> unsetLicenseNotificationEmail(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseNotificationEmail, "");
+        return attrs;
+    }
+
+    /**
      * Whether to bind to port on startup irrespective of whether the server
      * is enabled. Useful when port to bind is privileged and must be bound
      * early.
