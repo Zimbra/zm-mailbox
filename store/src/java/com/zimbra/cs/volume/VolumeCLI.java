@@ -540,6 +540,7 @@ public final class VolumeCLI extends SoapCLI {
         printOptWithDesc(VolumeCLIConstants.O_GBID,  8, VolumeCLIConstants.H_DESC_VOL_BKT_ID,     true);
         printOptWithDesc(VolumeCLIConstants.O_P,     8, VolumeCLIConstants.H_DESC_VOL_RP,         true);
         printOptWithDesc(VolumeCLIConstants.O_VP,    8, VolumeCLIConstants.H_DESC_VOL_PRE,        true);
+        printOptWithDesc(VolumeCLIConstants.O_C,     8, VolumeCLIConstants.H_DESC_VOL_CB,         false);
         printOptWithDesc(VolumeCLIConstants.O_UIT,   8, VolumeCLIConstants.H_DESC_VOL_AWS_UIT,    false);
         printOptWithDesc(VolumeCLIConstants.O_UFA,   8, VolumeCLIConstants.H_DESC_VOL_AWS_UFA,    false);
         printOptWithDesc(VolumeCLIConstants.O_UFAT,  8, VolumeCLIConstants.H_DESC_VOL_AWS_UFAT,   false);
@@ -582,6 +583,7 @@ public final class VolumeCLI extends SoapCLI {
         printOptWithDesc(VolumeCLIConstants.O_E,   4,  VolumeCLIConstants.H_DESC_VOL_EDIT,      false);
         printOptWithDesc(VolumeCLIConstants.O_ID,  8,  VolumeCLIConstants.H_DESC_VOL_ID,        true);
         printOptWithDesc(VolumeCLIConstants.O_N,   8,  VolumeCLIConstants.H_DESC_VOL_NAME,      true);
+        printOptWithDesc(VolumeCLIConstants.O_C,   8, VolumeCLIConstants.H_DESC_VOL_CB,         false);
         printLineWithLeftPad(VolumeCLIConstants.H_NOTE_EXT_VOL_EDIT, 4);
         printLineWithLeftPad(VolumeCLIConstants.H_EXP_EXT_VOL_EDIT, 4);
 
