@@ -584,7 +584,6 @@ public final class VolumeCLI extends SoapCLI {
         printOptWithDesc(VolumeCLIConstants.O_ID,  8,  VolumeCLIConstants.H_DESC_VOL_ID,        true);
         printOptWithDesc(VolumeCLIConstants.O_N,   8,  VolumeCLIConstants.H_DESC_VOL_NAME,      true);
         printOptWithDesc(VolumeCLIConstants.O_C,   8, VolumeCLIConstants.H_DESC_VOL_CB,         false);
-        printLineWithLeftPad(VolumeCLIConstants.H_NOTE_EXT_VOL_EDIT, 4);
         printLineWithLeftPad(VolumeCLIConstants.H_EXP_EXT_VOL_EDIT, 4);
 
         printLineWithLeftPad(VolumeCLIConstants.STR_EMPTY, 0);
