@@ -174,6 +174,10 @@ public class MimeCompoundHeader extends MimeHeader {
                     } else if (b == ';') {
                         rfc2231.saveParameter(params);
                         rfc2231.setState(RFC2231State.PARAM);
+                    } else if (b == '"') {
+                        // invalid, double-quote not allowed here. ignore
+                        rfc2231.reset();
+                        rfc2231.setState(RFC2231State.SLOP);
                     } else {
                         rfc2231.addCharsetByte(b);
                     }
@@ -507,7 +511,7 @@ public class MimeCompoundHeader extends MimeHeader {
                             charset.reset();
                         }
                         try {
-                            URLCodec codec = new URLCodec(charset.isEmpty() ? "us-ascii" : charset.toString());
+                            URLCodec codec = new URLCodec(charset.isEmpty() ? "us-ascii" : charset.toString().trim());
                             pvalue = codec.decode(pvalue);
                         } catch (DecoderException ignore) {
                         }
