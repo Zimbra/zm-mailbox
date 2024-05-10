@@ -367,12 +367,20 @@ public final class FileBlobStore extends StoreManager {
 
     @Override
     public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) throws ServiceException {
-        short volumeId = Short.valueOf(locator);
-        File file = getMailboxBlobFile(mbox, itemId, revision, volumeId, validate);
-        if (file == null) {
-            return null;
+        try {
+            short volumeId = Short.valueOf(locator);
+            File file = getMailboxBlobFile(mbox, itemId, revision, volumeId, validate);
+            if (file == null) {
+                return null;
+            }
+            return new VolumeMailboxBlob(mbox, itemId, revision, locator, new VolumeBlob(file, volumeId));
+        } catch (NumberFormatException e) {
+            // this exception occurs when primary is internal and secondary is external, while reading volume id we get custom locator
+            // Also, when license is expired, we should block user reading external blobs from S3 volume
+            ZimbraLog.store.debug("NumberFormatException:", e.getMessage());
+            throw ServiceException.FAILURE("Operation can not be completed because License is expired or not activated",
+                    null);
         }
-        return new VolumeMailboxBlob(mbox, itemId, revision, locator, new VolumeBlob(file, volumeId));
     }
 
     @Override
