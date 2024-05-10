@@ -697,6 +697,7 @@ public class GqlConstants {
     public static final String GRNATEE_NAME = "granteeName";
     public static final String GRANTEE_DISPLAY_NAME = "granteeDisplayName";
     public static final String MOUNTPOINT_ID = "mountpointId";
+    public static final String ACTIVESYNC_DISABLED = "activeSyncDisabled";
 
     // auth
     public static final String CLASS_ADMIN_AUTH_REQUEST = "AdminAuthRequest";

@@ -20,6 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.account.ShareInfo.MountedFolders.FolderMountpoint;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.MailItem;
 
@@ -295,14 +296,13 @@ public class ShareInfoData {
         sid.setGranteeId(eShare.getAttribute(AccountConstants.A_GRANTEE_ID, null));
         sid.setGranteeName(eShare.getAttribute(AccountConstants.A_GRANTEE_NAME, null));
         sid.setGranteeDisplayName(eShare.getAttribute(AccountConstants.A_GRANTEE_DISPLAY_NAME, null));
-
         // and this ugly thing
         sid.setMountpointId_zmprov_only(eShare.getAttribute(AccountConstants.A_MOUNTPOINT_ID, null));
 
         return sid;
     }
 
-    public com.zimbra.soap.type.ShareInfo toJAXB(Integer mptId) {
+    public com.zimbra.soap.type.ShareInfo toJAXB(FolderMountpoint mptId) {
         com.zimbra.soap.type.ShareInfo jaxb = new com.zimbra.soap.type.ShareInfo();
         jaxb.setOwnerId(getOwnerAcctId());
         jaxb.setOwnerEmail(getOwnerAcctEmail());
@@ -317,7 +317,8 @@ public class ShareInfoData {
         jaxb.setGranteeName(getGranteeName());
         jaxb.setGranteeDisplayName(getGranteeDisplayName());
         if (mptId != null) {
-            jaxb.setMountpointId(mptId.toString());
+            jaxb.setMountpointId(String.valueOf(mptId.getId()));
+            jaxb.setActiveSyncDisabled(mptId.isActiveSyncDisabled());
         }
         return jaxb;
     }
