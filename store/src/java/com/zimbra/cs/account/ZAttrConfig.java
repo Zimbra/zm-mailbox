@@ -18378,6 +18378,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Zimbra feature actual usage count
+     *
+     * @return zimbraFeatureActualUsageCount, or null if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public String getFeatureActualUsageCount() {
+        return getAttr(Provisioning.A_zimbraFeatureActualUsageCount, null, true);
+    }
+
+    /**
+     * Zimbra feature actual usage count
+     *
+     * @param zimbraFeatureActualUsageCount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public void setFeatureActualUsageCount(String zimbraFeatureActualUsageCount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureActualUsageCount, zimbraFeatureActualUsageCount);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra feature actual usage count
+     *
+     * @param zimbraFeatureActualUsageCount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public Map<String,Object> setFeatureActualUsageCount(String zimbraFeatureActualUsageCount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureActualUsageCount, zimbraFeatureActualUsageCount);
+        return attrs;
+    }
+
+    /**
+     * Zimbra feature actual usage count
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public void unsetFeatureActualUsageCount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureActualUsageCount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra feature actual usage count
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public Map<String,Object> unsetFeatureActualUsageCount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureActualUsageCount, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
      * handler. Orig desc: Sleep time between subsequent contact backups. 0
      * means that contact backup is disabled. . Must be in valid duration
