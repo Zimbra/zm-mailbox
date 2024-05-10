@@ -6652,6 +6652,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalUserMailAddress = "zimbraExternalUserMailAddress";
 
     /**
+     * Zimbra feature actual usage count
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public static final String A_zimbraFeatureActualUsageCount = "zimbraFeatureActualUsageCount";
+
+    /**
      * RFC822 email address under verification for an account
      *
      * @since ZCS 8.8.5

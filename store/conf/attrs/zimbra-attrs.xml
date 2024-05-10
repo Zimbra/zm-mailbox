@@ -10519,6 +10519,7 @@ TODO: delete them permanently from here
   <desc>Zimbra offline network license code</desc>
 </attr>
 
+
 <attr id="4130" name="zimbraFeatureAdvancedChatEnabled" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>When true, users can access all chat features, including private chats, group chats, and sending attachments</desc>
@@ -10531,6 +10532,10 @@ TODO: delete them permanently from here
 
 <attr id="4132" name="zimbraLicenseNotificationEmail" type="email" cardinality="single" optionalIn="globalConfig" since="10.1.0">
   <desc>Email address for receiving Zimbra license notifications</desc>
+</attr>
+
+<attr id="4133" name="zimbraFeatureActualUsageCount" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.0">
+  <desc>Zimbra feature actual usage count</desc>
 </attr>
 
 </attrs>
