@@ -1244,8 +1244,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void prepareAccountStatusToDelete(Account acct) throws ServiceException;
 
-    public abstract void validateS3BucketAccess(Account acct) throws ServiceException;
-
     public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto)
     throws ServiceException;
 
