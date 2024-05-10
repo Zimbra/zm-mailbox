@@ -536,6 +536,7 @@ public class AccountConstants {
     public static final String A_OWNER_DISPLAY_NAME = "ownerName";
     public static final String A_RIGHTS = "rights";
     public static final String A_MOUNTPOINT_ID = "mid";
+    public static final String A_ACTIVESYNC_DISABLED = "activeSyncDisabled";
     // contact search
     public static final String A_DEPARTMENT = "department";
 

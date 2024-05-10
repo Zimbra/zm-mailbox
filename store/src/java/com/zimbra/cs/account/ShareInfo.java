@@ -266,13 +266,41 @@ public class ShareInfo {
          *     key: {owner-acct-id}:{remote-folder-id}
          *     value: {local-folder-id}
          */
-        private final Map<String, Integer> mMountedFolders;
+
+        public class FolderMountpoint {
+
+            int id;
+            boolean activesyncDisabled;
+
+            public FolderMountpoint(Integer id, boolean activesyncDisabled) {
+                this.id = id;
+                this.activesyncDisabled = activesyncDisabled;
+            }
+
+            public int getId() {
+                return id;
+            }
+
+            public void setId(Integer id) {
+                this.id = id;
+            }
+
+            public boolean isActivesyncDisabled() {
+                return activesyncDisabled;
+            }
+
+            public void setActivesyncDisabled(boolean activesyncDisabled) {
+                this.activesyncDisabled = activesyncDisabled;
+            }
+
+        }
+        private final Map<String, FolderMountpoint> mMountedFolders;
 
         public MountedFolders(OperationContext octxt, Account acct) throws ServiceException {
             mMountedFolders = getLocalMountpoints(octxt, acct);
         }
 
-        public Integer getLocalFolderId(String ownerAcctId, int remoteFolderId) {
+        public FolderMountpoint getLocalFolderId(String ownerAcctId, int remoteFolderId) {
             if (mMountedFolders == null)
                 return null;
             else {
@@ -295,7 +323,7 @@ public class ShareInfo {
          * @return
          * @throws ServiceException
          */
-        private Map<String, Integer> getLocalMountpoints(OperationContext octxt, Account acct) throws ServiceException {
+        private Map<String, FolderMountpoint> getLocalMountpoints(OperationContext octxt, Account acct) throws ServiceException {
             if (octxt == null)
                 return null;
 
@@ -307,9 +335,9 @@ public class ShareInfo {
 
         }
 
-        private Map<String, Integer> getLocalMountpoints(OperationContext octxt, Mailbox mbox) throws ServiceException {
+        private Map<String, FolderMountpoint> getLocalMountpoints(OperationContext octxt, Mailbox mbox) throws ServiceException {
 
-            Map<String, Integer> mountpoints = new HashMap<String, Integer>();
+            Map<String, FolderMountpoint> mountpoints = new HashMap<String, FolderMountpoint>();
 
             mbox.lock.lock(false);
             try {
@@ -327,7 +355,7 @@ public class ShareInfo {
             return mountpoints;
         }
 
-        private void getLocalMountpoints(Folder folder, Set<Folder> visible, Map<String, Integer> mountpoints) throws ServiceException {
+        private void getLocalMountpoints(Folder folder, Set<Folder> visible, Map<String, FolderMountpoint> mountpoints) throws ServiceException {
             boolean isVisible = visible == null || visible.remove(folder);
             if (!isVisible)
                 return;
@@ -335,7 +363,8 @@ public class ShareInfo {
             if (folder instanceof Mountpoint) {
                 Mountpoint mpt = (Mountpoint)folder;
                 String mid =  getKey(mpt.getOwnerId(), mpt.getRemoteId());
-                mountpoints.put(mid, mpt.getId());
+                FolderMountpoint folderMountpoint = new FolderMountpoint(mpt.getId(), mpt.isActiveSyncDisabled());
+                mountpoints.put(mid, folderMountpoint);
             }
 
             // if this was the last visible folder overall, no need to look at children

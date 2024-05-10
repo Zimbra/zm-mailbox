@@ -31,11 +31,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.ShareInfo;
+import com.zimbra.cs.account.ShareInfo.MountedFolders.FolderMountpoint;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.GetShareInfoRequest;
 import com.zimbra.soap.account.message.GetShareInfoResponse;
@@ -361,8 +361,8 @@ public class GetShareInfo  extends AccountDocumentHandler {
             mResp.addShare(sid.toJAXB(getMountpointId(sid)));
         }
 
-        private Integer getMountpointId(ShareInfoData sid) throws ServiceException {
-            Integer mptId = null;
+        private FolderMountpoint getMountpointId(ShareInfoData sid) throws ServiceException {
+            FolderMountpoint mptId = null;
             if (mMountedFolders != null) {
                 mptId = mMountedFolders.getLocalFolderId(sid.getOwnerAcctId(), sid.getItemId());
             }
