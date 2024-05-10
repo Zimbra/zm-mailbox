@@ -377,9 +377,8 @@ public final class FileBlobStore extends StoreManager {
         } catch (NumberFormatException e) {
             // this exception occurs when primary is internal and secondary is external, while reading volume id we get custom locator
             // Also, when license is expired, we should block user reading external blobs from S3 volume
-            ZimbraLog.store.debug("NumberFormatException:", e.getMessage());
-            throw ServiceException.FAILURE("Operation can not be completed because License is expired or not activated",
-                    null);
+            ZimbraLog.store.info("NumberFormatException:", e);
+            throw ServiceException.FAILURE("Operation can not be completed because store is not accessible", null);
         }
     }
 
