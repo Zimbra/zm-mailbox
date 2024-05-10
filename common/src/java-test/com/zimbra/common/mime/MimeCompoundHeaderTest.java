@@ -22,7 +22,6 @@ import org.junit.Test;
 public class MimeCompoundHeaderTest {
     private void test(boolean isContentType, String description, String raw, String value, String[] params) {
         MimeCompoundHeader mch = isContentType ? new ContentType(raw) : new ContentDisposition(raw);
-
         String primary = isContentType ? ((ContentType) mch).getContentType() : ((ContentDisposition) mch).getDisposition();
         Assert.assertEquals(description, value, primary);
         Assert.assertEquals(description, params.length, mch.getParameterCount() * 2);
@@ -125,7 +124,12 @@ public class MimeCompoundHeaderTest {
         test(false, "missing 2231 charset/language with subsequent param",
                 "Content-Disposition: attachment; \r\nfilename*=Jarrod_Stiles%7a_resume_5579615_10344909272010946044.pdf; foo=bar",
                 "attachment", new String[] { "filename", "Jarrod_Stilesz_resume_5579615_10344909272010946044.pdf", "foo", "bar" });
+        test(false, "value continuation",
+                "Content-Disposition: attachment; filename*0=\"foo.\"; filename*1=\"html\"",
+                "attachment", new String[] { "filename", "foo.html"});
+        test(false, "using RFC2231 encoded UTF-8, with double quotes around the parameter value.\n",
+                "Content-Disposition: attachment; filename*=\"UTF-8''foo-%c3%a4.html\"",
+                "attachment", new String[] {});
     }
-
     // FIXME: add tests for serialization (2231 or not, various charsets, quoting, folding, etc.)
 }
