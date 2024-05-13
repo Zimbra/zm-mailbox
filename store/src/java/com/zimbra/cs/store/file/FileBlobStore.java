@@ -375,8 +375,6 @@ public final class FileBlobStore extends StoreManager {
             }
             return new VolumeMailboxBlob(mbox, itemId, revision, locator, new VolumeBlob(file, volumeId));
         } catch (NumberFormatException e) {
-            // this exception occurs when primary is internal and secondary is external, while reading volume id we get custom locator
-            // Also, when license is expired, we should block user reading external blobs from S3 volume
             ZimbraLog.store.info("NumberFormatException:", e);
             throw ServiceException.FAILURE("Operation can not be completed because store is not accessible", null);
         }
