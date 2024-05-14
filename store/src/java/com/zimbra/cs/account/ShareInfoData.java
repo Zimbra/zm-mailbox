@@ -318,7 +318,7 @@ public class ShareInfoData {
         jaxb.setGranteeDisplayName(getGranteeDisplayName());
         if (mptId != null) {
             jaxb.setMountpointId(String.valueOf(mptId.getId()));
-            jaxb.setActiveSyncDisabled(mptId.isActivesyncDisabled());
+            jaxb.setActiveSyncDisabled(mptId.isActiveSyncDisabled());
         }
         return jaxb;
     }

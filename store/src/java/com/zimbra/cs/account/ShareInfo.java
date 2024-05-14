@@ -270,11 +270,11 @@ public class ShareInfo {
         public class FolderMountpoint {
 
             int id;
-            boolean activesyncDisabled;
+            boolean activeSyncDisabled;
 
-            public FolderMountpoint(Integer id, boolean activesyncDisabled) {
+            public FolderMountpoint(Integer id, boolean activeSyncDisabled) {
                 this.id = id;
-                this.activesyncDisabled = activesyncDisabled;
+                this.activeSyncDisabled = activeSyncDisabled;
             }
 
             public int getId() {
@@ -285,12 +285,12 @@ public class ShareInfo {
                 this.id = id;
             }
 
-            public boolean isActivesyncDisabled() {
-                return activesyncDisabled;
+            public boolean isActiveSyncDisabled() {
+                return activeSyncDisabled;
             }
 
-            public void setActivesyncDisabled(boolean activesyncDisabled) {
-                this.activesyncDisabled = activesyncDisabled;
+            public void setActiveSyncDisabled(boolean activeSyncDisabled) {
+                this.activeSyncDisabled = activeSyncDisabled;
             }
 
         }
