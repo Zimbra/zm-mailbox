@@ -15402,6 +15402,88 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. Which makes shared folders sync enabled for mobile
+     * devices
+     *
+     * @return zimbraFeatureSharedFolderMobileSyncEnabled, or true if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public boolean isFeatureSharedFolderMobileSyncEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, true, true);
+    }
+
+    /**
+     * Whether to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. Which makes shared folders sync enabled for mobile
+     * devices
+     *
+     * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public void setFeatureSharedFolderMobileSyncEnabled(boolean zimbraFeatureSharedFolderMobileSyncEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, zimbraFeatureSharedFolderMobileSyncEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. Which makes shared folders sync enabled for mobile
+     * devices
+     *
+     * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public Map<String,Object> setFeatureSharedFolderMobileSyncEnabled(boolean zimbraFeatureSharedFolderMobileSyncEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, zimbraFeatureSharedFolderMobileSyncEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. Which makes shared folders sync enabled for mobile
+     * devices
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public void unsetFeatureSharedFolderMobileSyncEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. Which makes shared folders sync enabled for mobile
+     * devices
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public Map<String,Object> unsetFeatureSharedFolderMobileSyncEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, "");
+        return attrs;
+    }
+
+    /**
      * enabled sharing
      *
      * @return zimbraFeatureSharingEnabled, or true if unset
