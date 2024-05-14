@@ -124,7 +124,6 @@ public final class VolumeCLIConstants {
 
     public static final String H_NOTE_EXT_OI_VOL_ADD = "Note: Type index volume is not supported for external OPENIO volume";
     public static final String H_NOTE_EXT_S3_VOL_ADD = "Note: Type index volume is not supported for external S3 volume";
-    public static final String H_NOTE_EXT_VOL_EDIT   = "Note: Only volume name can be edited for external volumes";
 
     /** attributes for other zmvolume cli options **/
     public static final String STR_SPACE             = " ";
