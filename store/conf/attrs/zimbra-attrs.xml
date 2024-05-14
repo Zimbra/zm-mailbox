@@ -10538,4 +10538,8 @@ TODO: delete them permanently from here
   <desc>Zimbra feature actual usage count</desc>
 </attr>
 
+<attr id="4134" name="zimbraFeatureSharedFolderMobileSyncEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether to enable/disable the mobile sync for shared folders. Default value is TRUE. Which makes shared folders sync enabled for mobile devices</desc>
+</attr>
 </attrs>
