@@ -275,6 +275,9 @@ public class VolumeConfigUtil {
             VolumeInfo volInfo = vol.toJAXB();
 
             if (Volume.StoreType.EXTERNAL.equals(vol.getStoreType())) {
+                if (!VolumeQualifier.getInstance().qualify(volInfo)) {
+                    continue;
+                }
                 ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
 
                 try {
