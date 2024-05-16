@@ -10540,6 +10540,6 @@ TODO: delete them permanently from here
 
 <attr id="4134" name="zimbraFeatureSharedFolderMobileSyncEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>Whether to enable/disable the mobile sync for shared folders. Default value is TRUE. Which makes shared folders sync enabled for mobile devices</desc>
+  <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
 </attr>
 </attrs>

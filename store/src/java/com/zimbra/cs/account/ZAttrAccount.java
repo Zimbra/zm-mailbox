@@ -21013,30 +21013,32 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. Which makes shared folders sync enabled for mobile
-     * devices
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
+     * be enabled for shared folders having Admin or Manager permission
      *
      * @return zimbraFeatureSharedFolderMobileSyncEnabled, or true if unset
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4133)
+    @ZAttr(id=4134)
     public boolean isFeatureSharedFolderMobileSyncEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, true, true);
     }
 
     /**
-     * Whether to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. Which makes shared folders sync enabled for mobile
-     * devices
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
+     * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4133)
+    @ZAttr(id=4134)
     public void setFeatureSharedFolderMobileSyncEnabled(boolean zimbraFeatureSharedFolderMobileSyncEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, zimbraFeatureSharedFolderMobileSyncEnabled ? TRUE : FALSE);
@@ -21044,9 +21046,10 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. Which makes shared folders sync enabled for mobile
-     * devices
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
+     * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21054,7 +21057,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4133)
+    @ZAttr(id=4134)
     public Map<String,Object> setFeatureSharedFolderMobileSyncEnabled(boolean zimbraFeatureSharedFolderMobileSyncEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, zimbraFeatureSharedFolderMobileSyncEnabled ? TRUE : FALSE);
@@ -21062,15 +21065,16 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. Which makes shared folders sync enabled for mobile
-     * devices
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
+     * be enabled for shared folders having Admin or Manager permission
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4133)
+    @ZAttr(id=4134)
     public void unsetFeatureSharedFolderMobileSyncEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, "");
@@ -21078,16 +21082,17 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. Which makes shared folders sync enabled for mobile
-     * devices
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
+     * be enabled for shared folders having Admin or Manager permission
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 10.1.0
      */
-    @ZAttr(id=4133)
+    @ZAttr(id=4134)
     public Map<String,Object> unsetFeatureSharedFolderMobileSyncEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSharedFolderMobileSyncEnabled, "");
