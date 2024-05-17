@@ -168,7 +168,7 @@ public class RemoteManager {
         String send = "HOST:" + host + " " + command;
         InputStream inputStream = new ByteArrayInputStream(send.getBytes());
 
-        Duration timeout = Duration.ofMinutes(LC.zimbra_remote_cmd_channel_timeout_min.intValue())
+        Duration timeout = Duration.ofMinutes(LC.zimbra_remote_cmd_channel_timeout_min.intValue());
 
         SshClient client = SshClient.setUpDefaultClient();
         client.start();
