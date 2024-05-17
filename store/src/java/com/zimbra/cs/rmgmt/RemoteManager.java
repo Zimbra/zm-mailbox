@@ -168,18 +168,21 @@ public class RemoteManager {
         String send = "HOST:" + host + " " + command;
         InputStream inputStream = new ByteArrayInputStream(send.getBytes());
 
+        Duration timeout = Duration.ofMinutes(LC.zimbra_remote_cmd_channel_timeout_min.intValue())
+
         SshClient client = SshClient.setUpDefaultClient();
         client.start();
 
         ConnectFuture cf = client.connect(username, host, port);
+
 
         try (ClientSession session = cf.verify().getSession();) {
             session.addPublicKeyIdentity(loadKeypair(privateKey.getAbsolutePath()));
             session.auth().verify(defaultTimeoutSeconds, TimeUnit.SECONDS);
 
             session.setSessionHeartbeat(HeartbeatType.IGNORE, TimeUnit.MINUTES, 1);
-            CoreModuleProperties.HEARTBEAT_REPLY_WAIT.set(session, Duration.ofMillis(50));
-            CoreModuleProperties.IDLE_TIMEOUT.set(session, Duration.ofMinutes(LC.zimbra_remote_cmd_channel_timeout_min.intValue()));
+
+            CoreModuleProperties.IDLE_TIMEOUT.set(session, timeout);
 
             ZimbraLog.rmgmt.debug("executing shim command '%s'", mShimCommand);
 
@@ -195,7 +198,7 @@ public class RemoteManager {
                 channel.open().await();
 
                 try {
-                    channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), null);
+                    channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), timeout);
                     session.close(false);
 
                     ClientChannel.validateCommandExitStatusCode(mShimCommand, channel.getExitStatus());
