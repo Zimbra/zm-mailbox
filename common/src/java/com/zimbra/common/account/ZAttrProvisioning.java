@@ -7506,6 +7506,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
 
     /**
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4134)
+    public static final String A_zimbraFeatureSharedFolderMobileSyncEnabled = "zimbraFeatureSharedFolderMobileSyncEnabled";
+
+    /**
      * enabled sharing
      */
     @ZAttr(id=335)
