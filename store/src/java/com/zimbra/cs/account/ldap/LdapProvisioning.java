@@ -494,6 +494,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         AttributeManager.getInstance().postModify(attrs, e, callbackContext, allowCallback);
     }
 
+    public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs)
+            throws ServiceException {
+        modifyLdapAttrs(e, null, attrs);
+    }
+
     @Override
     public void restoreAccountAttrs(Account acct, Map<String, ? extends Object> backupAttrs)
     throws ServiceException {
@@ -546,7 +551,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         // restricting the COS modification, if any of the feature status or
         // license status is in grace period
         if (entry instanceof LdapCos) {
-            validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, null, attrs);
+            LdapCos cos = (LdapCos) entry;
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, null, attrs, cos);
+            ZimbraLog.system.info("******* COS MODIFIYING ATTRS " + attrs.toString());
         }
 
         if (!storeEphemeralInLdap) {
@@ -9442,6 +9449,25 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         String[] bases = getSearchBases(domain, types);
+
+        long num = 0;
+        for (String base : bases) {
+            num += countObjects(base, filter);
+        }
+
+        return num;
+    }
+
+    public long countObjects(List<String> cosIds, String ldapAttribute) throws ServiceException{
+        ZLdapFilter filter;
+
+        // setup types for finding bases
+        Set<ObjectType> types = Sets.newHashSet();
+        types.add(ObjectType.accounts);
+        filter = filterFactory.accountsByCos(cosIds, ldapAttribute);
+        ZimbraLog.system.info("********* QUERY Filter string : " + filter.toFilterString() + "CosIds : " + cosIds);
+        ZimbraLog.system.info("********* QUERY Filter : " + filter.toString());
+        String[] bases = getSearchBases(null, types);
 
         long num = 0;
         for (String base : bases) {

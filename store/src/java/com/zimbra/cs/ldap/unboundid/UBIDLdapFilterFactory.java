@@ -860,6 +860,29 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING));
     }
 
+    @Override
+    public ZLdapFilter accountsByCos(List<String> cosIds, String ldapAttribute) {
+        List<Filter> filters = Lists.newArrayList();
+        for (String cosId : cosIds) {
+            filters.add(Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId));
+        }
+        filters.add(Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_BY_COS,
+                Filter.createANDFilter(
+                        FILTER_ALL_NON_SYSTEM_ACCOUNTS,
+                        Filter.createNOTFilter(
+                            Filter.createORFilter(
+                                Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_TRUE),
+                                Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_FALSE))),
+                        Filter.createORFilter(filters)));
+    }
+
+
+
+
+
+
     /*
      * alias
      */
