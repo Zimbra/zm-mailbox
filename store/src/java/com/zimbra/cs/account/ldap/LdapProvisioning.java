@@ -492,6 +492,40 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         AttributeManager.getInstance().preModify(attrs, e, callbackContext, checkImmutable, allowCallback);
         modifyAttrsInternal(e, null, attrs);
         AttributeManager.getInstance().postModify(attrs, e, callbackContext, allowCallback);
+
+        postModificationValidation(e, attrs);
+
+    }
+
+    /**
+     * Performing post validation
+     * @param e
+     * @param attrs
+     * @throws ServiceException
+     */
+    private void postModificationValidation(Entry e, Map<String, ?> attrs) throws ServiceException {
+        boolean isAccount = e instanceof Account;
+        boolean isNotCalendarResource = !(e instanceof CalendarResource);
+        if (isAccount && isNotCalendarResource) {
+            Account acct = (Account) e;
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_COS_AND_FEATURE_SUCCEEDED,
+                    acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
+        }
+        if (e instanceof LdapCos) {
+            LdapCos cos = (LdapCos) e;
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_COS_AND_FEATURE_SUCCEEDED, null, attrs, cos);
+        }
+    }
+
+    /**
+     * Modifies the attributes in the LDAP
+     * @param e
+     * @param attrs
+     * @throws ServiceException
+     */
+    public void modifyLdapAttrs(Entry e, Map<String, ? extends Object> attrs)
+            throws ServiceException {
+        modifyLdapAttrs(e, null, attrs);
     }
 
     @Override
@@ -546,7 +580,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         // restricting the COS modification, if any of the feature status or
         // license status is in grace period
         if (entry instanceof LdapCos) {
-            validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, null, attrs);
+            LdapCos cos = (LdapCos) entry;
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, null, attrs, cos);
         }
 
         if (!storeEphemeralInLdap) {
@@ -9448,6 +9483,76 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             num += countObjects(base, filter);
         }
 
+        return num;
+    }
+
+    @Override
+    public long countObjects(CountObjectsType type, Object... args) throws ServiceException {
+        if (null == type) {
+            throw ServiceException.OPERATION_DENIED("Counting failed : Invalid type");
+        }
+        if (null == args || 0 == args.length) {
+            throw ServiceException.OPERATION_DENIED("Counting failed : Invalid arguments");
+        }
+
+        ZLdapFilter filter = null;
+
+        // setup types for finding bases
+        Set<ObjectType> types = Sets.newHashSet();
+        int argsLength = args.length;
+        String ldapAttribute = null;
+        switch (type) {
+            case internalUserAccountsByCosesWithLdapFeature: // multiple cos ids
+                boolean isAccountsByCosesWithLdapFeatureCheck =
+                        argsLength == 2 &&
+                                args[0] instanceof List &&
+                                args[1] instanceof String;
+                if (!isAccountsByCosesWithLdapFeatureCheck) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting accounts By Coses and Feature check Failed : Invalid Arguments");
+                }
+                List<String> cosIds = (List<String>) args[0];
+                ldapAttribute = (String) args[1];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsByCosesAndFeatureCheck(cosIds, ldapAttribute);
+                break;
+            case internalUserAccountsByCosWithLdapFeature:// single cos id
+                boolean isAccountsByCosWithLdapFeatureCheck =
+                        argsLength == 2 &&
+                                args[0] instanceof String &&
+                                args[1] instanceof String;
+                if (!isAccountsByCosWithLdapFeatureCheck) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting accounts By Cos and Feature check Failed : Invalid Arguments");
+                }
+                String cosId = (String) args[0];
+                ldapAttribute = (String) args[1];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsByCosAndFeatureCheck(cosId, ldapAttribute);
+                break;
+            case internalUserAccountsWithLdapFeatureCheck: // accounts with a feature enabled or disabled
+                boolean isAccountsWithLdapFeatureCheck =
+                        argsLength == 2 &&
+                                args[0] instanceof String &&
+                                args[1] instanceof String;
+                if (!isAccountsWithLdapFeatureCheck) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting accounts with Feature check Failed : Invalid Arguments");
+                }
+                ldapAttribute = (String) args[0];
+                String ldapValue = (String) args[1];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithLdapFeatureCheck(ldapAttribute, ldapValue);
+                break;
+            default:
+                throw ServiceException.FAILURE("unsupported counting", null);
+        }
+        String[] bases = getSearchBases(null, types);
+
+        long num = 0;
+        for (String base : bases) {
+            num += countObjects(base, filter);
+        }
         return num;
     }
 

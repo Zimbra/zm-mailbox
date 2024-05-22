@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.ldap.unboundid;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Cos;
 import java.util.Collection;
 import java.util.List;
 
@@ -29,6 +32,7 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import java.util.stream.Collectors;
 
 /**
  * @author pshao
@@ -858,6 +862,59 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_ACCOUNTS_ONLY,
                         FILTER_NOT_SYSTEM_RESOURCE,
                         FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING));
+    }
+
+    @Override
+    public ZLdapFilter accountsByCosesAndFeatureCheck(List<String> cosIds, String ldapAttribute) {
+        List<Filter> filters = cosIds.stream()
+                .map(cosId -> Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId))
+                .collect(Collectors.toList());
+        filters.add(Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_BY_COSES_AND_LDAP_FEATURE_CHECK,
+                Filter.createANDFilter(
+                        FILTER_ALL_NON_SYSTEM_ACCOUNTS,
+                        Filter.createNOTFilter(
+                                Filter.createORFilter(
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_TRUE),
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_FALSE))),
+                        Filter.createORFilter(filters)));
+    }
+
+    @Override
+    public ZLdapFilter accountsByCosAndFeatureCheck(String cosId, String ldapAttribute) {
+        Cos cos = null;
+        try {
+            cos = Provisioning.getInstance().get(Key.CosBy.id, cosId);
+        } catch (Exception e) {
+            ZimbraLog.system.warn(String.format("unable to fetch cos %s", cosId));
+        }
+
+        List<Filter> filters = Lists.newArrayList();
+        filters.add(Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId));
+        // cos is default, need to add presence filter to consider all accounts with auto cos
+        if(null != cos && cos.isDefaultCos()) {
+            filters.add(Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
+        }
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_BY_COS_AND_LDAP_FEATURE_CHECK,
+                Filter.createANDFilter(
+                        FILTER_ALL_NON_SYSTEM_ACCOUNTS,
+                        Filter.createNOTFilter(
+                                Filter.createORFilter(
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_TRUE),
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_FALSE))),
+                        Filter.createORFilter(filters)));
+    }
+
+    @Override
+    public ZLdapFilter accountsWithLdapFeatureCheck(String ldapAttribute, String ldapValue) {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_WITH_LDAP_FEATURE_CHECK,
+                Filter.createANDFilter(
+                        FILTER_ALL_NON_SYSTEM_ACCOUNTS,
+                        Filter.createEqualityFilter(ldapAttribute, ldapValue)
+                ));
     }
 
     /*
