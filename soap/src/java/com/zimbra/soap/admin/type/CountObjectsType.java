@@ -52,7 +52,10 @@ public enum CountObjectsType {
     internalUserAccountWithViewInHtml(false, false),
     internalUserAccountWithChatAll(false, false),
     internalUserAccountWithVideoAll(false, false),
-    internalUserAccountWithDocumentEditing(false, false);
+    internalUserAccountWithDocumentEditing(false, false),
+    internalUserAccountsByCosesWithLdapFeature(false, false),
+    internalUserAccountsByCosWithLdapFeature(false, false),
+    internalUserAccountsWithLdapFeatureCheck(false, false);
 
     private boolean allowsDomain;
     private boolean allowsUCService;
