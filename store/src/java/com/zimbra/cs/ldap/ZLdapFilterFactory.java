@@ -53,7 +53,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNTS_HOMED_ON_SERVER_ACCOUNTS_ONLY(SINGLETON.accountsHomedOnServerAccountsOnly("{SERVER-SERVICE-HOSTNAME}")),
         ACCOUNTS_ON_SERVER_AND_COS_HAS_SUBORDINATES(SINGLETON.accountsOnServerAndCosHasSubordinates("{SERVER-SERVICE-HOSTNAME}", "{COS-ID}")),
         ACCOUNTS_ON_UCSERVICE(SINGLETON.accountsOnUCService("{UCSERVICE-ID}")),
-
+        ACCOUNTS_BY_COSES_AND_LDAP_FEATURE_CHECK(SINGLETON.accountsByCosesAndFeatureCheck(Lists.newArrayList("{COS-ID-1}", "{COS-ID-2}", "..."), "{LDAP_ATTRIBUTE}")),
+        ACCOUNTS_BY_COS_AND_LDAP_FEATURE_CHECK(SINGLETON.accountsByCosAndFeatureCheck("{COS-ID-1}", "{LDAP_ATTRIBUTE}")),
+        ACCOUNTS_WITH_LDAP_FEATURE_CHECK(SINGLETON.accountsWithLdapFeatureCheck("{LDAP_ATTRIBUTE}", "{LDAP_VALUE}")),
         ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "{ADDR-2}", "..."})),
         ADMIN_ACCOUNT_BY_RDN(SINGLETON.adminAccountByRDN("{NAMING-RDN-ATTR}", "{NAME}")),
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
@@ -395,6 +397,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract  ZLdapFilter accountsWithChatAll();
     public abstract ZLdapFilter accountsWithVideoAll();
     public abstract ZLdapFilter accountsWithDocumentEditing();
+    public abstract  ZLdapFilter accountsByCosesAndFeatureCheck(List<String> cosIds, String ldapAttribute);
+    public abstract  ZLdapFilter accountsByCosAndFeatureCheck(String cosId, String ldapAttribute);
+    public abstract  ZLdapFilter accountsWithLdapFeatureCheck(String ldapAttribute, String ldapValue);
 
     /*
      * alias
