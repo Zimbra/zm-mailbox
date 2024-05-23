@@ -885,7 +885,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter accountsByCosAndFeatureCheck(String cosId, String ldapAttribute) {
         Cos cos = null;
         try {
-            cos = Provisioning.getInstance().get(Key.CosBy.id, cosId);
+            if(!cosId.contains("COS")) { // skipping dummy value cos fetching to avoid warning
+                cos = Provisioning.getInstance().get(Key.CosBy.id, cosId);
+            }
         } catch (Exception e) {
             ZimbraLog.system.warn(String.format("unable to fetch cos %s", cosId));
         }
