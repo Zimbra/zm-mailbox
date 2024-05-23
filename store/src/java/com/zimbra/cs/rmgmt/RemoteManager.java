@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +35,9 @@ import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.common.session.SessionHeartbeatController.HeartbeatType;
 import org.apache.sshd.common.util.security.SecurityUtils;
+import org.apache.sshd.core.CoreModuleProperties;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
@@ -160,40 +163,59 @@ public class RemoteManager {
 
     public static RemoteResult executeRemoteCommand(String username, String host, int port, File privateKey,
             String mShimCommand, String command) throws Exception {
+
         long defaultTimeoutSeconds = 100l;
         String send = "HOST:" + host + " " + command;
         InputStream inputStream = new ByteArrayInputStream(send.getBytes());
+
+        Duration timeout = Duration.ofMinutes(LC.zimbra_remote_cmd_channel_timeout_min.intValue());
+
         SshClient client = SshClient.setUpDefaultClient();
         client.start();
+
         ConnectFuture cf = client.connect(username, host, port);
+
+
         try (ClientSession session = cf.verify().getSession();) {
             session.addPublicKeyIdentity(loadKeypair(privateKey.getAbsolutePath()));
             session.auth().verify(defaultTimeoutSeconds, TimeUnit.SECONDS);
+
+            session.setSessionHeartbeat(HeartbeatType.IGNORE, TimeUnit.MINUTES, 1);
+
+            CoreModuleProperties.IDLE_TIMEOUT.set(session, timeout);
+
             ZimbraLog.rmgmt.debug("executing shim command '%s'", mShimCommand);
+
             try (ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
                     ByteArrayOutputStream errorResponseStream = new ByteArrayOutputStream();
                     ChannelExec channel = session.createExecChannel(mShimCommand);) {
+
                 ZimbraLog.rmgmt.debug("sending mgmt command '%s'", send);
+
                 channel.setIn(inputStream);
                 channel.setOut(responseStream);
                 channel.setErr(errorResponseStream);
                 channel.open().await();
+
                 try {
-                    channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),
-                            TimeUnit.MINUTES.toMillis(LC.zimbra_remote_cmd_channel_timeout_min.intValue()));
+                    channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), timeout);
                     session.close(false);
-                    RemoteResult result = new RemoteResult();
+
                     ClientChannel.validateCommandExitStatusCode(mShimCommand, channel.getExitStatus());
                     InputStream stdout = new ByteArrayInputStream(responseStream.toByteArray());
                     InputStream stderr = new ByteArrayInputStream(errorResponseStream.toByteArray());
+
+                    RemoteResult result = new RemoteResult();
                     result.mStdout = ByteUtil.getContent(stdout, -1);
                     result.mStderr = ByteUtil.getContent(stderr, -1);
                     result.mExitStatus = channel.getExitStatus();
+
                     if (result.mExitStatus != 0) {
                         throw new IOException("command failed: exit status=" + result.mExitStatus + ", stdout="
                                 + new String(result.mStdout) + ", stderr=" + new String(result.mStderr));
                     }
                     result.mExitSignal = channel.getExitSignal();
+
                     return result;
                 } finally {
                     channel.close(false);
