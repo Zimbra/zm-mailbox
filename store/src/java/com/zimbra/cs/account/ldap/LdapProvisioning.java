@@ -3906,6 +3906,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_COS);
             zlc.deleteEntry(c.getDN());
+            validate(ProvisioningValidator.DELETE_COS, c);
             cosCache.remove(c);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge cos: "+zimbraId, e);
