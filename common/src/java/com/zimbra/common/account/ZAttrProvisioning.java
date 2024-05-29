@@ -5439,6 +5439,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceIsInternal = "zimbraDataSourceIsInternal";
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether this data source corresponds to an account on the Zimbra
      * system being proxied
      *
@@ -7299,6 +7300,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMobileAppEnabled = "zimbraFeatureMobileAppEnabled";
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @since ZCS 8.7.0,9.0.0
@@ -9332,6 +9334,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIsExternalVirtualAccount = "zimbraIsExternalVirtualAccount";
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway app
      *
      * @since ZCS 8.7.0
@@ -9340,6 +9343,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIsMobileGatewayAppAccount = "zimbraIsMobileGatewayAppAccount";
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * whether or not an account represents a Mobile Gateway Proxy account
      *
      * @since ZCS 8.7.0,9.0.0
@@ -10801,8 +10805,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileForceSamsungProtocol25 = "zimbraMobileForceSamsungProtocol25";
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
-     * created
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: id of
+     * the doamin under which (hidden) accounts for apps would be created
      *
      * @since ZCS 8.7.0
      */
@@ -10810,11 +10814,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileGatewayDefaultAppAccountDomainId = "zimbraMobileGatewayDefaultAppAccountDomainId";
 
     /**
-     * Id of the domain under which &quot;Proxy&quot; accounts would be
-     * created. One can configure the system to act as a &quot;Proxy&quot; to
-     * another Zimbra system. When the Proxy mode is enabled, some accounts
-     * in the system would be syncing mailbox data from a Zimbra account
-     * hosted on a different Zimbra system into a data source.
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: Id of
+     * the domain under which &quot;Proxy&quot; accounts would be created.
+     * One can configure the system to act as a &quot;Proxy&quot; to another
+     * Zimbra system. When the Proxy mode is enabled, some accounts in the
+     * system would be syncing mailbox data from a Zimbra account hosted on a
+     * different Zimbra system into a data source.
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -10822,7 +10827,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileGatewayDefaultProxyAccountDomainId = "zimbraMobileGatewayDefaultProxyAccountDomainId";
 
     /**
-     * IMAP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * connection type of the Zimbra system being proxied
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -10830,7 +10836,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileGatewayProxyImapConnectionType = "zimbraMobileGatewayProxyImapConnectionType";
 
     /**
-     * IMAP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * host name of the Zimbra system being proxied
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -10838,7 +10845,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileGatewayProxyImapHost = "zimbraMobileGatewayProxyImapHost";
 
     /**
-     * IMAP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * port of the Zimbra system being proxied
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -10846,7 +10854,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileGatewayProxyImapPort = "zimbraMobileGatewayProxyImapPort";
 
     /**
-     * SMTP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * connection type of the Zimbra system being proxied
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -10854,7 +10863,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileGatewayProxySmtpConnectionType = "zimbraMobileGatewayProxySmtpConnectionType";
 
     /**
-     * SMTP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * host name of the Zimbra system being proxied
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -10862,7 +10872,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileGatewayProxySmtpHost = "zimbraMobileGatewayProxySmtpHost";
 
     /**
-     * SMTP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * port of the Zimbra system being proxied
      *
      * @since ZCS 8.7.0,9.0.0
      */
@@ -15362,6 +15373,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefZimletTreeOpen = "zimbraPrefZimletTreeOpen";
 
     /**
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Option to turn on/off zimbra mobile gateway push notifications
      *
      * @since ZCS 8.7.0,9.0.0
