@@ -97,6 +97,8 @@ public class AccountServiceException extends ServiceException {
     public static final String INVALID_TRUSTED_DEVICE_TOKEN = "account.INVALID_TRUSTED_DEVICE_TOKEN";
     public static final String TWO_FACTOR_AUTH_FAILED = "account.TWO_FACTOR_AUTH_FAILED";
     public static final String TWO_FACTOR_AUTH_REQUIRED = "account.TWO_FACTOR_AUTH_REQUIRED";
+    public static final String TWO_FACTOR_AUTH_METHOD_NOT_ALLOWED = "account.TWO_FACTOR_AUTH_METHOD_NOT_ALLOWED";
+    public static final String TWO_FACTOR_AUTH_INVALID_CONFIG = "account.TWO_FACTOR_AUTH_INVALID_CONFIG";
     public static final String NO_SUCH_ORG_UNIT = "account.NO_SUCH_ORG_UNIT";
     public static final String WEB_CLIENT_ACCESS_NOT_ALLOWED = "account.WEB_CLIENT_ACCESS_NOT_ALLOWED";
 
@@ -438,6 +440,14 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException TWO_FACTOR_AUTH_REQUIRED() {
         return new AccountServiceException("two-factor auth required", TWO_FACTOR_AUTH_REQUIRED, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException TWO_FACTOR_AUTH_METHOD_NOT_ALLOWED(String method) {
+        return new AccountServiceException(method + " method is not allowed" , TWO_FACTOR_AUTH_METHOD_NOT_ALLOWED, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException TWO_FACTOR_AUTH_INVALID_CONFIG(String message) {
+        return new AccountServiceException(message, TWO_FACTOR_AUTH_INVALID_CONFIG, RECEIVERS_FAULT, null);
     }
 
     public static AccountServiceException ALIAS_EXISTS(String name) {

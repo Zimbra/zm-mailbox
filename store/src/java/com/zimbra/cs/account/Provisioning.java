@@ -424,6 +424,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
                                      boolean checkImmutable)
     throws ServiceException;
 
+    public void modifyLdapAttrs(Entry e,
+            Map<String, ? extends Object> attrs)
+            throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     public void modifyAttrs(Entry e,
             Map<String, ? extends Object> attrs,
             boolean checkImmutable,
@@ -2532,6 +2538,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
+    public long countObjects(CountObjectsType type, Object... args) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     /**
      * checks to make sure the specified address is a valid email address (addr part only, no personal part)
      *
@@ -2602,11 +2612,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
             "createAccountCheckDomainCosAndFeature";
         static final String MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE =
             "modifyAccountCheckDomainCosAndFeature";
+        static final String MODIFY_ACCOUNT_COS_AND_FEATURE_SUCCEEDED =
+                "modifyAccountCosAndFeaturesSucceeded";
         static final String RENAME_ACCOUNT = "renameAccount";
         static final String RENAME_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE =
             "renameAccountCheckDomainCosAndFeature";
         static final String DELETE_ACCOUNT_SUCCEEDED = "deleteAccountSucceeded";
         static final String DELETE_ACCOUNT = "deleteAccount";
+        static final String CREATE_COS = "createCos";
 
         void validate(Provisioning prov, String action, Object... args) throws ServiceException;
         void refresh();

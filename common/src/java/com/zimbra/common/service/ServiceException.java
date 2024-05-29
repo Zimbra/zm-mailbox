@@ -40,6 +40,7 @@ public class ServiceException extends Exception {
     public static final String INVALID_REQUEST = "service.INVALID_REQUEST";
     public static final String UNKNOWN_DOCUMENT = "service.UNKNOWN_DOCUMENT";
     public static final String PARSE_ERROR = "service.PARSE_ERROR";
+    public static final String LICENSE_ERROR = "service.LICENSE_ERROR";
     public static final String RESOURCE_UNREACHABLE = "service.RESOURCE_UNREACHABLE";
     public static final String TEMPORARILY_UNAVAILABLE = "service.TEMPORARILY_UNAVAILABLE";
     public static final String PERM_DENIED = "service.PERM_DENIED";
@@ -293,6 +294,13 @@ public class ServiceException extends Exception {
      */
     public static ServiceException FAILURE(String message, Throwable cause) {
         return new ServiceException("system failure: "+message, FAILURE, RECEIVERS_FAULT, cause);
+    }
+
+    /**
+     * license error
+     */
+    public static ServiceException LICENSE_ERROR(String message, Throwable cause) {
+        return new ServiceException("license error: "+message, LICENSE_ERROR, RECEIVERS_FAULT, cause);
     }
 
     public static ServiceException ERROR_WHILE_PARSING_UPLOAD(String message, Throwable cause) {

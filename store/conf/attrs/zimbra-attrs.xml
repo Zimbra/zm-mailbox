@@ -2006,12 +2006,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether end-user wants auto-complete from GAL. Feature must also be enabled.</desc>
 </attr>
 
-<attr id="374" name="zimbraNetworkLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox">
+<attr id="374" name="zimbraNetworkLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" deprecatedSince="10.1.0">
   <desc>Contents of a signed Zimbra license key - an XML string.</desc>
+  <deprecateDesc>deprecated in favor for new realtime license attributes</deprecateDesc>
 </attr>
 
-<attr id="375" name="zimbraNetworkActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1">
+<attr id="375" name="zimbraNetworkActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" deprecatedSince="10.1.0">
   <desc>A signed activation key that authorizes this installation.</desc>
+  <deprecateDesc>deprecated in favor for new realtime license attributes</deprecateDesc>
 </attr>
 
 <attr id="376" name="zimbraIsSystemResource" type="boolean" cardinality="single" optionalIn="account">
@@ -10440,19 +10442,22 @@ TODO: delete them permanently from here
   <desc>Define body: field for 2FA email in text format</desc>
 </attr>
 
-<attr id="4110" name="zimbraFeatureChatAllFeaturesEnabled" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+<attr id="4110" name="zimbraFeatureChatAllFeaturesEnabled" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0" deprecatedSince="10.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>When true, users can access all chat features, including private chats, group chats, and sending attachments</desc>
+  <deprecateDesc>Replaced by zimbraFeatureAdvancedChatEnabled</deprecateDesc>
 </attr>
 
-<attr id="4111" name="zimbraFeatureVideoAllFeaturesEnabled" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+<attr id="4111" name="zimbraFeatureVideoAllFeaturesEnabled" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0" deprecatedSince="10.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>When true, users can utilize all video features, such as scheduling meetings, screen sharing, video recording, and the waiting room</desc>
+  <deprecateDesc>Replaced by zimbraFeatureAdvancedChatVideoEnabled</deprecateDesc>
 </attr>
 
-<attr id="4112" name="zimbraFeatureMaxVideoParticipantsForUser" type="integer" min="0" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+<attr id="4112" name="zimbraFeatureMaxVideoParticipantsForUser" type="integer" min="0" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0" deprecatedSince="10.1.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>This numeric attribute defines the maximum number of participants a user can have in their meetings. For instance, if set to 5, the user can't host a meeting with more than five participants</desc>
+  <deprecateDesc>design decision to ensure that there is no limit on the number of video participants per user</deprecateDesc>
 </attr>
 
 <attr id="4113" name="zimbraServerVersionChangeNotificationDisabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="10.1.0">
@@ -10515,4 +10520,39 @@ TODO: delete them permanently from here
   <desc>Whether Chat feature is enabled or not</desc>
 </attr>
 
+<attr id="4127" name="zimbraNetworkRealtimeLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.0">
+  <desc>Zimbra product license code</desc>
+</attr>
+
+<attr id="4128" name="zimbraNetworkRealtimeActivation" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.0">
+  <desc>Zimbra product license information</desc>
+</attr>
+
+<attr id="4129" name="zimbraOfflineNetworkRealtimeLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.0">
+  <desc>Zimbra offline network license code</desc>
+</attr>
+
+
+<attr id="4130" name="zimbraFeatureAdvancedChatEnabled" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>When true, users can access all chat features, including private chats, group chats, and sending attachments</desc>
+</attr>
+
+<attr id="4131" name="zimbraFeatureAdvancedChatVideoEnabled" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>When true, users can utilize all video features, such as scheduling meetings, screen sharing, video recording, and the waiting room</desc>
+</attr>
+
+<attr id="4132" name="zimbraLicenseNotificationEmail" type="email" cardinality="single" optionalIn="globalConfig" since="10.1.0">
+  <desc>Email address for receiving Zimbra license notifications</desc>
+</attr>
+
+<attr id="4133" name="zimbraFeatureActualUsageCount" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.0">
+  <desc>Zimbra feature actual usage count</desc>
+</attr>
+
+<attr id="4134" name="zimbraFeatureSharedFolderMobileSyncEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
+</attr>
 </attrs>

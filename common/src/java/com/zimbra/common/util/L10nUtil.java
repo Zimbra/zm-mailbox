@@ -320,7 +320,12 @@ public class L10nUtil {
         // send Two Factor Auth Code for email method
         twoFactorAuthCodeEmailSubject,
         twoFactorAuthCodeEmailBodyText,
-        twoFactorAuthCodeEmailBodyHtml
+        twoFactorAuthCodeEmailBodyHtml,
+
+        // license notification email for exceeding usage count for feature
+        licenseFeaureOnHoldNotifierSubject,
+        licenseFeaureOnHoldNotifierBodyText,
+        licenseFeaureOnHoldNotifierBodyHtml
 
         // add other messages in the future...
     }

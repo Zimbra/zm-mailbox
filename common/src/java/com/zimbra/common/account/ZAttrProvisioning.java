@@ -6653,6 +6653,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalUserMailAddress = "zimbraExternalUserMailAddress";
 
     /**
+     * Zimbra feature actual usage count
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4133)
+    public static final String A_zimbraFeatureActualUsageCount = "zimbraFeatureActualUsageCount";
+
+    /**
      * RFC822 email address under verification for an account
      *
      * @since ZCS 8.8.5
@@ -6708,6 +6716,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1686)
     public static final String A_zimbraFeatureAdminPreferencesEnabled = "zimbraFeatureAdminPreferencesEnabled";
+
+    /**
+     * When true, users can access all chat features, including private
+     * chats, group chats, and sending attachments
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4130)
+    public static final String A_zimbraFeatureAdvancedChatEnabled = "zimbraFeatureAdvancedChatEnabled";
+
+    /**
+     * When true, users can utilize all video features, such as scheduling
+     * meetings, screen sharing, video recording, and the waiting room
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4131)
+    public static final String A_zimbraFeatureAdvancedChatVideoEnabled = "zimbraFeatureAdvancedChatVideoEnabled";
 
     /**
      * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
@@ -6821,8 +6847,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureChangePasswordEnabled = "zimbraFeatureChangePasswordEnabled";
 
     /**
-     * When true, users can access all chat features, including private
-     * chats, group chats, and sending attachments
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatEnabled. Orig desc: When true, users can
+     * access all chat features, including private chats, group chats, and
+     * sending attachments
      *
      * @since ZCS 10.1.0
      */
@@ -7252,8 +7280,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMarkMailForwardedAsRead = "zimbraFeatureMarkMailForwardedAsRead";
 
     /**
-     * This numeric attribute defines the maximum number of participants a
-     * user can have in their meetings. For instance, if set to 5, the user
+     * Deprecated since: 10.1.0. design decision to ensure that there is no
+     * limit on the number of video participants per user. Orig desc: This
+     * numeric attribute defines the maximum number of participants a user
+     * can have in their meetings. For instance, if set to 5, the user
      * can&#039;t host a meeting with more than five participants
      *
      * @since ZCS 10.1.0
@@ -7478,6 +7508,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
 
     /**
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4134)
+    public static final String A_zimbraFeatureSharedFolderMobileSyncEnabled = "zimbraFeatureSharedFolderMobileSyncEnabled";
+
+    /**
      * enabled sharing
      */
     @ZAttr(id=335)
@@ -7608,8 +7649,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureTwoFactorAuthRequired = "zimbraFeatureTwoFactorAuthRequired";
 
     /**
-     * When true, users can utilize all video features, such as scheduling
-     * meetings, screen sharing, video recording, and the waiting room
+     * Deprecated since: 10.1.0. Replaced by
+     * zimbraFeatureAdvancedChatVideoEnabled. Orig desc: When true, users can
+     * utilize all video features, such as scheduling meetings, screen
+     * sharing, video recording, and the waiting room
      *
      * @since ZCS 10.1.0
      */
@@ -9414,6 +9457,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4097)
     public static final String A_zimbraLicenseDaemonServerHost = "zimbraLicenseDaemonServerHost";
+
+    /**
+     * Email address for receiving Zimbra license notifications
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4132)
+    public static final String A_zimbraLicenseNotificationEmail = "zimbraLicenseNotificationEmail";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname
@@ -12755,7 +12806,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMyoneloginSamlSigningCert = "zimbraMyoneloginSamlSigningCert";
 
     /**
-     * A signed activation key that authorizes this installation.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: A signed activation key that authorizes this
+     * installation.
      */
     @ZAttr(id=375)
     public static final String A_zimbraNetworkActivation = "zimbraNetworkActivation";
@@ -12780,7 +12833,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
 
     /**
-     * Contents of a signed Zimbra license key - an XML string.
+     * Deprecated since: 10.1.0. deprecated in favor for new realtime license
+     * attributes. Orig desc: Contents of a signed Zimbra license key - an
+     * XML string.
      */
     @ZAttr(id=374)
     public static final String A_zimbraNetworkLicense = "zimbraNetworkLicense";
@@ -12803,6 +12858,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2117)
     public static final String A_zimbraNetworkModulesNGEnabled = "zimbraNetworkModulesNGEnabled";
+
+    /**
+     * Zimbra product license information
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4128)
+    public static final String A_zimbraNetworkRealtimeActivation = "zimbraNetworkRealtimeActivation";
+
+    /**
+     * Zimbra product license code
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4127)
+    public static final String A_zimbraNetworkRealtimeLicense = "zimbraNetworkRealtimeLicense";
 
     /**
      * Template used to construct the body of an email notification message.
@@ -13017,6 +13088,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=161)
     public static final String A_zimbraObjectType = "zimbraObjectType";
+
+    /**
+     * Zimbra offline network license code
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4129)
+    public static final String A_zimbraOfflineNetworkRealtimeLicense = "zimbraOfflineNetworkRealtimeLicense";
 
     /**
      * temporary RFC822 email address of this recipient for accepting mail

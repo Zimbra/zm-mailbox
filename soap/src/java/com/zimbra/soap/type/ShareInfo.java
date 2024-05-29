@@ -33,7 +33,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonPropertyOrder({ "ownerId", "ownerEmail", "ownerName", "folderId", "folderUuid", "folderPath", "view", "rights",
-    "granteeType", "granteeId", "granteeName", "granteeDisplayName", "mid" })
+    "granteeType", "granteeId", "granteeName", "granteeDisplayName", "mid", "activeSyncDisabled" })
 @GraphQLType(name=GqlConstants.CLASS_SHARE_INFO, description="share info")
 public class ShareInfo {
 
@@ -129,6 +129,13 @@ public class ShareInfo {
     @XmlAttribute(name=AccountConstants.A_MOUNTPOINT_ID /* mid */, required=false)
     private String mountpointId;
 
+    /**
+     * @zm-api-field-tag activeSyncDisabled
+     * @zm-api-field-description activesync is disabled
+     */
+    @XmlAttribute(name=AccountConstants.A_ACTIVESYNC_DISABLED /* granteeDisplayName */, required=true)
+    private boolean activeSyncDisabled;
+
     public ShareInfo() {
     }
 
@@ -223,7 +230,16 @@ public class ShareInfo {
     @GraphQLQuery(name=GqlConstants.MOUNTPOINT_ID, description="mountpoint id")
     public String getMountpointId() { return mountpointId; }
 
-    @Override
+    public void setActiveSyncDisabled(boolean activeSyncDisabled) {
+		this.activeSyncDisabled = activeSyncDisabled;
+	}
+
+    @GraphQLQuery(name=GqlConstants.ACTIVESYNC_DISABLED, description="disbale activesync")
+    public boolean isActiveSyncDisabled() {
+		return activeSyncDisabled;
+	}
+
+	@Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("ownerId", ownerId)
@@ -239,6 +255,8 @@ public class ShareInfo {
             .add("granteeName", granteeName)
             .add("granteeDisplayName", granteeDisplayName)
             .add("mountpointId", mountpointId)
+            .add("activeSyncDisabled", activeSyncDisabled)
             .toString();
     }
+
 }

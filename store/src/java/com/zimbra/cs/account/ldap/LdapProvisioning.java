@@ -492,6 +492,40 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         AttributeManager.getInstance().preModify(attrs, e, callbackContext, checkImmutable, allowCallback);
         modifyAttrsInternal(e, null, attrs);
         AttributeManager.getInstance().postModify(attrs, e, callbackContext, allowCallback);
+
+        postModificationValidation(e, attrs);
+
+    }
+
+    /**
+     * Performing post validation
+     * @param e
+     * @param attrs
+     * @throws ServiceException
+     */
+    private void postModificationValidation(Entry e, Map<String, ?> attrs) throws ServiceException {
+        boolean isAccount = e instanceof Account;
+        boolean isNotCalendarResource = !(e instanceof CalendarResource);
+        if (isAccount && isNotCalendarResource) {
+            Account acct = (Account) e;
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_COS_AND_FEATURE_SUCCEEDED,
+                    acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
+        }
+        if (e instanceof LdapCos) {
+            LdapCos cos = (LdapCos) e;
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_COS_AND_FEATURE_SUCCEEDED, null, attrs, cos);
+        }
+    }
+
+    /**
+     * Modifies the attributes in the LDAP
+     * @param e
+     * @param attrs
+     * @throws ServiceException
+     */
+    public void modifyLdapAttrs(Entry e, Map<String, ? extends Object> attrs)
+            throws ServiceException {
+        modifyLdapAttrs(e, null, attrs);
     }
 
     @Override
@@ -541,6 +575,15 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE,
                     acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
         }
+
+        // validating the cos attributes while modifying
+        // restricting the COS modification, if any of the feature status or
+        // license status is in grace period
+        if (entry instanceof LdapCos) {
+            LdapCos cos = (LdapCos) entry;
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, null, attrs, cos);
+        }
+
         if (!storeEphemeralInLdap) {
             Map<String, AttributeInfo> ephemeralAttrMap = AttributeManager.getInstance().getEphemeralAttrs();
             Map<String, Object> ephemeralAttrs = new HashMap<String, Object>();
@@ -1250,7 +1293,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String[] additionalObjectClasses,
             boolean restoring, Map<String, Object> origAttrs)
     throws ServiceException {
-
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
 
@@ -1267,7 +1309,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         emailAddress = localPart + "@" + domain;
 
         validEmailAddress(emailAddress);
-
         if (restoring) {
             validate(ProvisioningValidator.CREATE_ACCOUNT,
                     emailAddress, additionalObjectClasses, origAttrs);
@@ -1286,7 +1327,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
         callbackContext.setCreatingEntryName(emailAddress);
         AttributeManager.getInstance().preModify(acctAttrs, null, callbackContext, true);
-
         Account acct = null;
         String dn = null;
         ZLdapContext zlc = null;
@@ -1509,7 +1549,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } catch (AccountServiceException e) {
             throw e;
         } catch (ServiceException e) {
-           throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
+            if (ServiceException.LICENSE_ERROR.equalsIgnoreCase(e.getCode())
+                    && null != acct) {
+                modifyAccountStatus(acct, AccountStatus.maintenance.name());
+                deleteAccount(acct.getId());
+            }
+            throw ServiceException.FAILURE("unable to create account: " + emailAddress, e);
         } finally {
             LdapClient.closeContext(zlc);
 
@@ -3113,6 +3158,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         allAttrs.remove(Provisioning.A_cn);
         allAttrs.remove(Provisioning.A_description);
         if (cosAttrs != null) {
+            // validating the cos attributes while creating a COS
+            // restricting the COS creation, if any of the feature status or
+            // license status is in grace period
+            validate(ProvisioningValidator.CREATE_COS, cosAttrs);
             for (Map.Entry<String, Object> e : cosAttrs.entrySet()) {
                 String attr = e.getKey();
                 Object value = e.getValue();
@@ -5826,17 +5875,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             boolean allowFallback = true;
             if (!authMech.isZimbraAuth()) {
-                allowFallback =
-                    domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
-                    acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
-                    acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+                allowFallback = domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false);
             }
 
             try {
                 authMech.doAuth(this, domain, acct, password, context);
                 AuthMech authedByMech = authMech.getMechanism();
-                // indicate the authed by mech in the auth context
-                // context.put(AuthContext.AC_AUTHED_BY_MECH, authedByMech); TODO
                 return;
             } catch (ServiceException e) {
                 if (!allowFallback || authMech.isZimbraAuth())
@@ -5847,7 +5891,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             // fall back to zimbra default auth
             AuthMechanism.doZimbraAuth(this, domain, acct, password, context);
-            // context.put(AuthContext.AC_AUTHED_BY_MECH, Provisioning.AM_ZIMBRA); // TODO
         }
     }
 
@@ -9322,6 +9365,76 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             num += countObjects(base, filter);
         }
 
+        return num;
+    }
+
+    @Override
+    public long countObjects(CountObjectsType type, Object... args) throws ServiceException {
+        if (null == type) {
+            throw ServiceException.OPERATION_DENIED("Counting failed : Invalid type");
+        }
+        if (null == args || 0 == args.length) {
+            throw ServiceException.OPERATION_DENIED("Counting failed : Invalid arguments");
+        }
+
+        ZLdapFilter filter = null;
+
+        // setup types for finding bases
+        Set<ObjectType> types = Sets.newHashSet();
+        int argsLength = args.length;
+        String ldapAttribute = null;
+        switch (type) {
+            case internalUserAccountsByCosesWithLdapFeature: // multiple cos ids
+                boolean isAccountsByCosesWithLdapFeatureCheck =
+                        argsLength == 2 &&
+                                args[0] instanceof List &&
+                                args[1] instanceof String;
+                if (!isAccountsByCosesWithLdapFeatureCheck) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting accounts By Coses and Feature check Failed : Invalid Arguments");
+                }
+                List<String> cosIds = (List<String>) args[0];
+                ldapAttribute = (String) args[1];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsByCosesAndFeatureCheck(cosIds, ldapAttribute);
+                break;
+            case internalUserAccountsByCosWithLdapFeature:// single cos id
+                boolean isAccountsByCosWithLdapFeatureCheck =
+                        argsLength == 2 &&
+                                args[0] instanceof String &&
+                                args[1] instanceof String;
+                if (!isAccountsByCosWithLdapFeatureCheck) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting accounts By Cos and Feature check Failed : Invalid Arguments");
+                }
+                String cosId = (String) args[0];
+                ldapAttribute = (String) args[1];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsByCosAndFeatureCheck(cosId, ldapAttribute);
+                break;
+            case internalUserAccountsWithLdapFeatureCheck: // accounts with a feature enabled or disabled
+                boolean isAccountsWithLdapFeatureCheck =
+                        argsLength == 2 &&
+                                args[0] instanceof String &&
+                                args[1] instanceof String;
+                if (!isAccountsWithLdapFeatureCheck) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting accounts with Feature check Failed : Invalid Arguments");
+                }
+                ldapAttribute = (String) args[0];
+                String ldapValue = (String) args[1];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsWithLdapFeatureCheck(ldapAttribute, ldapValue);
+                break;
+            default:
+                throw ServiceException.FAILURE("unsupported counting", null);
+        }
+        String[] bases = getSearchBases(null, types);
+
+        long num = 0;
+        for (String base : bases) {
+            num += countObjects(base, filter);
+        }
         return num;
     }
 

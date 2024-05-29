@@ -53,7 +53,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNTS_HOMED_ON_SERVER_ACCOUNTS_ONLY(SINGLETON.accountsHomedOnServerAccountsOnly("{SERVER-SERVICE-HOSTNAME}")),
         ACCOUNTS_ON_SERVER_AND_COS_HAS_SUBORDINATES(SINGLETON.accountsOnServerAndCosHasSubordinates("{SERVER-SERVICE-HOSTNAME}", "{COS-ID}")),
         ACCOUNTS_ON_UCSERVICE(SINGLETON.accountsOnUCService("{UCSERVICE-ID}")),
-
+        ACCOUNTS_BY_COSES_AND_LDAP_FEATURE_CHECK(SINGLETON.accountsByCosesAndFeatureCheck(Lists.newArrayList("{COS-ID-1}", "{COS-ID-2}", "..."), "{LDAP_ATTRIBUTE}")),
+        ACCOUNTS_BY_COS_AND_LDAP_FEATURE_CHECK(SINGLETON.accountsByCosAndFeatureCheck("{COS-ID-1}", "{LDAP_ATTRIBUTE}")),
+        ACCOUNTS_WITH_LDAP_FEATURE_CHECK(SINGLETON.accountsWithLdapFeatureCheck("{LDAP_ATTRIBUTE}", "{LDAP_VALUE}")),
         ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "{ADDR-2}", "..."})),
         ADMIN_ACCOUNT_BY_RDN(SINGLETON.adminAccountByRDN("{NAMING-RDN-ATTR}", "{NAME}")),
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
@@ -203,8 +205,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNTS_WITH_SHARING("Filter in " + Provisioning.A_zimbraFeatureSharingEnabled),
         ACCOUNTS_WITH_BRIEFCASES("Filter in " + Provisioning.A_zimbraFeatureBriefcasesEnabled),
         ACCOUNTS_WITH_VIEW_IN_HTML("Filter in " + Provisioning.A_zimbraFeatureViewInHtmlEnabled),
-        ACCOUNTS_WITH_CHAT_ALL("Filter in " + Provisioning.A_zimbraFeatureChatAllFeaturesEnabled),
-        ACCOUNTS_WITH_VIDEO_ALL("Filter in " + Provisioning.A_zimbraFeatureVideoAllFeaturesEnabled),
+        ACCOUNTS_WITH_CHAT_ALL("Filter in " + Provisioning.A_zimbraFeatureAdvancedChatEnabled),
+        ACCOUNTS_WITH_VIDEO_ALL("Filter in " + Provisioning.A_zimbraFeatureAdvancedChatVideoEnabled),
         ACCOUNTS_WITH_DOCUMENT_EDITING("Filter in " + Provisioning.A_zimbraFeatureDocumentEditingEnabled),
         ;
 
@@ -395,6 +397,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract  ZLdapFilter accountsWithChatAll();
     public abstract ZLdapFilter accountsWithVideoAll();
     public abstract ZLdapFilter accountsWithDocumentEditing();
+    public abstract  ZLdapFilter accountsByCosesAndFeatureCheck(List<String> cosIds, String ldapAttribute);
+    public abstract  ZLdapFilter accountsByCosAndFeatureCheck(String cosId, String ldapAttribute);
+    public abstract  ZLdapFilter accountsWithLdapFeatureCheck(String ldapAttribute, String ldapValue);
 
     /*
      * alias
