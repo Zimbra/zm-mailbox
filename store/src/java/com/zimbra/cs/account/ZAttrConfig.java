@@ -36868,8 +36868,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
-     * created
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: id of
+     * the doamin under which (hidden) accounts for apps would be created
      *
      * @return zimbraMobileGatewayDefaultAppAccountDomainId, or null if unset
      *
@@ -36881,8 +36881,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
-     * created
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: id of
+     * the doamin under which (hidden) accounts for apps would be created
      *
      * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36897,8 +36897,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
-     * created
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: id of
+     * the doamin under which (hidden) accounts for apps would be created
      *
      * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
      * @param attrs existing map to populate, or null to create a new map
@@ -36914,8 +36914,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
-     * created
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: id of
+     * the doamin under which (hidden) accounts for apps would be created
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -36929,8 +36929,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
-     * created
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: id of
+     * the doamin under which (hidden) accounts for apps would be created
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -36945,11 +36945,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Id of the domain under which &quot;Proxy&quot; accounts would be
-     * created. One can configure the system to act as a &quot;Proxy&quot; to
-     * another Zimbra system. When the Proxy mode is enabled, some accounts
-     * in the system would be syncing mailbox data from a Zimbra account
-     * hosted on a different Zimbra system into a data source.
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: Id of
+     * the domain under which &quot;Proxy&quot; accounts would be created.
+     * One can configure the system to act as a &quot;Proxy&quot; to another
+     * Zimbra system. When the Proxy mode is enabled, some accounts in the
+     * system would be syncing mailbox data from a Zimbra account hosted on a
+     * different Zimbra system into a data source.
      *
      * @return zimbraMobileGatewayDefaultProxyAccountDomainId, or null if unset
      *
@@ -36961,11 +36962,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Id of the domain under which &quot;Proxy&quot; accounts would be
-     * created. One can configure the system to act as a &quot;Proxy&quot; to
-     * another Zimbra system. When the Proxy mode is enabled, some accounts
-     * in the system would be syncing mailbox data from a Zimbra account
-     * hosted on a different Zimbra system into a data source.
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: Id of
+     * the domain under which &quot;Proxy&quot; accounts would be created.
+     * One can configure the system to act as a &quot;Proxy&quot; to another
+     * Zimbra system. When the Proxy mode is enabled, some accounts in the
+     * system would be syncing mailbox data from a Zimbra account hosted on a
+     * different Zimbra system into a data source.
      *
      * @param zimbraMobileGatewayDefaultProxyAccountDomainId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -36980,11 +36982,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Id of the domain under which &quot;Proxy&quot; accounts would be
-     * created. One can configure the system to act as a &quot;Proxy&quot; to
-     * another Zimbra system. When the Proxy mode is enabled, some accounts
-     * in the system would be syncing mailbox data from a Zimbra account
-     * hosted on a different Zimbra system into a data source.
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: Id of
+     * the domain under which &quot;Proxy&quot; accounts would be created.
+     * One can configure the system to act as a &quot;Proxy&quot; to another
+     * Zimbra system. When the Proxy mode is enabled, some accounts in the
+     * system would be syncing mailbox data from a Zimbra account hosted on a
+     * different Zimbra system into a data source.
      *
      * @param zimbraMobileGatewayDefaultProxyAccountDomainId new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37000,11 +37003,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Id of the domain under which &quot;Proxy&quot; accounts would be
-     * created. One can configure the system to act as a &quot;Proxy&quot; to
-     * another Zimbra system. When the Proxy mode is enabled, some accounts
-     * in the system would be syncing mailbox data from a Zimbra account
-     * hosted on a different Zimbra system into a data source.
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: Id of
+     * the domain under which &quot;Proxy&quot; accounts would be created.
+     * One can configure the system to act as a &quot;Proxy&quot; to another
+     * Zimbra system. When the Proxy mode is enabled, some accounts in the
+     * system would be syncing mailbox data from a Zimbra account hosted on a
+     * different Zimbra system into a data source.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37018,11 +37022,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Id of the domain under which &quot;Proxy&quot; accounts would be
-     * created. One can configure the system to act as a &quot;Proxy&quot; to
-     * another Zimbra system. When the Proxy mode is enabled, some accounts
-     * in the system would be syncing mailbox data from a Zimbra account
-     * hosted on a different Zimbra system into a data source.
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: Id of
+     * the domain under which &quot;Proxy&quot; accounts would be created.
+     * One can configure the system to act as a &quot;Proxy&quot; to another
+     * Zimbra system. When the Proxy mode is enabled, some accounts in the
+     * system would be syncing mailbox data from a Zimbra account hosted on a
+     * different Zimbra system into a data source.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -37037,7 +37042,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl, tls, tls_if_available]
      *
@@ -37051,7 +37057,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl, tls, tls_if_available]
      *
@@ -37065,7 +37072,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl, tls, tls_if_available]
      *
@@ -37082,7 +37090,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl, tls, tls_if_available]
      *
@@ -37100,7 +37109,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl, tls, tls_if_available]
      *
@@ -37117,7 +37127,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl, tls, tls_if_available]
      *
@@ -37135,7 +37146,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl, tls, tls_if_available]
      *
@@ -37151,7 +37163,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl, tls, tls_if_available]
      *
@@ -37168,7 +37181,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * host name of the Zimbra system being proxied
      *
      * @return zimbraMobileGatewayProxyImapHost, or null if unset
      *
@@ -37180,7 +37194,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * host name of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxyImapHost new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37195,7 +37210,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * host name of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxyImapHost new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37211,7 +37227,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * host name of the Zimbra system being proxied
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37225,7 +37242,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * host name of the Zimbra system being proxied
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -37240,7 +37258,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * port of the Zimbra system being proxied
      *
      * <p>Use getMobileGatewayProxyImapPortAsString to access value as a string.
      *
@@ -37256,7 +37275,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * port of the Zimbra system being proxied
      *
      * @return zimbraMobileGatewayProxyImapPort, or null if unset
      *
@@ -37268,7 +37288,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * port of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxyImapPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37283,7 +37304,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * port of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxyImapPort new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37299,7 +37321,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * port of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxyImapPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37314,7 +37337,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * port of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxyImapPort new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37330,7 +37354,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * port of the Zimbra system being proxied
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37344,7 +37369,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * IMAP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: IMAP
+     * port of the Zimbra system being proxied
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -37359,7 +37385,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl]
      *
@@ -37373,7 +37400,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl]
      *
@@ -37387,7 +37415,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl]
      *
@@ -37404,7 +37433,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl]
      *
@@ -37422,7 +37452,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl]
      *
@@ -37439,7 +37470,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl]
      *
@@ -37457,7 +37489,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl]
      *
@@ -37473,7 +37506,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP connection type of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * connection type of the Zimbra system being proxied
      *
      * <p>Valid values: [cleartext, ssl]
      *
@@ -37490,7 +37524,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * host name of the Zimbra system being proxied
      *
      * @return zimbraMobileGatewayProxySmtpHost, or null if unset
      *
@@ -37502,7 +37537,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * host name of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxySmtpHost new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37517,7 +37553,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * host name of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxySmtpHost new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37533,7 +37570,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * host name of the Zimbra system being proxied
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37547,7 +37585,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP host name of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * host name of the Zimbra system being proxied
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -37562,7 +37601,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * port of the Zimbra system being proxied
      *
      * <p>Use getMobileGatewayProxySmtpPortAsString to access value as a string.
      *
@@ -37578,7 +37618,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * port of the Zimbra system being proxied
      *
      * @return zimbraMobileGatewayProxySmtpPort, or null if unset
      *
@@ -37590,7 +37631,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * port of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxySmtpPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37605,7 +37647,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * port of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxySmtpPort new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37621,7 +37664,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * port of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxySmtpPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37636,7 +37680,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * port of the Zimbra system being proxied
      *
      * @param zimbraMobileGatewayProxySmtpPort new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37652,7 +37697,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * port of the Zimbra system being proxied
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -37666,7 +37712,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * SMTP port of the Zimbra system being proxied
+     * Deprecated since: 10.1.0. unfinished feature removed. Orig desc: SMTP
+     * port of the Zimbra system being proxied
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
