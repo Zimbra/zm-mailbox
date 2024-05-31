@@ -1549,12 +1549,15 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } catch (AccountServiceException e) {
             throw e;
         } catch (ServiceException e) {
+            StringBuilder errorMsg = new StringBuilder();
+            errorMsg.append(String.format("unable to create account: %s", emailAddress));
             if (ServiceException.LICENSE_ERROR.equalsIgnoreCase(e.getCode())
                     && null != acct) {
                 modifyAccountStatus(acct, AccountStatus.maintenance.name());
                 deleteAccount(acct.getId());
+                errorMsg.append(String.format("\nReason : %s", e.getMessage()));
             }
-            throw ServiceException.FAILURE("unable to create account: " + emailAddress, e);
+            throw ServiceException.FAILURE(errorMsg.toString(), e);
         } finally {
             LdapClient.closeContext(zlc);
 
