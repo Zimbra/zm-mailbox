@@ -444,6 +444,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
                                      boolean allowCallback)
     throws ServiceException;
 
+    public void modifyAttrs(Entry e,
+            Map<String, ? extends Object> attrs,
+            boolean checkImmutable,
+            boolean allowCallback,
+            boolean isRestoring)
+            throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     public void restoreAccountAttrs(Account acct, Map<String, ? extends Object> backupAttrs)
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
