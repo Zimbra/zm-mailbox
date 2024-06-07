@@ -463,7 +463,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     throws ServiceException {
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.MODIFY);
         AttributeManager.getInstance().preModify(attrs, e, callbackContext, false, true);
-        modifyAttrsInternal(e, null, attrs, true);
+        modifyAttrsInternal(e, null, attrs, true, false);
         AttributeManager.getInstance().postModify(attrs, e, callbackContext, true);
     }
 
@@ -492,9 +492,28 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         AttributeManager.getInstance().preModify(attrs, e, callbackContext, checkImmutable, allowCallback);
         modifyAttrsInternal(e, null, attrs);
         AttributeManager.getInstance().postModify(attrs, e, callbackContext, allowCallback);
-
         postModificationValidation(e, attrs);
+    }
 
+    /**
+     * Modifies this entry while restoring account  <code>attrs</code> is a <code>Map</code> consisting of
+     * keys that are <code>String</code>s, and values that are either
+     * <ul>
+     *   <li><code>null</code>, in which case the attr is removed</li>
+     *   <li>a single <code>Object</code>, in which case the attr is modified
+     *     based on the object's <code>toString()</code> value</li>
+     *   <li>an <code>Object</code> array or <code>Collection</code>,
+     *     in which case a multi-valued attr is updated</li>
+     * </ul>
+     */
+    @Override
+    public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs,
+            boolean checkImmutable, boolean allowCallback, boolean isRestoring)
+            throws ServiceException {
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.MODIFY);
+        AttributeManager.getInstance().preModify(attrs, e, callbackContext, checkImmutable, allowCallback);
+        modifyAttrsInternal(e, null, attrs, isRestoring);
+        AttributeManager.getInstance().postModify(attrs, e, callbackContext, allowCallback);
     }
 
     /**
@@ -552,14 +571,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         attrs.put(A_objectClass, needOCs.toArray(new String[needOCs.size()]));
 
-        modifyAttrs(acct, attrs, false, false);
+        modifyAttrs(acct, attrs, false, false, true);
     }
 
     protected void modifyAttrsInternal(Entry entry, ZLdapContext initZlc,
             Map<String, ? extends Object> attrs)
             throws ServiceException {
-        modifyAttrsInternal(entry, initZlc, attrs, false);
+        modifyAttrsInternal(entry, initZlc, attrs, false, false);
     }
+
+    protected void modifyAttrsInternal(Entry entry, ZLdapContext initZlc,
+            Map<String, ? extends Object> attrs, boolean isRestoring)
+            throws ServiceException {
+        modifyAttrsInternal(entry, initZlc, attrs, false, isRestoring);
+    }
+
     /**
      * should only be called internally.
      *
@@ -568,12 +594,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * @throws ServiceException
      */
     protected void modifyAttrsInternal(Entry entry, ZLdapContext initZlc,
-            Map<String, ? extends Object> attrs, boolean storeEphemeralInLdap)
+            Map<String, ? extends Object> attrs, boolean storeEphemeralInLdap, boolean isRestoring)
             throws ServiceException {
         if (entry instanceof Account && !(entry instanceof CalendarResource)) {
             Account acct = (Account) entry;
             validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE,
-                    acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
+                    acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct, isRestoring);
         }
 
         // validating the cos attributes while modifying
@@ -581,7 +607,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         // license status is in grace period
         if (entry instanceof LdapCos) {
             LdapCos cos = (LdapCos) entry;
-            validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, null, attrs, cos);
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, null, attrs, cos, isRestoring);
         }
 
         if (!storeEphemeralInLdap) {
@@ -1537,7 +1563,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             AttributeManager.getInstance().postModify(acctAttrs, acct, callbackContext);
             removeExternalAddrsFromAllDynamicGroups(acct.getAllAddrsSet(), zlc);
-            validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED, emailAddress, acct, skipCountingLicenseQuota);
+            validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED, emailAddress, acct, skipCountingLicenseQuota, restoring);
             if (password != null) {
                 setLdapPassword(acct, zlc, password);
             }
@@ -1551,7 +1577,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } catch (ServiceException e) {
             StringBuilder errorMsg = new StringBuilder();
             errorMsg.append(String.format("unable to create account: %s", emailAddress));
-            if (ServiceException.LICENSE_ERROR.equalsIgnoreCase(e.getCode())
+            if (!restoring && ServiceException.LICENSE_ERROR.equalsIgnoreCase(e.getCode())
                     && null != acct) {
                 modifyAccountStatus(acct, AccountStatus.maintenance.name());
                 deleteAccount(acct.getId());
