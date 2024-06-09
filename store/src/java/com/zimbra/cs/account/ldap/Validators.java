@@ -210,7 +210,7 @@ final public class Validators {
             }
 
             Account account = null;
-            if (args.length == 3)
+            if (args.length >= 3)
                 account = (Account) args[2];
             String domainName = null;
             int index = emailAddress.indexOf('@');
