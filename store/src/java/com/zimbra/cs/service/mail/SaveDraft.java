@@ -103,14 +103,19 @@ public class SaveDraft extends MailDocumentHandler {
         // if mail is not delegated to be Send As, then the delegator account is the same as the account of the mailbox
         String mailAddress = null;
         List<Element> elements = msgElem.listElements(MailConstants.E_EMAIL);
-        for (Element element : elements) {
-            if (element.getAttribute(MailConstants.A_ITEM_TYPE, null).equals(MailConstants.A_FLAGS)) {
-                mailAddress = element.getAttribute(MailConstants.A_ADDRESS, null);
+        if (elements != null) {
+            for (Element element : elements) {
+                if (element.getAttribute(MailConstants.A_ITEM_TYPE, null).equals(MailConstants.A_FLAGS)) {
+                    mailAddress = element.getAttribute(MailConstants.A_ADDRESS, null);
+                }
             }
         }
         String mId = msgElem.getAttribute(MailConstants.A_ID, String.valueOf(Mailbox.ID_AUTO_INCREMENT));
         ItemId iidMsg = mId == null ? null : new ItemId(mId, zsc);
-        int id = iidMsg.getId();
+        int id = 0;
+        if (iidMsg != null) {
+            id = iidMsg.getId();
+        }
         String originalId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
         ItemId iidOrigid = originalId == null ? null : new ItemId(originalId, zsc);
         String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, null);
@@ -192,18 +197,20 @@ public class SaveDraft extends MailDocumentHandler {
                 if (delegateeAccountId != null) {
                     delegateeAccount = prov.getAccountById(delegateeAccountId);
                     oct = new OperationContext(delegateeAccount);
-                } else {
+                } else if (delegatorMbox != null) {
                     oct = new OperationContext(delegatorMbox);
                 }
-                mm = ParseMimeMessage.parseMimeMsgSoap(zsc, oct, delegatorMbox, msgElem, null, mimeData);
-                SendMsg.doSendMessage(oct, delegatorMbox, mm, mimeData.uploads, null, "r", null, null, false,
-                        false, false, false);
+                if (oct != null && delegatorMbox != null) {
+                    mm = ParseMimeMessage.parseMimeMsgSoap(zsc, oct, delegatorMbox, msgElem, null, mimeData);
+                    SendMsg.doSendMessage(oct, delegatorMbox, mm, mimeData.uploads, null, "r", null, null, false,
+                            false, false, false);
+                }
                 Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
                 response.addElement(MailConstants.E_MSG);
                 return response;
             }
 
-            if (mailAddress != null) {
+            if (mailAddress != null && delegatorAccount != null) {
                 delegatorMbox = mbox;
                 if (Provisioning.onLocalServer(delegatorAccount)) {
                     msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
