@@ -512,6 +512,8 @@ public final class AdminConstants {
     public static final String E_ACTIVATE_LICENSE_RESPONSE = "ActivateLicenseResponse";
     public static final String E_GET_LICENSE_REQUEST = "GetLicenseRequest";
     public static final String E_GET_LICENSE_RESPONSE = "GetLicenseResponse";
+    public static final String E_LICENSE_USAGE_REPORTING_REQUEST = "LicenseUsageReportingRequest";
+    public static final String E_LICENSE_USAGE_REPORTING_RESPONSE = "LicenseUsageReportingResponse";
 
     // Auto Provision
     public static final String E_AUTO_PROV_ACCOUNT_REQUEST = "AutoProvAccountRequest";
@@ -1029,6 +1031,8 @@ public final class AdminConstants {
     public static final QName GET_LICENSE_RESPONSE = QName.get(E_GET_LICENSE_RESPONSE, NAMESPACE);
     public static final QName GET_OFFLINE_LICENSE_CERTIFICATE_REQUEST = QName.get(E_GET_OFFLINE_LICENSE_FINGERPRINT_REQUEST, NAMESPACE);
     public static final QName GET_OFFLINE_LICENSE_CERTIFICATE_RESPONSE = QName.get(E_GET_OFFLINE_LICENSE_FINGERPRINT_RESPONSE, NAMESPACE);
+    public static final QName LICENSE_USAGE_REPORTING_REQUEST = QName.get(E_LICENSE_USAGE_REPORTING_REQUEST, NAMESPACE);
+    public static final QName LICENSE_USAGE_REPORTING_RESPONSE = QName.get(E_LICENSE_USAGE_REPORTING_RESPONSE, NAMESPACE);
 
     // Auto provision
     public static final QName AUTO_PROV_ACCOUNT_REQUEST = QName.get(E_AUTO_PROV_ACCOUNT_REQUEST, NAMESPACE);
@@ -1563,6 +1567,8 @@ public final class AdminConstants {
     public static final String A_VALID_UNTIL = "validUntil";
     public static final String A_SERVER_TIME = "serverTime";
     public static final String A_FEATURE = "feature";
+    public static final String A_USAGE_REPORTING_ACTION = "usageReportingAction";
+    public static final String A_USAGE_REPORTING_STATS = "usageReportingStats";
 
     // Retention policy
     public static final String E_RETENTION_POLICY = "retentionPolicy";
