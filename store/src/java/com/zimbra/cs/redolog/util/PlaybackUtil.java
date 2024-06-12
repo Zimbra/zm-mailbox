@@ -375,6 +375,7 @@ public class PlaybackUtil {
             player.playback();
         } finally {
             teardown();
+            System.exit(0);
         }
     }
 
