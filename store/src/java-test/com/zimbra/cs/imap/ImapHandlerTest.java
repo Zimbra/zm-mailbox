@@ -5,7 +5,9 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.After;
@@ -21,11 +23,13 @@ import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.util.ZTestWatchman;
@@ -272,6 +276,37 @@ public class ImapHandlerTest {
         handler.setCredentials(null);
         Assert.assertTrue(handler.authenticate(LOCAL_USER, null, "secret", "logintag", null));
         Assert.assertFalse(handler.isAuthenticated());
+    }
+
+    @Test
+    public void testListFolderWithPlusSign() throws Exception {
+        final String troubleName = "BOB+ALICE";
+        final ImapHandler handler = new MockImapHandler();
+
+        final Account acct = Provisioning.getInstance().getAccount("12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
+        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+        final Folder folder = mbox.createFolder((OperationContext)null, troubleName, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
+
+        final ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
+        handler.setCredentials(creds);
+
+        ImapPath pathFolder = new MockImapPath(null, folder, creds);
+        handler.setSelectedFolder(pathFolder, (byte)0);
+
+        final String tag = ".";
+        final String referenceName = "";
+        final byte selectOptions = 0;
+        final byte returnOptions = 0;
+        final byte status = 0;
+
+        final Set<String> mailboxNames = new HashSet<>();
+        mailboxNames.add(troubleName);
+
+        handler.doLIST(tag, referenceName, mailboxNames, selectOptions, returnOptions, status);
+
+        final ByteArrayOutputStream baos = (ByteArrayOutputStream)handler.output;
+        final String expected = String.format("* LIST (\\HasNoChildren) \"/\" \"%s\"\r\n%s OK LIST completed\r\n", troubleName, tag);
+        Assert.assertEquals("Output of LIST", expected, baos.toString());
     }
 
     class MockImapPath extends ImapPath {
