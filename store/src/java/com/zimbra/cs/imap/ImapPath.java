@@ -58,8 +58,7 @@ public class ImapPath implements Comparable<ImapPath> {
             FOLDER_ENCODING_CHARSET = Charset.forName("imap-utf-7");
         } catch (Exception e) {
             ZimbraLog.imap.error(
-                "could not load imap-utf-7 charset (perhaps zimbra-charset.jar is not in the jetty endorsed directory)",
-                e);
+                "could not load imap-utf-7 charset (perhaps zimbra-charset.jar is not in the jetty endorsed directory)");
             FOLDER_ENCODING_CHARSET = Charset.forName("utf-8");
         }
     }

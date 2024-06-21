@@ -221,7 +221,7 @@ public abstract class ImapHandler {
         REGEXP_ESCAPED['['] = REGEXP_ESCAPED[']'] = REGEXP_ESCAPED['|'] = true;
         REGEXP_ESCAPED['^'] = REGEXP_ESCAPED['$'] = REGEXP_ESCAPED['?'] = true;
         REGEXP_ESCAPED['{'] = REGEXP_ESCAPED['}'] = REGEXP_ESCAPED['*'] = true;
-        REGEXP_ESCAPED['\\'] = true;
+        REGEXP_ESCAPED['+'] = REGEXP_ESCAPED['\\'] = true;
     }
 
     protected ImapConfig config;
@@ -2160,7 +2160,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    private boolean doLIST(String tag, String referenceName, Set<String> mailboxNames,
+    protected boolean doLIST(String tag, String referenceName, Set<String> mailboxNames,
             byte selectOptions, byte returnOptions, byte status) throws ImapException, IOException {
         checkCommandThrottle(new ListCommand(referenceName, mailboxNames, selectOptions, returnOptions, status));
         if (!checkState(tag, State.AUTHENTICATED)) {
@@ -2632,7 +2632,7 @@ public abstract class ImapHandler {
         if (path.belongsTo(credentials)) {
             FolderStore folderStore = path.getFolder();
             if (folderStore != null) {
-            	return folderStore.isIMAPSubscribed();
+                return folderStore.isIMAPSubscribed();
             } else {
                 ZimbraLog.imap.info("Null FolderStore for path %s", path.asZimbraPath());
             }
