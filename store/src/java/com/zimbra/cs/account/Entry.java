@@ -303,7 +303,7 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public String getAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
-        if (!skipEphemeralCheck && mAttrMgr.isEphemeral(name)) {
+        if (!skipEphemeralCheck && mAttrMgr != null && mAttrMgr.isEphemeral(name)) {
             try {
                 if (mAttrMgr.isDynamic(name)) {
                     ZimbraLog.ephemeral.warn("can't get value of dynamic ephemeral attribute %s without the dynamic component", name);
@@ -596,7 +596,7 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public String[] getMultiAttr(String name, boolean applyDefaults, boolean skipEphemeralCheck) {
-        if (!skipEphemeralCheck && mAttrMgr.isEphemeral(name)) {
+        if (!skipEphemeralCheck && mAttrMgr != null && mAttrMgr.isEphemeral(name)) {
             try {
                 if (mAttrMgr.isDynamic(name)) {
                     ZimbraLog.ephemeral.warn("can't get value of dynamic ephemeral attribute %s without the dynamic component", name);
