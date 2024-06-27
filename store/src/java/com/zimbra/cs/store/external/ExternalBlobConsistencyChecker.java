@@ -51,8 +51,7 @@ public class ExternalBlobConsistencyChecker extends BlobConsistencyChecker {
         results = new Results();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
         DbConnection conn = null;
-        assert(StoreManager.getInstance() instanceof ExternalStoreManager);
-        ExternalStoreManager sm = (ExternalStoreManager) StoreManager.getInstance();
+        ExternalStoreManager sm = (ExternalStoreManager) getStoreManager();
         try {
             unexpectedBlobPaths = sm.getAllBlobPaths(mbox);
         } catch (IOException ioe) {
@@ -126,7 +125,10 @@ public class ExternalBlobConsistencyChecker extends BlobConsistencyChecker {
                 }
             } catch (Exception e) {
                 blobInfo.fetchException = e instanceof IOException ? (IOException) e : new IOException("Exception fetching blob", e);
-                results.missingBlobs.put(blobInfo.itemId, blobInfo);
+                StoreManager storeManager = StoreManager.getReaderSMInstance(mblob.getLocator());
+                if (storeManager instanceof ExternalStoreManager) {
+                    results.missingBlobs.put(blobInfo.itemId, blobInfo);
+                }
             }
         }
     }
