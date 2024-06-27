@@ -45,8 +45,9 @@ public class ChangePassword extends AccountDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        if (!checkPasswordSecurity(context))
+        if (!checkPasswordSecurity(context)) {
             throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
+        }
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
@@ -63,9 +64,8 @@ public class ChangePassword extends AccountDocumentHandler {
                 name = name + "@" + d.getName();
         }
 
-        String text =  request.getAttribute(AccountConstants.E_DRYRUN, null);
-
-        boolean dryRun   = false;
+        String text = request.getAttribute(AccountConstants.E_DRYRUN, null);
+        boolean dryRun = false;
         if (!StringUtil.isNullOrEmpty(text)) {
             if (text.equals("1") || text.equalsIgnoreCase("true")) {
                 dryRun = true;
@@ -73,8 +73,9 @@ public class ChangePassword extends AccountDocumentHandler {
         }
 
         Account acct = prov.get(AccountBy.name, name, zsc.getAuthToken());
-        if (acct == null)
+        if (acct == null) {
             throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
+        }
 
         // proxyIfNecessary is called by the SOAP framework only for
         // requests that require auth.  ChangePassword does not require
@@ -95,6 +96,7 @@ public class ChangePassword extends AccountDocumentHandler {
 
         String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
         String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
+
         if (acct.isIsExternalVirtualAccount() && StringUtil.isNullOrEmpty(oldPassword)
                 && !acct.isVirtualAccountInitialPasswordSet() && acct.getId().equals(zsc.getAuthtokenAccountId())) {
             // need a valid auth token in this case
