@@ -77,21 +77,8 @@ public class ChangePassword extends AccountDocumentHandler {
             throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
         }
 
-        // proxyIfNecessary is called by the SOAP framework only for
-        // requests that require auth.  ChangePassword does not require
-        // an auth token.  Proxy here if this is not the home server of the account.
-        if (!Provisioning.onLocalServer(acct)) {
-            try {
-                return proxyRequest(request, context, acct.getId());
-            } catch (ServiceException e) {
-                // if something went wrong proxying the request, just execute it locally
-                if (ServiceException.PROXY_ERROR.equals(e.getCode())) {
-                    ZimbraLog.account.warn("encountered proxy error", e);
-                } else {
-                    // but if it's a real error, it's a real error
-                    throw e;
-                }
-            }
+        if (!canAccessAccount(zsc, acct)) {
+            throw ServiceException.PERM_DENIED("cannot access account");
         }
 
         String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
