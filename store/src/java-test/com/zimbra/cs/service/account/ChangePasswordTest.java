@@ -96,13 +96,13 @@ public class ChangePasswordTest {
         Assert.fail("expected handler to fail");
     }
 
-	@Test
-	public void testNeedsAuth() throws Exception {
+    @Test
+    public void testNeedsAuth() throws Exception {
         final ChangePassword handler = new ChangePassword();
         final Map<String,Object> context = Collections.emptyMap();
 
         Assert.assertTrue("handler.needsAuth()", handler.needsAuth(context));
-	}
+    }
 
     @After
     public void tearDown() throws Exception {
