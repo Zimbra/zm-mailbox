@@ -111,17 +111,18 @@ public class ChangePassword extends AccountDocumentHandler {
            at.encodeAuthResp(response, false);
            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         }
+
         return response;
 	}
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
-        // This command can be sent before authenticating, so this method
-        // should return false.  The Account.changePassword() method called
-        // from handle() will internally make sure the old password provided
-        // matches the current password of the account.
-        //
-        // The user identity in the auth token, if any, is ignored.
-        return false;
+        // Because the user might have 2FA or some other enhanced
+        // authentication enabled, it's easier to lock this endpoint down and
+        // require that the user has already fully authenticated before we hand
+        // them the means to do that. We cannot rely on the Provisioning
+        // changePassword check alone, or we bypass 2FA protection.
+
+        return true;
     }
 }
