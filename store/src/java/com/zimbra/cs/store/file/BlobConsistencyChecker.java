@@ -235,12 +235,22 @@ public class BlobConsistencyChecker {
     protected boolean checkSize = true;
     protected boolean reportUsedBlobs = false;
 
+    public StoreManager getStoreManager() {
+        return storeManager;
+    }
+
+    public void setStoreManager(StoreManager storeManager) {
+        this.storeManager = storeManager;
+    }
+
+    private StoreManager storeManager;
+
     public BlobConsistencyChecker() {
     }
 
     public Results check(Collection<Short> volumeIds, int mboxId, boolean checkSize, boolean reportUsedBlobs)
     throws ServiceException {
-        StoreManager sm = StoreManager.getInstance();
+        StoreManager sm = getStoreManager();
         if (!(sm instanceof FileBlobStore)) {
             throw ServiceException.INVALID_REQUEST(sm.getClass().getSimpleName() + " is not supported", null);
         }
