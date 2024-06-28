@@ -7508,9 +7508,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @since ZCS 10.1.0
@@ -8585,6 +8585,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4116)
     public static final String A_zimbraHideAliasesInGal = "zimbraHideAliasesInGal";
+
+    /**
+     * Option to hide/show alias in GAL
+     *
+     * @since ZCS 10.1.1
+     */
+    @ZAttr(id=4135)
+    public static final String A_zimbraHideAliasInGal = "zimbraHideAliasInGal";
 
     /**
      * hide entry in Global Address List
@@ -19079,6 +19087,12 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4082)
     public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
+
+
+    @ZAttr(id=4082)
+    public static final String A_hideInGal = "zimbraHideAliasInGal";
+
+
 
     ///// END-AUTO-GEN-REPLACE
 }

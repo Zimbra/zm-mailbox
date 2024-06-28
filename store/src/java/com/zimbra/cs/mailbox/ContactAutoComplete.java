@@ -46,6 +46,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalSearchControl;
@@ -440,7 +441,7 @@ public class ContactAutoComplete {
 
         long t3 = System.currentTimeMillis();
 
-        ZimbraLog.gal.info("autocomplete: overall=%dms, ranking=%dms, folder=%dms, gal=%dms",
+        ZimbraLog.mailbox.info("autocomplete: overall=%dms, ranking=%dms, folder=%dms, gal=%dms",
                 t3 - t0, t1 - t0, t2 - t1, t3 - t2);
         return result;
     }
@@ -470,7 +471,7 @@ public class ContactAutoComplete {
     }
 
     private void queryGal(String str, AutoCompleteResult result) {
-        ZimbraLog.gal.debug("querying gal");
+        ZimbraLog.mailbox.info("querying gal");
         GalSearchParams params = new GalSearchParams(mRequestedAcct, mZsc);
         params.setQuery(str);
         params.setType(mSearchType);
@@ -707,22 +708,54 @@ public class ContactAutoComplete {
             if (Strings.isNullOrEmpty(displayName)) {
                 displayName = Joiner.on(' ').skipNulls().join(first, middle, last);
             }
+            Account account;
+            try {
+                account = Provisioning.getInstance().get(Key.AccountBy.name, fullName);
+            }
+            catch (ServiceException e) {
+                throw new RuntimeException(e);
+            }
 
-            for (String emailKey : mEmailKeys) {
-                String email = getFieldAsString(attrs, emailKey);
+
+            List<String> allowedEmailsList = new ArrayList<>();
+            for(String emailKey: mEmailKeys) {
+                if (!emailKey.equals("email")) {
+                        if (account.isHideAliasesInGal()) {
+                            //condition for allowing primary email address only
+                            break;
+                        }
+                }
+                allowedEmailsList.add(getFieldAsString(attrs, emailKey));
+            }
+            ZimbraLog.mailbox.info("allowed list 1 is %s", allowedEmailsList);
+
+            try {
+                Provisioning.getInstance().checkIsAliasToBeHidden(account, allowedEmailsList.subList( 1, allowedEmailsList.size()));
+            } catch (ServiceException e) {
+                throw new RuntimeException(e);
+            }
+
+            ZimbraLog.mailbox.info("allowed list 2 is %s", allowedEmailsList);
+
+
+            for (String email : allowedEmailsList) {
+
+
                 if (email != null && (nameMatches || matchesEmail(tokens, email))) {
+                    ZimbraLog.gal.debug("adding1 %s", email);
+
                     ContactEntry entry = new ContactEntry();
                     entry.mEmail = email;
                     entry.setName(displayName);
                     entry.mId = id;
                     entry.mFolderId = folderId;
-                    entry.mFirstName  = first;
+                    entry.mFirstName = first;
                     entry.mMiddleName = middle;
                     entry.mLastName = last;
                     entry.mFullName = fullName;
                     entry.mNickname = nick;
-                    entry.mCompany  = company;
-                    entry.mFileAs   = fileas;
+                    entry.mCompany = company;
+                    entry.mFileAs = fileas;
                     if (Contact.isGroup(attrs)) {
                         entry.setIsGalGroup(email, attrs, mAuthedAcct, mNeedCanExpand);
                     } else if (entry.mFolderId != FOLDER_ID_GAL) {
@@ -734,6 +767,7 @@ public class ContactAutoComplete {
                     if (returnFullContactData) {
                         entry.mAttrs = attrs;
                     }
+
                     addEntry(entry, result);
                     ZimbraLog.gal.debug("adding %s", entry.getEmail());
                     /*

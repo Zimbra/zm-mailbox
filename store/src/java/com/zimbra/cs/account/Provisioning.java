@@ -28,7 +28,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -2795,4 +2794,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
     
     public abstract String sendMdmEmail(String status, String timeInterval) throws ServiceException;
+
+
+    public abstract void checkIsAliasToBeHidden(NamedEntry entry, List<String> email) throws ServiceException;
+
+
 }

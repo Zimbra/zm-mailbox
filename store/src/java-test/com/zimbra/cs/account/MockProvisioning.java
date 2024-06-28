@@ -970,4 +970,8 @@ public final class MockProvisioning extends Provisioning {
     public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
         return null;
     }
+
+    @Override public boolean checkIsAliasToBeHidden(Entry entry, String email) throws ServiceException {
+        return false;
+    }
 }

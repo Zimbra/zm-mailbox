@@ -37,10 +37,8 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -135,7 +133,6 @@ import com.zimbra.cs.account.ldap.entry.LdapXMPPComponent;
 import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
-import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
@@ -184,9 +181,6 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.listeners.AuthListener;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
@@ -205,12 +199,10 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedValue;
 import com.zimbra.soap.type.TargetBy;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -318,7 +310,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         alwaysOnClusterCache = cache.alwaysOnClusterCache();
 
         commonPasswordFilter = UnmodifiableBloomFilter
-            .createLazyFilterFromFile(LC.common_passwords_txt.value());
+                .createLazyFilterFromFile(LC.common_passwords_txt.value());
 
         setDIT();
         setHelper(new ZLdapHelper(this));
@@ -460,7 +452,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * @throws ServiceException
      */
     public void modifyEphemeralAttrsInLdap(Entry e, Map<String, ? extends Object> attrs)
-    throws ServiceException {
+            throws ServiceException {
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.MODIFY);
         AttributeManager.getInstance().preModify(attrs, e, callbackContext, false, true);
         modifyAttrsInternal(e, null, attrs, true, false);
@@ -469,7 +461,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable)
-    throws ServiceException {
+            throws ServiceException {
         modifyAttrs(e, attrs, checkImmutable, true);
     }
 
@@ -487,7 +479,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs,
             boolean checkImmutable, boolean allowCallback)
-    throws ServiceException {
+            throws ServiceException {
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.MODIFY);
         AttributeManager.getInstance().preModify(attrs, e, callbackContext, checkImmutable, allowCallback);
         modifyAttrsInternal(e, null, attrs);
@@ -549,7 +541,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void restoreAccountAttrs(Account acct, Map<String, ? extends Object> backupAttrs)
-    throws ServiceException {
+            throws ServiceException {
         Map<String, Object> attrs = Maps.newHashMap(backupAttrs);
 
         Object ocsInBackupObj = backupAttrs.get(A_objectClass);
@@ -690,7 +682,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private void handleEphemeralAttrChange(EphemeralStore store, String key, String value, EphemeralLocation location,
             AttributeInfo ai, AttributeConverter converter, boolean doAdd, boolean doRemove)
-    throws ServiceException {
+            throws ServiceException {
         EphemeralInput input;
         if (ai.isDynamic()) {
             input = converter.convert(key, value);
@@ -994,7 +986,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private ZSearchResultEntry getSearchResultForAccountByQuery(String base, ZLdapFilter filter, ZLdapContext initZlc,
             boolean loadFromMaster, String[] returnAttrs)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(base, filter, initZlc, loadFromMaster, returnAttrs);
             return sr;
@@ -1003,13 +995,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             ZimbraLog.account.debug(e.getMessage());
             throw AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED(
                     String.format("multiple entries are returned by query: base=%s, query=%s",
-                    e.getQueryBase(), e.getQuery()));
+                            e.getQueryBase(), e.getQuery()));
         }
     }
 
     private Account getAccountByQuery(String base, ZLdapFilter filter, ZLdapContext initZlc,
             boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = getSearchResultForAccountByQuery(base, filter, initZlc, loadFromMaster, null);
             if (sr != null) {
@@ -1023,7 +1015,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Account getAccountById(String zimbraId, ZLdapContext zlc, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         if (zimbraId == null)
             return null;
         Account a = accountCache.getById(zimbraId);
@@ -1080,7 +1072,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Account get(AccountBy keyType, String key, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         switch(keyType) {
         case adminName:
             return getAdminAccountByName(key, loadFromMaster);
@@ -1117,7 +1109,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         Account a = accountCache.getByForeignPrincipal(foreignPrincipal);
 
         // bug 27966, always do a search so dup entries can be thrown
@@ -1137,7 +1129,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Account getAdminAccountByName(String name, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         Account a = accountCache.getByName(name);
         if (a == null) {
             a = getAccountByQuery(
@@ -1150,7 +1142,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Account getAppAdminAccountByName(String name, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         Account a = accountCache.getByName(name);
         if (a == null) {
             a = getAccountByQuery(
@@ -1179,13 +1171,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     Account getAccountByName(String emailAddress, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
 
         return getAccountByName(emailAddress, loadFromMaster, true);
     }
 
     Account getAccountByName(String emailAddress, boolean loadFromMaster, boolean checkAliasDomain)
-    throws ServiceException {
+            throws ServiceException {
 
         Account account = getAccountByNameInternal(emailAddress, loadFromMaster);
 
@@ -1204,7 +1196,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Account getAccountByNameInternal(String emailAddress, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
 
         emailAddress = fixupAccountName(emailAddress);
 
@@ -1221,7 +1213,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Account getAccountByForeignName(String foreignName, String application, Domain domain)
-    throws ServiceException {
+            throws ServiceException {
         // first try direct match
         Account acct = getAccountByForeignPrincipal(application + ":" + foreignName);
 
@@ -1242,7 +1234,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         // see if there is a custom hander on the domain
         DomainNameMappingHandler.HandlerConfig handlerConfig =
-            DomainNameMappingHandler.getHandlerConfig(domain, application);
+                DomainNameMappingHandler.getHandlerConfig(domain, application);
 
         String acctName;
         if (handlerConfig != null) {
@@ -1269,39 +1261,39 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void autoProvAccountEager(EagerAutoProvisionScheduler scheduler)
-    throws ServiceException {
+            throws ServiceException {
         AutoProvisionEager.handleScheduledDomains(this, scheduler);
     }
 
     @Override
     public Account autoProvAccountLazy(Domain domain, String loginName,
             String loginPassword, AutoProvAuthMech authMech)
-    throws ServiceException {
+            throws ServiceException {
         AutoProvisionLazy autoPorv =
-            new AutoProvisionLazy(this, domain, loginName, loginPassword, authMech);
+                new AutoProvisionLazy(this, domain, loginName, loginPassword, authMech);
         return autoPorv.handle();
     }
 
     @Override
     public Account autoProvAccountManual(Domain domain, AutoProvPrincipalBy by,
             String principal, String password)
-    throws ServiceException {
+            throws ServiceException {
         AutoProvisionManual autoProv =
-            new AutoProvisionManual(this, domain, by, principal, password);
+                new AutoProvisionManual(this, domain, by, principal, password);
         return autoProv.handle();
     }
 
     @Override
     public void searchAutoProvDirectory(Domain domain, String filter, String name,
             String[] returnAttrs, int maxResults, DirectoryEntryVisitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         AutoProvision.searchAutoProvDirectory(this, domain, filter, name, null,
                 returnAttrs, maxResults, visitor);
     }
 
     @Override
     public Account createAccount(String emailAddress, String password, Map<String, Object> attrs)
-    throws ServiceException {
+            throws ServiceException {
         return createAccount(emailAddress, password, attrs,
                 mDIT.handleSpecialAttrs(attrs), null, false, null);
     }
@@ -1309,7 +1301,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public Account restoreAccount(String emailAddress, String password,
             Map<String, Object> attrs, Map<String, Object> origAttrs)
-    throws ServiceException {
+            throws ServiceException {
         return createAccount(emailAddress, password, attrs,
                 mDIT.handleSpecialAttrs(attrs), null, true, origAttrs);
     }
@@ -1318,7 +1310,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             Map<String, Object> acctAttrs, SpecialAttrs specialAttrs,
             String[] additionalObjectClasses,
             boolean restoring, Map<String, Object> origAttrs)
-    throws ServiceException {
+            throws ServiceException {
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
 
@@ -1473,17 +1465,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             } else {
                 String domainCosId =
                         domain != null ?
-                        isExternalVirtualAccount(entry) ?
-                        d.getDomainDefaultExternalUserCOSId() :
-                        d.getDomainDefaultCOSId() :
-                        null;
+                                isExternalVirtualAccount(entry) ?
+                                        d.getDomainDefaultExternalUserCOSId() :
+                                        d.getDomainDefaultCOSId() :
+                                null;
 
                 if (domainCosId != null) {
                     cos = get(Key.CosBy.id, domainCosId);
                 }
                 if (cos == null) {
                     cos = getCosByName(isExternalVirtualAccount(entry) ?
-                            Provisioning.DEFAULT_EXTERNAL_COS_NAME : Provisioning.DEFAULT_COS_NAME,
+                                    Provisioning.DEFAULT_EXTERNAL_COS_NAME : Provisioning.DEFAULT_COS_NAME,
                             zlc);
                 }
             }
@@ -1498,7 +1490,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             // set all the mail-related attrs if zimbraMailHost or zimbraMailTransport was specified
             if (entry.hasAttribute(Provisioning.A_zimbraMailHost) ||
-                entry.hasAttribute(Provisioning.A_zimbraMailTransport)) {
+                    entry.hasAttribute(Provisioning.A_zimbraMailTransport)) {
                 // default mail status is enabled
                 if (!entry.hasAttribute(Provisioning.A_zimbraMailStatus)) {
                     entry.setAttr(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
@@ -1558,7 +1550,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             if (acct == null) {
                 throw ServiceException.FAILURE(
                         "unable to get account after creating LDAP account entry: " +
-                        emailAddress + ", check ldap log for possible error", null);
+                                emailAddress + ", check ldap log for possible error", null);
             }
 
             AttributeManager.getInstance().postModify(acctAttrs, acct, callbackContext);
@@ -1687,7 +1679,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private boolean addDefaultMailHost(ZMutableEntry entry, Server server, boolean setMailTransport)
-    throws ServiceException {
+            throws ServiceException {
         String serviceHostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
         if (server.hasMailClientService() && serviceHostname != null) {
             setMailHost(entry,  server, setMailTransport);
@@ -1697,7 +1689,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void addDefaultMailHost(ZMutableEntry entry, boolean setMailTransport)
-    throws ServiceException {
+            throws ServiceException {
         if (!addDefaultMailHost(entry, getLocalServer(), setMailTransport)) {
             for (Server server: getAllServers()) {
                 if (addDefaultMailHost(entry, server, setMailTransport)) {
@@ -1708,7 +1700,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void addMailHost(ZMutableEntry entry, Cos cos, boolean setMailTransport)
-    throws ServiceException {
+            throws ServiceException {
         // if zimbraMailHost is not specified, and we have a COS, see if there is
         // a pool to pick from.
         if (cos != null && !entry.hasAttribute(Provisioning.A_zimbraMailHost)) {
@@ -1727,7 +1719,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private String addMailHost(ZMutableEntry entry, String[] mailHostPool, String cosName,
             boolean setMailTransport)
-    throws ServiceException {
+            throws ServiceException {
         if (mailHostPool.length == 0) {
             return null;
         } else if (mailHostPool.length > 1) {
@@ -1781,19 +1773,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public void searchAccountsOnServer(Server server, SearchAccountsOptions opts,
             NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         searchAccountsOnServerInternal(server, opts, visitor);
     }
 
     @Override
     public List<NamedEntry> searchAccountsOnServer(Server server, SearchAccountsOptions opts)
-    throws ServiceException {
+            throws ServiceException {
         return searchAccountsOnServerInternal(server, opts, null);
     }
 
     private List<NamedEntry> searchAccountsOnServerInternal(Server server,
             SearchAccountsOptions options, NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         // filter cannot be set
         if (options.getFilter() != null || options.getFilterString() != null) {
             throw ServiceException.INVALID_REQUEST(
@@ -1833,23 +1825,23 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public List<NamedEntry> searchDirectory(SearchDirectoryOptions options)
-    throws ServiceException {
+            throws ServiceException {
         return searchDirectoryInternal(options, null);
     }
 
     @Override
     public void searchDirectory(SearchDirectoryOptions options, NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         searchDirectoryInternal(options, visitor);
     }
 
     protected List<?> searchDirectoryInternal(SearchDirectoryOptions options)
-    throws ServiceException{
+            throws ServiceException{
         return searchDirectoryInternal(options, null);
     }
 
     public String[] getSearchBases(Domain domain, Set<ObjectType> types)
-    throws ServiceException {
+            throws ServiceException {
         String[] bases;
 
         if (domain != null) {
@@ -1863,13 +1855,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 groupsTree = true;
             }
             if (types.contains(ObjectType.accounts) ||
-                types.contains(ObjectType.aliases) ||
-                types.contains(ObjectType.distributionlists) ||
-                types.contains(ObjectType.resources)) {
+                    types.contains(ObjectType.aliases) ||
+                    types.contains(ObjectType.distributionlists) ||
+                    types.contains(ObjectType.resources)) {
                 peopleTree = true;
             }
             if (types.contains(ObjectType.domains) ||
-                types.contains(ObjectType.habgroups)) {
+                    types.contains(ObjectType.habgroups)) {
                 domainsTree = true;
             }
 
@@ -1961,7 +1953,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private List<NamedEntry> searchDirectoryInternal(SearchDirectoryOptions options,
             NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         Set<ObjectType> types = options.getTypes();
 
         if (types == null) {
@@ -1977,8 +1969,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             bases = new String[1];
             bases[0] = options.getHabRootGroupDn();
         } else {
-	    bases = getSearchBases(domain, types);
-	}
+            bases = getSearchBases(domain, types);
+        }
 
         /*
          * filter
@@ -2025,9 +2017,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 groupsTree = true;
             }
             if (types.contains(ObjectType.accounts) ||
-                types.contains(ObjectType.aliases) ||
-                types.contains(ObjectType.distributionlists) ||
-                types.contains(ObjectType.resources)) {
+                    types.contains(ObjectType.aliases) ||
+                    types.contains(ObjectType.distributionlists) ||
+                    types.contains(ObjectType.resources)) {
                 peopleTree = true;
             }
 
@@ -2057,13 +2049,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         boolean habgroups = (flags & Provisioning.SD_HAB_FLAG) != 0;
 
         int num = (accounts ? 1 : 0) +
-                  (aliases ? 1 : 0) +
-                  (lists ? 1 : 0) +
-                  (groups ? 1 : 0) +
-                  (domains ? 1 : 0) +
-                  (coses ? 1 : 0) +
-                  (habgroups ? 1 : 0) +
-                  (calendarResources ? 1 : 0);
+                (aliases ? 1 : 0) +
+                (lists ? 1 : 0) +
+                (groups ? 1 : 0) +
+                (domains ? 1 : 0) +
+                (coses ? 1 : 0) +
+                (habgroups ? 1 : 0) +
+                (calendarResources ? 1 : 0);
         if (num == 0) {
             accounts = true;
         }
@@ -2201,7 +2193,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             */
 
             List<String> objectclass =
-                ldapAttrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
+                    ldapAttrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
 
             // skip admin accounts
             // if we are looking for domains or coses, they can be under config branch in non default DIT impl.
@@ -2214,7 +2206,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             ZAttributes attrs = (ZAttributes)ldapAttrs;
 
             if (objectclass == null || objectclass.contains(AttributeClass.OC_zimbraAccount)
-                || objectclass.contains(AttributeClass.OC_zimbraCalendarResource)) {
+                    || objectclass.contains(AttributeClass.OC_zimbraCalendarResource)) {
                 visitor.visit(prov.makeAccount(dn, attrs, makeObjOpt));
             } else if (objectclass.contains(AttributeClass.OC_zimbraAlias)) {
                 visitor.visit(prov.makeAlias(dn, attrs));
@@ -2244,7 +2236,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      */
     private List<NamedEntry> searchObjects(String[] bases, ZLdapFilter filter, String returnAttrs[],
             SearchDirectoryOptions opts, NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
 
         if (visitor != null) {
             if (opts.getSortOpt() != SortOpt.NO_SORT) {
@@ -2272,8 +2264,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 return result;
             } else {
                 NamedEntryComparator comparator =
-                    new NamedEntryComparator(this,
-                            opts.getSortAttr(), opts.getSortOpt()==SortOpt.SORT_ASCENDING);
+                        new NamedEntryComparator(this,
+                                opts.getSortAttr(), opts.getSortOpt()==SortOpt.SORT_ASCENDING);
                 Collections.sort(result, comparator);
                 return result;
             }
@@ -2282,14 +2274,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private void searchLdapObjects(String base, ZLdapFilter filter, String returnAttrs[],
             SearchDirectoryOptions opts, NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.get(opts.getOnMaster()), opts.getUseConnPool(), LdapUsage.SEARCH);
 
             SearchObjectsVisitor searchObjectsVisitor =
-                new SearchObjectsVisitor(this, zlc, visitor, opts.getMaxResults(),
-                        opts.getMakeObjectOpt(), returnAttrs);
+                    new SearchObjectsVisitor(this, zlc, visitor, opts.getMaxResults(),
+                            opts.getMakeObjectOpt(), returnAttrs);
 
             SearchLdapOptions searchObjectsOptions = new SearchLdapOptions(base, filter,
                     returnAttrs, opts.getMaxResults(), null, opts.getResultPageSize(), ZSearchScope.SEARCH_SCOPE_SUBTREE,
@@ -2358,16 +2350,16 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         int num = (needUID ? 1 : 0) +
-                  (needID ? 1 : 0) +
-                  (needCOSId ? 1 : 0) +
-                  (needAliasTargetId ? 1 : 0) +
-                  (needObjectClass ? 1 :0) +
-                  (needCalendarUserType ? 1 : 0) +
-                  (needDomainName ? 1 : 0) +
-                  (needZimbraACE ? 1 : 0) +
-                  (needCn ? 1 : 0) +
-                  (needIsExternalVirtualAccount ? 1 : 0) +
-                  (needExternalUserMailAddress ? 1 : 0);
+                (needID ? 1 : 0) +
+                (needCOSId ? 1 : 0) +
+                (needAliasTargetId ? 1 : 0) +
+                (needObjectClass ? 1 :0) +
+                (needCalendarUserType ? 1 : 0) +
+                (needDomainName ? 1 : 0) +
+                (needZimbraACE ? 1 : 0) +
+                (needCn ? 1 : 0) +
+                (needIsExternalVirtualAccount ? 1 : 0) +
+                (needExternalUserMailAddress ? 1 : 0);
 
         if (num == 0) return returnAttrs;
 
@@ -2495,10 +2487,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String targetEntryId = entry.getId();
             try {
                 zlc.createEntry(aliasDn, "zimbraAlias",
-                    new String[] { Provisioning.A_uid, aliasName,
-                                   Provisioning.A_zimbraId, aliasUuid,
-                                   Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()),
-                                   Provisioning.A_zimbraAliasTargetId, targetEntryId} );
+                        new String[] { Provisioning.A_uid, aliasName,
+                                Provisioning.A_zimbraId, aliasUuid,
+                                Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()),
+                                Provisioning.A_zimbraAliasTargetId, targetEntryId,
+                                Provisioning.A_zimbraHideAliasInGal, "TRUE"
+                        } );
             } catch (LdapEntryAlreadyExistException e) {
                 /*
                  * check if the alias is a dangling alias.  If so remove the dangling alias
@@ -2523,17 +2517,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     // try creating the alias again
                     zlc.createEntry(aliasDn, "zimbraAlias",
                             new String[] {
-                            Provisioning.A_uid, aliasName,
-                            Provisioning.A_zimbraId, aliasUuid,
-                            Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()),
-                            Provisioning.A_zimbraAliasTargetId, targetEntryId} );
+                                    Provisioning.A_uid, aliasName,
+                                    Provisioning.A_zimbraId, aliasUuid,
+                                    Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()),
+                                    Provisioning.A_zimbraAliasTargetId, targetEntryId} );
                 } else if (targetEntryId.equals(targetEntry.getId())) {
                     // the alias target points to this account/DL
                     Set<String> mailAliases = entry.getMultiAttrSet(Provisioning.A_zimbraMailAlias);
                     Set<String> mails = entry.getMultiAttrSet(Provisioning.A_mail);
 
                     if (mailAliases != null && mailAliases.contains(alias) &&
-                        mails != null && mails.contains(alias)) {
+                            mails != null && mails.contains(alias)) {
                         throw e;
                     } else {
                         ZimbraLog.account.warn("alias entry exists at " + aliasDn +
@@ -2682,7 +2676,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             // throw NO_SUCH_ALIAS if necessary
             if (((entry != null) && (aliasEntry == null)) ||
-                ((entry != null) && (aliasEntry != null) && !aliasPointsToEntry))
+                    ((entry != null) && (aliasEntry != null) && !aliasPointsToEntry))
                 throw AccountServiceException.NO_SUCH_ALIAS(alias);
 
         } finally {
@@ -2718,7 +2712,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Domain createDomain(String name, Map<String, Object> domainAttrs)
-    throws ServiceException {
+            throws ServiceException {
         name = name.toLowerCase().trim();
         name = IDNUtil.toAsciiDomainName(name);
 
@@ -2838,8 +2832,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                  * on how far we want to allow the DIT to be customized.
                  */
                 zlc.createEntry(mDIT.domainDNToAccountBaseDN(dn),
-                                 "organizationalRole",
-                                 new String[] { A_ou, "people", A_cn, "people"});
+                        "organizationalRole",
+                        new String[] { A_ou, "people", A_cn, "people"});
 
                 // create the base DN for dynamic groups
                 zlc.createEntry(mDIT.domainDNToDynamicGroupsBaseDN(dn),
@@ -2866,7 +2860,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private LdapDomain getDomainByQuery(ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.domainBaseDN(), filter, initZlc, false);
             if (sr != null) {
@@ -2882,7 +2876,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private String getOrgUnitDNByName(String name, Domain domain, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.domainNameToDN(domain.getDomainName()), filterFactory.habOrgUnitByName(name), initZlc, false);
             if (sr != null) {
@@ -2901,7 +2895,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Domain getDomain(Key.DomainBy keyType, String key, boolean checkNegativeCache)
-    throws ServiceException {
+            throws ServiceException {
 
         // note: *always* use negative cache for keys from external source
         //       - virtualHostname, foreignName, krb5Realm
@@ -2910,34 +2904,34 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 GetFromDomainCacheOption.BOTH : GetFromDomainCacheOption.POSITIVE;
 
         switch(keyType) {
-            case name:
-                return getDomainByNameInternal(key, option);
-            case id:
-                return getDomainByIdInternal(key, null, option);
-            case virtualHostname:
-                return getDomainByVirtualHostnameInternal(key, GetFromDomainCacheOption.BOTH);
-            case foreignName:
-                return getDomainByForeignNameInternal(key, GetFromDomainCacheOption.BOTH);
-            case krb5Realm:
-                return getDomainByKrb5RealmInternal(key, GetFromDomainCacheOption.BOTH);
-            default:
-                return null;
+        case name:
+            return getDomainByNameInternal(key, option);
+        case id:
+            return getDomainByIdInternal(key, null, option);
+        case virtualHostname:
+            return getDomainByVirtualHostnameInternal(key, GetFromDomainCacheOption.BOTH);
+        case foreignName:
+            return getDomainByForeignNameInternal(key, GetFromDomainCacheOption.BOTH);
+        case krb5Realm:
+            return getDomainByKrb5RealmInternal(key, GetFromDomainCacheOption.BOTH);
+        default:
+            return null;
         }
     }
 
     private Domain getFromCache(Key.DomainBy keyType, String key, GetFromDomainCacheOption option) {
         switch(keyType) {
-            case name:
-                String asciiName = IDNUtil.toAsciiDomainName(key);
-                return domainCache.getByName(asciiName, option);
-            case id:
-                return domainCache.getById(key, option);
-            case virtualHostname:
-                return domainCache.getByVirtualHostname(key, option);
-            case krb5Realm:
-                return domainCache.getByKrb5Realm(key, option);
-            default:
-                return null;
+        case name:
+            String asciiName = IDNUtil.toAsciiDomainName(key);
+            return domainCache.getByName(asciiName, option);
+        case id:
+            return domainCache.getById(key, option);
+        case virtualHostname:
+            return domainCache.getByVirtualHostname(key, option);
+        case krb5Realm:
+            return domainCache.getByKrb5Realm(key, option);
+        default:
+            return null;
         }
     }
 
@@ -2946,7 +2940,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Domain getDomainByIdInternal(String zimbraId, ZLdapContext zlc, GetFromDomainCacheOption option)
-    throws ServiceException {
+            throws ServiceException {
         if (zimbraId == null) {
             return null;
         }
@@ -2981,19 +2975,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Domain getDomainByNameInternal(String name, GetFromDomainCacheOption option)
-    throws ServiceException {
+            throws ServiceException {
         String asciiName = IDNUtil.toAsciiDomainName(name);
         return getDomainByAsciiNameInternal(asciiName, null, option);
     }
 
     private Domain getDomainByAsciiName(String name, ZLdapContext zlc)
-    throws ServiceException {
+            throws ServiceException {
         return getDomainByAsciiNameInternal(name, zlc, GetFromDomainCacheOption.POSITIVE);
     }
 
     private Domain getDomainByAsciiNameInternal(String name, ZLdapContext zlc,
             GetFromDomainCacheOption option)
-    throws ServiceException {
+            throws ServiceException {
         Domain d = domainCache.getByName(name, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
@@ -3008,7 +3002,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private Domain getDomainByVirtualHostnameInternal(String virtualHostname,
             GetFromDomainCacheOption option)
-    throws ServiceException {
+            throws ServiceException {
         Domain d = domainCache.getByVirtualHostname(virtualHostname, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
@@ -3023,7 +3017,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private Domain getDomainByForeignNameInternal(String foreignName,
             GetFromDomainCacheOption option)
-    throws ServiceException {
+            throws ServiceException {
         Domain d = domainCache.getByForeignName(foreignName, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
@@ -3038,7 +3032,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private Domain getDomainByKrb5RealmInternal(String krb5Realm,
             GetFromDomainCacheOption option)
-    throws ServiceException {
+            throws ServiceException {
         Domain d = domainCache.getByKrb5Realm(krb5Realm, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
@@ -3114,7 +3108,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     };
 
     public void getDomainsByIds(NamedEntry.Visitor visitor, Collection<String> domains, String[] retAttrs)
-    throws ServiceException {
+            throws ServiceException {
         SearchDirectoryOptions opts = new SearchDirectoryOptions(retAttrs);
         opts.setFilter(filterFactory.domainsByIds(domains));
         opts.setTypes(ObjectType.domains);
@@ -3123,7 +3117,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs)
-    throws ServiceException {
+            throws ServiceException {
         SearchDirectoryOptions opts = new SearchDirectoryOptions(retAttrs);
         opts.setFilter(filterFactory.allDomains());
         opts.setTypes(ObjectType.domains);
@@ -3143,7 +3137,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void createParentDomains(ZLdapContext zlc, String parts[], String dns[])
-    throws ServiceException {
+            throws ServiceException {
         for (int i=dns.length-1; i > 0; i--) {
             if (!domainDnExists(zlc, dns[i])) {
                 String dn = dns[i];
@@ -3167,7 +3161,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Cos copyCos(String srcCosId, String destCosName, Map<String, Object> cosAttrs)
-    throws ServiceException {
+            throws ServiceException {
         destCosName = destCosName.toLowerCase().trim();
 
         Cos srcCos = getCosById(srcCosId, null);
@@ -3280,7 +3274,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private LdapCos getCOSByQuery(ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.cosBaseDN(), filter, initZlc, false);
             if (sr != null) {
@@ -3310,23 +3304,23 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public Cos get(Key.CosBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case name:
-                return getCosByName(key, null);
-            case id:
-                return getCosById(key, null);
-            default:
-                    return null;
+        case name:
+            return getCosByName(key, null);
+        case id:
+            return getCosById(key, null);
+        default:
+            return null;
         }
     }
 
     private Cos getFromCache(Key.CosBy keyType, String key) {
         switch(keyType) {
-            case name:
-                return cosCache.getByName(key);
-            case id:
-                return cosCache.getById(key);
-            default:
-                return null;
+        case name:
+            return cosCache.getByName(key);
+        case id:
+            return cosCache.getById(key);
+        default:
+            return null;
         }
     }
 
@@ -3537,7 +3531,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             ReplaceAddressResult replacedAllowAddrForDelegatedSender =
                     replaceMailAddresses(acct, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
-                    oldEmail, newName);
+                            oldEmail, newName);
             if (replacedAllowAddrForDelegatedSender.newAddrs().length > 0) {
                 newAttrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
                         replacedAllowAddrForDelegatedSender.newAddrs());
@@ -3620,7 +3614,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     aliasDomainIds = getEmptyAliasDomainIds(zlc, domain, true);
                 }
 
-               // delete all alias domains if any
+                // delete all alias domains if any
                 if (aliasDomainIds != null) {
                     for (String aliasDomainId : aliasDomainIds) {
                         deleteDomainInternal(zlc, aliasDomainId);
@@ -3642,13 +3636,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         deleteDomain(zimbraId, true);
     }
 
-	@Override
+    @Override
     public void deleteDomainAfterRename(String zimbraId) throws ServiceException {
         deleteDomain(zimbraId, false);
     }
 
     public List<String> getEmptyAliasDomainIds(ZLdapContext zlc, Domain targetDomain, boolean subordinateCheck)
-    throws ServiceException {
+            throws ServiceException {
         List<String> aliasDomainIds = new ArrayList<String>();
 
         ZSearchResultEnumeration ne = null;
@@ -3827,92 +3821,92 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_DOMAIN);
 
             RenameDomain.RenameDomainLdapHelper helper =
-                new RenameDomain.RenameDomainLdapHelper(this, zlc) {
+                    new RenameDomain.RenameDomainLdapHelper(this, zlc) {
 
-                private ZLdapContext toZLdapContext() {
-                    return LdapClient.toZLdapContext(mProv, mZlc);
-                }
+                        private ZLdapContext toZLdapContext() {
+                            return LdapClient.toZLdapContext(mProv, mZlc);
+                        }
 
-                @Override
-                public void createEntry(String dn, Map<String, Object> attrs)
-                throws ServiceException {
+                        @Override
+                        public void createEntry(String dn, Map<String, Object> attrs)
+                                throws ServiceException {
 
-                    ZMutableEntry entry = LdapClient.createMutableEntry();
-                    entry.mapToAttrs(attrs);
-                    entry.setDN(dn);
+                            ZMutableEntry entry = LdapClient.createMutableEntry();
+                            entry.mapToAttrs(attrs);
+                            entry.setDN(dn);
 
-                    ZLdapContext ldapContext = toZLdapContext();
-                    ldapContext.createEntry(entry);
-                }
+                            ZLdapContext ldapContext = toZLdapContext();
+                            ldapContext.createEntry(entry);
+                        }
 
-                @Override
-                public void deleteEntry(String dn) throws ServiceException {
-                    ZLdapContext ldapContext = toZLdapContext();
-                    ldapContext.deleteEntry(dn);
-                }
+                        @Override
+                        public void deleteEntry(String dn) throws ServiceException {
+                            ZLdapContext ldapContext = toZLdapContext();
+                            ldapContext.deleteEntry(dn);
+                        }
 
-                @Override
-                public void renameEntry(String oldDn, String newDn)
-                throws ServiceException {
-                    ZLdapContext ldapContext = toZLdapContext();
-                    ldapContext.renameEntry(oldDn, newDn);
-                }
+                        @Override
+                        public void renameEntry(String oldDn, String newDn)
+                                throws ServiceException {
+                            ZLdapContext ldapContext = toZLdapContext();
+                            ldapContext.renameEntry(oldDn, newDn);
+                        }
 
-                @Override
-                public void searchDirectory(SearchDirectoryOptions options,
-                        NamedEntry.Visitor visitor) throws ServiceException {
-                    ((LdapProvisioning) mProv).searchDirectory(options, visitor);
-                }
+                        @Override
+                        public void searchDirectory(SearchDirectoryOptions options,
+                                NamedEntry.Visitor visitor) throws ServiceException {
+                            ((LdapProvisioning) mProv).searchDirectory(options, visitor);
+                        }
 
-                @Override
-                public void renameAddressesInAllDistributionLists(Map<String, String> changedPairs) {
-                    ((LdapProvisioning) mProv).renameAddressesInAllDistributionLists(changedPairs);
-                }
+                        @Override
+                        public void renameAddressesInAllDistributionLists(Map<String, String> changedPairs) {
+                            ((LdapProvisioning) mProv).renameAddressesInAllDistributionLists(changedPairs);
+                        }
 
-                @Override
-                public void renameXMPPComponent(String zimbraId, String newName)
-                throws ServiceException {
-                    ((LdapProvisioning) mProv).renameXMPPComponent(zimbraId, newName);
-                }
+                        @Override
+                        public void renameXMPPComponent(String zimbraId, String newName)
+                                throws ServiceException {
+                            ((LdapProvisioning) mProv).renameXMPPComponent(zimbraId, newName);
+                        }
 
-                @Override
-                public Account getAccountById(String id) throws ServiceException {
-                    // note: we do NOT want to get a cached entry
-                    return ((LdapProvisioning) mProv).getAccountByQuery(
-                        mProv.getDIT().mailBranchBaseDN(),
-                        ZLdapFilterFactory.getInstance().accountById(id), toZLdapContext(), true);
-                }
+                        @Override
+                        public Account getAccountById(String id) throws ServiceException {
+                            // note: we do NOT want to get a cached entry
+                            return ((LdapProvisioning) mProv).getAccountByQuery(
+                                    mProv.getDIT().mailBranchBaseDN(),
+                                    ZLdapFilterFactory.getInstance().accountById(id), toZLdapContext(), true);
+                        }
 
-                @Override
-                public DistributionList getDistributionListById(String id)
-                throws ServiceException {
-                    // note: we do NOT want to get a cahed entry
-                    return ((LdapProvisioning) mProv).getDistributionListByQuery(
-                            mDIT.mailBranchBaseDN(),
-                            filterFactory.distributionListById(id),
-                            toZLdapContext(), false);
-                }
+                        @Override
+                        public DistributionList getDistributionListById(String id)
+                                throws ServiceException {
+                            // note: we do NOT want to get a cahed entry
+                            return ((LdapProvisioning) mProv).getDistributionListByQuery(
+                                    mDIT.mailBranchBaseDN(),
+                                    filterFactory.distributionListById(id),
+                                    toZLdapContext(), false);
+                        }
 
-                @Override
-                public DynamicGroup getDynamicGroupById(String id) throws ServiceException {
-                    // note: we do NOT want to get a cahed entry
-                    return ((LdapProvisioning) mProv).getDynamicGroupByQuery(
-                            filterFactory.dynamicGroupById(id),
-                            toZLdapContext(), false);
-                }
+                        @Override
+                        public DynamicGroup getDynamicGroupById(String id) throws ServiceException {
+                            // note: we do NOT want to get a cahed entry
+                            return ((LdapProvisioning) mProv).getDynamicGroupByQuery(
+                                    filterFactory.dynamicGroupById(id),
+                                    toZLdapContext(), false);
+                        }
 
-                @Override
-                public void modifyLdapAttrs(Entry entry,
-                        Map<String, ? extends Object> attrs)
-                        throws ServiceException {
-                    ((LdapProvisioning) mProv).modifyLdapAttrs(entry, toZLdapContext(), attrs);
-                }
+                        @Override
+                        public void modifyLdapAttrs(Entry entry,
+                                Map<String, ? extends Object> attrs)
+                                throws ServiceException {
+                            ((LdapProvisioning) mProv).modifyLdapAttrs(entry, toZLdapContext(), attrs);
+                        }
 
-            };
+                    };
 
             Domain oldDomain = getDomainById(zimbraId, zlc);
             if (oldDomain == null)
-               throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
+                throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
 
             RenameDomain rd = new RenameDomain(this, helper, oldDomain, newDomainName);
             rd.execute();
@@ -3950,7 +3944,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         case id:
             return getShareLocatorById(key, null, false);
         default:
-                return null;
+            return null;
         }
     }
 
@@ -4012,7 +4006,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Server createServer(String name, Map<String, Object> serverAttrs)
-    throws ServiceException {
+            throws ServiceException {
         name = name.toLowerCase().trim();
 
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
@@ -4059,7 +4053,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Server getServerByQuery(ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.serverBaseDN(), filter, initZlc, false);
             if (sr != null) {
@@ -4075,7 +4069,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Server getServerById(String zimbraId, ZLdapContext zlc, boolean nocache)
-    throws ServiceException {
+            throws ServiceException {
         if (zimbraId == null)
             return null;
         Server s = null;
@@ -4089,7 +4083,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private AlwaysOnCluster getAlwaysOnClusterByQuery(ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.alwaysOnClusterBaseDN(), filter, initZlc, false);
             if (sr != null) {
@@ -4105,7 +4099,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private AlwaysOnCluster getAlwaysOnClusterById(String zimbraId, ZLdapContext zlc, boolean nocache)
-    throws ServiceException {
+            throws ServiceException {
         if (zimbraId == null)
             return null;
         AlwaysOnCluster c = null;
@@ -4119,7 +4113,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private ShareLocator getShareLocatorByQuery(ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.shareLocatorBaseDN(), filter, initZlc, false);
             if (sr != null) {
@@ -4135,7 +4129,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private ShareLocator getShareLocatorById(String id, ZLdapContext zlc, boolean nocache)
-    throws ServiceException {
+            throws ServiceException {
         if (id == null)
             return null;
         ShareLocator shloc = null;
@@ -4151,21 +4145,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public Server get(Key.ServerBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case name:
-                return getServerByNameInternal(key);
-            case id:
-                return getServerByIdInternal(key);
-            case serviceHostname:
-                List<Server> servers = getAllServers();
-                for (Server server : servers) {
-                    // when replication is enabled, should return server representing current master
-                    if (key.equalsIgnoreCase(server.getAttr(Provisioning.A_zimbraServiceHostname, ""))) {
-                        return server;
-                    }
+        case name:
+            return getServerByNameInternal(key);
+        case id:
+            return getServerByIdInternal(key);
+        case serviceHostname:
+            List<Server> servers = getAllServers();
+            for (Server server : servers) {
+                // when replication is enabled, should return server representing current master
+                if (key.equalsIgnoreCase(server.getAttr(Provisioning.A_zimbraServiceHostname, ""))) {
+                    return server;
                 }
-                return null;
-            default:
-                    return null;
+            }
+            return null;
+        default:
+            return null;
         }
     }
 
@@ -4287,7 +4281,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public AlwaysOnCluster createAlwaysOnCluster(String name, Map<String, Object> clusterAttrs)
-    throws ServiceException {
+            throws ServiceException {
         name = name.toLowerCase().trim();
 
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
@@ -4362,17 +4356,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public AlwaysOnCluster get(Key.AlwaysOnClusterBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case id:
-                return getAlwaysOnClusterByIdInternal(key);
-            case name:
-                return getAlwaysOnClusterByNameInternal(key);
-            default:
-                    return null;
+        case id:
+            return getAlwaysOnClusterByIdInternal(key);
+        case name:
+            return getAlwaysOnClusterByNameInternal(key);
+        default:
+            return null;
         }
     }
 
     private List<Cos> searchCOS(ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         List<Cos> result = new ArrayList<Cos>();
         try {
             ZSearchResultEnumeration ne = helper.searchDir(mDIT.cosBaseDN(), filter,
@@ -4407,7 +4401,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             return;
         }
 
-     }
+    }
 
     private void removeAttrsForServer(String[] attributes, String serverName) throws ServiceException {
         // Remove attrs from global config
@@ -4424,7 +4418,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
             modifyAttrs(server, serverAttrs);
         }
-     }
+    }
 
     private static class CountingVisitor extends SearchLdapVisitor {
         long numAccts = 0;
@@ -4474,9 +4468,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw ServiceException.INVALID_REQUEST("zimbraLogHostname is set to " + serverName, null);
         }
         String[] attributesToRemove = {
-            Provisioning.A_zimbraReverseProxyAvailableLookupTargets,
-            Provisioning.A_zimbraReverseProxyUpstreamEwsServers,
-            Provisioning.A_zimbraReverseProxyUpstreamLoginServers
+                Provisioning.A_zimbraReverseProxyAvailableLookupTargets,
+                Provisioning.A_zimbraReverseProxyUpstreamEwsServers,
+                Provisioning.A_zimbraReverseProxyUpstreamLoginServers
         };
         removeAttrsForServer(attributesToRemove, server.getName());
 
@@ -4517,13 +4511,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public DistributionList createDistributionList(String listAddress,
             Map<String, Object> listAttrs)
-    throws ServiceException {
+            throws ServiceException {
         return createDistributionList(listAddress, listAttrs, null);
     }
 
     private DistributionList createDistributionList(String listAddress,
             Map<String, Object> listAttrs, Account creator)
-    throws ServiceException {
+            throws ServiceException {
         boolean isHabGroup = false;
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(listAttrs);
         String baseDn = specialAttrs.getLdapBaseDn();
@@ -4744,8 +4738,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
 
             ReplaceAddressResult replacedAllowAddrForDelegatedSender =
-                replaceMailAddresses(dl, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
-                oldEmail, newEmail);
+                    replaceMailAddresses(dl, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
+                            oldEmail, newEmail);
             if (replacedAllowAddrForDelegatedSender.newAddrs().length > 0) {
                 attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
                         replacedAllowAddrForDelegatedSender.newAddrs());
@@ -4818,33 +4812,33 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public DistributionList get(Key.DistributionListBy keyType, String key)
-    throws ServiceException {
+            throws ServiceException {
         switch(keyType) {
-            case id:
-                return getDistributionListByIdInternal(key);
-            case name:
-                DistributionList dl = getDistributionListByNameInternal(key);
-                if (dl == null) {
-                    String localDomainAddr = getEmailAddrByDomainAlias(key);
-                    if (localDomainAddr != null) {
-                        dl = getDistributionListByNameInternal(localDomainAddr);
-                    }
+        case id:
+            return getDistributionListByIdInternal(key);
+        case name:
+            DistributionList dl = getDistributionListByNameInternal(key);
+            if (dl == null) {
+                String localDomainAddr = getEmailAddrByDomainAlias(key);
+                if (localDomainAddr != null) {
+                    dl = getDistributionListByNameInternal(localDomainAddr);
                 }
-                return dl;
-            default:
-                return null;
+            }
+            return dl;
+        default:
+            return null;
         }
     }
 
     private DistributionList getDistributionListById(String zimbraId, ZLdapContext zlc)
-    throws ServiceException {
+            throws ServiceException {
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                                          filterFactory.distributionListById(zimbraId),
-                                          zlc, false);
+                filterFactory.distributionListById(zimbraId),
+                zlc, false);
     }
 
     private DistributionList getDistributionListByIdInternal(String zimbraId)
-    throws ServiceException {
+            throws ServiceException {
         return getDistributionListById(zimbraId, null);
     }
 
@@ -4910,7 +4904,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         // delete all grants granted to the DL
         try {
-             RightCommand.revokeAllRights(this, GranteeType.GT_GROUP, zimbraId);
+            RightCommand.revokeAllRights(this, GranteeType.GT_GROUP, zimbraId);
         } catch (ServiceException e) {
             // eat the exception and continue
             ZimbraLog.account.warn("cannot revoke grants", e);
@@ -4949,7 +4943,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private DistributionList getDistributionListByNameInternal(String listAddress)
-    throws ServiceException {
+            throws ServiceException {
         listAddress = IDNUtil.toAsciiEmail(listAddress);
 
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
@@ -5027,10 +5021,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      */
     @Override
     public GroupMembership getGroupMembership(Account acct, boolean adminGroupsOnly)
-    throws ServiceException {
+            throws ServiceException {
         EntryCacheDataKey cacheKey = adminGroupsOnly ?
                 EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY :
-                    EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP;
+                EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP;
 
         GroupMembership cacheableGroups = (GroupMembership)acct.getCachedData(cacheKey);
         if (cacheableGroups == null) {
@@ -5043,10 +5037,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * Note this is over-ridden in CustomLdapProvisioning to always return an empty list
      */
     public GroupMembership getCustomDynamicGroupMembership(Account acct, boolean adminGroupsOnly)
-    throws ServiceException {
+            throws ServiceException {
         GroupMembership groups = new GroupMembership();
         return LdapDynamicGroup.updateGroupMembershipForCustomDynamicGroups(this,
-            groups, acct, (Domain) null, adminGroupsOnly);
+                groups, acct, (Domain) null, adminGroupsOnly);
     }
 
     /**
@@ -5055,7 +5049,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      */
     @Override
     public GroupMembership getGroupMembershipWithRights(Account acct, Set<Right> rights, boolean adminGroupsOnly)
-    throws ServiceException {
+            throws ServiceException {
         SearchForGroupsWithRightsVisitor visitor = new SearchForGroupsWithRightsVisitor(rights);
         Set<String> groupsWithRights = searchForGroupsWhichUseRights(getDIT().zimbraBaseDN(), rights, visitor);
         if (groupsWithRights.size() == 0) {
@@ -5134,7 +5128,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      */
     private Set<String> searchForGroupsWhichUseRights(String base, Set<Right> rights,
             SearchForGroupsWithRightsVisitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         String[] fetchAttrs = { LdapProvisioning.A_zimbraACE };
         StringBuilder query = new StringBuilder("(|");
         if ((rights == null) || rights.isEmpty()) {
@@ -5142,7 +5136,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } else {
             for (Right right : rights) {
                 query.append('(').append(Provisioning.A_zimbraACE).append('=').append("* grp ")
-                .append(right.getName()).append(")");
+                        .append(right.getName()).append(")");
             }
         }
         query.append(")");
@@ -5152,7 +5146,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private GroupMembership setupGroupedEntryCacheData(Account acct, boolean adminGroupsOnly)
-    throws ServiceException {
+            throws ServiceException {
         //
         // static groups
         //
@@ -5164,8 +5158,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         //
         Set<String>allGroupIDs = getAllContainingDynamicGroupIDs(acct);
         groups = LdapDynamicGroup.updateGroupMembershipForDynamicGroups(this, groups, acct, allGroupIDs,
-            false /* adminGroupsOnly - false because need them all for the cache */,
-            false /* customGroupsOnly */, true /* nonCustomGroupsOnly */);
+                false /* adminGroupsOnly - false because need them all for the cache */,
+                false /* customGroupsOnly */, true /* nonCustomGroupsOnly */);
 
         GroupMembership customMembership = getCustomDynamicGroupMembership(acct, false /* need them all for cache */);
         groups.mergeFrom(customMembership);
@@ -5183,7 +5177,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public GroupMembership getGroupMembership(DistributionList dl, boolean adminGroupsOnly)
-    throws ServiceException {
+            throws ServiceException {
 
         EntryCacheDataKey cacheKey = adminGroupsOnly ?
                 EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY :
@@ -5240,12 +5234,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     public static final long TIMESTAMP_WINDOW = Constants.MILLIS_PER_MINUTE * 5;
 
     private void checkAccountStatus(Account acct, Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         checkAccountStatus(acct, authCtxt, Boolean.FALSE);
     }
 
     private void checkAccountStatus(Account acct, Map<String, Object> authCtxt, boolean ignoreLockout)
-    throws ServiceException {
+            throws ServiceException {
         /*
          * We no longer do this reload(see bug 18981):
          *     Stale data can be read back if there are replication delays and the account is
@@ -5289,17 +5283,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         if (!ignoreLockout && !(accountStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
-              accountStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT))) {
+                accountStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT))) {
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                     AuthMechanism.namePassedIn(authCtxt), "account(or domain) status is " +
-                    accountStatus);
+                            accountStatus);
         }
     }
 
     @Override
     public void preAuthAccount(Account acct, String acctValue, String acctBy,
             long timestamp, long expires, String preAuth, Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         preAuthAccount(acct, acctValue, acctBy, timestamp, expires, preAuth, false, authCtxt);
     }
 
@@ -5307,7 +5301,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     public void preAuthAccount(Account acct, String acctValue, String acctBy,
             long timestamp, long expires, String preAuth, boolean admin,
             Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         try {
             preAuth(acct, acctValue, acctBy, timestamp, expires, preAuth, admin, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -5326,7 +5320,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public void preAuthAccount(Domain domain, String acctValue, String acctBy,
             long timestamp, long expires, String preAuth, Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         verifyPreAuth(domain, null, acctValue, acctBy, timestamp, expires, preAuth, false, authCtxt);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "PreAuth","account", acctValue}));
@@ -5342,14 +5336,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     void verifyPreAuth(Domain domain, String acctNameForLogging,
             String acctValue, String acctBy, long timestamp, long expires,
             String preAuth, boolean admin, Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
 
-         if (preAuth == null || preAuth.length() == 0)
+        if (preAuth == null || preAuth.length() == 0)
             throw ServiceException.INVALID_REQUEST("preAuth must not be empty", null);
 
-         if (acctNameForLogging == null) {
-             acctNameForLogging = acctValue;
-         }
+        if (acctNameForLogging == null) {
+            acctNameForLogging = acctValue;
+        }
 
         // see if domain is configured for preauth
         String domainPreAuthKey = domain.getAttr(Provisioning.A_zimbraPreAuthKey, null);
@@ -5365,7 +5359,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw AuthFailedServiceException.AUTH_FAILED(acctNameForLogging,
                     AuthMechanism.namePassedIn(authCtxt),
                     "preauth timestamp is too old, server time: " + nowDate.toString() +
-                    ", preauth timestamp: " + preauthDate.toString());
+                            ", preauth timestamp: " + preauthDate.toString());
         }
 
         // compute expected preAuth
@@ -5409,14 +5403,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void authAccount(Account acct, String password, AuthContext.Protocol proto)
-    throws ServiceException {
+            throws ServiceException {
         authAccount(acct, password, proto, null);
     }
 
     @Override
     public void authAccount(Account acct, String password, AuthContext.Protocol proto,
             Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         try {
             if (password == null || password.equals("")) {
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
@@ -5450,7 +5444,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private void authAccount(Account acct, String password,
             boolean checkPasswordPolicy, Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         checkAccountStatus(acct, authCtxt);
 
         AuthMechanism authMech = AuthMechanism.newInstance(acct, authCtxt);
@@ -5543,7 +5537,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public void ssoAuthAccount(Account acct, AuthContext.Protocol proto,
             Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ssoAuth(acct, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -5611,10 +5605,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             if (detail instanceof IOException) {
                 return Check.toResult((IOException) detail, dn);
             } else if (ldapException instanceof LdapEntryNotFoundException ||
-                       detail instanceof LdapEntryNotFoundException) {
+                    detail instanceof LdapEntryNotFoundException) {
                 return new Provisioning.Result(Check.STATUS_NAME_NOT_FOUND, e, dn);
             } else if (ldapException instanceof LdapInvalidSearchFilterException ||
-                       detail instanceof LdapInvalidSearchFilterException) {
+                    detail instanceof LdapInvalidSearchFilterException) {
                 return new Provisioning.Result(Check.STATUS_INVALID_SEARCH_FILTER, e, dn);
             }
         }
@@ -5624,11 +5618,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password)
-    throws ServiceException {
+            throws ServiceException {
         if (password == null || password.equals("")) {
-        	AuthFailedServiceException afe = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+            AuthFailedServiceException afe = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
             AuthListener.invokeOnException(afe);
-        	throw afe;
+            throw afe;
         }
 
         LdapClient.externalLdapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
@@ -5639,12 +5633,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      */
     private void ldapAuthenticate(String url[], boolean wantStartTLS, String password,
             String searchBase, String searchFilter, String searchDn, String searchPassword)
-    throws ServiceException {
+            throws ServiceException {
 
         if (password == null || password.equals("")) {
-        	AuthFailedServiceException afe = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+            AuthFailedServiceException afe = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
             AuthListener.invokeOnException(afe);
-        	throw afe;
+            throw afe;
         }
 
         ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS,
@@ -5682,7 +5676,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             AuthListener.invokeOnException(afse);
             throw afse;
         } else if (resultDn == null) {
-        	AuthFailedServiceException afse = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty search");
+            AuthFailedServiceException afse = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty search");
             AuthListener.invokeOnException(afse);
             throw afse;
         }
@@ -5692,7 +5686,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Provisioning.Result checkAuthConfig(Map attrs, String name, String password)
-    throws ServiceException {
+            throws ServiceException {
         AuthMech mech = AuthMech.fromString(Check.getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech));
         if (!(mech == AuthMech.ldap || mech == AuthMech.ad)) {
             throw ServiceException.INVALID_REQUEST("auth mech must be: "+
@@ -5735,7 +5729,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Provisioning.Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp)
-    throws ServiceException {
+            throws ServiceException {
 
         GalMode mode = GalMode.fromString(Check.getRequiredAttr(attrs, Provisioning.A_zimbraGalMode));
         if (mode != GalMode.ldap)
@@ -5765,14 +5759,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public void externalLdapAuth(Domain domain, AuthMech authMech,
             Account acct, String password, Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         externalLdapAuth(domain, authMech, acct, null, password, authCtxt);
     }
 
     @Override
     public void externalLdapAuth(Domain d, AuthMech authMech,
             String principal, String password, Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         externalLdapAuth(d, authMech, null, principal, password, authCtxt);
     }
 
@@ -5830,10 +5824,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 return;
             }
         } catch (ServiceException e) {
-        	AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(principal,
+            AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(principal,
                     AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
-        	AuthListener.invokeOnException(afse);
-        	throw afse;
+            AuthListener.invokeOnException(afse);
+            throw afse;
         }
 
         String msg = "one of the following attrs must be set "+
@@ -5856,7 +5850,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private void verifyPassword(Account acct, String password, AuthMechanism authMech,
             Map<String, Object> authCtxt)
-    throws ServiceException {
+            throws ServiceException {
         synchronized (acct) {
             //Checking alias login allowed or not
             if (authCtxt != null && authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN) != null) {
@@ -5897,7 +5891,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      */
     private void verifyPasswordInternal(Account acct, String password,
             AuthMechanism authMech, Map<String, Object> context)
-    throws ServiceException {
+            throws ServiceException {
         if (isRecoveryCodeBasedAuth(context)) {
             verifyRecoveryCode(acct, password, context);
         } else {
@@ -5916,7 +5910,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 if (!allowFallback || authMech.isZimbraAuth())
                     throw e;
                 ZimbraLog.account.warn(authMech.getMechanism() + " auth for domain " +
-                    domain.getName() + " failed, fall back to zimbra default auth mechanism", e);
+                        domain.getName() + " failed, fall back to zimbra default auth mechanism", e);
             }
 
             // fall back to zimbra default auth
@@ -5926,13 +5920,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void changePassword(Account acct, String currentPassword, String newPassword)
-    throws ServiceException {
+            throws ServiceException {
         changePassword (acct, currentPassword, newPassword, false);
     }
 
     @Override
     public void changePassword(Account acct, String currentPassword, String newPassword, boolean dryRun)
-    throws ServiceException {
+            throws ServiceException {
         authAccount(acct, currentPassword, false, null);
         boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
         if (locked)
@@ -5945,7 +5939,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * @throws AccountServiceException
      */
     private void checkHistory(String newPassword, String[] history)
-    throws AccountServiceException {
+            throws AccountServiceException {
         if (history == null)
             return;
         for (int i=0; i < history.length; i++) {
@@ -5993,14 +5987,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public SetPasswordResult setPassword(Account acct, String newPassword)
-    throws ServiceException {
+            throws ServiceException {
         return setPassword(acct, newPassword, false);
     }
 
     @Override
     public SetPasswordResult setPassword(Account acct, String newPassword,
             boolean enforcePasswordPolicy)
-    throws ServiceException {
+            throws ServiceException {
         SetPasswordResult result = new SetPasswordResult();
         String msg = null;
 
@@ -6025,12 +6019,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void checkPasswordStrength(Account acct, String password)
-    throws ServiceException {
+            throws ServiceException {
         checkPasswordStrength(password, acct, null, null);
     }
 
     private int getInt(Account acct, Cos cos, ZMutableEntry entry, String name, int defaultValue)
-    throws ServiceException {
+            throws ServiceException {
         if (acct != null) {
             return acct.getIntAttr(name, defaultValue);
         }
@@ -6052,7 +6046,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private String getString(Account acct, Cos cos, ZMutableEntry entry, String name)
-    throws ServiceException {
+            throws ServiceException {
         if (acct != null) {
             return acct.getAttr(name);
         }
@@ -6070,7 +6064,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private boolean getBoolean(Account acct, Cos cos, ZMutableEntry entry, String name,
-        boolean defaultValue) throws ServiceException {
+            boolean defaultValue) throws ServiceException {
         if (acct != null) {
             return acct.getBooleanAttr(name, defaultValue);
         }
@@ -6106,7 +6100,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void checkPasswordStrength(String password, Account acct, Cos cos, ZMutableEntry entry, String userName)
-    throws ServiceException {
+            throws ServiceException {
         int minLength = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinLength, 0);
         if (minLength > 0 && password.length() < minLength) {
             throw AccountServiceException.INVALID_PASSWORD("too short",
@@ -6119,7 +6113,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     new Argument(Provisioning.A_zimbraPasswordMaxLength, maxLength, Argument.Type.NUM));
         }
 
-        // userName is passed from createAccount() and else condition is invoked 
+        // userName is passed from createAccount() and else condition is invoked
         // when called from other Api's Changepassword and Resetpassword Api
         boolean isFeatureAllowUsernameInPassword;
         if (acct == null) {
@@ -6247,19 +6241,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private boolean isAsciiPunc(char ch) {
         return
-            (ch >= 33 && ch <= 47) || // ! " # $ % & ' ( ) * + , - . /
-            (ch >= 58 && ch <= 64) || // : ; < = > ? @
-            (ch >= 91 && ch <= 96) || // [ \ ] ^ _ `
-            (ch >=123 && ch <= 126);  // { | } ~
+                (ch >= 33 && ch <= 47) || // ! " # $ % & ' ( ) * + , - . /
+                        (ch >= 58 && ch <= 64) || // : ; < = > ? @
+                        (ch >= 91 && ch <= 96) || // [ \ ] ^ _ `
+                        (ch >=123 && ch <= 126);  // { | } ~
     }
 
-    public void resetPassword(Account acct, String newPassword, boolean dryRun) 
+    public void resetPassword(Account acct, String newPassword, boolean dryRun)
             throws ServiceException {
         setPassword(acct, newPassword, true, dryRun);
     }
 
     void setPassword(Account acct, String newPassword, boolean enforcePolicy, boolean dryRun)
-    throws ServiceException {
+            throws ServiceException {
 
         boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
 
@@ -6346,7 +6340,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Zimlet getZimlet(String name, ZLdapContext initZlc, boolean useZimletCache)
-    throws ServiceException {
+            throws ServiceException {
 
         LdapZimlet zimlet = null;
         if (useZimletCache) {
@@ -6385,7 +6379,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     filterFactory.allZimlets(), ZSearchControls.SEARCH_CTLS_SUBTREE());
             while (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
-             result.add(new LdapZimlet(sr.getDN(), sr.getAttributes(), this));
+                result.add(new LdapZimlet(sr.getDN(), sr.getAttributes(), this));
             }
             ne.close();
         } catch (ServiceException e) {
@@ -6398,7 +6392,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Zimlet createZimlet(String name, Map<String, Object> zimletAttrs)
-    throws ServiceException {
+            throws ServiceException {
         name = name.toLowerCase().trim();
 
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
@@ -6461,11 +6455,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public CalendarResource createCalendarResource(String emailAddress,String password,
             Map<String, Object> calResAttrs)
-    throws ServiceException {
+            throws ServiceException {
         emailAddress = emailAddress.toLowerCase().trim();
 
         calResAttrs.put(Provisioning.A_zimbraAccountCalendarUserType,
-                        AccountCalendarUserType.RESOURCE.toString());
+                AccountCalendarUserType.RESOURCE.toString());
 
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(calResAttrs);
 
@@ -6476,47 +6470,47 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 ocs.toArray(new String[0]), false, null);
 
         LdapCalendarResource resource =
-            (LdapCalendarResource) getCalendarResourceById(acct.getId(), true);
+                (LdapCalendarResource) getCalendarResourceById(acct.getId(), true);
         AttributeManager.getInstance().
-            postModify(calResAttrs, resource, callbackContext);
+                postModify(calResAttrs, resource, callbackContext);
         return resource;
     }
 
     @Override
     public void deleteCalendarResource(String zimbraId)
-    throws ServiceException {
+            throws ServiceException {
         deleteAccount(zimbraId);
     }
 
     @Override
     public void renameCalendarResource(String zimbraId, String newName)
-    throws ServiceException {
+            throws ServiceException {
         renameAccount(zimbraId, newName);
     }
 
     @Override
     public CalendarResource get(Key.CalendarResourceBy keyType, String key)
-    throws ServiceException {
+            throws ServiceException {
         return get(keyType, key, false);
     }
 
     @Override
     public CalendarResource get(Key.CalendarResourceBy keyType, String key, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         switch(keyType) {
-            case id:
-                return getCalendarResourceById(key, loadFromMaster);
-            case foreignPrincipal:
-                return getCalendarResourceByForeignPrincipal(key, loadFromMaster);
-            case name:
-                return getCalendarResourceByName(key, loadFromMaster);
-            default:
-                    return null;
+        case id:
+            return getCalendarResourceById(key, loadFromMaster);
+        case foreignPrincipal:
+            return getCalendarResourceByForeignPrincipal(key, loadFromMaster);
+        case name:
+            return getCalendarResourceByName(key, loadFromMaster);
+        default:
+            return null;
         }
     }
 
     private CalendarResource getCalendarResourceById(String zimbraId, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         if (zimbraId == null)
             return null;
         Account acct = accountCache.getById(zimbraId);
@@ -6529,15 +6523,15 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
         }
         LdapCalendarResource resource = (LdapCalendarResource) getAccountByQuery(
-            mDIT.mailBranchBaseDN(),
-            filterFactory.calendarResourceById(zimbraId),
-            null, loadFromMaster);
+                mDIT.mailBranchBaseDN(),
+                filterFactory.calendarResourceById(zimbraId),
+                null, loadFromMaster);
         accountCache.put(resource);
         return resource;
     }
 
     private CalendarResource getCalendarResourceByName(String emailAddress, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         emailAddress = fixupAccountName(emailAddress);
         Account acct = accountCache.getByName(emailAddress);
         if (acct != null) {
@@ -6549,20 +6543,20 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
         }
         LdapCalendarResource resource = (LdapCalendarResource) getAccountByQuery(
-            mDIT.mailBranchBaseDN(),
-            filterFactory.calendarResourceByName(emailAddress),
-            null, loadFromMaster);
+                mDIT.mailBranchBaseDN(),
+                filterFactory.calendarResourceByName(emailAddress),
+                null, loadFromMaster);
         accountCache.put(resource);
         return resource;
     }
 
     private CalendarResource getCalendarResourceByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         LdapCalendarResource resource =
-            (LdapCalendarResource) getAccountByQuery(
-                mDIT.mailBranchBaseDN(),
-                filterFactory.calendarResourceByForeignPrincipal(foreignPrincipal),
-                null, loadFromMaster);
+                (LdapCalendarResource) getAccountByQuery(
+                        mDIT.mailBranchBaseDN(),
+                        filterFactory.calendarResourceByForeignPrincipal(foreignPrincipal),
+                        null, loadFromMaster);
         accountCache.put(resource);
         return resource;
     }
@@ -6576,7 +6570,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Account makeAccount(String dn, ZAttributes attrs, MakeObjectOpt makeObjOpt)
-    throws ServiceException {
+            throws ServiceException {
         String userType = attrs.getAttrString(Provisioning.A_zimbraAccountCalendarUserType);
         boolean isAccount = (userType == null) || userType.equals(AccountCalendarUserType.USER.toString());
 
@@ -6585,7 +6579,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             emailAddress = mDIT.dnToEmail(dn, attrs);
 
         Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null, this) :
-            new LdapCalendarResource(dn, emailAddress, attrs, null, this);
+                new LdapCalendarResource(dn, emailAddress, attrs, null, this);
 
         setAccountDefaults(acct, makeObjOpt);
 
@@ -6593,7 +6587,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void setAccountDefaults(Account acct, MakeObjectOpt makeObjOpt)
-    throws ServiceException {
+            throws ServiceException {
         if (makeObjOpt == MakeObjectOpt.NO_DEFAULTS) {
             // don't set any default
         } else if (makeObjOpt == MakeObjectOpt.NO_SECONDARY_DEFAULTS) {
@@ -6610,7 +6604,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private DistributionList makeDistributionList(String dn, ZAttributes attrs, boolean isBasic)
-    throws ServiceException {
+            throws ServiceException {
         String emailAddress = mDIT.dnToEmail(dn, attrs);
         DistributionList dl = new LdapDistributionList(dn, emailAddress, attrs, isBasic, this);
         return dl;
@@ -6621,7 +6615,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * LDAP search code uses this to return NamedEntry hits which happen to be Dynamic groups.
      */
     private DynamicGroup makeDynamicGroup(ZLdapContext initZlc, String dn, ZAttributes attrs)
-    throws ServiceException {
+            throws ServiceException {
         String emailAddress = mDIT.dnToEmail(dn, mDIT.dynamicGroupNamingRdnAttr(), attrs);
 
         LdapDynamicGroup group = new LdapDynamicGroup(dn, emailAddress, attrs, this);
@@ -6743,7 +6737,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @SuppressWarnings("unchecked")
     private List<DistributionList> getAllDistributionListsForAddresses(String addrs[],
             boolean basicAttrsOnly)
-    throws ServiceException {
+            throws ServiceException {
         if (addrs == null || addrs.length == 0)
             return new ArrayList<DistributionList>();
         String [] attrs = basicAttrsOnly ? BASIC_DL_ATTRS : null;
@@ -6772,7 +6766,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * @throws ServiceException
      */
     private List<DistributionList> getAllDirectDLs(LdapProvisioning prov, Entry entry)
-    throws ServiceException {
+            throws ServiceException {
         if (!(entry instanceof GroupedEntry)) {
             throw ServiceException.FAILURE("internal error", null);
         }
@@ -6861,13 +6855,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      */
     @Override
     public DistributionList getDLBasic(Key.DistributionListBy keyType, String key)
-    throws ServiceException {
+            throws ServiceException {
         return getDLBasic(keyType, key, null);
     }
 
     private DistributionList getDLBasic(Key.DistributionListBy keyType, String key,
             ZLdapContext zlc)
-    throws ServiceException {
+            throws ServiceException {
 
         Group group = getGroupFromCache(keyType, key);
 
@@ -6881,16 +6875,16 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         DistributionList dl = null;
 
         switch(keyType) {
-            case id:
-                dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        filterFactory.distributionListById(key), zlc, true);
-                break;
-            case name:
-                dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        filterFactory.distributionListByName(key), zlc, true);
-                break;
-            default:
-               return null;
+        case id:
+            dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                    filterFactory.distributionListById(key), zlc, true);
+            break;
+        case name:
+            dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                    filterFactory.distributionListByName(key), zlc, true);
+            break;
+        default:
+            return null;
         }
 
         if (dl != null) {
@@ -6902,7 +6896,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private List<DistributionList> getContainingDistributionLists(Entry entry,
             boolean directOnly, Map<String, String> via)
-    throws ServiceException {
+            throws ServiceException {
         List<DistributionList> directDLs = getAllDirectDLs(this, entry);
         HashSet<String> directDLSet = new HashSet<String>();
         HashSet<String> checked = new HashSet<String>();
@@ -6962,7 +6956,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Set<String> getDistributionListIds(Account acct, boolean directOnly)
-    throws ServiceException {
+            throws ServiceException {
 
         Set<String> dls = new HashSet<String>();
 
@@ -6983,7 +6977,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public boolean inDistributionList(DistributionList list, String zimbraId)
-    throws ServiceException {
+            throws ServiceException {
         GroupMembership groupMembership = getGroupMembership(list, false);
         return groupMembership.groupIds().contains(zimbraId);
     }
@@ -7026,7 +7020,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void getAllAccounts(Domain domain, NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         SearchAccountsOptions opts = new SearchAccountsOptions(domain);
         opts.setFilter(filterFactory.allAccountsOnly());
         opts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
@@ -7035,7 +7029,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void getAllAccounts(Domain domain, Server server, NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         if (server != null) {
             SearchAccountsOptions searchOpts = new SearchAccountsOptions(domain);
             searchOpts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
@@ -7056,7 +7050,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void getAllCalendarResources(Domain domain, NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
         searchOpts.setFilter(mDIT.filterCalendarResourcesByDomain(domain));
         searchOpts.setTypes(ObjectType.resources);
@@ -7065,7 +7059,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void getAllCalendarResources(Domain domain, Server server, NamedEntry.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         if (server != null) {
             SearchAccountsOptions searchOpts = new SearchAccountsOptions(domain);
             searchOpts.setIncludeType(IncludeType.CALENDAR_RESOURCES_ONLY);
@@ -7153,7 +7147,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public SearchGalResult autoCompleteGal(Domain domain, String query,
             GalSearchType type, int limit, GalContact.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         SearchGalResult searchResult = SearchGalResult.newSearchGalResult(visitor);
 
         GalSearchParams params = new GalSearchParams(domain, null);
@@ -7164,7 +7158,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         params.setGalResult(searchResult);
 
         LdapOnlyGalSearchResultCallback callback =
-            new LdapOnlyGalSearchResultCallback(params, visitor);
+                new LdapOnlyGalSearchResultCallback(params, visitor);
         params.setResultCallback(callback);
 
         GalSearchControl gal = new GalSearchControl(params);
@@ -7176,7 +7170,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public SearchGalResult searchGal(Domain domain, String query, GalSearchType type,
             int limit, GalContact.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         SearchGalResult searchResult = SearchGalResult.newSearchGalResult(visitor);
 
         GalSearchParams params = new GalSearchParams(domain, null);
@@ -7187,7 +7181,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         params.setGalResult(searchResult);
 
         LdapOnlyGalSearchResultCallback callback =
-            new LdapOnlyGalSearchResultCallback(params, visitor);
+                new LdapOnlyGalSearchResultCallback(params, visitor);
         params.setResultCallback(callback);
 
         GalSearchControl gal = new GalSearchControl(params);
@@ -7197,7 +7191,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public SearchGalResult syncGal(Domain domain, String token, GalContact.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         SearchGalResult searchResult = SearchGalResult.newSearchGalResult(visitor);
 
         GalSearchParams params = new GalSearchParams(domain, null);
@@ -7210,7 +7204,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         params.setGalResult(searchResult);
 
         LdapOnlyGalSearchResultCallback callback =
-            new LdapOnlyGalSearchResultCallback(params, visitor);
+                new LdapOnlyGalSearchResultCallback(params, visitor);
         params.setResultCallback(callback);
 
         GalSearchControl gal = new GalSearchControl(params);
@@ -7296,21 +7290,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public SearchGalResult searchGal(Domain d,
-                                     String n,
-                                     GalSearchType type,
-                                     GalMode galMode,
-                                     String token) throws ServiceException {
+            String n,
+            GalSearchType type,
+            GalMode galMode,
+            String token) throws ServiceException {
         return searchGal(d, n, type, galMode, token, null);
     }
 
 
     private SearchGalResult searchGal(Domain d,
-                                      String n,
-                                      GalSearchType type,
-                                      GalMode galMode,
-                                      String token,
-                                      GalContact.Visitor visitor)
-    throws ServiceException {
+            String n,
+            GalSearchType type,
+            GalMode galMode,
+            String token,
+            GalContact.Visitor visitor)
+            throws ServiceException {
         GalOp galOp = token != null ? GalOp.sync : GalOp.search;
         // escape user-supplied string
         n = LdapUtil.escapeSearchFilterArg(n);
@@ -7383,29 +7377,29 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private SearchGalResult searchResourcesGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraCalendarResourceFilter(galOp), n, maxResults, token, visitor);
     }
 
     private SearchGalResult searchGroupsGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraGroupFilter(galOp), n, maxResults, token, visitor);
     }
 
     private SearchGalResult searchZimbraGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraAcountFilter(galOp), n, maxResults, token, visitor);
     }
 
     private SearchGalResult searchZimbraWithNamedFilter(
-        Domain domain,
-        GalOp galOp,
-        String filterName,
-        String n,
-        int maxResults,
-        String token,
-        GalContact.Visitor visitor)
-    throws ServiceException {
+            Domain domain,
+            GalOp galOp,
+            String filterName,
+            String n,
+            int maxResults,
+            String token,
+            GalContact.Visitor visitor)
+            throws ServiceException {
         GalParams.ZimbraGalParams galParams = new GalParams.ZimbraGalParams(domain, galOp);
 
         String queryExpr = getFilterDef(filterName);
@@ -7436,14 +7430,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         try {
             zlc = LdapClient.getContext(LdapUsage.fromGalOpLegacy(galOp));
             LdapGalSearch.searchGal(zlc,
-                               GalSearchConfig.GalType.zimbra,
-                               galParams.pageSize(),
-                               galParams.searchBase(),
-                               query,
-                               maxResults,
-                               getGalRules(domain, true),
-                               token,
-                               result);
+                    GalSearchConfig.GalType.zimbra,
+                    galParams.pageSize(),
+                    galParams.searchBase(),
+                    query,
+                    maxResults,
+                    getGalRules(domain, true),
+                    token,
+                    result);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -7453,24 +7447,24 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private SearchGalResult searchLdapGal(Domain domain,
-                                          String n,
-                                          int maxResults,
-                                          String token,
-                                          GalOp galOp,
-                                          GalContact.Visitor visitor)
-    throws ServiceException {
+            String n,
+            int maxResults,
+            String token,
+            GalOp galOp,
+            GalContact.Visitor visitor)
+            throws ServiceException {
 
         GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(domain, galOp);
 
         LdapGalMapRules rules = getGalRules(domain, false);
         try {
             return LdapGalSearch.searchLdapGal(galParams,
-                                          galOp,
-                                          n,
-                                          maxResults,
-                                          rules,
-                                          token,
-                                          visitor);
+                    galOp,
+                    n,
+                    maxResults,
+                    rules,
+                    token,
+                    visitor);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to search GAL", e);
         }
@@ -7489,7 +7483,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void addDistributionListMembers(DistributionList dl, String[] members)
-    throws ServiceException {
+            throws ServiceException {
         Set<String> existing = dl.getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
         Set<String> mods = new HashSet<String>();
 
@@ -7604,7 +7598,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void removeDistributionListMembers(DistributionList dl, String[] members)
-    throws ServiceException {
+            throws ServiceException {
         Set<String> curMembers = dl.getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
 
         // bug 46219, need a case insentitive Set
@@ -7781,7 +7775,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private List<Identity> getIdentitiesByQuery(LdapEntry entry, ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         List<Identity> result = new ArrayList<Identity>();
 
         try {
@@ -7823,20 +7817,20 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public Identity createIdentity(Account account, String identityName,
             Map<String, Object> identityAttrs)
-    throws ServiceException {
+            throws ServiceException {
         return createIdentity(account, identityName, identityAttrs, false);
     }
 
     @Override
     public Identity restoreIdentity(Account account, String identityName,
             Map<String, Object> identityAttrs)
-    throws ServiceException {
+            throws ServiceException {
         return createIdentity(account, identityName, identityAttrs, true);
     }
 
     private Identity createIdentity(Account account, String identityName,
             Map<String, Object> identityAttrs, boolean restoring)
-    throws ServiceException {
+            throws ServiceException {
         removeAttrIgnoreCase("objectclass", identityAttrs);
         validateIdentityAttrs(identityAttrs);
 
@@ -7846,7 +7840,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
         if (identityName.equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME))
-                throw AccountServiceException.IDENTITY_EXISTS(identityName);
+            throw AccountServiceException.IDENTITY_EXISTS(identityName);
 
         List<Identity> existing = getAllIdentities(account);
         if (existing.size() >= account.getLongAttr(A_zimbraIdentityMaxNumEntries, 20))
@@ -7898,7 +7892,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public void modifyIdentity(Account account, String identityName,
             Map<String, Object> identityAttrs)
-    throws ServiceException {
+            throws ServiceException {
         removeAttrIgnoreCase("objectclass", identityAttrs);
 
         validateIdentityAttrs(identityAttrs);
@@ -7917,7 +7911,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             LdapIdentity identity = (LdapIdentity) getIdentityByName(ldapEntry, identityName, null);
             if (identity == null)
-                    throw AccountServiceException.NO_SUCH_IDENTITY(identityName);
+                throw AccountServiceException.NO_SUCH_IDENTITY(identityName);
 
             String name = (String) identityAttrs.get(A_zimbraPrefIdentityName);
             boolean newName = (name != null && !name.equals(identityName));
@@ -7934,7 +7928,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void renameIdentity(LdapEntry entry, LdapIdentity identity, String newIdentityName)
-    throws ServiceException {
+            throws ServiceException {
 
         if (identity.getName().equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME))
             throw ServiceException.INVALID_REQUEST("can't rename default identity", null);
@@ -8013,7 +8007,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Identity get(Account account, Key.IdentityBy keyType, String key)
-    throws ServiceException {
+            throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
@@ -8021,16 +8015,16 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         // this assumes getAllIdentities is cached and number of identities is reasaonble.
         // might want a per-identity cache (i.e., use "IDENTITY_BY_ID_"+id as a key, etc)
         switch(keyType) {
-            case id:
-                for (Identity identity : getAllIdentities(account))
-                    if (identity.getId().equals(key)) return identity;
-                return null;
-            case name:
-                for (Identity identity : getAllIdentities(account))
-                    if (identity.getName().equalsIgnoreCase(key)) return identity;
-                return null;
-            default:
-                return null;
+        case id:
+            for (Identity identity : getAllIdentities(account))
+                if (identity.getId().equals(key)) return identity;
+            return null;
+        case name:
+            for (Identity identity : getAllIdentities(account))
+                if (identity.getName().equalsIgnoreCase(key)) return identity;
+            return null;
+        default:
+            return null;
         }
     }
 
@@ -8057,7 +8051,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private Signature getSignatureById(Account acct, LdapEntry entry, String id,  ZLdapContext zlc)
-    throws ServiceException {
+            throws ServiceException {
         List<Signature> result = getSignaturesByQuery(acct, entry, filterFactory.signatureById(id), zlc, null);
         return result.isEmpty() ? null : result.get(0);
     }
@@ -8124,11 +8118,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         // is not associated with an existing signature
         String signatureId = (String)signatureAttrs.get(Provisioning.A_zimbraSignatureId);
         if (signatureId != null) {
-           for (Signature signature : existing) {
-               if (signatureId.equals(signature.getAttr(Provisioning.A_zimbraSignatureId))) {
-                   throw AccountServiceException.SIGNATURE_EXISTS(signatureId);
-               }
-           }
+            for (Signature signature : existing) {
+                if (signatureId.equals(signature.getAttr(Provisioning.A_zimbraSignatureId))) {
+                    throw AccountServiceException.SIGNATURE_EXISTS(signatureId);
+                }
+            }
         }
 
 
@@ -8199,7 +8193,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void modifySignature(Account account, String signatureId, Map<String, Object> signatureAttrs)
-    throws ServiceException {
+            throws ServiceException {
         removeAttrIgnoreCase("objectclass", signatureAttrs);
 
         validateSignatureAttrs(signatureAttrs);
@@ -8254,7 +8248,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void renameSignature(LdapEntry entry, LdapSignature signature, String newSignatureName)
-    throws ServiceException {
+            throws ServiceException {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.RENAME_SIGNATURE);
@@ -8338,7 +8332,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Signature get(Account account, Key.SignatureBy keyType, String key)
-    throws ServiceException {
+            throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
@@ -8346,23 +8340,23 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         // this assumes getAllSignatures is cached and number of signatures is reasaonble.
         // might want a per-signature cache (i.e., use "SIGNATURE_BY_ID_"+id as a key, etc)
         switch(keyType) {
-            case id:
-                for (Signature signature : getAllSignatures(account))
-                    if (signature.getId().equals(key)) return signature;
-                return null;
-            case name:
-                for (Signature signature : getAllSignatures(account))
-                    if (signature.getName().equalsIgnoreCase(key)) return signature;
-                return null;
-            default:
-                return null;
+        case id:
+            for (Signature signature : getAllSignatures(account))
+                if (signature.getId().equals(key)) return signature;
+            return null;
+        case name:
+            for (Signature signature : getAllSignatures(account))
+                if (signature.getName().equalsIgnoreCase(key)) return signature;
+            return null;
+        default:
+            return null;
         }
     }
 
     private static final String DATA_SOURCE_LIST_CACHE_KEY = "LdapProvisioning.DATA_SOURCE_CACHE";
 
     private List<DataSource> getDataSourcesByQuery(LdapEntry entry, ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         List<DataSource> result = new ArrayList<DataSource>();
 
         try {
@@ -8382,7 +8376,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private DataSource getDataSourceById(LdapEntry entry, String id,  ZLdapContext zlc)
-    throws ServiceException {
+            throws ServiceException {
         List<DataSource> result = getDataSourcesByQuery(entry, filterFactory.dataSourceById(id), zlc);
         return result.isEmpty() ? null : result.get(0);
     }
@@ -8393,7 +8387,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     protected ReplaceAddressResult replaceMailAddresses(Entry entry, String attrName,
             String oldAddr, String newAddr)
-    throws ServiceException {
+            throws ServiceException {
         String oldDomain = EmailUtil.getValidDomainPart(oldAddr);
         String newDomain = EmailUtil.getValidDomainPart(newAddr);
 
@@ -8439,7 +8433,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String newDomain, String primaryUid,
             String targetOldDn, String targetNewDn,
             String targetOldDomain, String targetNewDomain)
-    throws ServiceException {
+            throws ServiceException {
 
         for (int i=0; i < addrs.newAddrs().length; i++) {
             String oldAddr = addrs.oldAddrs()[i];
@@ -8468,7 +8462,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     } finally {
                     }
                 }
-             }
+            }
         }
     }
 
@@ -8476,7 +8470,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public DataSource createDataSource(Account account, DataSourceType dsType,
             String dsName, Map<String, Object> dataSourceAttrs)
-    throws ServiceException {
+            throws ServiceException {
         return createDataSource(account, dsType, dsName, dataSourceAttrs, false);
     }
 
@@ -8484,21 +8478,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     public DataSource createDataSource(Account account, DataSourceType type,
             String dataSourceName, Map<String, Object> attrs,
             boolean passwdAlreadyEncrypted)
-    throws ServiceException {
+            throws ServiceException {
         return createDataSource(account, type, dataSourceName, attrs, passwdAlreadyEncrypted, false);
     }
 
     @Override
     public DataSource restoreDataSource(Account account, DataSourceType dsType,
             String dsName, Map<String, Object> dataSourceAttrs)
-    throws ServiceException {
+            throws ServiceException {
         return createDataSource(account, dsType, dsName, dataSourceAttrs, true, true);
     }
 
     private DataSource createDataSource(Account account, DataSourceType dsType,
             String dsName, Map<String, Object> dataSourceAttrs,
             boolean passwdAlreadyEncrypted, boolean restoring)
-    throws ServiceException {
+            throws ServiceException {
         removeAttrIgnoreCase("objectclass", dataSourceAttrs);
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
 
@@ -8555,7 +8549,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String clientSecret = entry.getAttrString(A_zimbraDataSourceOAuthClientSecret);
             if (clientSecret != null) {
                 String encrypted = passwdAlreadyEncrypted ? clientSecret : DataSource.encryptData(
-                    dsId, clientSecret);
+                        dsId, clientSecret);
                 entry.setAttr(A_zimbraDataSourceOAuthClientSecret, encrypted);
             }
             String smtpPassword = entry.getAttrString(A_zimbraDataSourceSmtpAuthPassword);
@@ -8637,7 +8631,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs)
-    throws ServiceException {
+            throws ServiceException {
         removeAttrIgnoreCase("objectclass", attrs);
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null)
@@ -8666,7 +8660,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         String clientSecret = (String) attrs.get(A_zimbraDataSourceOAuthClientSecret);
         if (clientSecret != null) {
             attrs.put(A_zimbraDataSourceOAuthClientSecret,
-                DataSource.encryptData(ds.getId(), clientSecret));
+                    DataSource.encryptData(ds.getId(), clientSecret));
         }
         String smtpPassword = (String) attrs.get(A_zimbraDataSourceSmtpAuthPassword);
         if (smtpPassword != null) {
@@ -8692,7 +8686,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public DataSource get(Account account, Key.DataSourceBy keyType, String key)
-    throws ServiceException {
+            throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
@@ -8701,25 +8695,25 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         // might want a per-data-source cache (i.e., use "DATA_SOURCE_BY_ID_"+id as a key, etc)
 
         switch(keyType) {
-            case id:
-                for (DataSource source : getAllDataSources(account))
-                    if (source.getId().equals(key))
-                        return source;
-                return null;
-                //return getDataSourceById(ldapEntry, key, null);
-            case name:
-                for (DataSource source : getAllDataSources(account))
-                    if (source.getName().equalsIgnoreCase(key))
-                        return source;
-                return null;
-                //return getDataSourceByName(ldapEntry, key, null);
-            default:
-                return null;
+        case id:
+            for (DataSource source : getAllDataSources(account))
+                if (source.getId().equals(key))
+                    return source;
+            return null;
+        //return getDataSourceById(ldapEntry, key, null);
+        case name:
+            for (DataSource source : getAllDataSources(account))
+                if (source.getName().equalsIgnoreCase(key))
+                    return source;
+            return null;
+        //return getDataSourceByName(ldapEntry, key, null);
+        default:
+            return null;
         }
     }
 
     private XMPPComponent getXMPPComponentByQuery(ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.xmppcomponentBaseDN(), filter, initZlc, false);
             if (sr != null) {
@@ -8735,7 +8729,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private XMPPComponent getXMPPComponentByName(String name, boolean nocache)
-    throws ServiceException {
+            throws ServiceException {
         if (!nocache) {
             XMPPComponent x = xmppComponentCache.getByName(name);
             if (x != null)
@@ -8756,7 +8750,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private XMPPComponent getXMPPComponentById(String zimbraId, ZLdapContext zlc, boolean nocache)
-    throws ServiceException {
+            throws ServiceException {
         if (zimbraId == null)
             return null;
         XMPPComponent x = null;
@@ -8798,7 +8792,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public XMPPComponent createXMPPComponent(String name, Domain domain, Server server,
             Map<String, Object> inAttrs)
-    throws ServiceException {
+            throws ServiceException {
         name = name.toLowerCase().trim();
 
         // sanity checking
@@ -8843,13 +8837,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public XMPPComponent get(Key.XMPPComponentBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case name:
-                return getXMPPComponentByName(key, false);
-            case id:
-                return getXMPPComponentById(key, null, false);
-            case serviceHostname:
-                throw new UnsupportedOperationException("Writeme!");
-            default:
+        case name:
+            return getXMPPComponentByName(key, false);
+        case id:
+            return getXMPPComponentById(key, null, false);
+        case serviceHostname:
+            throw new UnsupportedOperationException("Writeme!");
+        default:
         }
         return null;
     }
@@ -8917,7 +8911,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * from zmprov -l, we don't expand all attrs, expandAllAttrs is ignored
      */
     public List<Right> getAllRights(String targetType, boolean expandAllAttrs, String rightClass)
-    throws ServiceException {
+            throws ServiceException {
         if (expandAllAttrs)
             throw ServiceException.FAILURE("expandAllAttrs == TRUE is not supported", null);
         return RightCommand.getAllRights(targetType, rightClass);
@@ -8925,9 +8919,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public boolean checkRight(String targetType, TargetBy targetBy, String target,
-                              GranteeBy granteeBy, String granteeVal,
-                              String right, Map<String, Object> attrs,
-                              AccessManager.ViaGrant via) throws ServiceException {
+            GranteeBy granteeBy, String granteeVal,
+            String right, Map<String, Object> attrs,
+            AccessManager.ViaGrant via) throws ServiceException {
         MailTarget grantee = null;
 
         try {
@@ -8949,8 +8943,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String granteeType, GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         return RightCommand.getAllEffectiveRights(this,
-                                                  granteeType, granteeBy, grantee,
-                                                  expandSetAttrs, expandGetAttrs);
+                granteeType, granteeBy, grantee,
+                expandSetAttrs, expandGetAttrs);
     }
 
     @Override
@@ -8959,9 +8953,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         return RightCommand.getEffectiveRights(this,
-                                               targetType, targetBy, target,
-                                               granteeBy, grantee,
-                                               expandSetAttrs, expandGetAttrs);
+                targetType, targetBy, target,
+                granteeBy, grantee,
+                expandSetAttrs, expandGetAttrs);
     }
 
     @Override
@@ -8969,19 +8963,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             Key.DomainBy domainBy, String domainStr,
             Key.CosBy cosBy, String cosStr,
             GranteeBy granteeBy, String grantee)
-    throws ServiceException {
+            throws ServiceException {
         return RightCommand.getCreateObjectAttrs(this,
-                                                 targetType,
-                                                 domainBy, domainStr,
-                                                 cosBy, cosStr,
-                                                 granteeBy, grantee);
+                targetType,
+                domainBy, domainStr,
+                cosBy, cosStr,
+                granteeBy, grantee);
     }
 
     @Override
     public RightCommand.Grants getGrants(String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs)
-    throws ServiceException {
+            throws ServiceException {
         return RightCommand.getGrants(this, targetType, targetBy, target,
                 granteeType, granteeBy, grantee, granteeIncludeGroupsGranteeBelongs);
     }
@@ -8990,24 +8984,24 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     public void grantRight(String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier)
-    throws ServiceException {
+            throws ServiceException {
         RightCommand.grantRight(this,
-                                null,
-                                targetType, targetBy, target,
-                                granteeType, granteeBy, grantee, secret,
-                                right, rightModifier);
+                null,
+                targetType, targetBy, target,
+                granteeType, granteeBy, grantee, secret,
+                right, rightModifier);
     }
 
     @Override
     public void revokeRight(String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee,
             String right, RightModifier rightModifier)
-    throws ServiceException {
-         RightCommand.revokeRight(this,
-                                  null,
-                                  targetType, targetBy, target,
-                                  granteeType, granteeBy, grantee,
-                                  right, rightModifier);
+            throws ServiceException {
+        RightCommand.revokeRight(this,
+                null,
+                targetType, targetBy, target,
+                granteeType, granteeBy, grantee,
+                right, rightModifier);
     }
 
     @Override
@@ -9223,7 +9217,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         SearchAccountsOptions option = new SearchAccountsOptions(domain,
                 new String[]{Provisioning.A_zimbraCOSId,
-                Provisioning.A_zimbraIsSystemResource});
+                        Provisioning.A_zimbraIsSystemResource});
         option.setIncludeType(IncludeType.ACCOUNTS_ONLY);
         option.setFilter(mDIT.filterAccountsOnlyByDomain(domain));
         searchDirectoryInternal(option, visitor);
@@ -9233,7 +9227,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public long countObjects(CountObjectsType type, Domain domain, UCService ucService)
-    throws ServiceException {
+            throws ServiceException {
 
         if (domain != null && !type.allowsDomain()) {
             throw ServiceException.INVALID_REQUEST(
@@ -9252,140 +9246,140 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         Set<ObjectType> types = Sets.newHashSet();
 
         switch (type) {
-            case userAccount:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.allNonSystemAccounts();
-                break;
-            case internalUserAccount:
-            case internalUserAccountX:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.allNonSystemInternalAccounts();
-                break;
-            case internalArchivingAccount:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.allNonSystemArchivingAccounts();
-                break;
-            case account:
-                types.add(ObjectType.accounts);
-                types.add(ObjectType.resources);
-                filter = filterFactory.allAccounts();
-                break;
-            case alias:
-                types.add(ObjectType.aliases);
-                filter = filterFactory.allAliases();
-                break;
-            case dl:
-                types.add(ObjectType.distributionlists);
-                types.add(ObjectType.dynamicgroups);
-                filter = mDIT.filterGroupsByDomain(domain);
-                if (domain != null && !InMemoryLdapServer.isOn()) {
-                    ZLdapFilter dnSubtreeMatchFilter = ((LdapDomain) domain).getDnSubtreeMatchFilter();
-                    filter = filterFactory.andWith(filter, dnSubtreeMatchFilter);
-                }
-                break;
-            case calresource:
-                types.add(ObjectType.resources);
-                filter = filterFactory.allCalendarResources();
-                break;
-            case domain:
-                types.add(ObjectType.domains);
-                filter = filterFactory.allDomains();
-                break;
-            case cos:
-                types.add(ObjectType.coses);
-                filter = filterFactory.allCoses();
-                break;
-            case server:
-                types.add(ObjectType.servers);
-                filter = filterFactory.allServers();
-                break;
-            case accountOnUCService:
-                if (ucService == null) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "UCService is required for counting type: " + type.toString(), null);
-                }
-                types.add(ObjectType.accounts);
-                types.add(ObjectType.resources);
-                filter = filterFactory.accountsOnUCService(ucService.getId());
-                break;
-            case cosOnUCService:
-                if (ucService == null) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "UCService is required for counting type: " + type.toString(), null);
-                }
-                types.add(ObjectType.coses);
-                filter = filterFactory.cosesOnUCService(ucService.getId());
-                break;
-            case domainOnUCService:
-                if (ucService == null) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "UCService is required for counting type: " + type.toString(), null);
-                }
-                types.add(ObjectType.domains);
-                filter = filterFactory.domainsOnUCService(ucService.getId());
-                break;
-            case internalUserAccountWithSmime:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithSmime();
-                break;
-            case internalUserAccountWithEws:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithEws();
-                break;
-            case internalUserAccountWithMobileSync:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithMobileSync();
-                break;
-            case internalUserAccountWithZimlets:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithZimlets();
-                break;
-            case internalUserAccountWithConversions:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithConversions();
-                break;
-            case internalUserAccountWithTagging:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithTagging();
-                break;
-            case internalUserAccountWithCalendar:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithCalendar();
-                break;
-            case internalUserAccountWithGroupCalendar:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithGroupCalendar();
-                break;
-            case internalUserAccountWithTasks:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithTasks();
-                break;
-            case internalUserAccountWithSharing:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithSharing();
-                break;
-            case internalUserAccountWithBriefcases:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithBriefcases();
-                break;
-            case internalUserAccountWithViewInHtml:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithViewInHtml();
-                break;
-            case internalUserAccountWithChatAll:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithChatAll();
-                break;
-            case internalUserAccountWithVideoAll:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithVideoAll();
-                break;
-            case internalUserAccountWithDocumentEditing:
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithDocumentEditing();
-                break;
-            default:
-                throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);
+        case userAccount:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.allNonSystemAccounts();
+            break;
+        case internalUserAccount:
+        case internalUserAccountX:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.allNonSystemInternalAccounts();
+            break;
+        case internalArchivingAccount:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.allNonSystemArchivingAccounts();
+            break;
+        case account:
+            types.add(ObjectType.accounts);
+            types.add(ObjectType.resources);
+            filter = filterFactory.allAccounts();
+            break;
+        case alias:
+            types.add(ObjectType.aliases);
+            filter = filterFactory.allAliases();
+            break;
+        case dl:
+            types.add(ObjectType.distributionlists);
+            types.add(ObjectType.dynamicgroups);
+            filter = mDIT.filterGroupsByDomain(domain);
+            if (domain != null && !InMemoryLdapServer.isOn()) {
+                ZLdapFilter dnSubtreeMatchFilter = ((LdapDomain) domain).getDnSubtreeMatchFilter();
+                filter = filterFactory.andWith(filter, dnSubtreeMatchFilter);
+            }
+            break;
+        case calresource:
+            types.add(ObjectType.resources);
+            filter = filterFactory.allCalendarResources();
+            break;
+        case domain:
+            types.add(ObjectType.domains);
+            filter = filterFactory.allDomains();
+            break;
+        case cos:
+            types.add(ObjectType.coses);
+            filter = filterFactory.allCoses();
+            break;
+        case server:
+            types.add(ObjectType.servers);
+            filter = filterFactory.allServers();
+            break;
+        case accountOnUCService:
+            if (ucService == null) {
+                throw ServiceException.INVALID_REQUEST(
+                        "UCService is required for counting type: " + type.toString(), null);
+            }
+            types.add(ObjectType.accounts);
+            types.add(ObjectType.resources);
+            filter = filterFactory.accountsOnUCService(ucService.getId());
+            break;
+        case cosOnUCService:
+            if (ucService == null) {
+                throw ServiceException.INVALID_REQUEST(
+                        "UCService is required for counting type: " + type.toString(), null);
+            }
+            types.add(ObjectType.coses);
+            filter = filterFactory.cosesOnUCService(ucService.getId());
+            break;
+        case domainOnUCService:
+            if (ucService == null) {
+                throw ServiceException.INVALID_REQUEST(
+                        "UCService is required for counting type: " + type.toString(), null);
+            }
+            types.add(ObjectType.domains);
+            filter = filterFactory.domainsOnUCService(ucService.getId());
+            break;
+        case internalUserAccountWithSmime:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithSmime();
+            break;
+        case internalUserAccountWithEws:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithEws();
+            break;
+        case internalUserAccountWithMobileSync:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithMobileSync();
+            break;
+        case internalUserAccountWithZimlets:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithZimlets();
+            break;
+        case internalUserAccountWithConversions:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithConversions();
+            break;
+        case internalUserAccountWithTagging:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithTagging();
+            break;
+        case internalUserAccountWithCalendar:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithCalendar();
+            break;
+        case internalUserAccountWithGroupCalendar:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithGroupCalendar();
+            break;
+        case internalUserAccountWithTasks:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithTasks();
+            break;
+        case internalUserAccountWithSharing:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithSharing();
+            break;
+        case internalUserAccountWithBriefcases:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithBriefcases();
+            break;
+        case internalUserAccountWithViewInHtml:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithViewInHtml();
+            break;
+        case internalUserAccountWithChatAll:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithChatAll();
+            break;
+        case internalUserAccountWithVideoAll:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithVideoAll();
+            break;
+        case internalUserAccountWithDocumentEditing:
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithDocumentEditing();
+            break;
+        default:
+            throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);
         }
 
         String[] bases = getSearchBases(domain, types);
@@ -9414,50 +9408,50 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         int argsLength = args.length;
         String ldapAttribute = null;
         switch (type) {
-            case internalUserAccountsByCosesWithLdapFeature: // multiple cos ids
-                boolean isAccountsByCosesWithLdapFeatureCheck =
-                        argsLength == 2 &&
-                                args[0] instanceof List &&
-                                args[1] instanceof String;
-                if (!isAccountsByCosesWithLdapFeatureCheck) {
-                    throw ServiceException.OPERATION_DENIED(
-                            "Counting accounts By Coses and Feature check Failed : Invalid Arguments");
-                }
-                List<String> cosIds = (List<String>) args[0];
-                ldapAttribute = (String) args[1];
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsByCosesAndFeatureCheck(cosIds, ldapAttribute);
-                break;
-            case internalUserAccountsByCosWithLdapFeature:// single cos id
-                boolean isAccountsByCosWithLdapFeatureCheck =
-                        argsLength == 2 &&
-                                args[0] instanceof String &&
-                                args[1] instanceof String;
-                if (!isAccountsByCosWithLdapFeatureCheck) {
-                    throw ServiceException.OPERATION_DENIED(
-                            "Counting accounts By Cos and Feature check Failed : Invalid Arguments");
-                }
-                String cosId = (String) args[0];
-                ldapAttribute = (String) args[1];
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsByCosAndFeatureCheck(cosId, ldapAttribute);
-                break;
-            case internalUserAccountsWithLdapFeatureCheck: // accounts with a feature enabled or disabled
-                boolean isAccountsWithLdapFeatureCheck =
-                        argsLength == 2 &&
-                                args[0] instanceof String &&
-                                args[1] instanceof String;
-                if (!isAccountsWithLdapFeatureCheck) {
-                    throw ServiceException.OPERATION_DENIED(
-                            "Counting accounts with Feature check Failed : Invalid Arguments");
-                }
-                ldapAttribute = (String) args[0];
-                String ldapValue = (String) args[1];
-                types.add(ObjectType.accounts);
-                filter = filterFactory.accountsWithLdapFeatureCheck(ldapAttribute, ldapValue);
-                break;
-            default:
-                throw ServiceException.FAILURE("unsupported counting", null);
+        case internalUserAccountsByCosesWithLdapFeature: // multiple cos ids
+            boolean isAccountsByCosesWithLdapFeatureCheck =
+                    argsLength == 2 &&
+                            args[0] instanceof List &&
+                            args[1] instanceof String;
+            if (!isAccountsByCosesWithLdapFeatureCheck) {
+                throw ServiceException.OPERATION_DENIED(
+                        "Counting accounts By Coses and Feature check Failed : Invalid Arguments");
+            }
+            List<String> cosIds = (List<String>) args[0];
+            ldapAttribute = (String) args[1];
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsByCosesAndFeatureCheck(cosIds, ldapAttribute);
+            break;
+        case internalUserAccountsByCosWithLdapFeature:// single cos id
+            boolean isAccountsByCosWithLdapFeatureCheck =
+                    argsLength == 2 &&
+                            args[0] instanceof String &&
+                            args[1] instanceof String;
+            if (!isAccountsByCosWithLdapFeatureCheck) {
+                throw ServiceException.OPERATION_DENIED(
+                        "Counting accounts By Cos and Feature check Failed : Invalid Arguments");
+            }
+            String cosId = (String) args[0];
+            ldapAttribute = (String) args[1];
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsByCosAndFeatureCheck(cosId, ldapAttribute);
+            break;
+        case internalUserAccountsWithLdapFeatureCheck: // accounts with a feature enabled or disabled
+            boolean isAccountsWithLdapFeatureCheck =
+                    argsLength == 2 &&
+                            args[0] instanceof String &&
+                            args[1] instanceof String;
+            if (!isAccountsWithLdapFeatureCheck) {
+                throw ServiceException.OPERATION_DENIED(
+                        "Counting accounts with Feature check Failed : Invalid Arguments");
+            }
+            ldapAttribute = (String) args[0];
+            String ldapValue = (String) args[1];
+            types.add(ObjectType.accounts);
+            filter = filterFactory.accountsWithLdapFeatureCheck(ldapAttribute, ldapValue);
+            break;
+        default:
+            throw ServiceException.FAILURE("unsupported counting", null);
         }
         String[] bases = getSearchBases(null, types);
 
@@ -9469,7 +9463,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private long countObjects(String base, ZLdapFilter filter)
-    throws ServiceException {
+            throws ServiceException {
         ZSearchControls searchControls = ZSearchControls.createSearchControls(
                 ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, null);
         return helper.countEntries(base, filter, searchControls);
@@ -9477,7 +9471,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Map<String, String> getNamesForIds(Set<String> ids, EntryType type)
-    throws ServiceException {
+            throws ServiceException {
         final Map<String, String> result = new HashMap<String, String>();
         Set<String> unresolvedIds;
 
@@ -9582,7 +9576,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     public void searchNamesForIds(Set<String> unresolvedIds, String base,
             String objectClass, String returnAttrs[],
             SearchLdapOptions.SearchLdapVisitor visitor)
-    throws ServiceException {
+            throws ServiceException {
 
         final int batchSize = 10;  // num ids per search
         final String queryStart = "(&(objectClass=" + objectClass + ")(|";
@@ -9611,14 +9605,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Map<String, Map<String, Object>> getDomainSMIMEConfig(Domain domain, String configName)
-    throws ServiceException {
+            throws ServiceException {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(domain);
         return smime.get(configName);
     }
 
     @Override
     public void modifyDomainSMIMEConfig(Domain domain, String configName, Map<String, Object> attrs)
-    throws ServiceException {
+            throws ServiceException {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(domain);
         smime.modify(configName, attrs);
     }
@@ -9631,14 +9625,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Map<String, Map<String, Object>> getConfigSMIMEConfig(String configName)
-    throws ServiceException {
+            throws ServiceException {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(getConfig());
         return smime.get(configName);
     }
 
     @Override
     public void modifyConfigSMIMEConfig(String configName, Map<String, Object> attrs)
-    throws ServiceException {
+            throws ServiceException {
         LdapSMIMEConfig smime = LdapSMIMEConfig.getInstance(getConfig());
         smime.modify(configName, attrs);
     }
@@ -9730,7 +9724,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * returns if any one of addrs is an email address on the system
      */
     private boolean addressExists(ZLdapContext zlc, String[] addrs)
-    throws ServiceException {
+            throws ServiceException {
         return addressExistsUnderDN(zlc, LdapConstants.DN_ROOT_DSE, addrs);
     }
 
@@ -9738,7 +9732,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * returns if any one of addrs is an email address under the specified baseDN
      */
     private boolean addressExistsUnderDN(ZLdapContext zlc, String baseDN, String[] addrs)
-    throws ServiceException {
+            throws ServiceException {
         ZLdapFilter filter = filterFactory.addrsExist(addrs);
         ZSearchControls searchControls = ZSearchControls.createSearchControls(
                 ZSearchScope.SEARCH_SCOPE_SUBTREE, 1, null);
@@ -9766,7 +9760,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public Group createDelegatedGroup(String name, Map<String, Object> attrs,
             boolean dynamic, Account creator)
-    throws ServiceException {
+            throws ServiceException {
         if (creator == null) {
             throw ServiceException.INVALID_REQUEST("must have a creator account", null);
         }
@@ -9822,7 +9816,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster, boolean basicAttrsOnly)
-    throws ServiceException {
+            throws ServiceException {
         return getGroupInternal(keyType, key, basicAttrsOnly, loadFromMaster);
     }
 
@@ -9835,7 +9829,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      */
     @Override
     public Group getGroupBasic(Key.DistributionListBy keyType, String key)
-    throws ServiceException {
+            throws ServiceException {
         Group group = getGroupFromCache(keyType, key);
         if (group != null) {
             return group;
@@ -9925,7 +9919,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      */
     @Override
     public List<Group> getGroups(Account acct, boolean directOnly, Map<String,String> via)
-    throws ServiceException {
+            throws ServiceException {
         // get static groups
         List<DistributionList> dls = getDistributionLists(acct, directOnly, via);
 
@@ -10058,40 +10052,40 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private Group getGroupInternal(Key.DistributionListBy keyType, String key,
             boolean basicAttrsOnly, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         switch(keyType) {
-            case id:
-                return getGroupById(key, null, basicAttrsOnly, loadFromMaster);
-            case name:
-                Group group = getGroupByName(key, null, basicAttrsOnly, loadFromMaster);
-                if (group == null) {
-                    String localDomainAddr = getEmailAddrByDomainAlias(key);
-                    if (localDomainAddr != null) {
-                        group = getGroupByName(localDomainAddr, null, basicAttrsOnly, loadFromMaster);
-                    }
+        case id:
+            return getGroupById(key, null, basicAttrsOnly, loadFromMaster);
+        case name:
+            Group group = getGroupByName(key, null, basicAttrsOnly, loadFromMaster);
+            if (group == null) {
+                String localDomainAddr = getEmailAddrByDomainAlias(key);
+                if (localDomainAddr != null) {
+                    group = getGroupByName(localDomainAddr, null, basicAttrsOnly, loadFromMaster);
                 }
-                return group;
-            default:
-                return null;
+            }
+            return group;
+        default:
+            return null;
         }
     }
 
     private Group getGroupById(String zimbraId, ZLdapContext zlc,
             boolean basicAttrsOnly, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         return getGroupByQuery(filterFactory.groupById(zimbraId), zlc, basicAttrsOnly, loadFromMaster);
     }
 
     private Group getGroupByName(String groupAddress, ZLdapContext zlc,
             boolean basicAttrsOnly, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         groupAddress = IDNUtil.toAsciiEmail(groupAddress);
         return getGroupByQuery(filterFactory.groupByName(groupAddress), zlc, basicAttrsOnly, loadFromMaster);
     }
 
     private Group getGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc,
             boolean basicAttrsOnly, boolean loadFromMaster)
-    throws ServiceException {
+            throws ServiceException {
         try {
             String[] returnAttrs = basicAttrsOnly ? BASIC_GROUP_ATTRS : null;
             ZSearchResultEntry sr = helper.searchForEntry(
@@ -10099,7 +10093,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             if (sr != null) {
                 ZAttributes attrs = sr.getAttributes();
                 List<String> objectclass =
-                    attrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
+                        attrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
 
                 Group grp = null;
                 if (objectclass.contains(AttributeClass.OC_zimbraDistributionList)) {
@@ -10129,7 +10123,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      *   - user soap: throw exception
      */
     private void setGroupHomeServer(ZMutableEntry entry, Account creator)
-    throws ServiceException {
+            throws ServiceException {
         //
         Cos cosOfCreator = null;
         if (creator != null) {
@@ -10162,7 +10156,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private DynamicGroup createDynamicGroup(String groupAddress,
             Map<String, Object> groupAttrs, Account creator)
-    throws ServiceException {
+            throws ServiceException {
         boolean isHabGroup = false;
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(groupAttrs);
         String baseDn = specialAttrs.getLdapBaseDn();
@@ -10256,7 +10250,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 } else if (ProvisioningConstants.FALSE.equals(specifiedIsACLGroup)) {
                     throw ServiceException.INVALID_REQUEST(
                             "No custom " + A_memberURL + " is provided, " +
-                            A_zimbraIsACLGroup + " cannot be set to FALSE", null);
+                                    A_zimbraIsACLGroup + " cannot be set to FALSE", null);
                 }
                 isACLGroup = true;
             } else {
@@ -10421,7 +10415,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private void searchDynamicGroupInternalMembers(ZLdapContext zlc, String dynGroupId,
             SearchLdapVisitor visitor)
-    throws ServiceException {
+            throws ServiceException {
         String base = mDIT.mailBranchBaseDN();
         ZLdapFilter filter = filterFactory.accountByMemberOf(dynGroupId);
 
@@ -10435,7 +10429,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     // TODO: change to ldif and do in background
     private void deleteMemberOfOnAccounts(ZLdapContext zlc, String dynGroupId)
-    throws ServiceException {
+            throws ServiceException {
         final List<Account> accts = new ArrayList<Account>();
         SearchLdapVisitor visitor = new SearchLdapVisitor(false) {
             @Override
@@ -10534,8 +10528,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
 
             ReplaceAddressResult replacedAllowAddrForDelegatedSender =
-                replaceMailAddresses(group, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
-                oldEmail, newEmail);
+                    replaceMailAddresses(group, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
+                            oldEmail, newEmail);
             if (replacedAllowAddrForDelegatedSender.newAddrs().length > 0) {
                 attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender,
                         replacedAllowAddrForDelegatedSender.newAddrs());
@@ -10657,19 +10651,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private DynamicGroup getDynamicGroupById(String zimbraId, ZLdapContext zlc, boolean basicAttrsOnly)
-    throws ServiceException {
+            throws ServiceException {
         return getDynamicGroupByQuery(filterFactory.dynamicGroupById(zimbraId), zlc, basicAttrsOnly);
     }
 
     private DynamicGroup getDynamicGroupByName(String groupAddress, ZLdapContext zlc,
             boolean basicAttrsOnly)
-    throws ServiceException {
+            throws ServiceException {
         groupAddress = IDNUtil.toAsciiEmail(groupAddress);
         return getDynamicGroupByQuery(filterFactory.dynamicGroupByName(groupAddress), zlc, basicAttrsOnly);
     }
 
     private DynamicGroup getDynamicGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc, boolean basicAttrsOnly)
-    throws ServiceException {
+            throws ServiceException {
         try {
             String[] returnAttrs = basicAttrsOnly ? BASIC_DYNAMIC_GROUP_ATTRS : null;
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.mailBranchBaseDN(), filter, initZlc, false, returnAttrs);
@@ -10692,7 +10686,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void addDynamicGroupMembers(LdapDynamicGroup group, String[] members)
-    throws ServiceException {
+            throws ServiceException {
         if (group.isMembershipDefinedByCustomURL()) {
             throw ServiceException.INVALID_REQUEST(
                     "cannot add members to dynamic group with custom memberURL", null);
@@ -10773,12 +10767,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void removeDynamicGroupExternalMembers(LdapDynamicGroup group, String[] members)
-    throws ServiceException {
+            throws ServiceException {
         removeDynamicGroupMembers(group, members, true);
     }
 
     private void removeDynamicGroupMembers(LdapDynamicGroup group, String[] members, boolean externalOnly)
-    throws ServiceException {
+            throws ServiceException {
         if (group.isMembershipDefinedByCustomURL()) {
             throw ServiceException.INVALID_REQUEST(
                     String.format("cannot remove members from dynamic group '%s' with custom memberURL",
@@ -10921,7 +10915,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         SearchLdapVisitor visitor = new SearchLdapVisitor(false) {
             @Override
             public void visit(String dn, IAttributes ldapAttrs)
-            throws StopIteratingException {
+                    throws StopIteratingException {
                 String groupId = null;
                 try {
                     groupId = ldapAttrs.getAttrString(A_zimbraGroupId);
@@ -10968,7 +10962,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * (create/rename/add-alias of accounts and static/dynamic groups)
      */
     private void removeExternalAddrsFromAllDynamicGroups(Set<String> addrs, ZLdapContext zlc)
-    throws ServiceException {
+            throws ServiceException {
         for (String addr : addrs) {
             Set<String> memberOf = searchContainingDynamicGroupIdsForExternalAddress(addr, zlc);
 
@@ -11066,13 +11060,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String[] memberDNs = group.getMultiAttr(Provisioning.A_member);
 
             final String[] attrsToGet = new String[] { Provisioning.A_zimbraMailDeliveryAddress,
-                Provisioning.A_zimbraIsExternalVirtualAccount };
+                    Provisioning.A_zimbraIsExternalVirtualAccount };
             for (String memberDN : memberDNs) {
                 ZAttributes memberAttrs = zlc.getAttributes(memberDN, attrsToGet);
                 String memberAddr = memberAttrs
-                    .getAttrString(Provisioning.A_zimbraMailDeliveryAddress);
+                        .getAttrString(Provisioning.A_zimbraMailDeliveryAddress);
                 boolean isVirtualAcct = memberAttrs.hasAttributeValue(
-                    Provisioning.A_zimbraIsExternalVirtualAccount, "TRUE");
+                        Provisioning.A_zimbraIsExternalVirtualAccount, "TRUE");
                 if (memberAddr != null && !isVirtualAcct) {
                     members.add(memberAddr);
                 }
@@ -11248,7 +11242,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      *
      */
     private UCService getUCServiceByQuery(ZLdapFilter filter, ZLdapContext initZlc)
-    throws ServiceException {
+            throws ServiceException {
         try {
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.ucServiceBaseDN(), filter, initZlc, false);
             if (sr != null) {
@@ -11264,7 +11258,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private UCService getUCServiceById(String zimbraId, ZLdapContext zlc, boolean nocache)
-    throws ServiceException {
+            throws ServiceException {
         if (zimbraId == null) {
             return null;
         }
@@ -11366,12 +11360,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public UCService get(UCServiceBy keyType, String key) throws ServiceException {
         switch(keyType) {
-            case name:
-                return getUCServiceByName(key, false);
-            case id:
-                return getUCServiceById(key, null, false);
-            default:
-                return null;
+        case name:
+            return getUCServiceByName(key, false);
+        case id:
+            return getUCServiceById(key, null, false);
+        default:
+            return null;
         }
     }
 
@@ -11482,7 +11476,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             habOrgList = getAllHabOrgUnitInADomain(domain);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(
-                String.format("Unable to list HAB org units for domain=%s", domain.getName()), e);
+                    String.format("Unable to list HAB org units for domain=%s", domain.getName()), e);
         }
         return habOrgList;
     }
@@ -11495,7 +11489,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String domainDn = ((LdapEntry)domain).getDN();
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
             zlc.renameEntry(createOuDn(habOrgUnitName, domainDn),
-                createOuDn(newHabOrgUnitName, domainDn));
+                    createOuDn(newHabOrgUnitName, domainDn));
             habOrgList = getAllHabOrgUnitInADomain(domain);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to rename HAB org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
@@ -11515,7 +11509,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 zlc.deleteEntry(createOuDn(habOrgUnitName, domainDn));
             } else {
                 throw ServiceException.FAILURE(String.format("HabOrgUnit: %s"
-                   + " of doamin:%s  is not empty", habOrgUnitName, domainDn) , null);
+                        + " of doamin:%s  is not empty", habOrgUnitName, domainDn) , null);
             }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
@@ -11539,17 +11533,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String filter = "(objectClass=zimbraDistributionList)";
             String returnAttrs[] = new String[] { "cn" };
             ZLdapFilter zFilter = ZLdapFilterFactory.getInstance()
-                .fromFilterString(FilterId.ALL_DISTRIBUTION_LISTS, filter);
+                    .fromFilterString(FilterId.ALL_DISTRIBUTION_LISTS, filter);
 
             ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
 
             ZSearchResultEnumeration ne = zlc.searchDir(baseDN, zFilter, searchControls);
             empty = !ne.hasMore();
         } catch (ServiceException e) {
             throw ServiceException
-                .FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",
-                    habOrgUnitName, domainDn), e);
+                    .FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",
+                            habOrgUnitName, domainDn), e);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -11642,7 +11636,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         return zimbraIdStr;
-   }
+    }
 
     /**
      *
@@ -11656,20 +11650,20 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         try {
             ZimbraLog.ldap.info("Called addresslist");
             String[] returnAttrs = { "objectClass", Provisioning.A_uid, Provisioning.A_zimbraId,
-                Provisioning.A_zimbraAddressListGalFilter, Provisioning.A_description,
-                Provisioning.A_zimbraIsAddressListActive,
-                Provisioning.A_zimbraAddressListLdapFilter };
+                    Provisioning.A_zimbraAddressListGalFilter, Provisioning.A_description,
+                    Provisioning.A_zimbraIsAddressListActive,
+                    Provisioning.A_zimbraAddressListLdapFilter };
 
             ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
             ZSearchResultEnumeration ne = helper.searchDir(mDIT.mailBranchBaseDN(),
-                filterFactory.addressListById(zimbraId), searchControls, null,
-                LdapServerType.MASTER);
+                    filterFactory.addressListById(zimbraId), searchControls, null,
+                    LdapServerType.MASTER);
             if (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 String dn = sr.getDN();
                 ZimbraLog.ldap.debug("Got address list: %s with attributes : %s", dn,
-                    sr.getAttributes());
+                        sr.getAttributes());
                 Map<String, Object> attrs = sr.getAttributes().getAttrs();
                 String name = (String) attrs.get(Provisioning.A_displayName);
                 list = new AddressList(dn, name, zimbraId, attrs, null, this);
@@ -11678,7 +11672,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         } catch (ServiceException e) {
             throw ServiceException
-                .FAILURE(String.format("Unable to fetch address list '%s'", zimbraId), e);
+                    .FAILURE(String.format("Unable to fetch address list '%s'", zimbraId), e);
         }
         return list;
     }
@@ -11699,7 +11693,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void modifyAddressList(AddressList addressList, String name, Map<String, String> attrs)
-        throws ServiceException {
+            throws ServiceException {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.MODIFY_ADDRESS_LIST);
@@ -11711,7 +11705,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             if (!StringUtil.isNullOrEmpty(name) && !StringUtil.equal(name, oldName)) {
                 String oldDn = addressList.getDN();
                 String newDn = oldDn.replaceFirst(LdapConstants.ATTR_uid + "=" + oldName,
-                    LdapConstants.ATTR_uid + "=" + LdapUtil.escapeRDNValue(name));
+                        LdapConstants.ATTR_uid + "=" + LdapUtil.escapeRDNValue(name));
                 zlc.renameEntry(oldDn, newDn);
                 ZimbraLog.addresslist.debug("New entry DN: %s", newDn);
             }
@@ -11725,5 +11719,43 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
         return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailFailure);
+    }
+
+
+    @Override
+    public void checkIsAliasToBeHidden(NamedEntry entry, List<String> aliases) throws ServiceException {
+        ZimbraLog.mailbox.debug("checkIsAliasToBeHidden %s ", aliases);
+
+        LdapUsage ldapUsage = LdapUsage.ADD_ALIAS_ACCOUNT;
+
+        ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, ldapUsage);
+
+        for(String alias : new ArrayList<String>(aliases)) {
+            if (null != alias) {
+                String parts[] = alias.split("@");
+                String aliasName = parts[0];
+                String aliasDomain = parts[1];
+
+                ZimbraLog.mailbox.debug("checkIsAliasToBeHidden2 %s ", alias);
+
+                String targetDomainName = ((Account) entry).getDomainName();
+
+                String aliasDn = mDIT.aliasDN(((LdapEntry) entry).getDN(), targetDomainName, aliasName, aliasDomain);
+
+                ZAttributes attrs = helper.getAttributes(zlc, aliasDn);
+
+                Alias aliasEntryLocal = makeAlias(aliasDn, attrs);
+
+                NamedEntry targetEntry = searchAliasTarget(aliasEntryLocal, false);
+
+                boolean isSame = (entry.getId().equals(targetEntry.getId()));
+
+                if ("TRUE".equalsIgnoreCase(aliasEntryLocal.getAttr(Provisioning.A_zimbraHideAliasInGal))) {
+                    aliases.remove(alias);
+                }
+                ZimbraLog.mailbox.info("alias attribute for %s is %s and isSame %s ", alias, aliasEntryLocal.getAttr(Provisioning.A_zimbraHideAliasInGal), isSame);
+            }
+        }
+
     }
 }

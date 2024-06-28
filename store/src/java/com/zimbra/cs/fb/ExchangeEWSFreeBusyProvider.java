@@ -141,17 +141,17 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     private static ExchangeService factory = null;
 
     static {
-        ZimbraLog.fb.debug("Setting MailcapCommandMap handlers back to default");
+        ZimbraLog.mailbox.info("hhhh Setting MailcapCommandMap handlers back to default");
         MailcapCommandMap mc = (MailcapCommandMap)CommandMap.getDefaultCommandMap();
         mc.addMailcap("application/xml;;x-java-content-handler=com.sun.mail.handlers.text_xml");
         mc.addMailcap("text/xml;;x-java-content-handler=com.sun.mail.handlers.text_xml");
         mc.addMailcap("text/plain;;x-java-content-handler=com.sun.mail.handlers.text_plain");
         mc.addMailcap("xml/x-zimbra-share;;x-java-content-handler=com.sun.mail.handlers.text_plain");
         CommandMap.setDefaultCommandMap(mc);
-        ZimbraLog.fb.debug("Done Setting MailcapCommandMap handlers");
+        ZimbraLog.mailbox.info("hhhh Done Setting MailcapCommandMap handlers");
 
         URL wsdlUrl = ExchangeService.class.getResource("/EWS.wsdl");
-        ZimbraLog.fb.debug("EWS Wsdl URL = %s", wsdlUrl);
+        ZimbraLog.mailbox.info("EWS Wsdl URL = %s", wsdlUrl);
         factory = new ExchangeService(wsdlUrl,
                 new QName("http://schemas.microsoft.com/exchange/services/2006/messages",
                     "ExchangeService"));
@@ -565,11 +565,11 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
     @Override
     public boolean handleMailboxChange(String accountId) {
-        ZimbraLog.fb.debug("Entering handleMailboxChange() for account : " + accountId);
+        ZimbraLog.mailbox.info("Entering handleMailboxChange() for account : " + accountId);
         String email = getEmailAddress(accountId);
 		ServerInfo serverInfo = getServerInfo(email);
 		if (email == null || !serverInfo.enabled) {
-		    ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
+		    ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
 			return true;  // no retry
 		}
 
@@ -578,21 +578,21 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             fb = getFreeBusy(accountId, FreeBusyQuery.CALENDAR_FOLDER_ALL);
         } catch (ServiceException se) {
             ZimbraLog.fb.warn("can't get freebusy for account " + accountId, se);
-            ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
+            ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
             // retry the request if it's receivers fault.
             return !se.isReceiversFault();
         }
         if (email == null || fb == null) {
             ZimbraLog.fb.warn("account not found / incorrect / wrong host: " +
                 accountId);
-            ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
+            ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
             return true; // no retry
         }
 
         if (serverInfo == null || serverInfo.org == null ||
             serverInfo.cn == null) {
             ZimbraLog.fb.warn("no exchange server info for user " + email);
-            ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
+            ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
             return true; // no retry
         }
         if (null == service) {
@@ -600,13 +600,13 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 if (!initService(serverInfo)) {
                     ZimbraLog.fb.error("failed to initialize exchange service object " +
                         serverInfo.url);
-                    ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
+                    ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
                     return true;
                 }
             } catch (MalformedURLException e) {
                 ZimbraLog.fb.error("exception while trying to initialize exchange service object " +
                     serverInfo.url);
-                ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
+                ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
                 return true;
             }
         }
@@ -825,7 +825,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         } catch (Exception e) {
             ZimbraLog.fb.error("error communicating with " + serverInfo.url, e);
         } finally {
-            ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
+            ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
         }
 
         return false;// retry
@@ -928,11 +928,11 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 if (attendeeAvailability.getFreeBusyView() != null) {
                     	String fbResponseViewType = attendeeAvailability.getFreeBusyView().getFreeBusyViewType().get(0);
                     	String emailAddress = attendees.getMailboxData().get(i).getEmail().getAddress();
-                    	ZimbraLog.fb.debug("For user :%s free busy response type received is : %s", emailAddress, fbResponseViewType);
+                    	ZimbraLog.mailbox.info("For user :%s free busy response type received is : %s", emailAddress, fbResponseViewType);
                 	
                     if (re.email == emailAddress) {
                         if (ResponseClassType.ERROR == attendeeAvailability.getResponseMessage().getResponseClass()) {
-                            ZimbraLog.fb.debug("Unable to fetch free busy for %s  error code %s :: %s",
+                            ZimbraLog.mailbox.info("Unable to fetch free busy for %s  error code %s :: %s",
                                 emailAddress,
                                 attendeeAvailability.getResponseMessage().getResponseCode(),
                                 attendeeAvailability.getResponseMessage().getMessageText());
@@ -942,12 +942,12 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             if (attendeeAvailability.getResponseMessage().getResponseCode().equals(ResponseCodeType.ERROR_NO_FREE_BUSY_ACCESS)) {
                                 	npFreeBusy.mList.getHead().hasPermission = false;
                             }
-                            ZimbraLog.fb.info("Error in response. continuing to next one sending nodata as response");
+                            ZimbraLog.mailbox.info("Error in response. continuing to next one sending nodata as response");
                             i++;
                             continue;
                         }
                         String fb = attendeeAvailability.getFreeBusyView().getMergedFreeBusy();
-                        ZimbraLog.fb.info("Merged view Free Busy info received for user:%s is %s: ", emailAddress, fb);
+                        ZimbraLog.mailbox.info("Merged view Free Busy info received for user:%s is %s: ", emailAddress, fb);
                         ArrayList<FreeBusy> userIntervals = new ArrayList<FreeBusy>();
                         
                         if (fb == null) {
@@ -966,7 +966,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             ret.addAll(userIntervals);
                         } else {  // No FreeBusy view information available. returning nodata freebusy in response
 
-                        	     ZimbraLog.fb.debug("No Free Busy view info avaiable for [%s], free busy view type from response : %s", emailAddress, fbResponseViewType);
+                        	     ZimbraLog.mailbox.info("No Free Busy view info avaiable for [%s], free busy view type from response : %s", emailAddress, fbResponseViewType);
                         	     ret.add(FreeBusy.nodataFreeBusy(emailAddress, startTime, endTime));
                         }
                     }
@@ -996,7 +996,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                     for (CalendarEvent event : calendarEvents) {
                         legacyType = event.getBusyType();
                         FreeBusy.Interval interval = getFreeBusyInterval(ret, event);
-                        ZimbraLog.fb.debug(
+                        ZimbraLog.mailbox.info(
                             "For user %s FB data received is: legacyType : %s, startTime : %s, "
                                 + "endTime : %s",name, legacyType, event.getStartTime(), event.getEndTime());
                         if (event.getCalendarEventDetails() != null && interval != null) {
@@ -1011,18 +1011,18 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             interval.isReminderSet = calendarEventDetails.isIsReminderSet();
                             interval.isPrivate = calendarEventDetails.isIsPrivate();
                             interval.detailsExist = true;
-                            ZimbraLog.fb.debug("eventID : %s, location : %s, subject : %s, isMeeting : %b, "
+                            ZimbraLog.mailbox.info("eventID : %s, location : %s, subject : %s, isMeeting : %b, "
                             + "isRecurring : %b, isException : %b, isReminderSet : %b, isPrivate : %b", 
                             interval.id, interval.location, interval.subject, interval.isMeeting,
                             interval.isRecurring, interval.isException, interval.isReminderSet, 
                             interval.isPrivate);
                     } else {
-                        ZimbraLog.fb.debug("Calendar Event details not found for the user %s",
+                        ZimbraLog.mailbox.info("Calendar Event details not found for the user %s",
                             name);
                     }
                 }
             } else {
-                    ZimbraLog.fb.debug("No Calendar Information available for the user : %s", name);
+                    ZimbraLog.mailbox.info("No Calendar Information available for the user : %s", name);
                 }
             }
         }

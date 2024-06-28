@@ -433,6 +433,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>RFC822 email address of this recipient for accepting mail</desc>
 </attr>
 
+
 <attr id="21" name="zimbraCOSInheritedAttr" type="string" max="1024" cardinality="multi" optionalIn="globalConfig" deprecatedSince="5.0">
   <desc>zimbraCOS attrs that get inherited in a zimbraAccount</desc>
   <deprecateDesc>deprecated in favor of the accountInherited flag</deprecateDesc>
@@ -10555,4 +10556,9 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
 </attr>
+
+
+  <attr id="4135" name="zimbraHideAliasInGal" type="boolean"  cardinality="single" requiredIn="alias"  since="10.1.1">
+    <desc> Option to hide/show alias in GAL</desc>
+  </attr>
 </attrs>
