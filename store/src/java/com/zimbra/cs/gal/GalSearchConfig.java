@@ -182,8 +182,11 @@ public class GalSearchConfig {
 		if (dnSubtreeMatchFilter == null) {
 		    dnSubtreeMatchFilter = "";
 		}
-		mFilter = "(&" + filter + "(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE))" + dnSubtreeMatchFilter + ")";
-
+		if (GalOp.autocomplete.equals(op)) {
+			mFilter = "(&" + filter + "(!(&(zimbraIsAdminGroup=TRUE)(zimbraHideInGal=TRUE)))(!(zimbraIsSystemResource=TRUE))" + dnSubtreeMatchFilter + ")";
+		} else {
+			mFilter = "(&" + filter + "(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE))" + dnSubtreeMatchFilter + ")";
+		}
 		mSearchBase = ZimbraGalSearchBase.getSearchBase(domain, op);
 		mGalType = GalType.zimbra;
 		mTimestampFormat = LdapDateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT_LEGACY;

@@ -19,10 +19,9 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Map;
-
 import javax.mail.internet.InternetAddress;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,9 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
-
 import com.google.common.collect.ImmutableMap;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -43,7 +40,6 @@ import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
 import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.util.ZTestWatchman;
-
 /**
  * Unit test for {@link ContactAutoComplete}.
  *
@@ -195,7 +191,6 @@ public final class ContactAutoCompleteTest {
         Assert.assertEquals(0, result.entries.size());
         result.clear();
 
-
         comp.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
@@ -233,7 +228,6 @@ public final class ContactAutoCompleteTest {
         Assert.assertEquals(1, result.entries.size());
         result.clear();
 
-
         comp.addMatchedContacts("conf - h", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
@@ -255,6 +249,7 @@ public final class ContactAutoCompleteTest {
         Assert.assertEquals(1, result.entries.size());
         result.clear();
     }
+
 
     @Test
     public void rankingTestContactWithSameEmailDifferentDisplayName() throws Exception {
@@ -296,5 +291,81 @@ public final class ContactAutoCompleteTest {
         ContactRankings.increment(mbox.getAccountId(), Collections.singleton(new InternetAddress("noex@zimbra.com")));
         ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
         Assert.assertEquals(0, autocomplete.query("noex", null, 10).entries.size());
-     }
+    }
+
+    @Test
+    public void autoCompleteTestForAliasesTwoResults() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactAutoComplete contactAutoComplete = new ContactAutoComplete(account, new OperationContext(mbox));
+        AutoCompleteResult result = new AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(ContactConstants.A_firstName, "First");
+        attrs.put(ContactConstants.A_middleName, "Middle");
+        attrs.put(ContactConstants.A_lastName, "Last");
+        attrs.put(ContactConstants.A_email, "first.last@zimbra.com");
+        attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
+        Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
+        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(2, result.entries.size());
+        result.clear();
+    }
+
+    @Test
+    public void testAddMatchedContactForTwoResults() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactAutoComplete contactAutoComplete = new ContactAutoComplete(account, new OperationContext(mbox));
+        AutoCompleteResult result = new AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(ContactConstants.A_firstName, "First");
+        attrs.put(ContactConstants.A_middleName, "Middle");
+        attrs.put(ContactConstants.A_lastName, "Last");
+        attrs.put(ContactConstants.A_email, "first.last@zimbra.com");
+        attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
+        attrs.put(ContactConstants.A_email3, "alias2@zimbra.com");
+        Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
+        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(3, result.entries.size());
+        result.clear();
+    }
+
+    @Test
+    public void testAddMatchedContactForThreeResults() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactAutoComplete contactAutoComplete = new ContactAutoComplete(account, new OperationContext(mbox));
+        AutoCompleteResult result = new AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(ContactConstants.A_firstName, "First");
+        attrs.put(ContactConstants.A_middleName, "Middle");
+        attrs.put(ContactConstants.A_lastName, "Last");
+        attrs.put(ContactConstants.A_email, "first.last@zimbra.com");
+        attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
+        attrs.put(ContactConstants.A_email3, "alias2@zimbra.com");
+        Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
+        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(3, result.entries.size());
+        result.clear();
+    }
+
+    @Test
+    public void testExtractEligibleEmailsListForAccount() throws Exception {
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(ContactConstants.A_firstName, "First");
+        attrs.put(ContactConstants.A_middleName, "Middle");
+        attrs.put(ContactConstants.A_lastName, "Last");
+        attrs.put(ContactConstants.A_email, "first.last@zimbra.com");
+        attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
+        attrs.put(ContactConstants.A_email3, "alias2@zimbra.com");
+        Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
+        Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactAutoComplete contactAutoComplete = new ContactAutoComplete(account, new OperationContext(mbox));
+        Set<String> eligibleEmails = contactAutoComplete.extractEligibleEmailsListForAccount(attrs);
+        Assert.assertEquals(3, eligibleEmails.size());
+    }
 }
