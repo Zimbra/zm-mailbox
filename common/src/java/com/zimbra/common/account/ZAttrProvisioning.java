@@ -22,7 +22,7 @@ import java.util.Arrays;
 
 /**
  * AUTO-GENERATED. DO NOT EDIT.
- * 
+ *
  * @author schemers
  *
  */
@@ -39,8 +39,8 @@ public class ZAttrProvisioning {
         public static AccountCalendarUserType fromString(String s) throws ServiceException {
             for (AccountCalendarUserType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isUSER() { return this == USER;}
         public boolean isRESOURCE() { return this == RESOURCE;}
@@ -59,8 +59,8 @@ public class ZAttrProvisioning {
         public static AccountStatus fromString(String s) throws ServiceException {
             for (AccountStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isActive() { return this == active;}
         public boolean isMaintenance() { return this == maintenance;}
@@ -79,8 +79,8 @@ public class ZAttrProvisioning {
         public static AdminAccessControlMech fromString(String s) throws ServiceException {
             for (AdminAccessControlMech value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isAcl() { return this == acl;}
         public boolean isGlobal() { return this == global;}
@@ -97,8 +97,8 @@ public class ZAttrProvisioning {
         public static AmavisFinalSpamDestiny fromString(String s) throws ServiceException {
             for (AmavisFinalSpamDestiny value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isD_PASS() { return this == D_PASS;}
         public boolean isD_BOUNCE() { return this == D_BOUNCE;}
@@ -117,8 +117,8 @@ public class ZAttrProvisioning {
         public static AutoProvAuthMech fromString(String s) throws ServiceException {
             for (AutoProvAuthMech value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isLDAP() { return this == LDAP;}
         public boolean isPREAUTH() { return this == PREAUTH;}
@@ -136,8 +136,8 @@ public class ZAttrProvisioning {
         public static AutoProvMode fromString(String s) throws ServiceException {
             for (AutoProvMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isEAGER() { return this == EAGER;}
         public boolean isLAZY() { return this == LAZY;}
@@ -154,8 +154,8 @@ public class ZAttrProvisioning {
         public static BackupBlobsCompressType fromString(String s) throws ServiceException {
             for (BackupBlobsCompressType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isZip() { return this == zip;}
         public boolean isZipStore() { return this == zipStore;}
@@ -171,8 +171,8 @@ public class ZAttrProvisioning {
         public static BackupMode fromString(String s) throws ServiceException {
             for (BackupMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isStandard() { return this == Standard;}
         public boolean isAuto_Grouped() { return this == Auto_Grouped;}
@@ -187,8 +187,8 @@ public class ZAttrProvisioning {
         public static CalendarCompatibilityMode fromString(String s) throws ServiceException {
             for (CalendarCompatibilityMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isStandard() { return this == standard;}
         public boolean isExchange() { return this == exchange;}
@@ -203,8 +203,8 @@ public class ZAttrProvisioning {
         public static CalResType fromString(String s) throws ServiceException {
             for (CalResType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isLocation() { return this == Location;}
         public boolean isEquipment() { return this == Equipment;}
@@ -219,8 +219,8 @@ public class ZAttrProvisioning {
         public static CBPolicydBypassMode fromString(String s) throws ServiceException {
             for (CBPolicydBypassMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isTempfail() { return this == tempfail;}
         public boolean isPass() { return this == pass;}
@@ -235,8 +235,8 @@ public class ZAttrProvisioning {
         public static ClamAVSafeBrowsing fromString(String s) throws ServiceException {
             for (ClamAVSafeBrowsing value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -252,8 +252,8 @@ public class ZAttrProvisioning {
         public static ClusterType fromString(String s) throws ServiceException {
             for (ClusterType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNone() { return this == none;}
         public boolean isRedHat() { return this == RedHat;}
@@ -271,8 +271,8 @@ public class ZAttrProvisioning {
         public static DataSourceAuthMechanism fromString(String s) throws ServiceException {
             for (DataSourceAuthMechanism value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isPLAIN() { return this == PLAIN;}
         public boolean isGSSAPI() { return this == GSSAPI;}
@@ -291,8 +291,8 @@ public class ZAttrProvisioning {
         public static DataSourceConnectionType fromString(String s) throws ServiceException {
             for (DataSourceConnectionType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isCleartext() { return this == cleartext;}
         public boolean isSsl() { return this == ssl;}
@@ -309,8 +309,8 @@ public class ZAttrProvisioning {
         public static DataSourceSmtpConnectionType fromString(String s) throws ServiceException {
             for (DataSourceSmtpConnectionType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isCleartext() { return this == cleartext;}
         public boolean isSsl() { return this == ssl;}
@@ -326,8 +326,8 @@ public class ZAttrProvisioning {
         public static DelayedIndexStatus fromString(String s) throws ServiceException {
             for (DelayedIndexStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isSuppressed() { return this == suppressed;}
         public boolean isWaitingForSearch() { return this == waitingForSearch;}
@@ -344,8 +344,8 @@ public class ZAttrProvisioning {
         public static DistributionListSubscriptionPolicy fromString(String s) throws ServiceException {
             for (DistributionListSubscriptionPolicy value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isACCEPT() { return this == ACCEPT;}
         public boolean isREJECT() { return this == REJECT;}
@@ -362,8 +362,8 @@ public class ZAttrProvisioning {
         public static DistributionListUnsubscriptionPolicy fromString(String s) throws ServiceException {
             for (DistributionListUnsubscriptionPolicy value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isACCEPT() { return this == ACCEPT;}
         public boolean isREJECT() { return this == REJECT;}
@@ -379,8 +379,8 @@ public class ZAttrProvisioning {
         public static DNSTCPUpstream fromString(String s) throws ServiceException {
             for (DNSTCPUpstream value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -395,8 +395,8 @@ public class ZAttrProvisioning {
         public static DNSUseTCP fromString(String s) throws ServiceException {
             for (DNSUseTCP value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -411,8 +411,8 @@ public class ZAttrProvisioning {
         public static DNSUseUDP fromString(String s) throws ServiceException {
             for (DNSUseUDP value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -428,8 +428,8 @@ public class ZAttrProvisioning {
         public static DomainAggregateQuotaPolicy fromString(String s) throws ServiceException {
             for (DomainAggregateQuotaPolicy value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isALLOWSENDRECEIVE() { return this == ALLOWSENDRECEIVE;}
         public boolean isBLOCKSEND() { return this == BLOCKSEND;}
@@ -449,8 +449,8 @@ public class ZAttrProvisioning {
         public static DomainStatus fromString(String s) throws ServiceException {
             for (DomainStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isActive() { return this == active;}
         public boolean isMaintenance() { return this == maintenance;}
@@ -469,8 +469,8 @@ public class ZAttrProvisioning {
         public static DomainType fromString(String s) throws ServiceException {
             for (DomainType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isLocal() { return this == local;}
         public boolean isAlias() { return this == alias;}
@@ -487,8 +487,8 @@ public class ZAttrProvisioning {
         public static FeatureAddressVerificationStatus fromString(String s) throws ServiceException {
             for (FeatureAddressVerificationStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isVerified() { return this == verified;}
         public boolean isPending() { return this == pending;}
@@ -506,8 +506,8 @@ public class ZAttrProvisioning {
         public static FeatureResetPasswordStatus fromString(String s) throws ServiceException {
             for (FeatureResetPasswordStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isEnabled() { return this == enabled;}
         public boolean isSuspended() { return this == suspended;}
@@ -525,8 +525,8 @@ public class ZAttrProvisioning {
         public static FeatureSocialFiltersEnabled fromString(String s) throws ServiceException {
             for (FeatureSocialFiltersEnabled value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isSocialCast() { return this == SocialCast;}
         public boolean isLinkedIn() { return this == LinkedIn;}
@@ -543,8 +543,8 @@ public class ZAttrProvisioning {
         public static FreebusyExchangeAuthScheme fromString(String s) throws ServiceException {
             for (FreebusyExchangeAuthScheme value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBasic() { return this == basic;}
         public boolean isForm() { return this == form;}
@@ -559,8 +559,8 @@ public class ZAttrProvisioning {
         public static FreebusyExchangeServerType fromString(String s) throws ServiceException {
             for (FreebusyExchangeServerType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isWebdav() { return this == webdav;}
         public boolean isEws() { return this == ews;}
@@ -576,8 +576,8 @@ public class ZAttrProvisioning {
         public static GalLdapAuthMech fromString(String s) throws ServiceException {
             for (GalLdapAuthMech value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNone() { return this == none;}
         public boolean isSimple() { return this == simple;}
@@ -594,8 +594,8 @@ public class ZAttrProvisioning {
         public static GalMode fromString(String s) throws ServiceException {
             for (GalMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isZimbra() { return this == zimbra;}
         public boolean isBoth() { return this == both;}
@@ -611,8 +611,8 @@ public class ZAttrProvisioning {
         public static GalStatus fromString(String s) throws ServiceException {
             for (GalStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isEnabled() { return this == enabled;}
         public boolean isDisabled() { return this == disabled;}
@@ -628,8 +628,8 @@ public class ZAttrProvisioning {
         public static GalSyncLdapAuthMech fromString(String s) throws ServiceException {
             for (GalSyncLdapAuthMech value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNone() { return this == none;}
         public boolean isSimple() { return this == simple;}
@@ -645,8 +645,8 @@ public class ZAttrProvisioning {
         public static GalTokenizeAutoCompleteKey fromString(String s) throws ServiceException {
             for (GalTokenizeAutoCompleteKey value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isAnd() { return this == and;}
         public boolean isOr() { return this == or;}
@@ -661,8 +661,8 @@ public class ZAttrProvisioning {
         public static GalTokenizeSearchKey fromString(String s) throws ServiceException {
             for (GalTokenizeSearchKey value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isAnd() { return this == and;}
         public boolean isOr() { return this == or;}
@@ -677,8 +677,8 @@ public class ZAttrProvisioning {
         public static GalType fromString(String s) throws ServiceException {
             for (GalType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isZimbra() { return this == zimbra;}
         public boolean isLdap() { return this == ldap;}
@@ -693,8 +693,8 @@ public class ZAttrProvisioning {
         public static IMService fromString(String s) throws ServiceException {
             for (IMService value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isZimbra() { return this == zimbra;}
         public boolean isYahoo() { return this == yahoo;}
@@ -710,8 +710,8 @@ public class ZAttrProvisioning {
         public static IPMode fromString(String s) throws ServiceException {
             for (IPMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isIpv4() { return this == ipv4;}
         public boolean isIpv6() { return this == ipv6;}
@@ -730,8 +730,8 @@ public class ZAttrProvisioning {
         public static MailMode fromString(String s) throws ServiceException {
             for (MailMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isHttp() { return this == http;}
         public boolean isHttps() { return this == https;}
@@ -750,8 +750,8 @@ public class ZAttrProvisioning {
         public static MailReferMode fromString(String s) throws ServiceException {
             for (MailReferMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isAlways() { return this == always;}
         public boolean isWronghost() { return this == wronghost;}
@@ -768,8 +768,8 @@ public class ZAttrProvisioning {
         public static MailSSLClientCertMode fromString(String s) throws ServiceException {
             for (MailSSLClientCertMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isDisabled() { return this == Disabled;}
         public boolean isNeedClientAuth() { return this == NeedClientAuth;}
@@ -785,8 +785,8 @@ public class ZAttrProvisioning {
         public static MailStatus fromString(String s) throws ServiceException {
             for (MailStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isEnabled() { return this == enabled;}
         public boolean isDisabled() { return this == disabled;}
@@ -804,8 +804,8 @@ public class ZAttrProvisioning {
         public static MailThreadingAlgorithm fromString(String s) throws ServiceException {
             for (MailThreadingAlgorithm value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isSubject() { return this == subject;}
         public boolean isSubjrefs() { return this == subjrefs;}
@@ -825,8 +825,8 @@ public class ZAttrProvisioning {
         public static MobileGatewayProxyImapConnectionType fromString(String s) throws ServiceException {
             for (MobileGatewayProxyImapConnectionType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isCleartext() { return this == cleartext;}
         public boolean isSsl() { return this == ssl;}
@@ -843,8 +843,8 @@ public class ZAttrProvisioning {
         public static MobileGatewayProxySmtpConnectionType fromString(String s) throws ServiceException {
             for (MobileGatewayProxySmtpConnectionType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isCleartext() { return this == cleartext;}
         public boolean isSsl() { return this == ssl;}
@@ -859,8 +859,8 @@ public class ZAttrProvisioning {
         public static MtaAlwaysAddMissingHeaders fromString(String s) throws ServiceException {
             for (MtaAlwaysAddMissingHeaders value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -875,8 +875,8 @@ public class ZAttrProvisioning {
         public static MtaBrokenSaslAuthClients fromString(String s) throws ServiceException {
             for (MtaBrokenSaslAuthClients value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -891,8 +891,8 @@ public class ZAttrProvisioning {
         public static MtaLmtpHostLookup fromString(String s) throws ServiceException {
             for (MtaLmtpHostLookup value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isDns() { return this == dns;}
         public boolean isNative_() { return this == native_;}
@@ -910,8 +910,8 @@ public class ZAttrProvisioning {
         public static MtaLmtpTlsCiphers fromString(String s) throws ServiceException {
             for (MtaLmtpTlsCiphers value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isExport() { return this == export;}
         public boolean isLow() { return this == low;}
@@ -932,8 +932,8 @@ public class ZAttrProvisioning {
         public static MtaLmtpTlsMandatoryCiphers fromString(String s) throws ServiceException {
             for (MtaLmtpTlsMandatoryCiphers value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isExport() { return this == export;}
         public boolean isLow() { return this == low;}
@@ -957,8 +957,8 @@ public class ZAttrProvisioning {
         public static MtaLmtpTlsSecurityLevel fromString(String s) throws ServiceException {
             for (MtaLmtpTlsSecurityLevel value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNone() { return this == none;}
         public boolean isMay() { return this == may;}
@@ -981,8 +981,8 @@ public class ZAttrProvisioning {
         public static MtaMilterDefaultAction fromString(String s) throws ServiceException {
             for (MtaMilterDefaultAction value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isAccept() { return this == accept;}
         public boolean isReject() { return this == reject;}
@@ -1005,8 +1005,8 @@ public class ZAttrProvisioning {
         public static MtaNotifyClasses fromString(String s) throws ServiceException {
             for (MtaNotifyClasses value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBounce() { return this == bounce;}
         public boolean is_2bounce() { return this == _2bounce;}
@@ -1028,8 +1028,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenBareNewlineAction fromString(String s) throws ServiceException {
             for (MtaPostscreenBareNewlineAction value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isIgnore() { return this == ignore;}
         public boolean isEnforce() { return this == enforce;}
@@ -1045,8 +1045,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenBareNewlineEnable fromString(String s) throws ServiceException {
             for (MtaPostscreenBareNewlineEnable value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1062,8 +1062,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenBlacklistAction fromString(String s) throws ServiceException {
             for (MtaPostscreenBlacklistAction value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isIgnore() { return this == ignore;}
         public boolean isEnforce() { return this == enforce;}
@@ -1080,8 +1080,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenDnsblAction fromString(String s) throws ServiceException {
             for (MtaPostscreenDnsblAction value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isIgnore() { return this == ignore;}
         public boolean isEnforce() { return this == enforce;}
@@ -1098,8 +1098,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenGreetAction fromString(String s) throws ServiceException {
             for (MtaPostscreenGreetAction value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isIgnore() { return this == ignore;}
         public boolean isEnforce() { return this == enforce;}
@@ -1116,8 +1116,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenNonSmtpCommandAction fromString(String s) throws ServiceException {
             for (MtaPostscreenNonSmtpCommandAction value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isIgnore() { return this == ignore;}
         public boolean isEnforce() { return this == enforce;}
@@ -1133,8 +1133,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenNonSmtpCommandEnable fromString(String s) throws ServiceException {
             for (MtaPostscreenNonSmtpCommandEnable value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1150,8 +1150,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenPipeliningAction fromString(String s) throws ServiceException {
             for (MtaPostscreenPipeliningAction value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isIgnore() { return this == ignore;}
         public boolean isEnforce() { return this == enforce;}
@@ -1167,8 +1167,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenPipeliningEnable fromString(String s) throws ServiceException {
             for (MtaPostscreenPipeliningEnable value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1182,8 +1182,8 @@ public class ZAttrProvisioning {
         public static MtaPostscreenUpstreamProxyProtocol fromString(String s) throws ServiceException {
             for (MtaPostscreenUpstreamProxyProtocol value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isHaproxy() { return this == haproxy;}
     }
@@ -1201,8 +1201,8 @@ public class ZAttrProvisioning {
         public static MtaPropagateUnmatchedExtensions fromString(String s) throws ServiceException {
             for (MtaPropagateUnmatchedExtensions value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isCanonical() { return this == canonical;}
         public boolean isVirtual() { return this == virtual;}
@@ -1221,8 +1221,8 @@ public class ZAttrProvisioning {
         public static MtaSaslAuthEnable fromString(String s) throws ServiceException {
             for (MtaSaslAuthEnable value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1237,8 +1237,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpCnameOverridesServername fromString(String s) throws ServiceException {
             for (MtaSmtpCnameOverridesServername value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1253,8 +1253,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdClientPortLogging fromString(String s) throws ServiceException {
             for (MtaSmtpdClientPortLogging value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1269,8 +1269,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdHeloRequired fromString(String s) throws ServiceException {
             for (MtaSmtpdHeloRequired value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1286,8 +1286,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpDnsSupportLevel fromString(String s) throws ServiceException {
             for (MtaSmtpDnsSupportLevel value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isDisabled() { return this == disabled;}
         public boolean isEnabled() { return this == enabled;}
@@ -1303,8 +1303,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdRejectUnlistedRecipient fromString(String s) throws ServiceException {
             for (MtaSmtpdRejectUnlistedRecipient value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1319,8 +1319,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdRejectUnlistedSender fromString(String s) throws ServiceException {
             for (MtaSmtpdRejectUnlistedSender value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1335,8 +1335,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdSaslAuthenticatedHeader fromString(String s) throws ServiceException {
             for (MtaSmtpdSaslAuthenticatedHeader value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1354,8 +1354,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdSaslSecurityOptions fromString(String s) throws ServiceException {
             for (MtaSmtpdSaslSecurityOptions value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNoplaintext() { return this == noplaintext;}
         public boolean isNoactive() { return this == noactive;}
@@ -1373,8 +1373,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdTlsAskCcert fromString(String s) throws ServiceException {
             for (MtaSmtpdTlsAskCcert value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1392,8 +1392,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdTlsCiphers fromString(String s) throws ServiceException {
             for (MtaSmtpdTlsCiphers value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isExport() { return this == export;}
         public boolean isLow() { return this == low;}
@@ -1414,8 +1414,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdTlsMandatoryCiphers fromString(String s) throws ServiceException {
             for (MtaSmtpdTlsMandatoryCiphers value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isExport() { return this == export;}
         public boolean isLow() { return this == low;}
@@ -1433,8 +1433,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpdTlsReceivedHeader fromString(String s) throws ServiceException {
             for (MtaSmtpdTlsReceivedHeader value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1449,8 +1449,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpSaslAuthEnable fromString(String s) throws ServiceException {
             for (MtaSmtpSaslAuthEnable value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1468,8 +1468,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpSaslSecurityOptions fromString(String s) throws ServiceException {
             for (MtaSmtpSaslSecurityOptions value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNoplaintext() { return this == noplaintext;}
         public boolean isNoactive() { return this == noactive;}
@@ -1490,8 +1490,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpTlsCiphers fromString(String s) throws ServiceException {
             for (MtaSmtpTlsCiphers value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isExport() { return this == export;}
         public boolean isLow() { return this == low;}
@@ -1510,8 +1510,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpTlsDaneInsecureMXPolicy fromString(String s) throws ServiceException {
             for (MtaSmtpTlsDaneInsecureMXPolicy value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isMay() { return this == may;}
         public boolean isEncrypt() { return this == encrypt;}
@@ -1530,8 +1530,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpTlsMandatoryCiphers fromString(String s) throws ServiceException {
             for (MtaSmtpTlsMandatoryCiphers value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isExport() { return this == export;}
         public boolean isLow() { return this == low;}
@@ -1555,8 +1555,8 @@ public class ZAttrProvisioning {
         public static MtaSmtpTlsSecurityLevel fromString(String s) throws ServiceException {
             for (MtaSmtpTlsSecurityLevel value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNone() { return this == none;}
         public boolean isMay() { return this == may;}
@@ -1577,8 +1577,8 @@ public class ZAttrProvisioning {
         public static MtaTlsAppendDefaultCA fromString(String s) throws ServiceException {
             for (MtaTlsAppendDefaultCA value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isYes() { return this == yes;}
         public boolean isNo() { return this == no;}
@@ -1593,8 +1593,8 @@ public class ZAttrProvisioning {
         public static MtaTlsSecurityLevel fromString(String s) throws ServiceException {
             for (MtaTlsSecurityLevel value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isMay() { return this == may;}
         public boolean isNone() { return this == none;}
@@ -1613,8 +1613,8 @@ public class ZAttrProvisioning {
         public static PasswordLockoutSuppressionProtocols fromString(String s) throws ServiceException {
             for (PasswordLockoutSuppressionProtocols value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isZsync() { return this == zsync;}
         public boolean isImap() { return this == imap;}
@@ -1634,8 +1634,8 @@ public class ZAttrProvisioning {
         public static PrefBriefcaseReadingPaneLocation fromString(String s) throws ServiceException {
             for (PrefBriefcaseReadingPaneLocation value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBottom() { return this == bottom;}
         public boolean isRight() { return this == right;}
@@ -1652,8 +1652,8 @@ public class ZAttrProvisioning {
         public static PrefCalendarAllowedTargetsForInviteDeniedAutoReply fromString(String s) throws ServiceException {
             for (PrefCalendarAllowedTargetsForInviteDeniedAutoReply value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isInternal() { return this == internal;}
         public boolean isSameDomain() { return this == sameDomain;}
@@ -1669,8 +1669,8 @@ public class ZAttrProvisioning {
         public static PrefCalendarApptVisibility fromString(String s) throws ServiceException {
             for (PrefCalendarApptVisibility value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isPublic_() { return this == public_;}
         public boolean isPrivate_() { return this == private_;}
@@ -1689,8 +1689,8 @@ public class ZAttrProvisioning {
         public static PrefCalendarInitialView fromString(String s) throws ServiceException {
             for (PrefCalendarInitialView value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isDay() { return this == day;}
         public boolean isWeek() { return this == week;}
@@ -1710,8 +1710,8 @@ public class ZAttrProvisioning {
         public static PrefCalenderScaling fromString(String s) throws ServiceException {
             for (PrefCalenderScaling value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean is_10() { return this == _10;}
         public boolean is_15() { return this == _15;}
@@ -1728,8 +1728,8 @@ public class ZAttrProvisioning {
         public static PrefClientType fromString(String s) throws ServiceException {
             for (PrefClientType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isStandard() { return this == standard;}
         public boolean isAdvanced() { return this == advanced;}
@@ -1745,8 +1745,8 @@ public class ZAttrProvisioning {
         public static PrefComposeDirection fromString(String s) throws ServiceException {
             for (PrefComposeDirection value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isLTR() { return this == LTR;}
         public boolean isRTL() { return this == RTL;}
@@ -1761,8 +1761,8 @@ public class ZAttrProvisioning {
         public static PrefComposeFormat fromString(String s) throws ServiceException {
             for (PrefComposeFormat value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isText() { return this == text;}
         public boolean isHtml() { return this == html;}
@@ -1777,8 +1777,8 @@ public class ZAttrProvisioning {
         public static PrefContactsInitialView fromString(String s) throws ServiceException {
             for (PrefContactsInitialView value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isCards() { return this == cards;}
         public boolean isList() { return this == list;}
@@ -1793,8 +1793,8 @@ public class ZAttrProvisioning {
         public static PrefConversationOrder fromString(String s) throws ServiceException {
             for (PrefConversationOrder value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isDateDesc() { return this == dateDesc;}
         public boolean isDateAsc() { return this == dateAsc;}
@@ -1810,8 +1810,8 @@ public class ZAttrProvisioning {
         public static PrefConvReadingPaneLocation fromString(String s) throws ServiceException {
             for (PrefConvReadingPaneLocation value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBottom() { return this == bottom;}
         public boolean isRight() { return this == right;}
@@ -1828,8 +1828,8 @@ public class ZAttrProvisioning {
         public static PrefDedupeMessagesSentToSelf fromString(String s) throws ServiceException {
             for (PrefDedupeMessagesSentToSelf value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isDedupeNone() { return this == dedupeNone;}
         public boolean isSecondCopyifOnToOrCC() { return this == secondCopyifOnToOrCC;}
@@ -1847,8 +1847,8 @@ public class ZAttrProvisioning {
         public static PrefDelegatedSendSaveTarget fromString(String s) throws ServiceException {
             for (PrefDelegatedSendSaveTarget value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isOwner() { return this == owner;}
         public boolean isSender() { return this == sender;}
@@ -1867,8 +1867,8 @@ public class ZAttrProvisioning {
         public static PrefExternalSendersType fromString(String s) throws ServiceException {
             for (PrefExternalSendersType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isALL() { return this == ALL;}
         public boolean isALLNOTINAB() { return this == ALLNOTINAB;}
@@ -1884,8 +1884,8 @@ public class ZAttrProvisioning {
         public static PrefFileSharingApplication fromString(String s) throws ServiceException {
             for (PrefFileSharingApplication value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBriefcase() { return this == briefcase;}
     }
@@ -1903,8 +1903,8 @@ public class ZAttrProvisioning {
         public static PrefForwardIncludeOriginalText fromString(String s) throws ServiceException {
             for (PrefForwardIncludeOriginalText value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
         public boolean isIncludeBody() { return this == includeBody;}
@@ -1924,8 +1924,8 @@ public class ZAttrProvisioning {
         public static PrefForwardReplyFormat fromString(String s) throws ServiceException {
             for (PrefForwardReplyFormat value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isText() { return this == text;}
         public boolean isHtml() { return this == html;}
@@ -1941,8 +1941,8 @@ public class ZAttrProvisioning {
         public static PrefFromAddressType fromString(String s) throws ServiceException {
             for (PrefFromAddressType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isSendAs() { return this == sendAs;}
         public boolean isSendOnBehalfOf() { return this == sendOnBehalfOf;}
@@ -1957,8 +1957,8 @@ public class ZAttrProvisioning {
         public static PrefGetMailAction fromString(String s) throws ServiceException {
             for (PrefGetMailAction value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isDefault_() { return this == default_;}
         public boolean isUpdate() { return this == update;}
@@ -1973,8 +1973,8 @@ public class ZAttrProvisioning {
         public static PrefGroupMailBy fromString(String s) throws ServiceException {
             for (PrefGroupMailBy value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isConversation() { return this == conversation;}
         public boolean isMessage() { return this == message;}
@@ -1991,8 +1991,8 @@ public class ZAttrProvisioning {
         public static PrefIMIdleStatus fromString(String s) throws ServiceException {
             for (PrefIMIdleStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isAway() { return this == away;}
         public boolean isXa() { return this == xa;}
@@ -2010,8 +2010,8 @@ public class ZAttrProvisioning {
         public static PrefMailSelectAfterDelete fromString(String s) throws ServiceException {
             for (PrefMailSelectAfterDelete value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNext() { return this == next;}
         public boolean isPrevious() { return this == previous;}
@@ -2028,8 +2028,8 @@ public class ZAttrProvisioning {
         public static PrefMailSendReadReceipts fromString(String s) throws ServiceException {
             for (PrefMailSendReadReceipts value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isAlways() { return this == always;}
         public boolean isNever() { return this == never;}
@@ -2045,8 +2045,8 @@ public class ZAttrProvisioning {
         public static PrefMailSignatureStyle fromString(String s) throws ServiceException {
             for (PrefMailSignatureStyle value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isOutlook() { return this == outlook;}
         public boolean isInternet() { return this == internet;}
@@ -2061,8 +2061,8 @@ public class ZAttrProvisioning {
         public static PrefOutOfOfficeFreeBusyStatus fromString(String s) throws ServiceException {
             for (PrefOutOfOfficeFreeBusyStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBUSY() { return this == BUSY;}
         public boolean isOUTOFOFFICE() { return this == OUTOFOFFICE;}
@@ -2077,8 +2077,8 @@ public class ZAttrProvisioning {
         public static PrefPasswordRecoveryAddressStatus fromString(String s) throws ServiceException {
             for (PrefPasswordRecoveryAddressStatus value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isVerified() { return this == verified;}
         public boolean isPending() { return this == pending;}
@@ -2095,8 +2095,8 @@ public class ZAttrProvisioning {
         public static PrefPop3DeleteOption fromString(String s) throws ServiceException {
             for (PrefPop3DeleteOption value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isKeep() { return this == keep;}
         public boolean isRead() { return this == read;}
@@ -2114,8 +2114,8 @@ public class ZAttrProvisioning {
         public static PrefReadingPaneLocation fromString(String s) throws ServiceException {
             for (PrefReadingPaneLocation value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBottom() { return this == bottom;}
         public boolean isRight() { return this == right;}
@@ -2140,8 +2140,8 @@ public class ZAttrProvisioning {
         public static PrefReplyIncludeOriginalText fromString(String s) throws ServiceException {
             for (PrefReplyIncludeOriginalText value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
         public boolean isIncludeBody() { return this == includeBody;}
@@ -2169,8 +2169,8 @@ public class ZAttrProvisioning {
         public static PrefTasksFilterBy fromString(String s) throws ServiceException {
             for (PrefTasksFilterBy value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNOTSTARTED() { return this == NOTSTARTED;}
         public boolean isCOMPLETED() { return this == COMPLETED;}
@@ -2190,8 +2190,8 @@ public class ZAttrProvisioning {
         public static PrefTasksReadingPaneLocation fromString(String s) throws ServiceException {
             for (PrefTasksReadingPaneLocation value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBottom() { return this == bottom;}
         public boolean isRight() { return this == right;}
@@ -2206,8 +2206,8 @@ public class ZAttrProvisioning {
         public static Product fromString(String s) throws ServiceException {
             for (Product value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isZCS() { return this == ZCS;}
     }
@@ -2221,8 +2221,8 @@ public class ZAttrProvisioning {
         public static ReverseProxyAcceptMutex fromString(String s) throws ServiceException {
             for (ReverseProxyAcceptMutex value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isOn() { return this == on;}
         public boolean isOff() { return this == off;}
@@ -2238,8 +2238,8 @@ public class ZAttrProvisioning {
         public static ReverseProxyClientCertMode fromString(String s) throws ServiceException {
             for (ReverseProxyClientCertMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isOn() { return this == on;}
         public boolean isOff() { return this == off;}
@@ -2255,8 +2255,8 @@ public class ZAttrProvisioning {
         public static ReverseProxyExactServerVersionCheck fromString(String s) throws ServiceException {
             for (ReverseProxyExactServerVersionCheck value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isOn() { return this == on;}
         public boolean isOff() { return this == off;}
@@ -2272,8 +2272,8 @@ public class ZAttrProvisioning {
         public static ReverseProxyImapStartTlsMode fromString(String s) throws ServiceException {
             for (ReverseProxyImapStartTlsMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isOn() { return this == on;}
         public boolean isOff() { return this == off;}
@@ -2297,8 +2297,8 @@ public class ZAttrProvisioning {
         public static ReverseProxyLogLevel fromString(String s) throws ServiceException {
             for (ReverseProxyLogLevel value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isDebug() { return this == debug;}
         public boolean isInfo() { return this == info;}
@@ -2324,8 +2324,8 @@ public class ZAttrProvisioning {
         public static ReverseProxyMailMode fromString(String s) throws ServiceException {
             for (ReverseProxyMailMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isHttp() { return this == http;}
         public boolean isHttps() { return this == https;}
@@ -2344,8 +2344,8 @@ public class ZAttrProvisioning {
         public static ReverseProxyPop3StartTlsMode fromString(String s) throws ServiceException {
             for (ReverseProxyPop3StartTlsMode value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isOn() { return this == on;}
         public boolean isOff() { return this == off;}
@@ -2362,8 +2362,8 @@ public class ZAttrProvisioning {
         public static ScheduledTaskRetryPolicy fromString(String s) throws ServiceException {
             for (ScheduledTaskRetryPolicy value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isConstant() { return this == constant;}
         public boolean isLinear() { return this == linear;}
@@ -2380,8 +2380,8 @@ public class ZAttrProvisioning {
         public static ShareNotificationMtaConnectionType fromString(String s) throws ServiceException {
             for (ShareNotificationMtaConnectionType value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isCLEARTEXT() { return this == CLEARTEXT;}
         public boolean isSSL() { return this == SSL;}
@@ -2398,8 +2398,8 @@ public class ZAttrProvisioning {
         public static SMTPPublicServiceProtocol fromString(String s) throws ServiceException {
             for (SMTPPublicServiceProtocol value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isNone() { return this == none;}
         public boolean isSsl() { return this == ssl;}
@@ -2415,8 +2415,8 @@ public class ZAttrProvisioning {
         public static TableMaintenanceOperation fromString(String s) throws ServiceException {
             for (TableMaintenanceOperation value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isANALYZE() { return this == ANALYZE;}
         public boolean isOPTIMIZE() { return this == OPTIMIZE;}
@@ -2432,8 +2432,8 @@ public class ZAttrProvisioning {
         public static TwoFactorAuthHashAlgorithm fromString(String s) throws ServiceException {
             for (TwoFactorAuthHashAlgorithm value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isSHA1() { return this == SHA1;}
         public boolean isSHA256() { return this == SHA256;}
@@ -2449,8 +2449,8 @@ public class ZAttrProvisioning {
         public static TwoFactorAuthScratchCodeEncoding fromString(String s) throws ServiceException {
             for (TwoFactorAuthScratchCodeEncoding value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBASE32() { return this == BASE32;}
         public boolean isBASE64() { return this == BASE64;}
@@ -2465,8 +2465,8 @@ public class ZAttrProvisioning {
         public static TwoFactorAuthSecretEncoding fromString(String s) throws ServiceException {
             for (TwoFactorAuthSecretEncoding value : values()) {
                 if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+            }
+            throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBASE32() { return this == BASE32;}
         public boolean isBASE64() { return this == BASE64;}
@@ -8585,14 +8585,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4116)
     public static final String A_zimbraHideAliasesInGal = "zimbraHideAliasesInGal";
-
-    /**
-     * Option to hide/show alias in GAL
-     *
-     * @since ZCS 10.1.1
-     */
-    @ZAttr(id=4135)
-    public static final String A_zimbraHideAliasInGal = "zimbraHideAliasInGal";
 
     /**
      * hide entry in Global Address List
@@ -19088,12 +19080,14 @@ public class ZAttrProvisioning {
     @ZAttr(id=4082)
     public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
 
-
-    @ZAttr(id=4082)
-    public static final String A_hideInGal = "zimbraHideAliasInGal";
-
+    /**
+     * Option to hide/show alias in GAL
+     *
+     * @since ZCS 10.1.1
+     */
+    @ZAttr(id=4135)
+    public static final String A_zimbraHideAliasInGal = "zimbraHideAliasInGal";
 
 
     ///// END-AUTO-GEN-REPLACE
 }
-

@@ -37,8 +37,10 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -133,6 +135,7 @@ import com.zimbra.cs.account.ldap.entry.LdapXMPPComponent;
 import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
@@ -181,6 +184,9 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.listeners.AuthListener;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
@@ -199,10 +205,12 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedValue;
 import com.zimbra.soap.type.TargetBy;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -2490,9 +2498,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                         new String[] { Provisioning.A_uid, aliasName,
                                 Provisioning.A_zimbraId, aliasUuid,
                                 Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()),
-                                Provisioning.A_zimbraAliasTargetId, targetEntryId,
-                                Provisioning.A_zimbraHideAliasInGal, "TRUE"
-                        } );
+                                Provisioning.A_zimbraAliasTargetId, targetEntryId} );
             } catch (LdapEntryAlreadyExistException e) {
                 /*
                  * check if the alias is a dangling alias.  If so remove the dangling alias
@@ -11721,7 +11727,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailFailure);
     }
 
-
     @Override
     public void checkIsAliasToBeHidden(NamedEntry entry, List<String> aliases) throws ServiceException {
         ZimbraLog.mailbox.debug("checkIsAliasToBeHidden %s ", aliases);
@@ -11730,7 +11735,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, ldapUsage);
 
-        for(String alias : new ArrayList<String>(aliases)) {
+        for (String alias : new ArrayList<String>(aliases)) {
             if (null != alias) {
                 String parts[] = alias.split("@");
                 String aliasName = parts[0];
@@ -11753,7 +11758,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 if ("TRUE".equalsIgnoreCase(aliasEntryLocal.getAttr(Provisioning.A_zimbraHideAliasInGal))) {
                     aliases.remove(alias);
                 }
-                ZimbraLog.mailbox.info("alias attribute for %s is %s and isSame %s ", alias, aliasEntryLocal.getAttr(Provisioning.A_zimbraHideAliasInGal), isSame);
+                ZimbraLog.mailbox.info("alias attribute for %s is %s and isSame %s ", alias,
+                        aliasEntryLocal.getAttr(Provisioning.A_zimbraHideAliasInGal), isSame);
             }
         }
 

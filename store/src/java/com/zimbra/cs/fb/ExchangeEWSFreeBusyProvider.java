@@ -141,57 +141,57 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     private static ExchangeService factory = null;
 
     static {
-        ZimbraLog.mailbox.info("hhhh Setting MailcapCommandMap handlers back to default");
+        ZimbraLog.fb.debug("Setting MailcapCommandMap handlers back to default");
         MailcapCommandMap mc = (MailcapCommandMap)CommandMap.getDefaultCommandMap();
         mc.addMailcap("application/xml;;x-java-content-handler=com.sun.mail.handlers.text_xml");
         mc.addMailcap("text/xml;;x-java-content-handler=com.sun.mail.handlers.text_xml");
         mc.addMailcap("text/plain;;x-java-content-handler=com.sun.mail.handlers.text_plain");
         mc.addMailcap("xml/x-zimbra-share;;x-java-content-handler=com.sun.mail.handlers.text_plain");
         CommandMap.setDefaultCommandMap(mc);
-        ZimbraLog.mailbox.info("hhhh Done Setting MailcapCommandMap handlers");
+        ZimbraLog.fb.debug("Done Setting MailcapCommandMap handlers");
 
         URL wsdlUrl = ExchangeService.class.getResource("/EWS.wsdl");
-        ZimbraLog.mailbox.info("EWS Wsdl URL = %s", wsdlUrl);
+        ZimbraLog.fb.debug("EWS Wsdl URL = %s", wsdlUrl);
         factory = new ExchangeService(wsdlUrl,
                 new QName("http://schemas.microsoft.com/exchange/services/2006/messages",
-                    "ExchangeService"));
+                        "ExchangeService"));
     }
 
     boolean initService(ServerInfo info) throws MalformedURLException {
         service = factory.getExchangeServicePort();
 
         ((BindingProvider)service).getRequestContext()
-            .put(BindingProvider.USERNAME_PROPERTY, info.authUsername);
+                .put(BindingProvider.USERNAME_PROPERTY, info.authUsername);
         ((BindingProvider)service).getRequestContext()
-            .put(BindingProvider.PASSWORD_PROPERTY, info.authPassword);
+                .put(BindingProvider.PASSWORD_PROPERTY, info.authPassword);
         ((BindingProvider)service).getRequestContext()
-            .put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, info.url);
+                .put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, info.url);
 
         // TODO: make sure we're passing authentication
         return true;
     }
 
     private static TrustManager[] trustAllCerts =
-        new TrustManager[] { new X509TrustManager() {
+            new TrustManager[] { new X509TrustManager() {
 
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
 
-            @Override
-            public void checkServerTrusted(X509Certificate[] chain,
-                String authType) throws CertificateException {
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain,
+                        String authType) throws CertificateException {
 
-            }
+                }
 
-            @Override
-            public void checkClientTrusted(X509Certificate[] chain,
-                String authType) throws CertificateException {
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain,
+                        String authType) throws CertificateException {
 
-            }
+                }
 
-        } };
+            } };
 
     private static HostnameVerifier hv = new HostnameVerifier() {
 
@@ -215,16 +215,16 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         @Override
         public ServerInfo getServerInfo(String emailAddr) {
             String url =
-                getAttr(Provisioning.A_zimbraFreebusyExchangeURL, emailAddr);
+                    getAttr(Provisioning.A_zimbraFreebusyExchangeURL, emailAddr);
             String user =
-                getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername,
-                    emailAddr);
+                    getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername,
+                            emailAddr);
             String pass =
-                getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword,
-                    emailAddr);
+                    getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword,
+                            emailAddr);
             String scheme =
-                getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme,
-                    emailAddr);
+                    getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme,
+                            emailAddr);
             if (url == null || user == null || pass == null || scheme == null)
                 return null;
 
@@ -234,13 +234,13 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             info.authPassword = pass;
             info.scheme = AuthScheme.valueOf(scheme);
             info.org =
-                getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, emailAddr);
+                    getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, emailAddr);
             try {
                 Account acct =
-                    Provisioning.getInstance().get(AccountBy.name, emailAddr);
+                        Provisioning.getInstance().get(AccountBy.name, emailAddr);
                 if (acct != null) {
                     String fps[] =
-                        acct.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
+                            acct.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
                     if (fps != null && fps.length > 0) {
                         for (String fp : fps) {
                             if (fp.startsWith(Provisioning.FP_PREFIX_AD)) {
@@ -256,8 +256,8 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             } catch (ServiceException se) {
                 info.cn = null;
             }
-			String exchangeType = getAttr(Provisioning.A_zimbraFreebusyExchangeServerType, emailAddr);
-			info.enabled = TYPE_EWS.equals(exchangeType);
+            String exchangeType = getAttr(Provisioning.A_zimbraFreebusyExchangeServerType, emailAddr);
+            info.enabled = TYPE_EWS.equals(exchangeType);
             return info;
         }
 
@@ -299,15 +299,15 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     }
 
     BaseFolderType bindFolder(
-        DistinguishedFolderIdNameType distinguishedFolderId,
-        DefaultShapeNamesType shapeType) {
+            DistinguishedFolderIdNameType distinguishedFolderId,
+            DefaultShapeNamesType shapeType) {
         final DistinguishedFolderIdType distinguishedFolderIdType =
-            new DistinguishedFolderIdType();
+                new DistinguishedFolderIdType();
         distinguishedFolderIdType.setId(distinguishedFolderId);
         final NonEmptyArrayOfBaseFolderIdsType nonEmptyArrayOfBaseFolderIdsType =
-            new NonEmptyArrayOfBaseFolderIdsType();
+                new NonEmptyArrayOfBaseFolderIdsType();
         nonEmptyArrayOfBaseFolderIdsType.getFolderIdOrDistinguishedFolderId()
-            .add(distinguishedFolderIdType);
+                .add(distinguishedFolderIdType);
         GetFolderType getFolderRequest = new GetFolderType();
         getFolderRequest.setFolderIds(nonEmptyArrayOfBaseFolderIdsType);
         FolderResponseShapeType stResp = new FolderResponseShapeType();
@@ -316,9 +316,9 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         RequestServerVersion serverVersion = new RequestServerVersion();
         serverVersion.setVersion(ExchangeVersionType.EXCHANGE_2010_SP_1);
         Holder<ServerVersionInfo> gfversionInfo =
-            new Holder<ServerVersionInfo>();
+                new Holder<ServerVersionInfo>();
         Holder<GetFolderResponseType> gfresponseHolder =
-            new Holder<GetFolderResponseType>();
+                new Holder<GetFolderResponseType>();
         MailboxCultureType mct = new MailboxCultureType();
         mct.setValue("EN");
         TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
@@ -330,17 +330,17 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 tzct, gfresponseHolder,
                 gfversionInfo);
         FolderInfoResponseMessageType firmtResp =
-            (FolderInfoResponseMessageType)gfresponseHolder.value.getResponseMessages()
-                .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
-                .get(0)
-                .getValue();
+                (FolderInfoResponseMessageType)gfresponseHolder.value.getResponseMessages()
+                        .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
+                        .get(0)
+                        .getValue();
 
         if (firmtResp.getFolders()
-            .getFolderOrCalendarFolderOrContactsFolder()
-            .size() > 0) {
-            return firmtResp.getFolders()
                 .getFolderOrCalendarFolderOrContactsFolder()
-                .get(0);
+                .size() > 0) {
+            return firmtResp.getFolders()
+                    .getFolderOrCalendarFolderOrContactsFolder()
+                    .get(0);
         } else {
             ZimbraLog.fb.error("Could not find the folder in Exchange : " + distinguishedFolderId.toString());
         }
@@ -349,14 +349,14 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     }
 
     List<BaseFolderType> findFolderByProp(FolderIdType id,
-        UnindexedFieldURIType prop, String val) {
+            UnindexedFieldURIType prop, String val) {
         FindFolderType findFolderRequest = new FindFolderType();
 
         findFolderRequest.setTraversal(FolderQueryTraversalType.SHALLOW);
         final NonEmptyArrayOfBaseFolderIdsType ffEmptyArrayOfBaseFolderIdsType =
-            new NonEmptyArrayOfBaseFolderIdsType();
+                new NonEmptyArrayOfBaseFolderIdsType();
         ffEmptyArrayOfBaseFolderIdsType.getFolderIdOrDistinguishedFolderId()
-            .add(id);
+                .add(id);
         FolderResponseShapeType stResp = new FolderResponseShapeType();
         stResp.setBaseShape(DefaultShapeNamesType.ID_ONLY);
         findFolderRequest.setParentFolderIds(ffEmptyArrayOfBaseFolderIdsType);
@@ -369,9 +369,9 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         PathToUnindexedFieldType pix = new PathToUnindexedFieldType();
         pix.setFieldURI(prop);
         ieq.setPath(new JAXBElement<PathToUnindexedFieldType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
-            "FieldURI"),
-            PathToUnindexedFieldType.class,
-            pix));
+                "FieldURI"),
+                PathToUnindexedFieldType.class,
+                pix));
 
         FieldURIOrConstantType ct = new FieldURIOrConstantType();
         ConstantValueType cv = new ConstantValueType();
@@ -381,18 +381,18 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         ieq.setFieldURIOrConstant(ct);
 
         rtRestriction.setSearchExpression(new JAXBElement<SearchExpressionType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
-            "IsEqualTo"),
-            SearchExpressionType.class,
-            ieq));
+                "IsEqualTo"),
+                SearchExpressionType.class,
+                ieq));
 
         findFolderRequest.setRestriction(rtRestriction);
 
         Holder<FindFolderResponseType> findFolderResponse =
-            new Holder<FindFolderResponseType>();
+                new Holder<FindFolderResponseType>();
         RequestServerVersion serverVersion = new RequestServerVersion();
         serverVersion.setVersion(ExchangeVersionType.EXCHANGE_2010_SP_1);
         Holder<ServerVersionInfo> gfversionInfo =
-            new Holder<ServerVersionInfo>();
+                new Holder<ServerVersionInfo>();
 
         MailboxCultureType mct = new MailboxCultureType();
         mct.setValue("EN");
@@ -406,28 +406,28 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 tzct, role, findFolderResponse,
                 gfversionInfo);
         FindFolderResponseMessageType ffRespMessage =
-            (FindFolderResponseMessageType)findFolderResponse.value.getResponseMessages()
-                .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
-                .get(0)
-                .getValue();
+                (FindFolderResponseMessageType)findFolderResponse.value.getResponseMessages()
+                        .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
+                        .get(0)
+                        .getValue();
         if (ResponseClassType.SUCCESS == ffRespMessage.getResponseClass()) {
             return ffRespMessage.getRootFolder()
-                .getFolders()
-                .getFolderOrCalendarFolderOrContactsFolder();
+                    .getFolders()
+                    .getFolderOrCalendarFolderOrContactsFolder();
         }
         ZimbraLog.fb.warn("findFolderByProp " + ffRespMessage.getResponseCode());
         return null;
     }
 
     List<BaseFolderType> findFolderByPartialProp(FolderIdType id,
-        UnindexedFieldURIType prop, String val) {
+            UnindexedFieldURIType prop, String val) {
         FindFolderType findFolderRequest = new FindFolderType();
 
         findFolderRequest.setTraversal(FolderQueryTraversalType.SHALLOW);
         final NonEmptyArrayOfBaseFolderIdsType ffEmptyArrayOfBaseFolderIdsType =
-            new NonEmptyArrayOfBaseFolderIdsType();
+                new NonEmptyArrayOfBaseFolderIdsType();
         ffEmptyArrayOfBaseFolderIdsType.getFolderIdOrDistinguishedFolderId()
-            .add(id);
+                .add(id);
         FolderResponseShapeType stResp = new FolderResponseShapeType();
         stResp.setBaseShape(DefaultShapeNamesType.ID_ONLY);
         findFolderRequest.setParentFolderIds(ffEmptyArrayOfBaseFolderIdsType);
@@ -439,9 +439,9 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         PathToUnindexedFieldType pix = new PathToUnindexedFieldType();
         pix.setFieldURI(prop);
         contains.setPath(new JAXBElement<PathToUnindexedFieldType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
-            "FieldURI"),
-            PathToUnindexedFieldType.class,
-            pix));
+                "FieldURI"),
+                PathToUnindexedFieldType.class,
+                pix));
 
         FieldURIOrConstantType ct = new FieldURIOrConstantType();
         ConstantValueType cv = new ConstantValueType();
@@ -452,18 +452,18 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         contains.setContainmentMode(ContainmentModeType.SUBSTRING);
 
         rtRestriction.setSearchExpression(new JAXBElement<SearchExpressionType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
-            "Contains"),
-            SearchExpressionType.class,
-            contains));
+                "Contains"),
+                SearchExpressionType.class,
+                contains));
 
         findFolderRequest.setRestriction(rtRestriction);
 
         Holder<FindFolderResponseType> findFolderResponse =
-            new Holder<FindFolderResponseType>();
+                new Holder<FindFolderResponseType>();
         RequestServerVersion serverVersion = new RequestServerVersion();
         serverVersion.setVersion(ExchangeVersionType.EXCHANGE_2010_SP_1);
         Holder<ServerVersionInfo> gfversionInfo =
-            new Holder<ServerVersionInfo>();
+                new Holder<ServerVersionInfo>();
 
         MailboxCultureType mct = new MailboxCultureType();
         mct.setValue("EN");
@@ -477,22 +477,22 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 tzct, role, findFolderResponse,
                 gfversionInfo);
         FindFolderResponseMessageType ffRespMessage =
-            (FindFolderResponseMessageType)findFolderResponse.value.getResponseMessages()
-                .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
-                .get(0)
-                .getValue();
+                (FindFolderResponseMessageType)findFolderResponse.value.getResponseMessages()
+                        .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
+                        .get(0)
+                        .getValue();
         if (ResponseClassType.SUCCESS == ffRespMessage.getResponseClass()) {
             return ffRespMessage.getRootFolder()
-                .getFolders()
-                .getFolderOrCalendarFolderOrContactsFolder();
+                    .getFolders()
+                    .getFolderOrCalendarFolderOrContactsFolder();
         }
         ZimbraLog.fb.warn("findFolderByPartialProp " +
-            ffRespMessage.getResponseCode());
+                ffRespMessage.getResponseCode());
         return null;
     }
 
     List<ItemType> findItemByProp(FolderIdType id, UnindexedFieldURIType prop,
-        String val, DefaultShapeNamesType shapeType) {
+            String val, DefaultShapeNamesType shapeType) {
         FindItemType findItemRequest = new FindItemType();
 
         RestrictionType rtRestriction = new RestrictionType();
@@ -502,9 +502,9 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         PathToUnindexedFieldType pix = new PathToUnindexedFieldType();
         pix.setFieldURI(prop);
         ieq.setPath(new JAXBElement<PathToUnindexedFieldType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
-            "FieldURI"),
-            PathToUnindexedFieldType.class,
-            pix));
+                "FieldURI"),
+                PathToUnindexedFieldType.class,
+                pix));
 
         FieldURIOrConstantType ct = new FieldURIOrConstantType();
         ConstantValueType cv = new ConstantValueType();
@@ -514,9 +514,9 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         ieq.setFieldURIOrConstant(ct);
 
         rtRestriction.setSearchExpression(new JAXBElement<SearchExpressionType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
-            "IsEqualTo"),
-            SearchExpressionType.class,
-            ieq));
+                "IsEqualTo"),
+                SearchExpressionType.class,
+                ieq));
 
         findItemRequest.setRestriction(rtRestriction);
 
@@ -524,7 +524,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         stShape.setBaseShape(shapeType);
         findItemRequest.setItemShape(stShape);
         NonEmptyArrayOfBaseFolderIdsType ids =
-            new NonEmptyArrayOfBaseFolderIdsType();
+                new NonEmptyArrayOfBaseFolderIdsType();
         ids.getFolderIdOrDistinguishedFolderId().add(id);
         findItemRequest.setParentFolderIds(ids);
         findItemRequest.setTraversal(ItemQueryTraversalType.SHALLOW);
@@ -533,9 +533,9 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         serverVersion.setVersion(ExchangeVersionType.EXCHANGE_2010_SP_1);
 
         Holder<FindItemResponseType> fiResponse =
-            new Holder<FindItemResponseType>();
+                new Holder<FindItemResponseType>();
         Holder<ServerVersionInfo> gfversionInfo =
-            new Holder<ServerVersionInfo>();
+                new Holder<ServerVersionInfo>();
         MailboxCultureType mct = new MailboxCultureType();
         mct.setValue("EN");
         TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
@@ -549,15 +549,15 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 gfversionInfo);
 
         FindItemResponseMessageType fiRespMessage =
-            (FindItemResponseMessageType)fiResponse.value.getResponseMessages()
-                .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
-                .get(0)
-                .getValue();
+                (FindItemResponseMessageType)fiResponse.value.getResponseMessages()
+                        .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
+                        .get(0)
+                        .getValue();
 
         if (ResponseClassType.SUCCESS == fiRespMessage.getResponseClass()) {
             return fiRespMessage.getRootFolder()
-                .getItems()
-                .getItemOrMessageOrCalendarItem();
+                    .getItems()
+                    .getItemOrMessageOrCalendarItem();
         }
         ZimbraLog.fb.warn("findItemByProp " + fiRespMessage.getResponseCode());
         return null;
@@ -565,160 +565,160 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
     @Override
     public boolean handleMailboxChange(String accountId) {
-        ZimbraLog.mailbox.info("Entering handleMailboxChange() for account : " + accountId);
+        ZimbraLog.fb.debug("Entering handleMailboxChange() for account : " + accountId);
         String email = getEmailAddress(accountId);
-		ServerInfo serverInfo = getServerInfo(email);
-		if (email == null || !serverInfo.enabled) {
-		    ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
-			return true;  // no retry
-		}
+        ServerInfo serverInfo = getServerInfo(email);
+        if (email == null || !serverInfo.enabled) {
+            ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
+            return true;  // no retry
+        }
 
         FreeBusy fb;
         try {
             fb = getFreeBusy(accountId, FreeBusyQuery.CALENDAR_FOLDER_ALL);
         } catch (ServiceException se) {
             ZimbraLog.fb.warn("can't get freebusy for account " + accountId, se);
-            ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
+            ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
             // retry the request if it's receivers fault.
             return !se.isReceiversFault();
         }
         if (email == null || fb == null) {
             ZimbraLog.fb.warn("account not found / incorrect / wrong host: " +
-                accountId);
-            ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
+                    accountId);
+            ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
             return true; // no retry
         }
 
         if (serverInfo == null || serverInfo.org == null ||
-            serverInfo.cn == null) {
+                serverInfo.cn == null) {
             ZimbraLog.fb.warn("no exchange server info for user " + email);
-            ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
+            ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
             return true; // no retry
         }
         if (null == service) {
             try {
                 if (!initService(serverInfo)) {
                     ZimbraLog.fb.error("failed to initialize exchange service object " +
-                        serverInfo.url);
-                    ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
+                            serverInfo.url);
+                    ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
                     return true;
                 }
             } catch (MalformedURLException e) {
                 ZimbraLog.fb.error("exception while trying to initialize exchange service object " +
-                    serverInfo.url);
-                ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
+                        serverInfo.url);
+                ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
                 return true;
             }
         }
         ExchangeEWSMessage msg =
-            new ExchangeEWSMessage(serverInfo.org, serverInfo.cn, email);
+                new ExchangeEWSMessage(serverInfo.org, serverInfo.cn, email);
 
         try {
             FolderType publicFolderRoot =
-                (FolderType)bindFolder(DistinguishedFolderIdNameType.PUBLICFOLDERSROOT,
-                    DefaultShapeNamesType.ALL_PROPERTIES);
+                    (FolderType)bindFolder(DistinguishedFolderIdNameType.PUBLICFOLDERSROOT,
+                            DefaultShapeNamesType.ALL_PROPERTIES);
             if (publicFolderRoot == null) {
                 ZimbraLog.fb.error("Could not find the public root folder on exchange");
                 return true;
             }
             List<BaseFolderType> resultsNonIpm =
-                findFolderByProp(publicFolderRoot.getParentFolderId(),
-                    UnindexedFieldURIType.FOLDER_DISPLAY_NAME,
-                    "NON_IPM_SUBTREE");
+                    findFolderByProp(publicFolderRoot.getParentFolderId(),
+                            UnindexedFieldURIType.FOLDER_DISPLAY_NAME,
+                            "NON_IPM_SUBTREE");
 
             if (resultsNonIpm != null && resultsNonIpm.size() > 0) {
                 FolderType folderNonIPM = (FolderType)resultsNonIpm.get(0);
 
                 List<BaseFolderType> resultSchedulePlus =
-                    findFolderByProp(folderNonIPM.getFolderId(),
-                        UnindexedFieldURIType.FOLDER_DISPLAY_NAME,
-                        "SCHEDULE+ FREE BUSY");
+                        findFolderByProp(folderNonIPM.getFolderId(),
+                                UnindexedFieldURIType.FOLDER_DISPLAY_NAME,
+                                "SCHEDULE+ FREE BUSY");
                 if (resultSchedulePlus != null && resultSchedulePlus.size() > 0) {
                     FolderType folderSchedulePlus =
-                        (FolderType)resultSchedulePlus.get(0);
+                            (FolderType)resultSchedulePlus.get(0);
 
                     List<BaseFolderType> resultFBFolder =
-                        findFolderByPartialProp(folderSchedulePlus.getFolderId(),
-                            UnindexedFieldURIType.FOLDER_DISPLAY_NAME,
-                            serverInfo.org);// TODO: check here for partial name
+                            findFolderByPartialProp(folderSchedulePlus.getFolderId(),
+                                    UnindexedFieldURIType.FOLDER_DISPLAY_NAME,
+                                    serverInfo.org);// TODO: check here for partial name
                     // search
                     if (resultFBFolder != null && resultFBFolder.size() > 0) {
                         FolderType folderFB = (FolderType)resultFBFolder.get(0);
 
                         List<ItemType> resultMessage =
-                            findItemByProp(folderFB.getFolderId(),
-                                UnindexedFieldURIType.ITEM_SUBJECT,
-                                "USER-/CN=RECIPIENTS/CN=" +
-                                getForeignPrincipal(accountId),
-                                DefaultShapeNamesType.ALL_PROPERTIES);
+                                findItemByProp(folderFB.getFolderId(),
+                                        UnindexedFieldURIType.ITEM_SUBJECT,
+                                        "USER-/CN=RECIPIENTS/CN=" +
+                                                getForeignPrincipal(accountId),
+                                        DefaultShapeNamesType.ALL_PROPERTIES);
                         if (resultMessage != null && resultMessage.size() > 0) {
                             // edit message
                             ItemType itemMessage = resultMessage.get(0);
 
                             Map<PathToExtendedFieldType, NonEmptyArrayOfPropertyValuesType> props =
-                                msg.GetFreeBusyProperties(fb);
+                                    msg.GetFreeBusyProperties(fb);
 
                             final NonEmptyArrayOfItemChangeDescriptionsType cdExPropArr =
-                                new NonEmptyArrayOfItemChangeDescriptionsType();
+                                    new NonEmptyArrayOfItemChangeDescriptionsType();
                             for (PathToExtendedFieldType pathExProp : props.keySet()) {
                                 ItemType itemEmptyMessage = new ItemType();
                                 SetItemFieldType sifItem =
-                                    new SetItemFieldType();
+                                        new SetItemFieldType();
                                 sifItem.setPath(new JAXBElement<PathToExtendedFieldType>(new QName("http://schemas.microsoft.com/exchange/services/2006/types",
-                                    "Path"),
-                                    PathToExtendedFieldType.class,
-                                    pathExProp));
+                                        "Path"),
+                                        PathToExtendedFieldType.class,
+                                        pathExProp));
                                 ExtendedPropertyType exProp =
-                                    new ExtendedPropertyType();
+                                        new ExtendedPropertyType();
                                 exProp.setExtendedFieldURI(pathExProp);
                                 if (pathExProp.getPropertyType() == MapiPropertyTypeType.APPLICATION_TIME_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.BINARY_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.CLSID_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.CURRENCY_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.DOUBLE_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.FLOAT_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.INTEGER_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.LONG_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.OBJECT_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.SHORT_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.STRING_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.SYSTEM_TIME_ARRAY) {
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.BINARY_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.CLSID_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.CURRENCY_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.DOUBLE_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.FLOAT_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.INTEGER_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.LONG_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.OBJECT_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.SHORT_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.STRING_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.SYSTEM_TIME_ARRAY) {
                                     exProp.setValues(props.get(pathExProp));
                                 } else {
                                     if (props.get(pathExProp).getValue().size() > 0) {
                                         exProp.setValue(props.get(pathExProp)
-                                            .getValue()
-                                            .get(0));
+                                                .getValue()
+                                                .get(0));
                                     }
                                 }
                                 itemEmptyMessage.getExtendedProperty()
-                                    .add(exProp);
+                                        .add(exProp);
                                 sifItem.setItem(itemEmptyMessage);
                                 cdExPropArr.getAppendToItemFieldOrSetItemFieldOrDeleteItemField()
-                                    .add(sifItem);
+                                        .add(sifItem);
 
                             }
                             UpdateItemType updateItemRequest =
-                                new UpdateItemType();
+                                    new UpdateItemType();
                             updateItemRequest.setMessageDisposition(MessageDispositionType.SAVE_ONLY);
                             updateItemRequest.setConflictResolution(ConflictResolutionType.ALWAYS_OVERWRITE);
                             RequestServerVersion serverVersion =
-                                new RequestServerVersion();
+                                    new RequestServerVersion();
                             serverVersion.setVersion(ExchangeVersionType.EXCHANGE_2010_SP_1);
 
                             ItemChangeType itemExpropChange =
-                                new ItemChangeType();
+                                    new ItemChangeType();
                             itemExpropChange.setItemId(itemMessage.getItemId());
                             itemExpropChange.setUpdates(cdExPropArr);
                             final NonEmptyArrayOfItemChangesType ctExPropArr =
-                                new NonEmptyArrayOfItemChangesType();
+                                    new NonEmptyArrayOfItemChangesType();
                             ctExPropArr.getItemChange().add(itemExpropChange);
                             updateItemRequest.setItemChanges(ctExPropArr);
 
                             Holder<UpdateItemResponseType> updateItemResponse =
-                                new Holder<UpdateItemResponseType>();
+                                    new Holder<UpdateItemResponseType>();
                             Holder<ServerVersionInfo> gfversionInfo =
-                                new Holder<ServerVersionInfo>();
+                                    new Holder<ServerVersionInfo>();
                             MailboxCultureType mct = new MailboxCultureType();
                             mct.setValue("EN");
                             TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
@@ -726,72 +726,72 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             TimeZoneContextType tzct = new TimeZoneContextType();
                             tzct.setTimeZoneDefinition(tzdt);
                             service.updateItem(updateItemRequest,
-                                mct, serverVersion,
-                                tzct, updateItemResponse,
-                                gfversionInfo);
+                                    mct, serverVersion,
+                                    tzct, updateItemResponse,
+                                    gfversionInfo);
                             ResponseMessageType updateItemResponseMessage =
-                                updateItemResponse.value.getResponseMessages()
-                                    .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
-                                    .get(0)
-                                    .getValue();
+                                    updateItemResponse.value.getResponseMessages()
+                                            .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
+                                            .get(0)
+                                            .getValue();
 
                         } else {
                             // create message
                             PostItemType itemMessage = new PostItemType();
 
                             itemMessage.setSubject("USER-/CN=RECIPIENTS/CN=" +
-                            	getForeignPrincipal(accountId));
+                                    getForeignPrincipal(accountId));
                             itemMessage.setItemClass("IPM.Post");
 
                             Map<PathToExtendedFieldType, NonEmptyArrayOfPropertyValuesType> props =
-                                msg.GetFreeBusyProperties(fb);
+                                    msg.GetFreeBusyProperties(fb);
 
                             for (PathToExtendedFieldType pathExProp : props.keySet()) {
                                 ExtendedPropertyType exProp =
-                                    new ExtendedPropertyType();
+                                        new ExtendedPropertyType();
                                 exProp.setExtendedFieldURI(pathExProp);
                                 if (pathExProp.getPropertyType() == MapiPropertyTypeType.APPLICATION_TIME_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.BINARY_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.CLSID_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.CURRENCY_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.DOUBLE_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.FLOAT_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.INTEGER_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.LONG_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.OBJECT_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.SHORT_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.STRING_ARRAY ||
-                                    pathExProp.getPropertyType() == MapiPropertyTypeType.SYSTEM_TIME_ARRAY) {
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.BINARY_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.CLSID_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.CURRENCY_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.DOUBLE_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.FLOAT_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.INTEGER_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.LONG_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.OBJECT_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.SHORT_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.STRING_ARRAY ||
+                                        pathExProp.getPropertyType() == MapiPropertyTypeType.SYSTEM_TIME_ARRAY) {
                                     exProp.setValues(props.get(pathExProp));
                                 } else {
                                     if (props.get(pathExProp).getValue().size() > 0) {
                                         exProp.setValue(props.get(pathExProp)
-                                            .getValue()
-                                            .get(0));
+                                                .getValue()
+                                                .get(0));
                                     }
                                 }
                                 itemMessage.getExtendedProperty().add(exProp);
                             }
 
                             CreateItemType createItemRequest =
-                                new CreateItemType();
+                                    new CreateItemType();
                             RequestServerVersion serverVersion =
-                                new RequestServerVersion();
+                                    new RequestServerVersion();
                             serverVersion.setVersion(ExchangeVersionType.EXCHANGE_2010_SP_1);
                             createItemRequest.setMessageDisposition(MessageDispositionType.SAVE_ONLY);
                             TargetFolderIdType idTargetFolder =
-                                new TargetFolderIdType();
+                                    new TargetFolderIdType();
                             idTargetFolder.setFolderId(folderFB.getFolderId());
                             createItemRequest.setSavedItemFolderId(idTargetFolder);
                             NonEmptyArrayOfAllItemsType createItems =
-                                new NonEmptyArrayOfAllItemsType();
+                                    new NonEmptyArrayOfAllItemsType();
                             createItems.getItemOrMessageOrCalendarItem()
-                                .add(itemMessage);
+                                    .add(itemMessage);
                             createItemRequest.setItems(createItems);
                             Holder<CreateItemResponseType> createItemResponse =
-                                new Holder<CreateItemResponseType>();
+                                    new Holder<CreateItemResponseType>();
                             Holder<ServerVersionInfo> gfversionInfo =
-                                new Holder<ServerVersionInfo>();
+                                    new Holder<ServerVersionInfo>();
                             MailboxCultureType mct = new MailboxCultureType();
                             mct.setValue("EN");
                             TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
@@ -799,14 +799,14 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             TimeZoneContextType tzct = new TimeZoneContextType();
                             tzct.setTimeZoneDefinition(tzdt);
                             service.createItem(createItemRequest,
-                                mct, serverVersion,
-                                tzct, createItemResponse,
-                                gfversionInfo);
+                                    mct, serverVersion,
+                                    tzct, createItemResponse,
+                                    gfversionInfo);
                             ResponseMessageType createItemResponseMessage =
-                                createItemResponse.value.getResponseMessages()
-                                    .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
-                                    .get(0)
-                                    .getValue();
+                                    createItemResponse.value.getResponseMessages()
+                                            .getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()
+                                            .get(0)
+                                            .getValue();
 
                         }
                     } else {
@@ -825,29 +825,29 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         } catch (Exception e) {
             ZimbraLog.fb.error("error communicating with " + serverInfo.url, e);
         } finally {
-            ZimbraLog.mailbox.info("Exiting handleMailboxChange() for account : " + accountId);
+            ZimbraLog.fb.debug("Exiting handleMailboxChange() for account : " + accountId);
         }
 
         return false;// retry
     }
 
     public List<FreeBusy>
-        getFreeBusyForHost(String host, ArrayList<Request> req)
+    getFreeBusyForHost(String host, ArrayList<Request> req)
             throws IOException {
         int fb_interval = LC.exchange_free_busy_interval_min.intValueWithinRange(5, 1444);
         List<FreeBusyResponseType> results = null;
         ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 
-		Request r = req.get(0);
+        Request r = req.get(0);
         long start = Request.offsetInterval(req.get(0).start, fb_interval);
-		ServerInfo serverInfo = (ServerInfo) r.data;
-		if (serverInfo == null) {
-			ZimbraLog.fb.warn("no exchange server info for user "+r.email);
-			return ret;
-		}
+        ServerInfo serverInfo = (ServerInfo) r.data;
+        if (serverInfo == null) {
+            ZimbraLog.fb.warn("no exchange server info for user "+r.email);
+            return ret;
+        }
 
-		if (!serverInfo.enabled)
-			return ret;
+        if (!serverInfo.enabled)
+            return ret;
 
         ArrayOfMailboxData attendees = new ArrayOfMailboxData();
 
@@ -872,7 +872,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             duration.setEndTime(datatypeFactory.newXMLGregorianCalendar(gregorianCalEnd));
 
             FreeBusyViewOptionsType availabilityOpts =
-                new FreeBusyViewOptionsType();
+                    new FreeBusyViewOptionsType();
             availabilityOpts.setMergedFreeBusyIntervalInMinutes(fb_interval);
 
             // Request for highest hierarchy view. The rest hierarchy will be Detailed->FreeBusy->MergedOnly->None
@@ -891,13 +891,13 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             availabilityRequest.setTimeZone(timezone);
             availabilityRequest.setFreeBusyViewOptions(availabilityOpts);
             availabilityRequest.setMailboxDataArray(attendees);
-            
+
             RequestServerVersion serverVersion = new RequestServerVersion();
             serverVersion.setVersion(ExchangeVersionType.EXCHANGE_2010_SP_1);
             Holder<GetUserAvailabilityResponseType> availabilityResponse =
-                new Holder<GetUserAvailabilityResponseType>();
+                    new Holder<GetUserAvailabilityResponseType>();
             Holder<ServerVersionInfo> gfversionInfo =
-                new Holder<ServerVersionInfo>();
+                    new Holder<ServerVersionInfo>();
 
             TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
             tzdt.setId("Greenwich Standard Time");
@@ -905,14 +905,14 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             tzct.setTimeZoneDefinition(tzdt);
 
             service.getUserAvailability(availabilityRequest, tzct, serverVersion,
-                availabilityResponse,
-                gfversionInfo);
+                    availabilityResponse,
+                    gfversionInfo);
             results = availabilityResponse.value.getFreeBusyResponseArray()
                     .getFreeBusyResponse();
 
         } catch (DatatypeConfigurationException dce) {
             ZimbraLog.fb.warn("getFreeBusyForHost DatatypeConfiguration failure",
-                dce);
+                    dce);
             return getEmptyList(req);
         } catch (Exception e) {
             ZimbraLog.fb.warn("getFreeBusyForHost failure", e);
@@ -920,42 +920,42 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         }
 
         for (Request re : req) {
-            
+
             int i = 0;
             long startTime = req.get(0).start;
             long endTime = req.get(0).end;
             for (FreeBusyResponseType attendeeAvailability : results) {
                 if (attendeeAvailability.getFreeBusyView() != null) {
-                    	String fbResponseViewType = attendeeAvailability.getFreeBusyView().getFreeBusyViewType().get(0);
-                    	String emailAddress = attendees.getMailboxData().get(i).getEmail().getAddress();
-                    	ZimbraLog.mailbox.info("For user :%s free busy response type received is : %s", emailAddress, fbResponseViewType);
-                	
+                    String fbResponseViewType = attendeeAvailability.getFreeBusyView().getFreeBusyViewType().get(0);
+                    String emailAddress = attendees.getMailboxData().get(i).getEmail().getAddress();
+                    ZimbraLog.fb.debug("For user :%s free busy response type received is : %s", emailAddress, fbResponseViewType);
+
                     if (re.email == emailAddress) {
                         if (ResponseClassType.ERROR == attendeeAvailability.getResponseMessage().getResponseClass()) {
-                            ZimbraLog.mailbox.info("Unable to fetch free busy for %s  error code %s :: %s",
-                                emailAddress,
-                                attendeeAvailability.getResponseMessage().getResponseCode(),
-                                attendeeAvailability.getResponseMessage().getMessageText());
-                           
+                            ZimbraLog.fb.debug("Unable to fetch free busy for %s  error code %s :: %s",
+                                    emailAddress,
+                                    attendeeAvailability.getResponseMessage().getResponseCode(),
+                                    attendeeAvailability.getResponseMessage().getMessageText());
+
                             FreeBusy npFreeBusy = FreeBusy.nodataFreeBusy(emailAddress, startTime, endTime);
                             ret.add(npFreeBusy);
                             if (attendeeAvailability.getResponseMessage().getResponseCode().equals(ResponseCodeType.ERROR_NO_FREE_BUSY_ACCESS)) {
-                                	npFreeBusy.mList.getHead().hasPermission = false;
+                                npFreeBusy.mList.getHead().hasPermission = false;
                             }
-                            ZimbraLog.mailbox.info("Error in response. continuing to next one sending nodata as response");
+                            ZimbraLog.fb.info("Error in response. continuing to next one sending nodata as response");
                             i++;
                             continue;
                         }
                         String fb = attendeeAvailability.getFreeBusyView().getMergedFreeBusy();
-                        ZimbraLog.mailbox.info("Merged view Free Busy info received for user:%s is %s: ", emailAddress, fb);
+                        ZimbraLog.fb.info("Merged view Free Busy info received for user:%s is %s: ", emailAddress, fb);
                         ArrayList<FreeBusy> userIntervals = new ArrayList<FreeBusy>();
-                        
+
                         if (fb == null) {
                             ZimbraLog.fb.warn("Merged view Free Busy info not avaiable for the user");
                             fb = "";  //Avoid NPE.
                         } else {
                             userIntervals.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
-                                re.email, fb_interval, startTime, endTime));
+                                    re.email, fb_interval, startTime, endTime));
                             ret.addAll(userIntervals);
                         }
 
@@ -966,24 +966,24 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             ret.addAll(userIntervals);
                         } else {  // No FreeBusy view information available. returning nodata freebusy in response
 
-                        	     ZimbraLog.mailbox.info("No Free Busy view info avaiable for [%s], free busy view type from response : %s", emailAddress, fbResponseViewType);
-                        	     ret.add(FreeBusy.nodataFreeBusy(emailAddress, startTime, endTime));
+                            ZimbraLog.fb.debug("No Free Busy view info avaiable for [%s], free busy view type from response : %s", emailAddress, fbResponseViewType);
+                            ret.add(FreeBusy.nodataFreeBusy(emailAddress, startTime, endTime));
                         }
                     }
                     i++;
-            	}
+                }
             }
         }
         return ret;
     }
-    
-   /*
-    * This method parse the Detailed and FreeBusy view response information for each individual user,
-    * who has those view information.
-    */
+
+    /*
+     * This method parse the Detailed and FreeBusy view response information for each individual user,
+     * who has those view information.
+     */
     private static void parseDetailedFreeBusyResponse(String name, long start, long end, FreeBusyResponseType freeBusyResponse, ArrayList<FreeBusy> ret) {
-        	ArrayOfCalendarEvent arrayOfCalendarEvent = null;
-        	List<CalendarEvent> calendarEvents  = null;
+        ArrayOfCalendarEvent arrayOfCalendarEvent = null;
+        List<CalendarEvent> calendarEvents  = null;
         if (freeBusyResponse.getFreeBusyView() != null) {
             arrayOfCalendarEvent = freeBusyResponse.getFreeBusyView().getCalendarEventArray();
 
@@ -992,15 +992,15 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 LegacyFreeBusyType legacyType;
 
                 if (calendarEvents != null && calendarEvents.size() > 0) {
-    
+
                     for (CalendarEvent event : calendarEvents) {
                         legacyType = event.getBusyType();
                         FreeBusy.Interval interval = getFreeBusyInterval(ret, event);
-                        ZimbraLog.mailbox.info(
-                            "For user %s FB data received is: legacyType : %s, startTime : %s, "
-                                + "endTime : %s",name, legacyType, event.getStartTime(), event.getEndTime());
+                        ZimbraLog.fb.debug(
+                                "For user %s FB data received is: legacyType : %s, startTime : %s, "
+                                        + "endTime : %s",name, legacyType, event.getStartTime(), event.getEndTime());
                         if (event.getCalendarEventDetails() != null && interval != null) {
-    
+
                             CalendarEventDetails calendarEventDetails = event.getCalendarEventDetails();
                             interval.id = calendarEventDetails.getID();
                             interval.location = calendarEventDetails.getLocation();
@@ -1011,18 +1011,18 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             interval.isReminderSet = calendarEventDetails.isIsReminderSet();
                             interval.isPrivate = calendarEventDetails.isIsPrivate();
                             interval.detailsExist = true;
-                            ZimbraLog.mailbox.info("eventID : %s, location : %s, subject : %s, isMeeting : %b, "
-                            + "isRecurring : %b, isException : %b, isReminderSet : %b, isPrivate : %b", 
-                            interval.id, interval.location, interval.subject, interval.isMeeting,
-                            interval.isRecurring, interval.isException, interval.isReminderSet, 
-                            interval.isPrivate);
-                    } else {
-                        ZimbraLog.mailbox.info("Calendar Event details not found for the user %s",
-                            name);
+                            ZimbraLog.fb.debug("eventID : %s, location : %s, subject : %s, isMeeting : %b, "
+                                            + "isRecurring : %b, isException : %b, isReminderSet : %b, isPrivate : %b",
+                                    interval.id, interval.location, interval.subject, interval.isMeeting,
+                                    interval.isRecurring, interval.isException, interval.isReminderSet,
+                                    interval.isPrivate);
+                        } else {
+                            ZimbraLog.fb.debug("Calendar Event details not found for the user %s",
+                                    name);
+                        }
                     }
-                }
-            } else {
-                    ZimbraLog.mailbox.info("No Calendar Information available for the user : %s", name);
+                } else {
+                    ZimbraLog.fb.debug("No Calendar Information available for the user : %s", name);
                 }
             }
         }
@@ -1049,12 +1049,12 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     }
 
     public static int checkAuth(ServerInfo info, Account requestor)
-        throws ServiceException, IOException {
+            throws ServiceException, IOException {
         ExchangeEWSFreeBusyProvider provider = new ExchangeEWSFreeBusyProvider();
         provider.initService(info);
         FolderType publicFolderRoot =
-            (FolderType)provider.bindFolder(DistinguishedFolderIdNameType.PUBLICFOLDERSROOT,
-                DefaultShapeNamesType.ALL_PROPERTIES);
+                (FolderType)provider.bindFolder(DistinguishedFolderIdNameType.PUBLICFOLDERSROOT,
+                        DefaultShapeNamesType.ALL_PROPERTIES);
         if (publicFolderRoot == null) {
             return 400;
         }
@@ -1088,7 +1088,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             }
         }
         if (info == null)
-			throw new FreeBusyUserNotFoundException();
+            throw new FreeBusyUserNotFoundException();
         addRequest(info, req);
     }
 
@@ -1115,10 +1115,10 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         for (Map.Entry<String, ArrayList<Request>> entry : mRequests.entrySet()) {
             try {
                 ret.addAll(this.getFreeBusyForHost(entry.getKey(),
-                    entry.getValue()));
+                        entry.getValue()));
             } catch (IOException e) {
                 ZimbraLog.fb.error("error communicating with " + entry.getKey(),
-                    e);
+                        e);
             }
         }
         return ret;
@@ -1177,7 +1177,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         } catch (ServiceException se) {
             // set to 1 week ago
             cal.setTimeInMillis(System.currentTimeMillis() -
-                Constants.MILLIS_PER_WEEK);
+                    Constants.MILLIS_PER_WEEK);
         }
         // normalize the time to 00:00:00
         cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -1222,10 +1222,10 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     }
 
     protected String getForeignPrincipal(String accountId) throws ServiceException {
-    	String ret = null;
+        String ret = null;
         Account acct =
-            Provisioning.getInstance()
-                .get(Key.AccountBy.id, accountId);
+                Provisioning.getInstance()
+                        .get(Key.AccountBy.id, accountId);
         if (acct == null)
             return null;
         String[] fps = acct.getForeignPrincipal();

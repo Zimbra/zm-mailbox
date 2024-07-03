@@ -286,7 +286,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
             return;
         }
 
-        log.debug("Response: %s", respDoc);
+        log.info("Response: %s", respDoc);
         log.debug("response length: %d", respDoc.length());
 
         try {
