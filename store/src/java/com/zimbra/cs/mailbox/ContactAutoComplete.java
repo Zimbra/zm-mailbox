@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2024 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -35,6 +35,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -46,6 +47,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.SearchDirectoryOptions;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalSearchControl;
@@ -57,8 +60,10 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.GalSearchType;
 
@@ -397,17 +402,17 @@ public class ContactAutoComplete {
     }
 
     public AutoCompleteResult resolveEmailAddr(String str) throws ServiceException {
-           AutoCompleteResult result = new AutoCompleteResult(1);
-           result.rankings = new ContactRankings(getRequestedAcctId());
-           for (String addr : mRequestedAcct.getAllAddrsSet()) {
-               if (addr.equals(str)) {
-                  ContactEntry entry = new ContactEntry();
-                  entry.mEmail = addr;
-                  result.addEntry(entry);
-                  break;
-               }
-             }
-           return result;
+        AutoCompleteResult result = new AutoCompleteResult(1);
+        result.rankings = new ContactRankings(getRequestedAcctId());
+        for (String addr : mRequestedAcct.getAllAddrsSet()) {
+            if (addr.equals(str)) {
+                ContactEntry entry = new ContactEntry();
+                entry.mEmail = addr;
+                result.addEntry(entry);
+                break;
+            }
+        }
+        return result;
     }
     public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
         ZimbraLog.gal.debug("AutoComplete querying: %s", str);
@@ -504,7 +509,7 @@ public class ContactAutoComplete {
             this.str = str;
         }
 
-        public void handleContactAttrs(Map<String, ? extends Object> attrs) {
+        public void handleContactAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
             addMatchedContacts(str, attrs, FOLDER_ID_GAL, null, result);
         }
 
@@ -600,8 +605,7 @@ public class ContactAutoComplete {
             String fullName = getFieldAsString(attrs, ContactConstants.A_fullName);
             if (!Strings.isNullOrEmpty(fullName)) {
                 for (String fullNameToken : TOKEN_SPLITTER.split(fullName)) {
-                    if (!Strings.isNullOrEmpty(fullNameToken) &&
-                        fullNameToken.toLowerCase().startsWith(token)) {
+                    if (!Strings.isNullOrEmpty(fullNameToken) && fullNameToken.toLowerCase().startsWith(token)) {
                         return true;
                     }
                 }
@@ -634,8 +638,8 @@ public class ContactAutoComplete {
             if (pattern.matcher(Joiner.on(' ').skipNulls().join(lastName, firstName, middleName)).matches()) {
                 return true;
             }
-            
-      
+
+
             String fullName = getFieldAsString(attrs, ContactConstants.A_fullName);
             if (!Strings.isNullOrEmpty(fullName) && pattern.matcher(fullName).matches()) {
                 return true;
@@ -669,23 +673,19 @@ public class ContactAutoComplete {
     }
 
     public void addMatchedContacts(String query, Map<String, ? extends Object> attrs, int folderId, ItemId id,
-            AutoCompleteResult result) {
+            AutoCompleteResult result) throws ServiceException {
         if (!result.canBeCached) {
             return;
         }
-
         List<String> tokens = Lists.newArrayListWithExpectedSize(1);
         for (String token : TOKEN_SPLITTER.split(query)) {
             tokens.add(token.toLowerCase());
         }
-
         if (!Contact.isGroup(attrs) || folderId == FOLDER_ID_GAL) {
-            // 
+            //
             // either a GAL entry or a non-contact-group contact entry
             //
-            
             boolean nameMatches = matchesName(tokens, attrs);
-
             // matching algorithm is slightly different between matching
             // personal Contacts in the addressbook vs GAL entry if there is
             // multiple email address associated to the entry.  multiple
@@ -695,7 +695,6 @@ public class ContactAutoComplete {
             // object.  for Contacts we want to show all the email addresses
             // available for the Contact entry.  but for GAL we need to show
             // just one email address.
-
             String fullName = getFieldAsString(attrs, ContactConstants.A_fullName);
             String first = getFieldAsString(attrs, ContactConstants.A_firstName);
             String middle = getFieldAsString(attrs, ContactConstants.A_middleName);
@@ -707,22 +706,21 @@ public class ContactAutoComplete {
             if (Strings.isNullOrEmpty(displayName)) {
                 displayName = Joiner.on(' ').skipNulls().join(first, middle, last);
             }
-
-            for (String emailKey : mEmailKeys) {
-                String email = getFieldAsString(attrs, emailKey);
+            List<String> eligibleEmailsForAccount = extractEligibleEmailsListForAccount(attrs);
+            for (String email : eligibleEmailsForAccount) {
                 if (email != null && (nameMatches || matchesEmail(tokens, email))) {
                     ContactEntry entry = new ContactEntry();
                     entry.mEmail = email;
                     entry.setName(displayName);
                     entry.mId = id;
                     entry.mFolderId = folderId;
-                    entry.mFirstName  = first;
+                    entry.mFirstName = first;
                     entry.mMiddleName = middle;
                     entry.mLastName = last;
                     entry.mFullName = fullName;
                     entry.mNickname = nick;
-                    entry.mCompany  = company;
-                    entry.mFileAs   = fileas;
+                    entry.mCompany = company;
+                    entry.mFileAs = fileas;
                     if (Contact.isGroup(attrs)) {
                         entry.setIsGalGroup(email, attrs, mAuthedAcct, mNeedCanExpand);
                     } else if (entry.mFolderId != FOLDER_ID_GAL) {
@@ -736,8 +734,8 @@ public class ContactAutoComplete {
                     }
                     addEntry(entry, result);
                     ZimbraLog.gal.debug("adding %s", entry.getEmail());
-                    /*
-                		Previously stopped at first matching email address for GAL contact. 
+                   /*
+                		Previously stopped at first matching email address for GAL contact.
                 		See ZBUG-1838.
                     */
                 }
@@ -756,6 +754,66 @@ public class ContactAutoComplete {
         }
     }
 
+    /**
+     * Identifies the eligible results for GAL Autocomplete for an account
+     * @param attrs
+     * @return
+     * @throws ServiceException
+     */
+    protected List<String> extractEligibleEmailsListForAccount(Map<String, ?> attrs) throws ServiceException {
+        List<String> eligibleEmailsForAccount = new ArrayList<>();
+        String primaryEmail = getFieldAsString(attrs, ContactConstants.A_email);
+        Account account = Provisioning.getInstance().get(Key.AccountBy.name, primaryEmail);
+        populateEmailsList(attrs, eligibleEmailsForAccount, account);
+        if (null != account) {
+            //removes aliases where zimbraHideAliasInGal is TRUE for internal accounts
+            excludePrivateAliases(account, eligibleEmailsForAccount);
+        }
+        return eligibleEmailsForAccount;
+    }
+
+    /**
+     * populats the eligible
+     * @param attrs
+     * @param eligibleEmailsForAccount
+     * @param account
+     * @throws ServiceException
+     */
+    private void populateEmailsList(Map<String, ?> attrs, List<String> eligibleEmailsForAccount, Account account)
+            throws ServiceException {
+        for (String emailKey : mEmailKeys) {
+            //when account is null, its external contact.Below alias logic is not applicable.
+            if (null != account && !ContactConstants.A_email.equals(emailKey)) {
+                //check if all aliases of an account need to be bypassed
+                if (account.isHideAliasesInGal()) {
+                    continue;
+                }
+            }
+            String email = getFieldAsString(attrs, emailKey);
+            if (null != email) {
+                eligibleEmailsForAccount.add(email);
+            }
+        }
+    }
+
+    /**
+     * identifies the aliases with zimbraHideAliasInGal value as TRUE and ignores them in GAL Autocomplete
+     * @param account
+     * @param allowedEmailsListInGalAutocomplete
+     * @throws ServiceException
+     */
+    protected void excludePrivateAliases(Account account, List<String> allowedEmailsListInGalAutocomplete) throws ServiceException {
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
+        options.setResultPageSize(LC.search_directory_results_page_size.intValue());
+        options.setMaxResults(LC.search_directory_results_max_results.intValue());
+        options.setTypes(SearchDirectoryOptions.ObjectType.aliases);
+        options.setFilter(ZLdapFilterFactory.getInstance().allAliasesHiddenByTarget(
+                account.getId()));
+        List<NamedEntry> results = Provisioning.getInstance().searchDirectory(options);
+        for (NamedEntry result : results) {
+            allowedEmailsListInGalAutocomplete.remove(result.getName());
+        }
+    }
     private Pair<List<Folder>, Map<ItemId, Mountpoint>> getLocalRemoteContactFolders(Collection<Integer> folderIDs) throws ServiceException {
         List<Folder> folders = new ArrayList<Folder>();
         Map<ItemId, Mountpoint> mountpoints = new HashMap<ItemId, Mountpoint>();

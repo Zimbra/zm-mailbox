@@ -412,8 +412,8 @@ public class TestProvIDN extends LdapTest {
         setAddressAttrsTest(EntryType.ACCOUNT, acct1, acct1Name);
         
         // add aliases
-        prov.addAlias(acct1, alias1Name.uName());  // add alias by uname
-        prov.addAlias(acct1, alias2Name.aName());  // add alias by aname
+        prov.addAlias(acct1, alias1Name.uName(), false);  // add alias by uname
+        prov.addAlias(acct1, alias2Name.aName(), false);  // add alias by aname
         // get by alias name test
         getTest(EntryType.ACCOUNT, acct1, alias1Name);
         getTest(EntryType.ACCOUNT, acct1, alias2Name);
@@ -425,8 +425,8 @@ public class TestProvIDN extends LdapTest {
         getTest(EntryType.ACCOUNT, null, alias2Name);
         
         // add aliases back so we can view them after the test
-        prov.addAlias(acct1, alias1Name.uName());  // add alias by uname
-        prov.addAlias(acct1, alias2Name.aName());  // add alias by aname
+        prov.addAlias(acct1, alias1Name.uName(), false);  // add alias by uname
+        prov.addAlias(acct1, alias2Name.aName(), false);  // add alias by aname
         
         // rename test
         renameTest(EntryType.ACCOUNT, acct2, acct2RenamedName);

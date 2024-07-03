@@ -26,13 +26,11 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -188,8 +186,8 @@ public class TestCheckRights extends SoapTest {
         Account targetAcct = provUtil.createAccount(genAcctNameLocalPart("target-acct"), domain);
         String alias1 = TestUtil.getAddress(genAcctNameLocalPart("target-acct-alias-1"), domain.getName());
         String alias2 = TestUtil.getAddress(genAcctNameLocalPart("target-acct-alias-2"), domain.getName());
-        prov.addAlias(targetAcct, alias1);
-        prov.addAlias(targetAcct, alias2);
+        prov.addAlias(targetAcct, alias1, false);
+        prov.addAlias(targetAcct, alias2, false);
         prov.modifyAttrs(targetAcct, 
                 Collections.singletonMap(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, alias1));
         

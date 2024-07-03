@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2013, 2014, 2015, 2016, 2024  Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -19,8 +19,8 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
 import javax.mail.internet.InternetAddress;
 
 import org.junit.After;
@@ -34,7 +34,6 @@ import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
 
 import com.google.common.collect.ImmutableMap;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -43,6 +42,10 @@ import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
 import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.util.ZTestWatchman;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 /**
  * Unit test for {@link ContactAutoComplete}.
@@ -185,12 +188,18 @@ public final class ContactAutoCompleteTest {
         Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
         ContactAutoComplete comp = new ContactAutoComplete(account, null);
         ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        ContactAutoComplete contactAutoComplete = spy(new ContactAutoComplete(account, new OperationContext(mbox)));
         result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Map<String, Object> attrs = ImmutableMap.<String, Object>of(
-                ContactConstants.A_firstName, "First",
+                               ContactConstants.A_firstName, "First",
+
                 ContactConstants.A_middleName, "Middle",
                 ContactConstants.A_lastName, "Last",
                 ContactConstants.A_email, "first.last@zimbra.com");
+        doNothing().when(contactAutoComplete).excludePrivateAliases(any(), any());
+
         comp.addMatchedContacts("first f", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(0, result.entries.size());
         result.clear();
@@ -297,4 +306,85 @@ public final class ContactAutoCompleteTest {
         ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
         Assert.assertEquals(0, autocomplete.query("noex", null, 10).entries.size());
      }
+
+
+    @Test
+    public void autoCompleteTestForAliasesTwoResults() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        ContactAutoComplete contactAutoComplete = spy(new ContactAutoComplete(account, new OperationContext(mbox)));
+        AutoCompleteResult result = new AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(ContactConstants.A_firstName, "First");
+        attrs.put( ContactConstants.A_middleName, "Middle");
+        attrs.put( ContactConstants.A_lastName, "Last");
+        attrs.put(   ContactConstants.A_email, "first.last@zimbra.com");
+        attrs.put(   ContactConstants.A_email2, "alias1@zimbra.com");
+        Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
+        doNothing().when(contactAutoComplete).excludePrivateAliases(any(), any());
+        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(2, result.entries.size());
+        result.clear();
+    }
+    @Test
+    public void testAddMatchedContactForTwoResults() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactAutoComplete contactAutoComplete = spy(new ContactAutoComplete(account, new OperationContext(mbox)));
+        AutoCompleteResult result = new AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(ContactConstants.A_firstName, "First");
+        attrs.put(ContactConstants.A_middleName, "Middle");
+        attrs.put(ContactConstants.A_lastName, "Last");
+        attrs.put(ContactConstants.A_email, "first.last@zimbra.com");
+        attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
+        attrs.put(ContactConstants.A_email3, "alias2@zimbra.com");
+        Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
+        doNothing().when(contactAutoComplete).excludePrivateAliases(any(), any());
+        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(3, result.entries.size());
+        result.clear();
+    }
+
+    @Test
+    public void testAddMatchedContactForThreeResults() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactAutoComplete contactAutoComplete = spy(new ContactAutoComplete(account, new OperationContext(mbox)));
+        AutoCompleteResult result = new AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(ContactConstants.A_firstName, "First");
+        attrs.put(ContactConstants.A_middleName, "Middle");
+        attrs.put(ContactConstants.A_lastName, "Last");
+        attrs.put(ContactConstants.A_email, "first.last@zimbra.com");
+        attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
+        attrs.put(ContactConstants.A_email3, "alias2@zimbra.com");
+        Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
+        doNothing().when(contactAutoComplete).excludePrivateAliases(any(), any());
+        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(3, result.entries.size());
+        result.clear();
+    }
+
+    @Test
+    public void testExtractEligibleEmailsListForAccount() throws Exception {
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(ContactConstants.A_firstName, "First");
+        attrs.put(ContactConstants.A_middleName, "Middle");
+        attrs.put(ContactConstants.A_lastName, "Last");
+        attrs.put(ContactConstants.A_email, "first.last@zimbra.com");
+        attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
+        attrs.put(ContactConstants.A_email3, "alias2@zimbra.com");
+        Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
+        Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactAutoComplete contactAutoComplete = spy(new ContactAutoComplete(account, new OperationContext(mbox)));
+        doNothing().when(contactAutoComplete).excludePrivateAliases(any(), any());
+        List<String> eligibleEmails = contactAutoComplete.extractEligibleEmailsListForAccount(attrs);
+        Assert.assertEquals(3, eligibleEmails.size());
+    }
 }

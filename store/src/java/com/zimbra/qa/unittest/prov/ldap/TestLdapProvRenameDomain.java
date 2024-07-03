@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2024 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -522,7 +522,7 @@ public class TestLdapProvRenameDomain extends LdapTest {
             Account acct = createAccount(ACCOUNT_NAME(a, domainIdx), domainName);
             
             for (int d = 0; d < NUM_DOMAINS; d++)
-                prov.addAlias(acct, ACCOUNT_ALIAS_NAME(a, domainIdx, d));
+                prov.addAlias(acct, ACCOUNT_ALIAS_NAME(a, domainIdx, d), false);
             
             String[] signatureIds = createSignatures(acct);
             createIdentities(acct, signatureIds);

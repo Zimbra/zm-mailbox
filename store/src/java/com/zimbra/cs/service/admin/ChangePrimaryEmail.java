@@ -127,7 +127,7 @@ public class ChangePrimaryEmail extends AdminDocumentHandler {
                 ZimbraLog.security.debug("ChangePrimaryEmail sleep was interrupted", e);
             }
 
-            prov.addAlias(account, oldName);
+            prov.addAlias(account, oldName, false);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] { "cmd", "ChangePrimaryEmail added alias",
                     "name", account.getName(), "alias", oldName }));
 

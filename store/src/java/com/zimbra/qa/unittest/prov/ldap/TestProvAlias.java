@@ -143,7 +143,7 @@ public class TestProvAlias extends LdapTest {
         String aliasName = getEmail(aliasLocalPart, LOCAL_DOMAIN_NAME, testName);
         
         Account acct = prov.createAccount(acctName, PASSWORD, null);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         String authAs = getEmail(aliasLocalPart, ALIAS_DOMAIN_NAME, testName);
         Account acctGot = prov.get(AccountBy.name, authAs);
@@ -170,7 +170,7 @@ public class TestProvAlias extends LdapTest {
         String aliasName = getEmail(aliasLocalPart, ALIAS_DOMAIN_NAME, testName);
         
         Account acct = prov.createAccount(acctName, PASSWORD, null);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         String authAs = getEmail(aliasLocalPart, LOCAL_DOMAIN_NAME, testName);
         Account acctGot = prov.get(AccountBy.name, authAs);
@@ -208,7 +208,7 @@ public class TestProvAlias extends LdapTest {
         prov.modifyAttrs(config, attrs);
         
         Account acct = prov.createAccount(acctName, PASSWORD, null);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         String authAs = getLocalPart(aliasLocalPart, testName);
         Account acctGot = prov.get(AccountBy.name, authAs);
@@ -267,7 +267,7 @@ public class TestProvAlias extends LdapTest {
         
         // add an alias to the account
         String aliasName = getEmail("alias-1", domainName);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         // create 2 DLs
         String dl1Name = getEmail("dl-1", domainName);
@@ -327,7 +327,7 @@ public class TestProvAlias extends LdapTest {
         
         // add an alias to the account
         String aliasName = getEmail("alias-1", domainName);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         // create 2 DLs
         String dl1Name = getEmail("dl-1", domainName);
@@ -430,7 +430,7 @@ public class TestProvAlias extends LdapTest {
         
         // add an alias to the account
         String aliasName = getEmail("alias-1", domainName);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         // create 2 DLs
         String dl1Name = getEmail("dl-1", domainName);
@@ -511,7 +511,7 @@ public class TestProvAlias extends LdapTest {
         
         // add an alias to the account
         String aliasName = getEmail("alias-1", domainName);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         // create 2 DLs
         String dl1Name = getEmail("dl-1", domainName);
@@ -589,7 +589,7 @@ public class TestProvAlias extends LdapTest {
         
         // add an alias to the account
         String aliasName = getEmail("alias-1", domainName);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         
         // create 2 DLs
@@ -655,7 +655,7 @@ public class TestProvAlias extends LdapTest {
         
         // add an alias to the account
         String aliasName = getEmail("alias-1", domainName);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         // create 2 DLs
         String dl1Name = getEmail("dl-1", domainName);
@@ -733,7 +733,7 @@ public class TestProvAlias extends LdapTest {
         
         // add an alias to the account
         String aliasName = getEmail("alias-1", domainName);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         // create 2 DLs
         String dl1Name = getEmail("dl-1", domainName);
@@ -865,7 +865,7 @@ public class TestProvAlias extends LdapTest {
         
         // add an alias to the account
         String aliasName = getEmail("alias-1", domainName);
-        prov.addAlias(acct, aliasName);
+        prov.addAlias(acct, aliasName, false);
         
         // remember the zimbraId of the alias entry
         List<NamedEntry> aliases = searchAliasesInDomain(domain);
@@ -892,7 +892,7 @@ public class TestProvAlias extends LdapTest {
         // now , try to add the alias to another account
         String otherAcctName = getEmail("acct-other", domainName);
         Account otherAcct = prov.createAccount(otherAcctName, PASSWORD, new HashMap<String, Object>());
-        prov.addAlias(otherAcct, aliasName);
+        prov.addAlias(otherAcct, aliasName, false);
         
         // reload all entries
         // mProv.reload(acct); this account should be gone already
@@ -945,7 +945,7 @@ public class TestProvAlias extends LdapTest {
         
         boolean good = false;
         try {
-            prov.addAlias(acct, acct2Name);
+            prov.addAlias(acct, acct2Name, false);
         } catch (ServiceException e) {
             if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode()))
                 good = true;
@@ -953,7 +953,7 @@ public class TestProvAlias extends LdapTest {
         assertTrue(good);
         
         try {
-            prov.addAlias(acct, dlName);
+            prov.addAlias(acct, dlName, false);
         } catch (ServiceException e) {
             if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode()))
                 good = true;
@@ -982,12 +982,12 @@ public class TestProvAlias extends LdapTest {
         
         // add an alias to acct1
         String aliasName = getEmail("alias", domainName);
-        prov.addAlias(acct1, aliasName);
+        prov.addAlias(acct1, aliasName, false);
         
         // add the same alias to acct2, should get error
         boolean good = false;
         try {
-            prov.addAlias(acct2, aliasName);
+            prov.addAlias(acct2, aliasName, false);
         } catch (ServiceException e) {
             if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode()))
                 good = true;
@@ -1054,7 +1054,7 @@ javax.naming.NameAlreadyBoundException: [LDAP: error code 68 - Entry Already Exi
         Domain newDomain = prov.createDomain(NEW_DOMAIN_NAME, new HashMap<String, Object>());
         
         Account acct = prov.createAccount(OLD_ACCT_NAME, "test123", new HashMap<String, Object>());
-        prov.addAlias(acct, ALIAS_NAME);
+        prov.addAlias(acct, ALIAS_NAME, false);
         
         boolean good = false;
         try {

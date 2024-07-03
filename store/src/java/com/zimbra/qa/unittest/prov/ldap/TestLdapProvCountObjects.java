@@ -18,7 +18,6 @@ package com.zimbra.qa.unittest.prov.ldap;
 
 import static org.junit.Assert.*;
 
-import java.util.List;
 import java.util.Map;
 
 import org.junit.AfterClass;
@@ -98,8 +97,8 @@ public class TestLdapProvCountObjects extends LdapTest {
     public void countAlias() throws Exception {
         // accounts should be counted as userAccount
         Account acct = provUtil.createAccount(genAcctNameLocalPart("user"), domain);
-        prov.addAlias(acct, TestUtil.getAddress(genAcctNameLocalPart("alias-1"), domain.getName()));
-        prov.addAlias(acct, TestUtil.getAddress(genAcctNameLocalPart("alias-2"), domain.getName()));
+        prov.addAlias(acct, TestUtil.getAddress(genAcctNameLocalPart("alias-1"), domain.getName()), false);
+        prov.addAlias(acct, TestUtil.getAddress(genAcctNameLocalPart("alias-2"), domain.getName()), false);
         
         long num = prov.countObjects(CountObjectsType.alias, domain, null);
         assertEquals(2, num);

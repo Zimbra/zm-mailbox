@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2022, 2023 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2022, 2023, 2024 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -519,7 +519,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     public enum Command {
-        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
+        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain} isAliasHidden {TRUE|FALSE} ", Category.ACCOUNT, 2, 3),
         ADD_ACCOUNT_LOGGER(
                 "addAccountLogger", "aal",
                 "[-s/--server hostname] {name@domain|id} {logging-category} {trace|debug|info|warn|error}",
@@ -1090,7 +1090,7 @@ public class ProvUtil implements HttpDebugListener {
         }
         switch (command) {
         case ADD_ACCOUNT_ALIAS:
-            prov.addAlias(lookupAccount(args[1]), args[2]);
+            doAddAccountAlias(args);
             break;
         case ADD_ACCOUNT_LOGGER:
             alo = parseAccountLoggerOptions(args);
@@ -1663,6 +1663,18 @@ public class ProvUtil implements HttpDebugListener {
             return false;
         }
         return true;
+    }
+
+    private void doAddAccountAlias(String[] args) throws ServiceException {
+        if(args.length == 3) {
+            prov.addAlias(lookupAccount(args[1]), args[2], false);
+        }
+        else if(args.length == 4) {
+            prov.addAlias(lookupAccount(args[1]), args[2], new Boolean(args[3]));
+        }
+        else {
+            throw ServiceException.INVALID_REQUEST("invalid arguments", null);
+        }
     }
 
     private void doSendMdmEmail(String[] args)  throws ServiceException {

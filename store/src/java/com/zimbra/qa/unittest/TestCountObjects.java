@@ -84,7 +84,7 @@ public class TestCountObjects extends TestCase {
                     + DOMAIN_NAME, PASSWORD, acctAttrs);
             assertNotNull(acct);
             testAccountIDs.add(acct.getId());
-            mProv.addAlias(acct, "count-test-alias" + i + "@" + DOMAIN_NAME);
+            mProv.addAlias(acct, "count-test-alias" + i + "@" + DOMAIN_NAME, false);
         }
 
         // create some DLs

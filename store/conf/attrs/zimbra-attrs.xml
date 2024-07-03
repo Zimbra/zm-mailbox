@@ -10474,7 +10474,7 @@ TODO: delete them permanently from here
   <desc>Define body: field for 2FA email in html format</desc>
 </attr>
 
-<attr id="4116" name="zimbraHideAliasesInGal" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="10.1.0">
+<attr id="4116" name="zimbraHideAliasesInGal" type="boolean" cardinality="single" optionalIn="domain,cos,account" flags="accountInfo,accountCosDomainInherited" since="10.2.0">
   <desc>When set to True, all aliases will be hidden for particular account</desc>
 </attr>
 
@@ -10554,5 +10554,9 @@ TODO: delete them permanently from here
 <attr id="4134" name="zimbraFeatureSharedFolderMobileSyncEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
+</attr>
+
+<attr id="4135" name="hideAliasInGal" type="boolean" cardinality="single" requiredIn="alias" since="10.2.0">
+  <desc>Option to hide/show alias in GAL</desc>
 </attr>
 </attrs>

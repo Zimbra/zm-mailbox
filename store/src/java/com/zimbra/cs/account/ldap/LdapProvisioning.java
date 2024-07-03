@@ -37,10 +37,8 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -135,7 +133,6 @@ import com.zimbra.cs.account.ldap.entry.LdapXMPPComponent;
 import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
-import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
@@ -184,9 +181,6 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.listeners.AuthListener;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
@@ -205,12 +199,10 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedValue;
 import com.zimbra.soap.type.TargetBy;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -2414,8 +2406,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
-    public void addAlias(Account acct, String alias) throws ServiceException {
-        addAliasInternal(acct, alias);
+    public void addAlias(Account acct, String alias, boolean isAliasHidden) throws ServiceException {
+        addAliasInternal(acct, alias, isAliasHidden);
     }
 
     @Override
@@ -2426,7 +2418,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void addAlias(DistributionList dl, String alias) throws ServiceException {
-        addAliasInternal(dl, alias);
+        addAliasInternal(dl, alias, false);
         allDLs.addGroup(dl);
     }
 
@@ -2452,7 +2444,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return false;
     }
 
-    private void addAliasInternal(NamedEntry entry, String alias) throws ServiceException {
+    private void addAliasInternal(NamedEntry entry, String alias, boolean isAliasHidden) throws ServiceException {
 
         LdapUsage ldapUsage = null;
 
@@ -2494,9 +2486,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String aliasUuid = LdapUtil.generateUUID();
             String targetEntryId = entry.getId();
             try {
+                String isAliasToBeHidden = String.valueOf(isAliasHidden).toUpperCase();
                 zlc.createEntry(aliasDn, "zimbraAlias",
                     new String[] { Provisioning.A_uid, aliasName,
                                    Provisioning.A_zimbraId, aliasUuid,
+                                   Provisioning.A_hideAliasInGal, isAliasToBeHidden,
                                    Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()),
                                    Provisioning.A_zimbraAliasTargetId, targetEntryId} );
             } catch (LdapEntryAlreadyExistException e) {
@@ -9899,7 +9893,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void addGroupAlias(Group group, String alias) throws ServiceException {
-        addAliasInternal(group, alias);
+        addAliasInternal(group, alias, false);
         allDLs.addGroup(group);
     }
 

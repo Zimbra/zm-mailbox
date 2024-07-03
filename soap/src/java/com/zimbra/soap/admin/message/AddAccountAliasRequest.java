@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2024 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -52,18 +52,28 @@ public class AddAccountAliasRequest {
     private final String alias;
 
     /**
+     * @zm-api-field-tag isAliasHidden
+     * @zm-api-field-description isAliasHidden
+     */
+    @XmlAttribute(name=AdminConstants.E_IS_ALIAS_HIDDEN /* alias */, required=false)
+    private final boolean isAliasHidden;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+        this((String)null, (String)null, false);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
+    public AddAccountAliasRequest(String id, String alias, boolean isAliasHidden) {
         this.id = id;
         this.alias = alias;
+        this.isAliasHidden = isAliasHidden;
     }
 
     public String getId() { return id; }
     public String getAlias() { return alias; }
+
+    public boolean isAliasHidden() { return isAliasHidden; }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016, 2024 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -63,6 +63,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ALL_ACCOUNTS_ONLY_BY_COS(SINGLETON.allAccountsOnlyByCos("{COS-ID}")),
         ALL_ADMIN_ACCOUNTS(SINGLETON.allAdminAccounts()),
         ALL_ALIASES(SINGLETON.allAliases()),
+        ALL_ALIASES_HIDDEN_BY_TARGET(SINGLETON.allAliasesHiddenByTarget("{ALIAS-TARGET-ID}")),
         ALL_CALENDAR_RESOURCES(SINGLETON.allCalendarResources()),
         ALL_COSES(SINGLETON.allCoses()),
         ALL_DATA_SOURCES(SINGLETON.allDataSources()),
@@ -405,6 +406,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * alias
      */
     public abstract ZLdapFilter allAliases();
+
+    public abstract ZLdapFilter allAliasesHiddenByTarget(String aliasTargetId);
 
     /*
      * calendar resource
