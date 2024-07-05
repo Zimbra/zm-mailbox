@@ -390,7 +390,7 @@ public class ContactGroup {
             }
         }
         
-        private static Member init(Member.Type type, String value) throws ServiceException {
+        public static Member init(Member.Type type, String value) throws ServiceException {
             Member member = null;
             switch (type) {
                 case CONTACT_REF:
@@ -890,7 +890,22 @@ public class ContactGroup {
             }
         }
         
+
         public void migrate(Contact contact) throws ServiceException {
+            migrate(contact, null);
+        }
+
+        /**
+         * Given a "group" type contact, add all its members either Inline or as a
+         * Contacts reference if found in the passed list of contacts already parsed
+         * from the source file of the passed contact.
+         * 
+         * @param contact      the contact being migrated
+         * @param parsedByAddr a list of contacts parsed from same source as above,
+         *                     null/empty to add all as inline
+         * @throws ServiceException
+         */
+        public void migrate(Contact contact, Map<String, Contact> parsedByAddr) throws ServiceException {
             if (!contact.isGroup()) {
                 return;
             }
@@ -903,7 +918,7 @@ public class ContactGroup {
 
             ContactGroup contactGroup = ContactGroup.init();
 
-            migrate(contactGroup, dlist);
+            migrate(contactGroup, dlist, parsedByAddr);
 
             if (contactGroup.hasMembers()) {
                 ParsedContact pc = new ParsedContact(contact);
@@ -924,8 +939,17 @@ public class ContactGroup {
             }
         }
 
-        // add each dlist member as an inlined member in groupMember
-        static void migrate(ContactGroup contactGroup, String dlist) throws ServiceException {
+        static void migrate(ContactGroup contactGroup, String dlist)
+                throws ServiceException {
+            migrate(contactGroup, dlist, null);
+        }
+
+        /**
+         * Add each comma-delimited dlist member to the given contact group, as either
+         * an inlined member or a contact reference if found in parsedByAddr.
+         */
+        static void migrate(ContactGroup contactGroup, String dlist, Map<String, Contact> parsedByAddr)
+                throws ServiceException {
             Matcher matcher = PATTERN.matcher(dlist);
             while (matcher.find()) {
                 String token = matcher.group();
@@ -937,9 +961,15 @@ public class ContactGroup {
                     String addr = token.trim();
                     if (!addr.isEmpty()) {
                         try {
-                            contactGroup.addMember(Member.Type.INLINE, addr);
+                            Contact found = parsedByAddr == null ? null : parsedByAddr.get(addr.toLowerCase());
+                            if (found == null) {
+                                contactGroup.addMember(Member.Type.INLINE, addr);
+                            } else {
+                                ItemId iid = new ItemId(found);
+                                contactGroup.addMember(Member.Type.CONTACT_REF, iid.toString());
+                            }
                         } catch (ServiceException e) {
-                            ZimbraLog.contact.info("skipped contact group member %s", addr);
+                            ZimbraLog.contact.info("skipped contact group member %s: %s", addr, e.getMessage());
                         }
                     }
                 }
