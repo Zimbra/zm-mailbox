@@ -50,4 +50,8 @@ public class Constants {
     public static final String BEARER= "Bearer";
     public static final String JWT_SALT_SEPARATOR = "|";
 
+    public static final String PRIMARY_EMAIL = "email";
+
+    public static final String TRUE_VALUE = "TRUE";
+
 }

@@ -2497,6 +2497,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 zlc.createEntry(aliasDn, "zimbraAlias",
                     new String[] { Provisioning.A_uid, aliasName,
                                    Provisioning.A_zimbraId, aliasUuid,
+                                    Provisioning.A_zimbraHideAliasInGal, String.valueOf(new Random().nextBoolean()).toUpperCase(),// to be modified
                                    Provisioning.A_zimbraCreateTimestamp, LdapDateUtil.toGeneralizedTime(new Date()),
                                    Provisioning.A_zimbraAliasTargetId, targetEntryId} );
             } catch (LdapEntryAlreadyExistException e) {
@@ -11726,4 +11727,32 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
         return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailFailure);
     }
+
+
+    @Override
+    public void excludePrivateAliases(NamedEntry entry, List<String> emailAndAliases) throws ServiceException {
+        LdapUsage ldapUsage = LdapUsage.GAL_SEARCH;
+        ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, ldapUsage);
+        for (String alias : new ArrayList<>(
+                emailAndAliases.subList(1, emailAndAliases.size()))) { // exclude primay email here
+            if (null != alias) {
+                String parts[] = alias.split("@");
+                String aliasName = parts[0];
+                String aliasDomain = parts[1];
+                String targetDomainName = ((Account) entry).getDomainName();
+                String aliasDn = mDIT.aliasDN(((LdapEntry) entry).getDN(), targetDomainName, aliasName, aliasDomain);
+                ZimbraLog.mailbox.info(
+                        "excludePrivateAliases alias - %s , aliasname - %s ,aliasDomain %s ,Target Domain - %s , aliasDn -%s ",
+                        alias, aliasName, aliasDomain, targetDomainName, aliasDn);
+                ZAttributes attrs = helper.getAttributes(zlc, aliasDn);
+                Alias aliasEntry = makeAlias(aliasDn, attrs);
+                if (Constants.TRUE_VALUE.equalsIgnoreCase(aliasEntry.getAttr(Provisioning.A_zimbraHideAliasInGal))) {
+                    emailAndAliases.remove(alias);
+                }
+                ZimbraLog.mailbox.info("alias attribute for %s is %s", alias,
+                        aliasEntry.getAttr(Provisioning.A_zimbraHideAliasInGal));
+            }
+        }
+    }
 }
+
