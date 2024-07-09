@@ -992,6 +992,13 @@ public final class LC {
     public static final KnownKey httpclient_mdm_devices_limit_per_server = KnownKey.newKey(50);
     public static final KnownKey httpclient_mdm_devices_total_limit= KnownKey.newKey(500);
 
+    public static final KnownKey lds_client_socket_timeout_millis = KnownKey.newKey(45 * Constants.MILLIS_PER_SECOND);
+    public static final KnownKey lds_client_connection_request_timeout_millis = KnownKey.newKey(30 * Constants.MILLIS_PER_SECOND);
+    public static final KnownKey lds_client_connection_timeout_millis = KnownKey.newKey(10 * Constants.MILLIS_PER_SECOND);
+    public static final KnownKey lds_client_max_retries = KnownKey.newKey(3);
+    public static final KnownKey lds_client_max_connection = KnownKey.newKey(100);
+    public static final KnownKey lds_client_max_per_route = KnownKey.newKey(20);
+    public static final KnownKey lds_client_max_idle_time_seconds = KnownKey.newKey(20);
 
     /**
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
