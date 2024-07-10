@@ -33,6 +33,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
@@ -1507,4 +1508,77 @@ public class DefangFilterTest {
         BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
         Assert.assertTrue(defanger instanceof OwaspDefang);
     }
+
+    private void doZbug4108Test(final boolean stripAlts, final boolean shouldContainPayload,
+            final String html, final String payload) throws Exception {
+
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(true);
+        LC.zimbra_owasp_strip_alt_tags_with_handlers.setDefault(stripAlts);
+
+        String exploit = String.format(html, payload);
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML)
+                .defang(htmlStream, true);
+
+        boolean doesContainPayload = result.contains(payload);
+
+        //System.err.printf("exploit: %s\n", exploit);
+        //System.err.printf(" result: %s\n", result);
+
+        if (shouldContainPayload != doesContainPayload) {
+            Assert.fail(String.format("defanged result %s an %sexpected «%s»",
+                    doesContainPayload ? "contains" : "does not contain",
+                    shouldContainPayload ? "" : "un", payload));
+        }
+    }
+
+    @Test
+    public void testZbug4108whileStripping() throws Exception {
+        doZbug4108Test(true, false, "<a rel=\"<style>@import\"><style></style></a><img alt=\"&gt;<svg/onload=%s>\">", "alert(this.location)");
+        doZbug4108Test(true, false, "<a rel=\"<style>@import\"><style></style></a><img alt=\"&gt;<svg/onhover=%s>\">", "alert(this.location)");
+    }
+
+    @Test
+    public void testZbug4108whileNotStripping() throws Exception {
+        // this test will fail when this is fixed in our modified upstream OWASP and not by policy
+        doZbug4108Test(false, false, "<a rel=\"<style>@import\"><style></style></a><img alt=\"&gt;<svg/onhover=%s>\">", "alert(this.location)");
+    }
+
+    @Test
+    public void testZbug4121WhileStripping() throws Exception {
+        doZbug4108Test(true, false, "<img alt=\" src='cid:><svg/onload=%s>\"><style></style>", "alert(location.origin)");
+    }
+
+    @Test
+    public void testZbug4121WhileNotStripping() throws Exception {
+        // this test will fail when this is fixed in our modified upstream OWASP and not by policy
+        doZbug4108Test(false, false, "<img alt=\" src='cid:><svg/onload=%s>\"><style></style>", "alert(location.origin)");
+    }
+
+    private void doZbug4108Speedtest(final boolean stripHandlingAlts) throws Exception {
+        int maxCount = 1_000_000;
+
+        String html = "<a rel=\"<style>@import\"><style></style></a><img alt=\"&gt;<svg/onload=alert(this.location)>\">";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+
+        LC.zimbra_owasp_strip_alt_tags_with_handlers.setDefault(stripHandlingAlts);
+
+        long start = System.currentTimeMillis();
+
+        for (int counter = 0; counter < maxCount; counter++) {
+            DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        }
+
+        System.err.printf("LC.zimbra_owasp_strip_alt_tags_with_handlers.setDefault(%s) * %,d =~ %,dms\n", stripHandlingAlts, maxCount, System.currentTimeMillis() - start);
+    }
+
+    @Ignore
+    @Test
+    public void speedtestZbug4108() throws Exception {
+        doZbug4108Speedtest(true);
+        doZbug4108Speedtest(false);
+    }
 }
+
+

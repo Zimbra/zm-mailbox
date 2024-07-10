@@ -1563,6 +1563,8 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_license_election_leader_zimbraId = KnownKey.newKey("");
 
+    // ZBUG-4108: Toggle regexp stripping of HTML alt tags containing malicious script.
+    public static final KnownKey zimbra_owasp_strip_alt_tags_with_handlers = KnownKey.newKey(true);
 
     static {
         // Automatically set the key name with the variable name.
