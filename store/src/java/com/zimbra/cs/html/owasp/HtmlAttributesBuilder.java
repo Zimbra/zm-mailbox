@@ -23,6 +23,8 @@ import java.util.Map;
 
 import org.owasp.html.AttributePolicy;
 
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.html.owasp.policies.AltAttributePolicy;
 import com.zimbra.cs.html.owasp.policies.ActionAttributePolicy;
 import com.zimbra.cs.html.owasp.policies.BackgroundAttributePolicy;
 import com.zimbra.cs.html.owasp.policies.SrcAttributePolicy;
@@ -38,6 +40,7 @@ public class HtmlAttributesBuilder {
         attributePolicies.put("src", new SrcAttributePolicy());
         attributePolicies.put("action", new ActionAttributePolicy());
         attributePolicies.put("background", new BackgroundAttributePolicy());
+        attributePolicies.put("alt", new AltAttributePolicy());
         // add any other attribute policies here
     }
 

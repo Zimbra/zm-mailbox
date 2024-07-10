@@ -1566,6 +1566,9 @@ public final class LC {
     // Comma-delimited list of CIDR subnets or IP to which we always allow redirects.
     public static final KnownKey zimbra_proxy_servlet_whitelist = KnownKey.newKey("");
 
+    // ZBUG-4108: Toggle regexp stripping of HTML alt tags containing malicious script.
+    public static final KnownKey zimbra_owasp_strip_alt_tags_with_handlers = KnownKey.newKey(true);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
