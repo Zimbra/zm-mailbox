@@ -65,7 +65,7 @@ public class HtmlDefang extends AbstractDefang
         DefangWriter writer = new DefangWriter(out, "utf-8");
 
         DefangFilter defang = new DefangFilter(neuterImages);
-        Purifier purifier= new HtmlPurifier();
+        Purifier purifier = new HtmlPurifier();
 
         // setup filter chain
         XMLDocumentFilter[] filters = {
