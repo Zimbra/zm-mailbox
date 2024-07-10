@@ -302,7 +302,7 @@ public class ServiceException extends Exception {
     public static ServiceException LICENSE_ERROR(String message, Throwable cause) {
         return new ServiceException("license error: "+message, LICENSE_ERROR, RECEIVERS_FAULT, cause);
     }
-    
+
     public static ServiceException ERROR_MESSAGE(String str, Throwable cause){
         return new ServiceException("error: " + str, null, SENDERS_FAULT, cause);
     }
