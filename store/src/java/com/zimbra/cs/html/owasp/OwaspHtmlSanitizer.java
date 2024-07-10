@@ -81,10 +81,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
                 Handler.PROPAGATE,
                 // log errors resulting from exceptionally bizarre inputs
                 new Handler<String>() {
-
-            public void handle(final String x) {
-                throw new AssertionError(x);
-            }
+                    public void handle(final String x) {
+                        throw new AssertionError(x);
+                    }
         }, zimbraStrictUnclosedCommentTag, zimbraSkipTagsWithUnclosedCdata);
         // create a thread-specific policy
         instantiatePolicy();

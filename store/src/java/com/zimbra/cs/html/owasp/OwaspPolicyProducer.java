@@ -20,14 +20,17 @@ import java.util.List;
 import java.util.Set;
 
 import org.owasp.html.CssSchema;
+import org.owasp.html.AttributePolicy;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 
 /*
  * Instantiate owasp policy instance with neuter images true/false at load time
  */
 public class OwaspPolicyProducer {
-
     private static PolicyFactory policyNeuterImagesTrue;
     private static PolicyFactory policyNeuterImagesFalse;
 
@@ -35,18 +38,21 @@ public class OwaspPolicyProducer {
         HtmlElementsBuilder builder = new HtmlElementsBuilder(new HtmlAttributesBuilder(), neuterImages);
         List<HtmlElement> allowedElements = builder.build();
         HtmlPolicyBuilder policyBuilder = new HtmlPolicyBuilder();
+
         policyBuilder.requireRelNofollowOnLinks();
+
         for (HtmlElement htmlElement : allowedElements) {
             htmlElement.configure(policyBuilder, neuterImages);
         }
-        Set<String> disallowTextElements = OwaspPolicy.getDisallowTextElements();
-        for (String disAllowTextElement : disallowTextElements) {
+
+        for (String disAllowTextElement : OwaspPolicy.getDisallowTextElements()) {
             policyBuilder.disallowTextIn(disAllowTextElement.trim());
         }
-        Set<String> allowTextElements = OwaspPolicy.getAllowTextElements();
-        for (String allowTextElement : allowTextElements) {
+
+        for (String allowTextElement : OwaspPolicy.getAllowTextElements()) {
             policyBuilder.allowTextIn(allowTextElement.trim());
         }
+
         /**
          * The following CSS properties do not appear in the default whitelist from
          * OWASP, but they improve the fidelity of the HTML display without
@@ -57,10 +63,11 @@ public class OwaspPolicyProducer {
         if (!cssWhitelist.isEmpty()) {
             ADDITIONAL_CSS = CssSchema.withProperties(cssWhitelist);
         }
-        Set<String> urlProtocols = OwaspPolicy.getURLProtocols();
-        for (String urlProtocol : urlProtocols) {
+
+        for (String urlProtocol : OwaspPolicy.getURLProtocols()) {
             policyBuilder.allowUrlProtocols(urlProtocol.trim());
         }
+
         if (neuterImages) {
             if (policyNeuterImagesTrue == null) {
                 policyNeuterImagesTrue = policyBuilder.allowStyling(ADDITIONAL_CSS == null
