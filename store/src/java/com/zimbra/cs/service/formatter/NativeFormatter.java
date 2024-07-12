@@ -125,9 +125,7 @@ public final class NativeFormatter extends Formatter {
         try {
             sendZimbraHeaders(context, context.resp, context.target);
             HttpUtil.Browser browser = HttpUtil.guessBrowser(context.req);
-            if (browser == HttpUtil.Browser.IE) {
-                context.resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
-            }
+            context.resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
             if (context.target instanceof Message) {
                 handleMessage(context, (Message) context.target);
             } else if (context.target instanceof CalendarItem) {
@@ -461,6 +459,7 @@ public final class NativeFormatter extends Formatter {
         }
         // defang when the html and svg attachment was requested with disposition inline
         if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
+            contentType = Mime.getContentType(contentType).toLowerCase();
             BrowserDefang defanger = DefangFactory.getDefanger(contentType);
             String content = defanger.defang(Mime.getTextReader(is, contentType, defaultCharset), true);
             resp.setContentType(contentType);
