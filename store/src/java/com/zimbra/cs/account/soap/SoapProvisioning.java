@@ -3312,4 +3312,9 @@ public class SoapProvisioning extends Provisioning {
 
         return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailSuccess);
     }
+
+    @Override
+    public void excludePrivateAliases(NamedEntry entry, List<String> email) throws ServiceException {
+        //not yet implemented
+    }
 }
