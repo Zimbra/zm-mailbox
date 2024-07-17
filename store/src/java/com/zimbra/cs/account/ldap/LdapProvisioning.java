@@ -1576,7 +1576,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw e;
         } catch (ServiceException e) {
             StringBuilder errorMsg = new StringBuilder();
-            errorMsg.append(String.format("unable to create account: %s", emailAddress));
+            errorMsg.append(String.format("Unable to create account: %s", emailAddress));
             if (!restoring && ServiceException.LICENSE_ERROR.equalsIgnoreCase(e.getCode())
                     && null != acct) {
                 modifyAccountStatus(acct, AccountStatus.maintenance.name());
@@ -3933,12 +3933,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         // TODO: should we go through all accounts with this cos and remove the zimbraCOSId attr?
         ZLdapContext zlc = null;
         try {
+            validate(ProvisioningValidator.DELETE_COS, c);
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_COS);
             zlc.deleteEntry(c.getDN());
-            validate(ProvisioningValidator.DELETE_COS, c);
+            validate(ProvisioningValidator.DELETE_COS_SUCCEEDED, c);
             cosCache.remove(c);
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to purge cos: "+zimbraId, e);
+            String errorMsg = String.format("unable to purge cos: %s", zimbraId);
+            if (ServiceException.LICENSE_ERROR.equalsIgnoreCase(e.getCode())) {
+                errorMsg = e.getMessage();
+            }
+            throw ServiceException.FAILURE(errorMsg, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
