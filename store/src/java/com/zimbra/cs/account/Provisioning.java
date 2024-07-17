@@ -2630,6 +2630,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         static final String DELETE_ACCOUNT = "deleteAccount";
         static final String CREATE_COS = "createCos";
         static final String DELETE_COS = "deleteCos";
+        static final String DELETE_COS_SUCCEEDED = "deleteCosSucceeded";
 
         void validate(Provisioning prov, String action, Object... args) throws ServiceException;
         void refresh();
