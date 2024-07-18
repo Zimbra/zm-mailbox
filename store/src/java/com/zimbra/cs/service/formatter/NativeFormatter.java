@@ -124,7 +124,6 @@ public final class NativeFormatter extends Formatter {
     public void formatCallback(UserServletContext context) throws IOException, ServiceException, UserServletException, ServletException {
         try {
             sendZimbraHeaders(context, context.resp, context.target);
-            HttpUtil.Browser browser = HttpUtil.guessBrowser(context.req);
             context.resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
             if (context.target instanceof Message) {
                 handleMessage(context, (Message) context.target);
