@@ -18,7 +18,6 @@ package com.zimbra.cs.lmtpserver;
 
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -153,6 +152,16 @@ public class ExternalEmailWarning {
         return false;
     }
 
+    private static final String CONTENT_TRANSFER_BASE64_ENCODING = "Content-Transfer-Encoding: base64";
+    private static final String CONTENT_TRANSFER_BASE64_TEXT_PLAIN_REGEX = CONTENT_TRANSFER_BASE64_ENCODING +
+            "(?:(?!\\r\\n\\r\\n).)*?Content-Type: text/plain(?:(?!\\r\\n\\r\\n).)*?\\r\\n\\r\\n";
+    private static final Pattern CONTENT_TRANSFER_BASE64_TEXT_PLAIN_PATTERN = Pattern.compile(CONTENT_TRANSFER_BASE64_TEXT_PLAIN_REGEX,
+            Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
+    private static final String CONTENT_TRANSFER_BASE64_TEXT_HTML_REGEX = CONTENT_TRANSFER_BASE64_ENCODING +
+            "(?:(?!\\r\\n\\r\\n).)*?Content-Type: text/html(?:(?!\\r\\n\\r\\n).)*?\\r\\n\\r\\n";
+    private static final Pattern CONTENT_TRANSFER_BASE64_TEXT_HTML_PATTERN = Pattern.compile(CONTENT_TRANSFER_BASE64_TEXT_HTML_REGEX,
+            Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
+
     // message must be RTF822 compliant: CRLFCRLF sequence is required to determine
     // where does the header meet the body of the text/plain part
     private static final String CONTENT_TYPE_TEXT_PLAIN_REGEX = "Content-Type: text/plain.*?\\r\\n\\r\\n";
@@ -167,7 +176,6 @@ public class ExternalEmailWarning {
     private static final String CONTENT_TYPE_TEXT_HTML_WITHOUT_BODY_TAG_REGEX = "Content-Type: text/html.*?\\r\\n\\r\\n";
     private static final Pattern CONTENT_TYPE_TEXT_HTML_WIHOUT_BODY_TAG_PATTERN = Pattern.compile(CONTENT_TYPE_TEXT_HTML_WITHOUT_BODY_TAG_REGEX,
             Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
-    private static final String CONTENT_TRANSFER_BASE64_ENCODING = "Content-Transfer-Encoding: base64";
     /**
      * Updates the string representation of a mime message in RFC822 format with the
      * warning note for text/plain and text/html parts.
@@ -185,17 +193,22 @@ public class ExternalEmailWarning {
     public String getUpdatedContent(String content) {
         if (content != null) {
             final Matcher ctTextPlainMatcher = CONTENT_TYPE_TEXT_PLAIN_PATTERN.matcher(content);
+            final Matcher ctBase64TextPlainMatcher = CONTENT_TRANSFER_BASE64_TEXT_PLAIN_PATTERN.matcher(content);
             if (ctTextPlainMatcher.find()) {
                 String textPlainHeader = ctTextPlainMatcher.group();
                 final int end = ctTextPlainMatcher.end();
                 if (textPlainHeader != null && textPlainHeader.contains(CONTENT_TRANSFER_BASE64_ENCODING)) {
                     content = appendWarning(content, end, getEncodedTextPlainWarning());
+                } else if (ctBase64TextPlainMatcher.find()) {
+                    final int endBase64TextPlain = ctBase64TextPlainMatcher.end();
+                    content = appendWarning(content, endBase64TextPlain, getEncodedTextPlainWarning());
                 } else {
                     content = appendWarning(content, end, getTextPlainWarning());
                 }
             }
             final Matcher ctTextHtmlMatcher = CONTENT_TYPE_TEXT_HTML_PATTERN.matcher(content);
             final Matcher ctTextHtmlWithoutBodyTagMatcher = CONTENT_TYPE_TEXT_HTML_WIHOUT_BODY_TAG_PATTERN.matcher(content);
+            final Matcher ctBase64TextHtmlMatcher = CONTENT_TRANSFER_BASE64_TEXT_HTML_PATTERN.matcher(content);
             if (ctTextHtmlMatcher.find()) {
                 final int end = ctTextHtmlMatcher.end();
                 content = appendWarning(content, end, getTextHtmlWarning());
@@ -204,6 +217,9 @@ public class ExternalEmailWarning {
                 final int end = ctTextHtmlWithoutBodyTagMatcher.end();
                 if (textHtmlHeader != null && textHtmlHeader.contains(CONTENT_TRANSFER_BASE64_ENCODING)) {
                     content = appendWarning(content, end, getEncodedTextHtmlWarning());
+                } else if (ctBase64TextHtmlMatcher.find()) {
+                    final int endBase64TextHtml = ctBase64TextHtmlMatcher.end();
+                    content = appendWarning(content, endBase64TextHtml, getEncodedTextHtmlWarning());
                 } else {
                     content = appendWarning(content, end, getTextHtmlWarning());
                 }
