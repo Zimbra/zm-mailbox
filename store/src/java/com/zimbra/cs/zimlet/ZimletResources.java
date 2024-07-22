@@ -88,6 +88,7 @@ public class ZimletResources extends DiskCacheServlet {
         TYPES.put("js", "text/javascript");
         TYPES.put("xsl", "application/xslt+xml");
         TYPES.put("plain", "text/plain");
+	TYPES.put("zgz", "text/javascript");
     }
 
     public ZimletResources() {
