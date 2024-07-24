@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.List;
 
 import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.account.Key.AccountBy;
@@ -33,6 +34,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.MailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -52,6 +54,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.MsgContent;
 
@@ -167,6 +170,18 @@ public class SaveDraft extends MailDocumentHandler {
 
             if (autoSendTime != 0) {
                 AccountUtil.checkQuotaWhenSendMail(mbox);
+                try {
+                    // always throws MessagingException. The api call here is checking if MessagingException is an instance of SendFailedException
+                    // then get the list of invalid e-mail addresses.
+                    MailUtil.validateRcptAddresses(JMSession.getSmtpSession(mbox.getAccount()), mm.getAllRecipients());
+                } catch (MessagingException mex) {
+                    if (mex instanceof SendFailedException) {
+                        SendFailedException sfex = (SendFailedException) mex;
+                        if (sfex.getInvalidAddresses().length > 0) {
+                            throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE("invalid addresses", sfex, sfex.getInvalidAddresses(), sfex.getValidUnsentAddresses());
+                        }
+                    }
+                }
             }
 
             String origid = iidOrigid == null ? null : iidOrigid.toString(account == null ? mbox.getAccountId() : account);
