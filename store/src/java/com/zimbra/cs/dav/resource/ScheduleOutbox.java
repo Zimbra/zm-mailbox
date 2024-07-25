@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -32,6 +33,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.util.StringUtil;
 import org.dom4j.Element;
 
 import com.google.common.base.Strings;
@@ -128,6 +130,9 @@ public class ScheduleOutbox extends CalendarCollection {
                 String val = prop.getValue();
                 if (val != null) {
                     organizer = val.trim();
+                    if (StringUtil.isNullOrEmpty(delegationInfo.getOriginator())) {
+                        delegationInfo.setOriginator(organizer);
+                    }
                     String addr = CalDavUtils.stripMailto(organizer);
                     // Rewrite the alias to primary address
                     Account acct = Provisioning.getInstance().get(AccountBy.name, addr);
@@ -171,6 +176,10 @@ public class ScheduleOutbox extends CalendarCollection {
                     }
                 }
             }
+        }
+
+        if (!recipients.hasMoreElements()) {
+            recipients = Collections.enumeration(attendees);
         }
 
         // Get the recipients.
