@@ -15407,9 +15407,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @return zimbraFeatureSharedFolderMobileSyncEnabled, or true if unset
@@ -15422,9 +15422,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
@@ -15440,9 +15440,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
@@ -15459,9 +15459,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15476,9 +15476,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -20179,78 +20179,6 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetGalSyncAccountBasedAutoCompleteEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, "");
-        return attrs;
-    }
-
-    /**
-     * When set to True, all aliases will be hidden for particular account
-     *
-     * @return zimbraHideAliasesInGal, or false if unset
-     *
-     * @since ZCS 10.2.0
-     */
-    @ZAttr(id=4116)
-    public boolean isHideAliasesInGal() {
-        return getBooleanAttr(Provisioning.A_zimbraHideAliasesInGal, false, true);
-    }
-
-    /**
-     * When set to True, all aliases will be hidden for particular account
-     *
-     * @param zimbraHideAliasesInGal new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.2.0
-     */
-    @ZAttr(id=4116)
-    public void setHideAliasesInGal(boolean zimbraHideAliasesInGal) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHideAliasesInGal, zimbraHideAliasesInGal ? TRUE : FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * When set to True, all aliases will be hidden for particular account
-     *
-     * @param zimbraHideAliasesInGal new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.2.0
-     */
-    @ZAttr(id=4116)
-    public Map<String,Object> setHideAliasesInGal(boolean zimbraHideAliasesInGal, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHideAliasesInGal, zimbraHideAliasesInGal ? TRUE : FALSE);
-        return attrs;
-    }
-
-    /**
-     * When set to True, all aliases will be hidden for particular account
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.2.0
-     */
-    @ZAttr(id=4116)
-    public void unsetHideAliasesInGal() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHideAliasesInGal, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * When set to True, all aliases will be hidden for particular account
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.2.0
-     */
-    @ZAttr(id=4116)
-    public Map<String,Object> unsetHideAliasesInGal(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHideAliasesInGal, "");
         return attrs;
     }
 

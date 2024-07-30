@@ -753,8 +753,8 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         DynamicGroup dg = createDynamicGroup(genGroupNameLocalPart("dg"));
 
         // prepend a digit so the order returned from SearchDirectory is predictable
-        prov.addAlias(acct, TestUtil.getAddress("1-acct-alias", domain.getName()), false);
-        prov.addAlias(cr, TestUtil.getAddress("2-cr-alias", domain.getName()), false);
+        prov.addAlias(acct, TestUtil.getAddress("1-acct-alias", domain.getName()));
+        prov.addAlias(cr, TestUtil.getAddress("2-cr-alias", domain.getName()));
         prov.addGroupAlias(dl, TestUtil.getAddress("3-dl-alias", domain.getName()));
         prov.addGroupAlias(dg, TestUtil.getAddress("4-dg-alias", domain.getName()));
 

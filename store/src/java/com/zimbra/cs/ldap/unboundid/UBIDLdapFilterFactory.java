@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016, 2024 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,6 +17,7 @@
 package com.zimbra.cs.ldap.unboundid;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Cos;
 import java.util.Collection;
 import java.util.List;
@@ -926,21 +927,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 FilterId.ALL_ALIASES,
                 FILTER_ALL_ALIASES);
-    }
-
-    /**
-     * returns aliases for an account excluding private aliases
-     * @param aliasTargetId
-     * @return
-     */
-    @Override
-    public ZLdapFilter allAliasesHiddenByTarget(String aliasTargetId) {
-        return new UBIDLdapFilter(
-                FilterId.ALL_ALIASES_HIDDEN_BY_TARGET,
-                Filter.createANDFilter(
-                        FILTER_ALL_ALIASES,
-                        Filter.createEqualityFilter(Provisioning.A_hideAliasInGal, LdapConstants.LDAP_TRUE),
-                        Filter.createEqualityFilter(Provisioning.A_zimbraAliasTargetId, aliasTargetId)));
     }
 
     /*

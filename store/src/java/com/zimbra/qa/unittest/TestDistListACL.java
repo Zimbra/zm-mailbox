@@ -317,7 +317,7 @@ public class TestDistListACL {
         prov.createDomain(otherDomain, new HashMap<String, Object>());
         DistributionList dl = prov.createDistributionList(listAddress, new HashMap<String, Object>());
         Account acct = prov.createAccount(auser, "test123", new HashMap<String, Object>());
-        prov.addAlias(acct, alias, false);
+        prov.addAlias(acct, alias);
         prov.grantRight("dl", TargetBy.name, listAddress, GranteeType.GT_DOMAIN.getCode(), GranteeBy.name,
                 acct.getDomainName(), null /* secret */,
                 RightConsts.RT_sendToDistList, (RightModifier) null /* rightModifier */);

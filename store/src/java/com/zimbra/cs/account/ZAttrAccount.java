@@ -21018,9 +21018,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @return zimbraFeatureSharedFolderMobileSyncEnabled, or true if unset
@@ -21033,9 +21033,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
@@ -21051,9 +21051,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
@@ -21070,9 +21070,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21087,9 +21087,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
+     * Feature to enable/disable the mobile sync for shared folders. Default 
+     * value is TRUE. The option to sync the shared folders to the Mobile 
+     * will be enabled for the users in the webclient. The option will only 
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -25991,7 +25991,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraHideAliasesInGal, or false if unset
      *
-     * @since ZCS 10.2.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4116)
     public boolean isHideAliasesInGal() {
@@ -26004,7 +26004,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraHideAliasesInGal new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.2.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4116)
     public void setHideAliasesInGal(boolean zimbraHideAliasesInGal) throws com.zimbra.common.service.ServiceException {
@@ -26020,7 +26020,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.2.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4116)
     public Map<String,Object> setHideAliasesInGal(boolean zimbraHideAliasesInGal, Map<String,Object> attrs) {
@@ -26034,7 +26034,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.2.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4116)
     public void unsetHideAliasesInGal() throws com.zimbra.common.service.ServiceException {
@@ -26049,7 +26049,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.2.0
+     * @since ZCS 10.1.0
      */
     @ZAttr(id=4116)
     public Map<String,Object> unsetHideAliasesInGal(Map<String,Object> attrs) {

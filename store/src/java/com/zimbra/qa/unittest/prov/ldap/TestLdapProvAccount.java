@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Names;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -325,8 +326,8 @@ public class TestLdapProvAccount extends LdapTest {
         String ALIAS_NAME_2 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_2, domain.getName()).toLowerCase();
         String ALIAS_NEW_NAME_1 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_1, NEW_DOMAIN_NAME).toLowerCase();
         String ALIAS_NEW_NAME_2 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_2, NEW_DOMAIN_NAME).toLowerCase();
-        prov.addAlias(acct, ALIAS_NAME_1, false);
-        prov.addAlias(acct, ALIAS_NAME_2, false);
+        prov.addAlias(acct, ALIAS_NAME_1);
+        prov.addAlias(acct, ALIAS_NAME_2);
         
         // set zimbraPrefAllowAddressForDelegatedSender
         Map<String, Object> attrs = Maps.newHashMap();

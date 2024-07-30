@@ -30,6 +30,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -752,12 +753,12 @@ public class TestProvisioning extends TestCase {
         TestProvisioningUtil.verifySameEntry(entrySpecialChars, entryGot);
 
         // add an alias in the same domain
-        mProv.addAlias(entry, ACCT_ALIAS_EMAIL, false);
+        mProv.addAlias(entry, ACCT_ALIAS_EMAIL);
 
         // add an alias in a different doamin
         boolean correct = false;
         try {
-            mProv.addAlias(entry, ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL, false);
+            mProv.addAlias(entry, ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL);
             correct = true;
         } catch (ServiceException e) {
             if (mCustomProvTester.isCustom())
@@ -1016,7 +1017,7 @@ public class TestProvisioning extends TestCase {
         crAttrs.put(Provisioning.A_zimbraCalResType, "Equipment");
         crAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
         CalendarResource entry = mProv.createCalendarResource(CR_EMAIL, PASSWORD, crAttrs);
-        mProv.addAlias(entry, CR_ALIAS_EMAIL, false);
+        mProv.addAlias(entry, CR_ALIAS_EMAIL);
 
         CalendarResource entryGot = mProv.get(Key.CalendarResourceBy.id, entry.getId());
         TestProvisioningUtil.verifySameEntry(entry, entryGot);

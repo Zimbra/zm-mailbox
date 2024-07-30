@@ -72,7 +72,7 @@ public class AuthRequestTest {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount(account, defaultPwd, new HashMap<String, Object>());
-        prov.addAlias(acct, accountAlias, false);
+        prov.addAlias(acct, accountAlias);
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
     }
 

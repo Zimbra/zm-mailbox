@@ -1175,7 +1175,6 @@ public final class AdminConstants {
     public static final String E_A = "a";
     public static final String E_S = "s";
     public static final String E_ALIAS = "alias";
-    public static final String E_IS_ALIAS_HIDDEN = "isAliasHidden";
     public static final String E_ID = "id";
     public static final String E_PAGE_NUMBER = "pagenum";
     public static final String E_ORDER_BY = "orderby";

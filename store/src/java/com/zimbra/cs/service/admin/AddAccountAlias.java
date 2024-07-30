@@ -71,7 +71,7 @@ public class AddAccountAlias extends AdminDocumentHandler {
 
         String id = req.getId();
         String alias = req.getAlias();
-        boolean isAliasHidden = req.isAliasHidden();
+
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
 
         defendAgainstAccountOrCalendarResourceHarvesting(account, AccountBy.id, id, zsc,
@@ -79,7 +79,8 @@ public class AddAccountAlias extends AdminDocumentHandler {
 
         // if the admin can create an alias in the domain
         checkDomainRightByEmail(zsc, alias, Admin.R_createAlias);
-        prov.addAlias(account, alias, isAliasHidden);
+
+        prov.addAlias(account, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "AddAccountAlias","name", account.getName(), "alias", alias}));
 

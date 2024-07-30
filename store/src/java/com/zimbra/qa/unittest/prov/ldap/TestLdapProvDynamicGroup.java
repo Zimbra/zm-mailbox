@@ -624,7 +624,7 @@ public class TestLdapProvDynamicGroup extends LdapTest {
                 members);
 
         // add an alias to the new account
-        prov.addAlias(newAcct, externalAddr8, false);
+        prov.addAlias(newAcct, externalAddr8);
         group = prov.getGroupBasic(DistributionListBy.id, groupId);
         members = prov.getGroupMembers(group);
         Verify.verifyEquals(

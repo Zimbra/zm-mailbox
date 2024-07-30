@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -35,7 +34,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -47,8 +45,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.SearchDirectoryOptions;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalSearchControl;
@@ -60,10 +56,8 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.GalSearchType;
 
@@ -402,17 +396,17 @@ public class ContactAutoComplete {
     }
 
     public AutoCompleteResult resolveEmailAddr(String str) throws ServiceException {
-        AutoCompleteResult result = new AutoCompleteResult(1);
-        result.rankings = new ContactRankings(getRequestedAcctId());
-        for (String addr : mRequestedAcct.getAllAddrsSet()) {
-            if (addr.equals(str)) {
-                ContactEntry entry = new ContactEntry();
-                entry.mEmail = addr;
-                result.addEntry(entry);
-                break;
-            }
-        }
-        return result;
+           AutoCompleteResult result = new AutoCompleteResult(1);
+           result.rankings = new ContactRankings(getRequestedAcctId());
+           for (String addr : mRequestedAcct.getAllAddrsSet()) {
+               if (addr.equals(str)) {
+                  ContactEntry entry = new ContactEntry();
+                  entry.mEmail = addr;
+                  result.addEntry(entry);
+                  break;
+              }
+           }
+          return result;
     }
     public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
         ZimbraLog.gal.debug("AutoComplete querying: %s", str);
@@ -765,10 +759,6 @@ public class ContactAutoComplete {
         String primaryEmail = getFieldAsString(attrs, ContactConstants.A_email);
         Account account = Provisioning.getInstance().get(Key.AccountBy.name, primaryEmail);
         populateEmailsList(attrs, eligibleEmailsForAccount, account);
-        if (null != account) {
-            //removes aliases where zimbraHideAliasInGal is TRUE for internal accounts
-            excludePrivateAliases(account, eligibleEmailsForAccount);
-        }
         return eligibleEmailsForAccount;
     }
 
@@ -782,36 +772,22 @@ public class ContactAutoComplete {
     private void populateEmailsList(Map<String, ?> attrs, List<String> eligibleEmailsForAccount, Account account)
             throws ServiceException {
         for (String emailKey : mEmailKeys) {
-            //when account is null, its external contact.Below alias logic is not applicable.
-            if (null != account && !ContactConstants.A_email.equals(emailKey)) {
-                //check if all aliases of an account need to be bypassed
-                if (account.isHideAliasesInGal()) {
+            if (null != account) {
+                if (ContactConstants.A_email.equals(emailKey) && account.isHideInGal()) {
                     continue;
+                }
+                //when account is null, its external contact.Below alias logic is not applicable.
+                if (!ContactConstants.A_email.equals(emailKey)) {
+                    //check if all aliases of an account need to be bypassed
+                    if (account.isHideAliasesInGal()) {
+                        continue;
+                    }
                 }
             }
             String email = getFieldAsString(attrs, emailKey);
             if (null != email) {
                 eligibleEmailsForAccount.add(email);
             }
-        }
-    }
-
-    /**
-     * identifies the aliases with zimbraHideAliasInGal value as TRUE and ignores them in GAL Autocomplete
-     * @param account
-     * @param allowedEmailsListInGalAutocomplete
-     * @throws ServiceException
-     */
-    protected void excludePrivateAliases(Account account, List<String> allowedEmailsListInGalAutocomplete) throws ServiceException {
-        SearchDirectoryOptions options = new SearchDirectoryOptions();
-        options.setResultPageSize(LC.search_directory_results_page_size.intValue());
-        options.setMaxResults(LC.search_directory_results_max_results.intValue());
-        options.setTypes(SearchDirectoryOptions.ObjectType.aliases);
-        options.setFilter(ZLdapFilterFactory.getInstance().allAliasesHiddenByTarget(
-                account.getId()));
-        List<NamedEntry> results = Provisioning.getInstance().searchDirectory(options);
-        for (NamedEntry result : results) {
-            allowedEmailsListInGalAutocomplete.remove(result.getName());
         }
     }
     private Pair<List<Folder>, Map<ItemId, Mountpoint>> getLocalRemoteContactFolders(Collection<Integer> folderIDs) throws ServiceException {

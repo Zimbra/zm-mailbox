@@ -614,7 +614,7 @@ public class TestProvDomainStatus {
         }
 
         public void ADD_ACCOUNT_ALIAS_REQUEST() throws Exception {
-            mCtx.mSoapClient.addAlias(mCtx.mTargetAcct, aliasName(), false);
+            mCtx.mSoapClient.addAlias(mCtx.mTargetAcct, aliasName());
         }
 
         public void REMOVE_ACCOUNT_ALIAS_REQUEST() throws Exception {

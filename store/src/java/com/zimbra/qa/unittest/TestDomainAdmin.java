@@ -435,10 +435,10 @@ public class TestDomainAdmin extends TestCase {
         assertNotNull("GetMailboxResponse for " + TARGET_ACCT + " as domAdmin specifying target acct", gmResp);
 
         AddAccountAliasResponse aaaResp;
-        aaaResp = domAdminSoapProv.invokeJaxb( new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT, false));
+        aaaResp = domAdminSoapProv.invokeJaxb( new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT));
         assertNotNull("AddAccountAliasResponse for " + TARGET_ACCT + " simple as domAdmin", aaaResp);
         aaaResp = domAdminSoapProv.invokeJaxbOnTargetAccount(
-                new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT2, false), acctId);
+                new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT2), acctId);
         assertNotNull("AddAccountAliasResponse for " + TARGET_ACCT + " as domAdmin specifying target acct", aaaResp);
 
         RemoveAccountAliasResponse daaResp;
@@ -547,20 +547,20 @@ public class TestDomainAdmin extends TestCase {
 
         AddAccountAliasResponse aaaResp;
         try {
-            aaaResp = domAdminSoapProv.invokeJaxb(new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT, false));
+            aaaResp = domAdminSoapProv.invokeJaxb(new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT));
             fail("AddAccountAliasRequest succeeded for account in other domain!");
         } catch (SoapFaultException sfe) {
             checkSoapReason(sfe, "permission denied: can not access account ");
         }
         try {
             aaaResp = domAdminSoapProv.invokeJaxbOnTargetAccount(
-                    new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT2, false), acctId);
+                    new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT2), acctId);
             fail("AddAccountAliasRequest succeeded for account in other domain!");
         } catch (SoapFaultException sfe) {
             checkSoapReason(sfe, "permission denied: can not access account ");
         }
 
-        aaaResp = adminSoapProv.invokeJaxb(new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT, false));
+        aaaResp = adminSoapProv.invokeJaxb(new AddAccountAliasRequest(acctId, ALIAS_FOR_TARGET_ACCT));
         assertNotNull("AddAccountAliasResponse for " + TARGET_ACCT + " as FULL ADMIN", aaaResp);
 
         try {

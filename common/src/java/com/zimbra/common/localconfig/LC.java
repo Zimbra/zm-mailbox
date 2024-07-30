@@ -1560,10 +1560,6 @@ public final class LC {
     public static final KnownKey zimbra_two_factor_auth_resend_email_wait_seconds = KnownKey.newKey(1); // 1 sec
 
     // 10.1.0 licensing config
-
-    public final static KnownKey search_directory_results_page_size = KnownKey.newKey(10000);
-
-    public final static KnownKey search_directory_results_max_results = KnownKey.newKey(10000);
     @Supported
     public static final KnownKey zimbra_license_election_leader_zimbraId = KnownKey.newKey("");
 

@@ -114,8 +114,8 @@ public class TestLdapProvAttrCallback extends LdapTest {
         String ALIAS_LOCALPART_2 = Names.makeAliasNameLocalPart(genAcctNameLocalPart("alias-2"));
         String ALIAS_NAME_2 = TestUtil.getAddress(ALIAS_LOCALPART_2, domain.getName()).toLowerCase();
 
-        prov.addAlias(acct, ALIAS_NAME_1, false);
-        prov.addAlias(acct, ALIAS_NAME_2, false);
+        prov.addAlias(acct, ALIAS_NAME_1);
+        prov.addAlias(acct, ALIAS_NAME_2);
 
         String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("accountStatus-dl");
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);

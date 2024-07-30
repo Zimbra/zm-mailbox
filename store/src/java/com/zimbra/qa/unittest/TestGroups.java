@@ -567,7 +567,7 @@ public class TestGroups extends TestCase {
         if (acct == null) {
             ZimbraLog.test.warn("createAccountWithAliase(%s) returning null!!!", name);
         }
-        prov.addAlias(acct, alias, false);
+        prov.addAlias(acct, alias);
         return acct;
     }
 

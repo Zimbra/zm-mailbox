@@ -374,7 +374,7 @@ public class TestJaxbProvisioning {
         prov.checkPasswordStrength(acct, "2ndDelTA4Pa555");
         prov.setPassword(acct, "2ndDelTA4Pa555");
         prov.renameAccount(acct.getId(), testNewAcctEmail);
-        prov.addAlias(acct, testAcctAlias, false);
+        prov.addAlias(acct, testAcctAlias);
         prov.removeAlias(acct, testAcctAlias);
         acct = prov.get(AccountBy.name, testNewAcctEmail);
         assertNotNull("Account for " + testNewAcctEmail, acct);
