@@ -82,6 +82,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
@@ -202,97 +203,38 @@ public class FeedManager {
     }
 
     /**
-     * Determines if a target address falls within the specified subnet.<br>
-     * If the prefix has no bit-length, determines direct match with target address.
-     * @param targetAddress The address in question
-     * @param prefix CIDR notation (first ip and number of relevant bits), or single ip - no wildcards
-     * @return True if the address matches or is within subnet range
-     */
-    protected static boolean isAddressInRange(InetAddress targetAddress, String prefix) {
-        ZimbraLog.misc.debug("checking if ip: %s is in range of: %s", targetAddress, prefix);
-        // split first ip from bit length
-        String [] firstIpAndLength = prefix.split("/");
-        // the first ip in the subnet
-        InetAddress firstIp;
-        // the number of relevant bits in the entire address
-        int bitLength;
-        try {
-            firstIp = InetAddress.getByName(firstIpAndLength[0]);
-            // compare direct if no bit length
-            if (firstIpAndLength.length < 2) {
-                return targetAddress.getHostAddress().equals(firstIp.getHostAddress());
-            }
-            bitLength = Integer.parseInt(firstIpAndLength[1]);
-        } catch (UnknownHostException | NumberFormatException e) {
-            ZimbraLog.misc.error("ignoring unparsable ip address prefix: %s", prefix);
-            ZimbraLog.misc.debug(e);
-            return false;
-        }
-
-        // don't compare across ipv4 vs ipv6
-        if (!targetAddress.getClass().equals(firstIp.getClass())) {
-            ZimbraLog.misc.debug("cannot compare across ipv4 and ipv6 address. target: %s, first ip: %s",
-                targetAddress, firstIp);
-            return false;
-        }
-
-        // determine number of relevant bytes to compare
-        // e.g. /116 -> 116/8=14.5 -> 14 -> remaining bits handled below
-        // e.g. /30 -> 30/8=3.75 -> 4 -> remaining bits handled below
-        // e.g. /24 -> 24/8=3 -> 3
-        int maskLength = bitLength / Byte.SIZE;
-
-        // mask on and compare #maskLength bytes we care about
-        byte mask = (byte) 0xFF;
-        byte [] targetBytes = targetAddress.getAddress();
-        byte [] subBytes = firstIp.getAddress();
-        for (int i = 0; i < maskLength; i++) {
-            if ((targetBytes[i] & mask) != (subBytes[i] & mask)) {
-                return false;
-            }
-        }
-
-        // the number of relevant bits in the last byte of the address
-        int doCareLength = bitLength % Byte.SIZE;
-
-        // last byte is only relevant for non-multiples of 8
-        // last byte has all bits on except the don't cares specified by bit length
-        // e.g. /30 -> 30%8=6 -> 8-6=2 -> last 2 bits are off
-        // e.g. /29 -> 29%8=5 -> 8-5=3 -> last 3 bits are off
-        if (doCareLength != 0) {
-            // set on all bits
-            byte lastByteMask = (byte) 0xFF;
-            // set off the lowest bits remaining from a full byte
-            int dontCareLength = Byte.SIZE - doCareLength;
-            lastByteMask <<= dontCareLength;
-            return (targetBytes[maskLength] & lastByteMask) == (subBytes[maskLength] & lastByteMask);
-        }
-
-        return true;
-    }
-
-    /**
      * Returns true if target address is link-local, loopback, or blacklisted.
      * @param url The target
      * @return True if address is blocked for feed manager
      */
     protected static boolean isBlockedFeedAddress(URIBuilder url) {
+        InetAddress targetAddress;
+        try {
+            targetAddress = InetAddress.getByName(url.getHost());
+        } catch (UnknownHostException e) {
+            ZimbraLog.misc.warn("unable to identify feed manager target url host: %s", url);
+            return false;
+        }
+
+        String whitelistString = LC.zimbra_feed_manager_whitelist.value();
+        List<String> whitelist = new ArrayList<String>();
+        if (!StringUtil.isNullOrEmpty(whitelistString)) {
+            whitelist.addAll(Arrays.asList(whitelistString.trim().split(",")));
+        }
+        if (whitelist.stream().anyMatch(ip -> NetUtil.isAddressInRange(targetAddress, ip))) {
+            return false;
+        }
+
         String blacklistString = LC.zimbra_feed_manager_blacklist.value();
         List<String> blacklist = new ArrayList<String>();
         if (!StringUtil.isNullOrEmpty(blacklistString)) {
             blacklist.addAll(Arrays.asList(blacklistString.split(",")));
         }
-        try {
-            InetAddress targetAddress = InetAddress.getByName(url.getHost());
-            return targetAddress.isAnyLocalAddress()
-                || targetAddress.isLinkLocalAddress()
-                || targetAddress.isLoopbackAddress()
-                || blacklist.stream()
-                    .anyMatch(ip -> isAddressInRange(targetAddress, ip));
-        } catch (UnknownHostException e) {
-            ZimbraLog.misc.warn("unable to identify feed manager target url host: %s", url);
-        }
-        return false;
+        return targetAddress.isAnyLocalAddress()
+            || targetAddress.isLinkLocalAddress()
+            || targetAddress.isLoopbackAddress()
+            || blacklist.stream()
+                .anyMatch(ip -> NetUtil.isAddressInRange(targetAddress, ip));
     }
 
     private static RemoteDataInfo retrieveRemoteData(String url, Folder.SyncData fsd)

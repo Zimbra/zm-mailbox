@@ -20,15 +20,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
@@ -57,6 +63,7 @@ import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -70,6 +77,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.servlet.ZimbraServlet;
+
 /**
  * @author jylee
  */
@@ -87,33 +95,59 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String AUTH_PARAM = "auth";
     private static final String AUTH_BASIC = "basic";
 
-    protected static boolean isRedirectStatus(int status) {
+    protected static boolean isRedirectStatus(final int status) {
         return status / 100 == 3; // 3xx Redirect
     }
 
-    private static Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
+    protected static Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, auth.getAccountId(), auth);
 
         Cos cos = prov.getCOS(acct);
-
         Set<String> allowedDomains = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
-
         ZimbraLog.zimlet.debug("get allowedDomains result: "+allowedDomains);
 
         return allowedDomains;
     }
 
-    protected static boolean checkPermissionOnTarget(URL target, AuthToken auth) {
-        String host = target.getHost().toLowerCase();
+	/** Check if an inet address is within one of the reserved non-routable private spaces.
+     *
+     * @param addr the inet address to check, either v4 or v6
+     * @return true if the address is within a restricted range, or null
+     */
+    protected static boolean isRestrictedIp(final InetAddress addr) {
+        if (addr == null) {
+            return true;
+        }
+
+		return addr.isAnyLocalAddress()  // 0.0.0.0/8 or ::
+            || addr.isLinkLocalAddress() // 169.254.0.0/16 or fe80::/10
+            || addr.isLoopbackAddress()  // 127.0.0.0/8 or ::1
+            || addr.isSiteLocalAddress(); // 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 or fec0::/10 (deprecated)
+    }
+
+    /** Check if a host is within the list of allowed domain names/wildcards
+     * for the account identified by the authtoken.
+     *
+     * <p>The host must pass further checks to determine if it is a valid
+     * target for the proxy request, but we start with the hostname.</p>
+     *
+     * @param host the host to check
+     * @param the auth token passed in to the request
+     * @return true if the host is provisionally allowed to be targeted by the proxy
+     */
+    protected static boolean isAllowedDomain(final String host, final AuthToken auth) {
         ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: " + host);
-        Set<String> domains;
+
+        final Set<String> domains;
+
         try {
             domains = getAllowedDomains(auth);
         } catch (ServiceException se) {
             ZimbraLog.zimlet.info("error getting allowedDomains: " + se.getMessage());
             return false;
         }
+
         for (String domain : domains) {
             if (domain.charAt(0) == '*') {
                 domain = domain.substring(1);
@@ -125,7 +159,74 @@ public class ProxyServlet extends ZimbraServlet {
                 return true;
             }
         }
+
         return false;
+    }
+
+    /** Simple wrapper to allow for mocking DNS resolution.
+     */
+    protected static InetAddress[] getAllInetAddressesByName(final String host) throws UnknownHostException {
+        return InetAddress.getAllByName(host);
+    }
+
+    /** Check if an IP address is an exception to resolved IP address restrictions on proxy targets.
+     *
+     * @param addr the subject address
+     * @return true if the IP address has no IP range restrictions
+     */
+    protected static boolean isWhitelistedAddress(final InetAddress addr) {
+        if (addr == null) {
+            return false;
+        }
+
+        final String whitelist = LC.zimbra_proxy_servlet_whitelist.value();
+
+        if (StringUtils.isEmpty(whitelist)) {
+            return false;
+        }
+
+        final String[] entries = whitelist.trim().split("\\s*,\\s*");
+
+        for (String cidr : entries) {
+            if (NetUtil.isAddressInRange(addr, cidr)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected static boolean checkPermissionOnTarget(URL target, AuthToken auth) {
+        if (target == null) {
+            return false;
+        }
+
+        final String host = target.getHost().toLowerCase();
+
+        if (!isAllowedDomain(host, auth)) {
+            return false;
+        }
+
+        InetAddress[] addresses;
+
+        try {
+            addresses = getAllInetAddressesByName(host);
+        } catch (UnknownHostException ex) {
+            ZimbraLog.zimlet.debug("refuse proxy because DNS lookup failed for %s", host);
+            return false;
+        }
+
+        for (final InetAddress ip : addresses) {
+            final String ipstr = ip.getHostAddress();
+            if (isWhitelistedAddress(ip)) {
+                ZimbraLog.zimlet.debug("skip private domain check for whitelisted host %s <%s>", host, ipstr);
+            } else if (isRestrictedIp(ip)) {
+                ZimbraLog.zimlet.info("refuse proxy to reserved or private host %s <%s>", host, ipstr);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     protected static boolean shouldFollowRedirectLocation(Header locationHeader, AuthToken authToken) {
