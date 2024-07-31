@@ -1546,6 +1546,15 @@ public final class LC {
     // PREAPPS-7386 Enable folder retention feature in Modern UI, only for Kepler and 10.0.1 patches
     public static final KnownKey enable_folder_retention_policy = KnownKey.newKey(true);
     
+    public static final KnownKey zimbra_two_factor_auth_resend_email_wait_seconds = KnownKey.newKey(1); // 1 sec
+
+    // 10.1.0 licensing config
+    @Supported
+    public static final KnownKey zimbra_license_election_leader_zimbraId = KnownKey.newKey("");
+
+    // Comma-delimited list of CIDR subnets or IP to which we always allow redirects.
+    public static final KnownKey zimbra_proxy_servlet_whitelist = KnownKey.newKey("");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
