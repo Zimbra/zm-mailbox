@@ -487,6 +487,10 @@ public final class MockProvisioning extends Provisioning {
         return cos;
     }
 
+    @Override public void deleteCos(String id) {
+        id2cos.remove(id);
+    }
+
     @Override
     public Cos copyCos(String srcCosId, String destCosName) {
         throw new UnsupportedOperationException();
@@ -517,11 +521,6 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public List<Cos> getAllCos() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void deleteCos(String zimbraId) {
         throw new UnsupportedOperationException();
     }
 
