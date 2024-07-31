@@ -1563,6 +1563,8 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_license_election_leader_zimbraId = KnownKey.newKey("");
 
+    // Comma-delimited list of CIDR subnets or IP to which we always allow redirects.
+    public static final KnownKey zimbra_proxy_servlet_whitelist = KnownKey.newKey("");
 
     static {
         // Automatically set the key name with the variable name.
