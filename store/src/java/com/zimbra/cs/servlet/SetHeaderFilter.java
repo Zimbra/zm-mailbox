@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import com.zimbra.common.localconfig.KnownKey;
 
 /** Sets headers for request. */
 public class SetHeaderFilter implements Filter {
@@ -51,6 +52,12 @@ public class SetHeaderFilter implements Filter {
     public static final String UNKNOWN_HEADER_NAME = "X-Zimbra-Unknown-Header";
 
     private boolean isResponseHeadersEnabled = true;
+
+    private static final KnownKey zimbra_modern_csp;
+    static {
+        zimbra_modern_csp = new KnownKey("zimbra_modern_csp");
+        zimbra_modern_csp.setDefault("");
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -94,9 +101,25 @@ public class SetHeaderFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse)response;
         String serverName = HttpUtil.getVirtualHost(httpRequest);
         KeyValue[] headers = getResponseHeaders(serverName);
+
+        System.out.println("addZimbraResponseHeaders:" + httpRequest.getRequestURI());
+        if (zimbra_modern_csp.value() != null && !zimbra_modern_csp.value().isEmpty()) {
+            if ((httpRequest.getRequestURI().startsWith("/modern")) || (httpRequest.getRequestURI().startsWith("//modern"))) {
+                KeyValue newHeader = new KeyValue("Content-Security-Policy", zimbra_modern_csp.value());
+                headers = appendHeader(headers, newHeader);
+                System.out.println("addZimbraResponseHeaders TRIGGER:" + httpRequest.getRequestURI());
+            }
+        }
+
         this.addHeaders(httpResponse, headers);
     }
 
+    private static KeyValue[] appendHeader(KeyValue[] headers, KeyValue newHeader) {
+        KeyValue[] newHeaders = new KeyValue[headers.length + 1];
+        System.arraycopy(headers, 0, newHeaders, 0, headers.length);
+        newHeaders[headers.length] = newHeader;
+        return newHeaders;
+    }
     private KeyValue[] getResponseHeaders(String serverName) {
         KeyValue[] headers = RESPONSE_HEADERS.get(serverName);
         if (headers == null) {
