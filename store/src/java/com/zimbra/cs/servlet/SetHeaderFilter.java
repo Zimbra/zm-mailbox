@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import com.zimbra.common.localconfig.KnownKey;
 
 /** Sets headers for request. */
 public class SetHeaderFilter implements Filter {
@@ -51,6 +52,17 @@ public class SetHeaderFilter implements Filter {
     public static final String UNKNOWN_HEADER_NAME = "X-Zimbra-Unknown-Header";
 
     private boolean isResponseHeadersEnabled = true;
+
+    private static final KnownKey zimbra_csp_header;
+    static {
+        zimbra_csp_header = new KnownKey("zimbra_csp_header");
+        zimbra_csp_header.setDefault("");
+    }
+    private static final KnownKey zimbra_csp_uris;
+    static {
+        zimbra_csp_uris = new KnownKey("zimbra_csp_uris");
+        zimbra_csp_uris.setDefault("");
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -94,9 +106,41 @@ public class SetHeaderFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse)response;
         String serverName = HttpUtil.getVirtualHost(httpRequest);
         KeyValue[] headers = getResponseHeaders(serverName);
+
+        if (zimbra_csp_header.value() != null && !zimbra_csp_header.value().isEmpty() && zimbra_csp_uris.value() != null && !zimbra_csp_uris.value().isEmpty()) {
+            String uris = zimbra_csp_uris.value();
+            
+            if (isCSPURI(httpRequest, uris)) {
+                KeyValue newHeader = new KeyValue("Content-Security-Policy", zimbra_csp_header.value());
+                headers = appendHeader(headers, newHeader);
+            }
+        }
+
         this.addHeaders(httpResponse, headers);
     }
 
+    private static boolean isCSPURI(HttpServletRequest httpRequest, String uris) {
+        String[] values = uris.split(",");
+        String requestUri = httpRequest.getRequestURI();
+
+        for (String value : values) {
+            if (value.equals("/") && requestUri.equals("/")) {
+                return true;
+            }
+
+            if (!value.equals("/") && requestUri.startsWith(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static KeyValue[] appendHeader(KeyValue[] headers, KeyValue newHeader) {
+        KeyValue[] newHeaders = new KeyValue[headers.length + 1];
+        System.arraycopy(headers, 0, newHeaders, 0, headers.length);
+        newHeaders[headers.length] = newHeader;
+        return newHeaders;
+    }
     private KeyValue[] getResponseHeaders(String serverName) {
         KeyValue[] headers = RESPONSE_HEADERS.get(serverName);
         if (headers == null) {
