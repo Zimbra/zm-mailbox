@@ -28,10 +28,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
@@ -50,7 +51,10 @@ public class ChangePassword extends AccountDocumentHandler {
         }
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
+        Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
+        if (authTokenEl == null && zsc.getAuthToken() == null) {
+            throw ServiceException.INVALID_REQUEST("invalid request parameter", null);
+        }
 
         String namePassedIn = request.getAttribute(AccountConstants.E_ACCOUNT);
         String name = namePassedIn;
@@ -58,6 +62,7 @@ public class ChangePassword extends AccountDocumentHandler {
         Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
         String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
 
+        Provisioning prov = Provisioning.getInstance();
         if (virtualHost != null && name.indexOf('@') == -1) {
             Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
             if (d != null)
@@ -72,22 +77,44 @@ public class ChangePassword extends AccountDocumentHandler {
             }
         }
 
-        Account acct = prov.get(AccountBy.name, name, zsc.getAuthToken());
+        AuthToken at = zsc.getAuthToken();
+        Account acct = prov.get(AccountBy.name, name, at);
         if (acct == null) {
             throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
         }
 
-        if (!canAccessAccount(zsc, acct)) {
+        Usage usage = Usage.AUTH;
+        if (authTokenEl != null) {
+            try {
+                at = AuthProvider.getAuthToken(authTokenEl, acct);
+            } catch (AuthTokenException e) {
+                throw ServiceException.AUTH_REQUIRED();
+            }
+            if (at == null) {
+                throw ServiceException.AUTH_REQUIRED("invalid auth token");
+            }
+            usage = Usage.RESET_PASSWORD;
+        } else if (!canAccessAccount(zsc, acct)) {
             throw ServiceException.PERM_DENIED("cannot access account");
         }
 
+        acct = AuthProvider.validateAuthToken(prov, at, false, usage);
+        if (acct == null) {
+            throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
+        }
         String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
         String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
 
-        if (acct.isIsExternalVirtualAccount() && StringUtil.isNullOrEmpty(oldPassword)
+        boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
+        if (mustChange && Usage.RESET_PASSWORD == at.getUsage()) {
+            prov.changePassword(acct, oldPassword, newPassword, dryRun);
+            try {
+                at.deRegister();
+            } catch (AuthTokenException e) {
+                throw ServiceException.FAILURE("cannot de-register reset password auth token", e);
+            }
+        } else if (acct.isIsExternalVirtualAccount() && StringUtil.isNullOrEmpty(oldPassword)
                 && !acct.isVirtualAccountInitialPasswordSet() && acct.getId().equals(zsc.getAuthtokenAccountId())) {
-            // need a valid auth token in this case
-            AuthProvider.validateAuthToken(prov, zsc.getAuthToken(), false);
             prov.setPassword(acct, newPassword, true);
             acct.setVirtualAccountInitialPasswordSet(true);
         } else {
@@ -96,7 +123,7 @@ public class ChangePassword extends AccountDocumentHandler {
 
         Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
         if (!dryRun) {
-           AuthToken at = AuthProvider.getAuthToken(acct);
+           at = AuthProvider.getAuthToken(acct);
            at.encodeAuthResp(response, false);
            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         }
@@ -106,12 +133,6 @@ public class ChangePassword extends AccountDocumentHandler {
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
-        // Because the user might have 2FA or some other enhanced
-        // authentication enabled, it's easier to lock this endpoint down and
-        // require that the user has already fully authenticated before we hand
-        // them the means to do that. We cannot rely on the Provisioning
-        // changePassword check alone, or we bypass 2FA protection.
-
-        return true;
+        return false;
     }
 }

@@ -169,6 +169,9 @@ public class AuthResponse {
     @XmlElement(name=AccountConstants.E_PREF_PASSWORD_RECOVERY_ADDRESS, required=false)
     private String prefPasswordRecoveryAddress;
 
+    @XmlElement(name=AccountConstants.E_RESET_PWD, required=false)
+    private String resetPassword;
+
     public AuthResponse() {
     }
 
@@ -279,6 +282,15 @@ public class AuthResponse {
     @GraphQLQuery(name="trustedDevicesEnabled", description="Denotes if trusted devices are enabled")
     public ZmBoolean getTrustedDevicesEnabled() { return trustedDevicesEnabled; }
     public AuthResponse setTrustedDevicesEnabled(boolean bool) { this.trustedDevicesEnabled = ZmBoolean.fromBool(bool); return this; }
+
+    @GraphQLQuery(name="resetPassword", description="if true then auth token will be used to change password")
+    public String getResetPassword() {
+        return resetPassword;
+    }
+
+    public void setResetPassword(String resetPassword) {
+        this.resetPassword = resetPassword;
+    }
 
     public AuthResponse addTwoFactorAuthMethodAllowed(String method) {
         this.twoFactorAuthMethodAllowed.add(method);
