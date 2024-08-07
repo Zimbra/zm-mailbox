@@ -601,6 +601,7 @@ public class AccountConstants {
     public static final String A_NUM_OTHER_TRUSTED_DEVICES = "nOtherDevices";
     public static final String E_DEVICE_ID = "deviceId";
     public static final String A_GENERATE_DEVICE_ID = "generateDeviceId";
+    public static final String E_RESET_PWD = "resetPassword";
     public static final String E_TWO_FACTOR_AUTH_REQUIRED = "twoFactorAuthRequired";
     public static final String E_TRUSTED_DEVICES_ENABLED = "trustedDevicesEnabled";
     public static final String E_TWO_FACTOR_METHOD_APP = "app";
