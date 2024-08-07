@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
@@ -65,6 +66,9 @@ public class ChangePasswordRequest {
 
     @XmlElement(name=AccountConstants.E_DRYRUN, required=false)
     private boolean dryRun;
+
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=false)
+    private AuthToken authToken;
 
     public ChangePasswordRequest() {
     }
@@ -116,6 +120,9 @@ public class ChangePasswordRequest {
     public void setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
     }
+
+    public AuthToken getAuthToken() { return authToken; }
+    public ChangePasswordRequest setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
 
 
 }
