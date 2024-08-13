@@ -425,7 +425,7 @@ public class DavContext {
     public boolean hasRequestMessage() {
         try {
             String ct = getUpload().getContentType();
-            return getUpload().getSize() > 0 && ct != null && (ct.startsWith(DavProtocol.XML_CONTENT_TYPE) || ct.startsWith(DavProtocol.XML_CONTENT_TYPE2));
+            return getUpload().getSize() > 0; // && ct != null && (ct.startsWith(DavProtocol.XML_CONTENT_TYPE) || ct.startsWith(DavProtocol.XML_CONTENT_TYPE2));
         } catch (Exception e) {
         }
         return false;
