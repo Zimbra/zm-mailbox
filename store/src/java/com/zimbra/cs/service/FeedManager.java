@@ -208,33 +208,22 @@ public class FeedManager {
      * @return True if address is blocked for feed manager
      */
     protected static boolean isBlockedFeedAddress(URIBuilder url) {
-        InetAddress targetAddress;
-        try {
-            targetAddress = InetAddress.getByName(url.getHost());
-        } catch (UnknownHostException e) {
-            ZimbraLog.misc.warn("unable to identify feed manager target url host: %s", url);
-            return false;
-        }
-
-        String whitelistString = LC.zimbra_feed_manager_whitelist.value();
-        List<String> whitelist = new ArrayList<String>();
-        if (!StringUtil.isNullOrEmpty(whitelistString)) {
-            whitelist.addAll(Arrays.asList(whitelistString.trim().split(",")));
-        }
-        if (whitelist.stream().anyMatch(ip -> NetUtil.isAddressInRange(targetAddress, ip))) {
-            return false;
-        }
-
         String blacklistString = LC.zimbra_feed_manager_blacklist.value();
         List<String> blacklist = new ArrayList<String>();
         if (!StringUtil.isNullOrEmpty(blacklistString)) {
             blacklist.addAll(Arrays.asList(blacklistString.split(",")));
         }
-        return targetAddress.isAnyLocalAddress()
-            || targetAddress.isLinkLocalAddress()
-            || targetAddress.isLoopbackAddress()
-            || blacklist.stream()
-                .anyMatch(ip -> NetUtil.isAddressInRange(targetAddress, ip));
+        try {
+            InetAddress targetAddress = InetAddress.getByName(url.getHost());
+            return targetAddress.isAnyLocalAddress()
+                || targetAddress.isLinkLocalAddress()
+                || targetAddress.isLoopbackAddress()
+                || blacklist.stream()
+                    .anyMatch(ip -> NetUtil.isAddressInRange(targetAddress, ip));
+        } catch (UnknownHostException e) {
+            ZimbraLog.misc.warn("unable to identify feed manager target url host: %s", url);
+        }
+        return false;
     }
 
     private static RemoteDataInfo retrieveRemoteData(String url, Folder.SyncData fsd)
