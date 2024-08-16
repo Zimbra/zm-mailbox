@@ -424,9 +424,14 @@ public class DavContext {
     /* Returns true if the DAV request contains a message. */
     public boolean hasRequestMessage() {
         try {
-            String ct = getUpload().getContentType();
-            return getUpload().getSize() > 0; // && ct != null && (ct.startsWith(DavProtocol.XML_CONTENT_TYPE) || ct.startsWith(DavProtocol.XML_CONTENT_TYPE2));
+            /*
+             Previously, we rejected any Content-Type that was not a variant
+             of XML, but sometimes the client doesn't send the right
+             Content-Type, so we decided to be liberal in what we receive.
+            */
+            return getUpload().getSize() > 0;
         } catch (Exception e) {
+            ZimbraLog.dav.debug("error getting upload", e);
         }
         return false;
     }
