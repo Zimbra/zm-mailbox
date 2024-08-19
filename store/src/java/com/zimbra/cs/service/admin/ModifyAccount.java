@@ -20,14 +20,17 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -46,6 +49,8 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.listeners.AccountListener;
+import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -58,6 +63,9 @@ import com.zimbra.soap.admin.type.CacheEntryType;
 public class ModifyAccount extends AdminDocumentHandler {
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ID };
+
+    private static final String CONFIG_KEY_CONTACT_RANKINGS = "CONTACT_RANKINGS";
+
 
     @Override
     protected String[] getProxiedAccountPath() {
@@ -159,6 +167,20 @@ public class ModifyAccount extends AdminDocumentHandler {
             attrs.remove(Provisioning.A_zimbraAccountSuspensionReason);
         }
 
+        //todo
+        try {
+            if (attrs.containsKey(Provisioning.A_zimbraHideAliasesInGal)) {
+                String newStatus = (String) attrs.get(Provisioning.A_zimbraHideAliasesInGal);
+                if ("TRUE".equalsIgnoreCase(newStatus)) {
+                    account.getAttr(Provisioning.A_zimbraMailAlias);
+                }
+                removeAliasesFromContactRankings(account);
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        //todo
         if (attrs.containsKey(Provisioning.A_zimbraServiceAccountNumber)) {
             String newServiceAcctNum = (String) attrs.get(Provisioning.A_zimbraServiceAccountNumber);
             try {
@@ -304,6 +326,58 @@ public class ModifyAccount extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.MODIFY_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account);
         return response;
+    }
+
+
+
+
+    private void removeAliasesFromContactRankings(Account account) throws ServiceException {
+        Mailbox mbox = null;
+        Set<String> aliases = account.getMultiAttrSet(Provisioning.A_zimbraMailAlias);
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId());
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
+        }
+        Set<String> mailBoxIds;
+        try {
+           mailBoxIds = mbox.getAllIds(null, aliases);
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
+        }
+        /*for(String mailBoxId: mailBoxIds) {
+            for(String alias:aliases) {
+                ContactRankings.remove(MailboxManager.getInstance().getAccountIdByMailboxId(Integer.parseInt(mailBoxId)), alias);
+            }
+        }*/
+        removeEntryFromLucene(mailBoxIds, aliases);
+    }
+
+    private void removeEntryFromLucene( Set<String> mailBoxIds, Set<String> aliases) {
+
+        for(String mailboxId: mailBoxIds) {
+            try {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxById(Integer.parseInt(mailboxId));
+                OperationContext ctx = new OperationContext(mbox);
+
+                for (MailItem item : mbox.getItemList(ctx, MailItem.Type.CONTACT, FolderConstants.ID_FOLDER_AUTO_CONTACTS)) {
+                    Contact contact = (Contact) item;
+                    contact.getEmailAddresses().retainAll(aliases);
+                    for(String address : aliases) {
+                        if(contact.getEmailAddresses().contains(address)) {
+                            contact.getEmailAddresses().remove(address);
+                        }
+                    }
+                    mbox.modifyContact(ctx, contact.getId(), new ParsedContact(contact));
+
+                }
+            } catch (ServiceException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+
+
     }
 
     public static String getStringAttrNewValue(String attrName, Map<String, Object> attrs) throws ServiceException {

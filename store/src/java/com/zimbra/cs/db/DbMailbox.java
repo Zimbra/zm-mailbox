@@ -31,7 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.StringJoiner;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -584,6 +584,31 @@ public final class DbMailbox {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
+    }
+
+    public static Set<String> getAllIds(Mailbox mbox, Set<String> aliases) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        StringJoiner joinClause = new StringJoiner("OR", "(", ")");
+        Set<String> results = new HashSet<>();
+        for (String alias : aliases) {
+            joinClause.add(" metadata like '%" + alias.split("@")[0] + "%' ");
+        }
+        try {
+            stmt = conn.prepareStatement("SELECT mailbox_id FROM " + qualifyZimbraTableName(mbox,
+                    TABLE_METADATA) + " WHERE " + "section = 'CONTACT_RANKINGS' " + "and  " + joinClause);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                results.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            ZimbraLog.mailbox.error("Unable to get mailbox details", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        return results;
     }
 
     public static void updateConfig(Mailbox mbox, String section, Metadata config) throws ServiceException {

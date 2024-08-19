@@ -1930,6 +1930,33 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+
+
+    public Set<String> getAllIds(OperationContext octxt, Set<String> aliases) throws ServiceException {
+        if (aliases.size() == 0) {
+            return null;
+        }
+        // note: defaulting to true, not false...
+        boolean success = true;
+        Set<String> ids = null;
+        try {
+            beginTransaction("getAllIds", octxt, null);
+            // make sure they have sufficient rights to view the config
+            if (!hasFullAccess()) {
+                return null;
+            }
+            ids = DbMailbox.getAllIds(this, aliases);
+            if (ids.size() == 0) {
+                return null;
+            }
+
+        }
+         finally {
+            endTransaction(success);
+        }
+        return ids;
+    }
+
     public String getConfig(OperationContext octxt, Pattern pattern) throws ServiceException {
 
         String previousDeviceId = null;
