@@ -26,6 +26,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.common.mailbox.ACLGrant;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.mailbox.Folder;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
@@ -358,7 +361,9 @@ public class WaitSetRequest extends MailDocumentHandler {
                     id = accountDetail.getId();
                 }
 
-                WaitSetMgr.checkRightForAdditionalAccount(id, zsc);
+                if (!checkSharedFolderPermission(zsc, accountDetail, id)) {
+                    WaitSetMgr.checkRightForAdditionalAccount(id, zsc);
+                }
 
                 String tokenStr = accountDetail.getToken();
                 SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
@@ -368,6 +373,37 @@ public class WaitSetRequest extends MailDocumentHandler {
             }
         }
         return toRet;
+    }
+    private static boolean checkSharedFolderPermission(ZimbraSoapContext zsc, WaitSetAddSpec accountDetail, String id) throws ServiceException {
+        String authAccountId = zsc.getRequestedAccountId();
+        String folderInterests1 = accountDetail.getFolderInterests();
+        if (folderInterests1 != null && !authAccountId.equals(id)) {
+            int getFolderInterests = Integer.parseInt(folderInterests1);
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.getAccountById(id);
+            if (account == null) {
+                throw ServiceException.INVALID_REQUEST("Account not found", null);
+            }
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            ZimbraLog.soap.trace("authAccountId: " + authAccountId);
+            List<Folder> folders = mailbox.getFolderList(null, SortBy.NONE);
+            for (Folder folder : folders) {
+                if (folder.getId() == getFolderInterests) {
+                    List<ACLGrant> aclGrants = folder.getACLGrants();
+                    for (ACLGrant aclGrant : aclGrants) {
+                        if (aclGrant.getGranteeId().equals(authAccountId)) {
+                            String permissions = aclGrant.getPermissions();
+                            ZimbraLog.soap.trace("permission: " + permissions);
+                            if (permissions.contains("r") || permissions.contains("w") || permissions.contains("i") || permissions.contains("a") || permissions.contains("x")) {
+                                ZimbraLog.soap.trace("Folder: " + folder.getName() + " has permissions for account: " + authAccountId);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private static List<String> parseRemoveAccounts(ZimbraSoapContext zsc, List<Id> ids)
