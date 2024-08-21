@@ -499,7 +499,7 @@ public class Auth extends AccountDocumentHandler {
     private Element needResetPassword(Map<String, Object> context, Element requestElement, Account account, TwoFactorAuth auth,
                                        ZimbraSoapContext zsc, TokenType tokenType) throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-        AuthToken authToken = AuthProvider.getAuthToken(account, Usage.RESET_PASSWORD , tokenType);
+        AuthToken authToken = AuthProvider.getAuthToken(account, Usage.RESET_PASSWORD, tokenType);
         response.addAttribute(AccountConstants.E_LIFETIME, authToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         response.addUniqueElement(AccountConstants.E_RESET_PWD).setText("true");
         authToken.encodeAuthResp(response, false);
