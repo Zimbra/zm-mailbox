@@ -50,34 +50,7 @@ public abstract class AccountDocumentHandler extends DocumentHandler {
             throw e;
         }
     }
-    
-    /*
-     * bug 27389
-     */
-    protected boolean checkPasswordSecurity(Map<String, Object> context) throws ServiceException {
-        HttpServletRequest req = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
-        boolean isHttps = req.getScheme().equals("https");
-        if (isHttps)
-            return true;
-        
-        // clear text
-        Server server = Provisioning.getInstance().getLocalServer();
-        String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
-        if (modeString == null) {
-            // not likely, but just log and let it through
-            ZimbraLog.soap.warn("missing " + Provisioning.A_zimbraMailMode + 
-                                " for checking password security, allowing the request");
-            return true;
-        }
-            
-        MailMode mailMode = Provisioning.MailMode.fromString(modeString);
-        if (mailMode == MailMode.mixed && 
-            !server.getBooleanAttr(Provisioning.A_zimbraMailClearTextPasswordEnabled, true)) 
-            return false;
-        else
-            return true;
-    }
-    
+
     protected Set<String> getReqAttrs(Element request, AttributeClass klass) throws ServiceException {
         String attrsStr = request.getAttribute(AccountConstants.A_ATTRS, null);
         if (attrsStr == null) {

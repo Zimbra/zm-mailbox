@@ -57,12 +57,15 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.CosSelector.CosBy;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.type.AccountSelector;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @since Oct 4, 2004

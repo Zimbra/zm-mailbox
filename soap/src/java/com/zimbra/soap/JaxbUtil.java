@@ -252,6 +252,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CancelPendingAccountOnlyRemoteWipeResponse.class,
             com.zimbra.soap.admin.message.CancelPendingRemoteWipeRequest.class,
             com.zimbra.soap.admin.message.CancelPendingRemoteWipeResponse.class,
+            com.zimbra.soap.admin.message.ChangePasswordRequest.class,
+            com.zimbra.soap.admin.message.ChangePasswordResponse.class,
             com.zimbra.soap.admin.message.CheckAuthConfigRequest.class,
             com.zimbra.soap.admin.message.CheckAuthConfigResponse.class,
             com.zimbra.soap.admin.message.CheckBlobConsistencyRequest.class,

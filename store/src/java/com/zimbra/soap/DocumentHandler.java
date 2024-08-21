@@ -709,4 +709,29 @@ public abstract class DocumentHandler {
         LOCAL_HOST = "";
         LOCAL_HOST_ID = "";
     }
+
+    protected boolean checkPasswordSecurity(Map<String, Object> context) throws ServiceException {
+        HttpServletRequest req = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
+        boolean isHttps = req.getScheme().equals("https");
+        if (isHttps) {
+            return true;
+        }
+
+        Server server = Provisioning.getInstance().getLocalServer();
+        String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
+        if (modeString == null) {
+            // not likely, but just log and let it through
+            ZimbraLog.soap.warn("missing " + Provisioning.A_zimbraMailMode +
+                    " for checking password security, allowing the request");
+            return true;
+        }
+
+        Provisioning.MailMode mailMode = Provisioning.MailMode.fromString(modeString);
+        if (mailMode == Provisioning.MailMode.mixed &&
+                !server.getBooleanAttr(Provisioning.A_zimbraMailClearTextPasswordEnabled, true)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 }
