@@ -391,7 +391,7 @@ public class AuthUtil {
     public static AuthToken getAuthToken(Account acct, boolean isAdmin, Usage usage, TokenType tokenType,
             AuthMech authedByMech) throws AuthProviderException {
         AuthToken at = null;
-        if (Usage.TWO_FACTOR_AUTH == usage) {
+        if (Usage.TWO_FACTOR_AUTH == usage || Usage.RESET_PASSWORD == usage) {
             at = AuthProvider.getAuthToken(acct, isAdmin, usage, tokenType);
         } else {
             at = AuthProvider.getAuthToken(acct, isAdmin, authedByMech);
