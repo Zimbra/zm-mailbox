@@ -20,10 +20,7 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -345,11 +342,12 @@ public class ModifyAccount extends AdminDocumentHandler {
         } catch (ServiceException e) {
             throw new RuntimeException(e);
         }
-        /*for(String mailBoxId: mailBoxIds) {
+
+        for(String mailBoxId: mailBoxIds) {
             for(String alias:aliases) {
                 ContactRankings.remove(MailboxManager.getInstance().getAccountIdByMailboxId(Integer.parseInt(mailBoxId)), alias);
             }
-        }*/
+        }
         removeEntryFromLucene(mailBoxIds, aliases);
     }
 
@@ -362,13 +360,16 @@ public class ModifyAccount extends AdminDocumentHandler {
 
                 for (MailItem item : mbox.getItemList(ctx, MailItem.Type.CONTACT, FolderConstants.ID_FOLDER_AUTO_CONTACTS)) {
                     Contact contact = (Contact) item;
-                    contact.getEmailAddresses().retainAll(aliases);
-                    for(String address : aliases) {
-                        if(contact.getEmailAddresses().contains(address)) {
-                            contact.getEmailAddresses().remove(address);
+                    List<String> emailAddresses = contact.getEmailAddresses();
+                    Map<String, String> hm = new HashMap<>();
+                    for (String address : aliases) {
+                        if (emailAddresses.contains(address)) {
+                            hm = contact.getAllFields();
+                            hm.clear();
+                            hm.put("EMPTY","EMPTY");
+                            mbox.modifyContact(ctx, contact.getId(), new ParsedContact(hm));
                         }
                     }
-                    mbox.modifyContact(ctx, contact.getId(), new ParsedContact(contact));
 
                 }
             } catch (ServiceException e) {
