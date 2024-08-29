@@ -37,6 +37,7 @@ public class ZAuthResult {
     private List<String> twoFactorAuthMethodEnabled;
     private String primaryTwoFactorAuthMethod;
     private String maskedPasswordRecoveryAddress;
+    private boolean resetPassword;
 
     /*
     public ZAuthResult(Element e) throws ServiceException {
@@ -63,6 +64,7 @@ public class ZAuthResult {
         twoFactorAuthMethodEnabled = data.getTwoFactorAuthMethodEnabled();
         primaryTwoFactorAuthMethod = data.getPrefPrimaryTwoFactorAuthMethod();
         maskedPasswordRecoveryAddress = data.getPrefPasswordRecoveryAddress();
+        resetPassword = ZmBoolean.toBool(data.getResetPassword(), false);
     }
 
     public ZAuthToken getAuthToken() {
@@ -148,5 +150,9 @@ public class ZAuthResult {
 
     public String getMaskedPasswordRecoveryAddress() {
         return maskedPasswordRecoveryAddress;
+    }
+
+    public boolean getResetPassword() {
+        return resetPassword;
     }
 }
