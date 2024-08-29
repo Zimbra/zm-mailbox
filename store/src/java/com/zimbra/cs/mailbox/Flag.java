@@ -56,6 +56,7 @@ public final class Flag extends Tag {
         HIGH_PRIORITY(-11, "\\Urgent", '!'),
         LOW_PRIORITY(-12, "\\Bulk", '?'),
         VERSIONED(-13, "\\Versioned", '/'),
+        MUTED(-19, "\\Muted", '('),
         /**
          * @deprecated Use indexId = 0
          */
@@ -65,7 +66,6 @@ public final class Flag extends Tag {
         NOTE(-16, "\\Note", 't'),
         PRIORITY(-17, "\\Priority", '+'),
         POST(-18, "\\Post", '^'),
-        MUTED(-19, "\\Muted", '('),
         SUBSCRIBED(-20, "\\Subscribed", '*'),
         EXCLUDE_FREEBUSY(-21, "\\ExcludeFB", 'b'),
         CHECKED(-22, "\\Checked", '#'),
