@@ -42,6 +42,8 @@ public final class AdminConstants {
 
     public static final String E_AUTH_REQUEST = "AuthRequest";
     public static final String E_AUTH_RESPONSE = "AuthResponse";
+    public static final String E_CHANGE_PASSWORD_REQUEST = "ChangePasswordRequest";
+    public static final String E_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
     public static final String E_CREATE_ACCOUNT_REQUEST = "CreateAccountRequest";
     public static final String E_CREATE_ACCOUNT_RESPONSE = "CreateAccountResponse";
     public static final String E_CREATE_GAL_SYNC_ACCOUNT_REQUEST = "CreateGalSyncAccountRequest";
@@ -599,6 +601,8 @@ public final class AdminConstants {
     public static final QName SEARCH_ACCOUNTS_RESPONSE = QName.get(E_SEARCH_ACCOUNTS_RESPONSE, NAMESPACE);
     public static final QName RENAME_ACCOUNT_REQUEST = QName.get(E_RENAME_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName RENAME_ACCOUNT_RESPONSE = QName.get(E_RENAME_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName CHANGE_PASSWORD_REQUEST = QName.get(E_CHANGE_PASSWORD_REQUEST, NAMESPACE);
+    public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName CHANGE_PRIMARY_EMAIL_REQUEST = QName.get(E_CHANGE_PRIMARY_EMAIL_REQUEST, NAMESPACE);
     public static final QName CHANGE_PRIMARY_EMAIL_RESPONSE = QName.get(E_CHANGE_PRIMARY_EMAIL_RESPONSE, NAMESPACE);
 

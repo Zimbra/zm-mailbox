@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2024 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -14,29 +14,18 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+package com.zimbra.soap.admin.message;
 
-package com.zimbra.soap.account.message;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.account.type.AuthToken;
+import com.zimbra.soap.type.AccountSelector;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.account.type.AuthToken;
-import com.zimbra.soap.type.AccountSelector;
-
-/**
- <ChangePasswordRequest>
-   <account by="name">...</account>
-   <oldPassword>...</oldPassword>
-   <password>...</password>
-   [<virtualHost>{virtual-host}</virtualHost>]
- </ChangePasswordRequest>
- * @zm-api-command-auth-required true
- * @zm-api-command-admin-auth-required false
- * @zm-api-command-description Change Password
-*/
-@XmlRootElement(name=AccountConstants.E_CHANGE_PASSWORD_REQUEST)
+@XmlRootElement(name= AdminConstants.E_CHANGE_PASSWORD_REQUEST)
 @XmlType(propOrder = {})
 public class ChangePasswordRequest {
     /**
@@ -111,11 +100,9 @@ public class ChangePasswordRequest {
         return this;
     }
 
-
     public boolean isDryRun() {
         return dryRun;
     }
-
 
     public void setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
@@ -123,6 +110,4 @@ public class ChangePasswordRequest {
 
     public AuthToken getAuthToken() { return authToken; }
     public ChangePasswordRequest setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
-
-
 }

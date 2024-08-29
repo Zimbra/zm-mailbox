@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2024 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -14,38 +14,28 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Sep 3, 2004
- */
-package com.zimbra.cs.service.account;
-
-import java.util.Map;
+package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
-public class ChangePassword extends AccountDocumentHandler {
+import java.util.Map;
 
+public class ChangePassword extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
         if (!checkPasswordSecurity(context)) {
             throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
         }
@@ -65,8 +55,9 @@ public class ChangePassword extends AccountDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         if (virtualHost != null && name.indexOf('@') == -1) {
             Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
-            if (d != null)
+            if (d != null) {
                 name = name + "@" + d.getName();
+            }
         }
 
         String text = request.getAttribute(AccountConstants.E_DRYRUN, null);
@@ -78,12 +69,12 @@ public class ChangePassword extends AccountDocumentHandler {
         }
 
         AuthToken at = zsc.getAuthToken();
-        Account acct = prov.get(AccountBy.name, name, at);
+        Account acct = prov.get(Key.AccountBy.name, name, at);
         if (acct == null) {
-            throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
+            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
         }
 
-        Usage usage = Usage.AUTH;
+        AuthToken.Usage usage = AuthToken.Usage.AUTH;
         if (authTokenEl != null) {
             try {
                 at = AuthProvider.getAuthToken(authTokenEl, acct);
@@ -93,20 +84,20 @@ public class ChangePassword extends AccountDocumentHandler {
             if (at == null) {
                 throw ServiceException.AUTH_REQUIRED("invalid auth token");
             }
-            usage = Usage.RESET_PASSWORD;
+            usage = AuthToken.Usage.RESET_PASSWORD;
         } else if (!canAccessAccount(zsc, acct)) {
             throw ServiceException.PERM_DENIED("cannot access account");
         }
 
         acct = AuthProvider.validateAuthToken(prov, at, false, usage);
         if (acct == null) {
-            throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
+            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
         }
         String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
         String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
 
         boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
-        if (mustChange && Usage.RESET_PASSWORD == at.getUsage()) {
+        if (mustChange && AuthToken.Usage.RESET_PASSWORD == at.getUsage()) {
             prov.changePassword(acct, oldPassword, newPassword, dryRun);
             try {
                 at.deRegister();
@@ -121,15 +112,20 @@ public class ChangePassword extends AccountDocumentHandler {
             prov.changePassword(acct, oldPassword, newPassword, dryRun);
         }
 
-        Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.CHANGE_PASSWORD_RESPONSE);
         if (!dryRun) {
-           at = AuthProvider.getAuthToken(acct);
-           at.encodeAuthResp(response, false);
-           response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+            at = AuthProvider.getAuthToken(acct);
+            at.encodeAuthResp(response, true);
+            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         }
 
         return response;
-	}
+    }
+
+    @Override
+    public boolean needsAdminAuth(Map<String, Object> context) {
+        return false;
+    }
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
