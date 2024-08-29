@@ -33,6 +33,7 @@ public class ZAuthResult {
     private boolean twoFactorAuthRequired;
     private boolean trustedDevicesEnabled;
     private AuthResponse data;
+    private boolean resetPassword;
 
     /*
     public ZAuthResult(Element e) throws ServiceException {
@@ -55,6 +56,7 @@ public class ZAuthResult {
         }
         twoFactorAuthRequired = ZmBoolean.toBool(data.getTwoFactorAuthRequired(), false);
         trustedDevicesEnabled = ZmBoolean.toBool(data.getTrustedDevicesEnabled(), false);
+        resetPassword = ZmBoolean.toBool(data.getResetPassword(), false);
     }
 
     public ZAuthToken getAuthToken() {
@@ -124,5 +126,9 @@ public class ZAuthResult {
 
     public boolean getTrustedDevicesEnabled() {
         return trustedDevicesEnabled;
+    }
+
+    public boolean getResetPassword() {
+        return resetPassword;
     }
 }
