@@ -63,6 +63,9 @@ public class AuthResponse {
     @XmlElement(name=AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED, required=false)
     private ZmBoolean twoFactorAuthRequired;
 
+    @XmlElement(name=AccountConstants.E_RESET_PWD, required=false)
+    private ZmBoolean resetPassword;
+
     public AuthResponse() {
     }
 
@@ -105,4 +108,14 @@ public class AuthResponse {
     @GraphQLQuery(name="twoFactorAuthRequired", description="Denotes if two factor authentication is required")
     public ZmBoolean getTwoFactorAuthRequired() { return twoFactorAuthRequired; }
     public AuthResponse setTwoFactorAuthRequired(boolean bool) { this.twoFactorAuthRequired = ZmBoolean.fromBool(bool); return this; }
+
+    @GraphQLQuery(name="resetPassword", description="if true then auth token will be used to change password")
+    public ZmBoolean getResetPassword() {
+        return resetPassword;
+    }
+
+    public AuthResponse setResetPassword(boolean resetPassword) {
+        this.resetPassword = ZmBoolean.fromBool(resetPassword);
+        return this;
+    }
 }
