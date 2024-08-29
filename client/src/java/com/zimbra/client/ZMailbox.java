@@ -702,7 +702,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         mailbox.mClientIp = options.getClientIp();
         mailbox.mNotifyPreference = SessionPreference.fromOptions(options);
         mailbox.initPreAuth(options);
-        return mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost(), options.getAuthToken(), options.getCsrfToken());
+        return mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(),
+                options.getNewPassword(), options.getVirtualHost(), options.getAuthToken(),
+                options.getCsrfToken(), false);
     }
 
     public static ZMailbox getByName(String name, String password, String uri) throws ServiceException {
@@ -744,7 +746,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
              * always the case. */
             initTargetAccountInfo(options.getTargetAccount(), options.getTargetAccountBy());
         }
-        if (options.getAuthToken() != null) {
+        if (options.getAuthToken() != null && options.getNewPassword() == null) {
             if (options.getAuthAuthToken()) {
                 authByAuthToken(options);
             } else {
@@ -753,8 +755,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         } else if (options.getAccount() != null) {
             String password;
             if (options.getNewPassword() != null) {
-                changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost(), options.getAuthToken(), options.getCsrfToken());
+                changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(),
+                        options.getNewPassword(), options.getVirtualHost(), options.getAuthToken(),
+                        options.getCsrfToken(), true);
                 password = options.getNewPassword();
+                options.setAuthToken((ZAuthToken)null);
             } else {
                 password = options.getPassword();
             }
@@ -828,7 +833,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    private ZChangePasswordResult changePassword(String key, AccountBy by, String oldPassword, String newPassword, String virtualHost, ZAuthToken zat, String csrfToken) throws ServiceException {
+    private ZChangePasswordResult changePassword(String key, AccountBy by, String oldPassword, String newPassword,
+            String virtualHost, ZAuthToken zat, String csrfToken, boolean authTokenAsAttr) throws ServiceException {
         if (mTransport == null) {
             throw ZClientException.CLIENT_ERROR("must call setURI before calling changePassword", null);
         }
@@ -836,7 +842,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         AccountSelector account = new AccountSelector(SoapConverter.TO_SOAP_ACCOUNT_BY.apply(by), key);
         ChangePasswordRequest req = new ChangePasswordRequest(account, oldPassword, newPassword);
         req.setVirtualHost(virtualHost);
-        initAuthToken(zat);
+        if (authTokenAsAttr) {
+            req.setAuthToken(new AuthToken(zat.getValue(), false));
+        } else {
+            initAuthToken(zat);
+        }
         initCsrfToken(csrfToken);
 
         ChangePasswordResponse res = invokeJaxb(req);
