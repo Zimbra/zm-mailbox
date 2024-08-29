@@ -112,6 +112,8 @@ public class Auth extends AdminDocumentHandler {
                 if (AccountServiceException.CHANGE_PASSWORD.equals(ase.getCode())) {
                     ZimbraLog.account.info("zimbraPasswordMustChange is enabled so creating a auth-token used to change password.");
                     usage = Usage.RESET_PASSWORD;
+                } else {
+                    throw ase;
                 }
             }
 
