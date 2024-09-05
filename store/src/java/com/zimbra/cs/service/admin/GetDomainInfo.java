@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
@@ -41,6 +43,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDomainInfo extends AdminDocumentHandler {
 
+    private static final String TRUE = "TRUE";
+    private static final String modernUIFolderPath = "/opt/zimbra/jetty/webapps/zimbra/modern";
     private static final Set<String> bootstrapInfoAttrs = ImmutableSet.of(
             ZAttrProvisioning.A_zimbraSkinLogoURL,
             ZAttrProvisioning.A_zimbraSkinLogoAppBanner,
@@ -129,8 +133,13 @@ public class GetDomainInfo extends AdminDocumentHandler {
                 element.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, key).setText(value);
             }
         } else {
+            // checking whether Modern UI is installed
+            File modernUIFile = new File(modernUIFolderPath);
             String value = entry.getAttr(key, null);
-            if (value != null) {
+            if (key.equals(ZAttrProvisioning.A_zimbraModernWebClientDisabled) && !(modernUIFile.exists() && modernUIFile.isDirectory())) {
+                element.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, key).setText(TRUE);
+                ZimbraLog.account.info("Modern UI is not installed, switching to Classic UI");
+            } else if (value != null) {
                 element.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, key).setText(value);
             }
         }
