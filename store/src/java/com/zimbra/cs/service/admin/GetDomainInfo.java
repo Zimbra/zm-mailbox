@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
@@ -41,6 +43,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDomainInfo extends AdminDocumentHandler {
 
+    private static final String zmlicensePath = "/opt/zimbra/bin/zmlicense";
     private static final Set<String> bootstrapInfoAttrs = ImmutableSet.of(
             ZAttrProvisioning.A_zimbraSkinLogoURL,
             ZAttrProvisioning.A_zimbraSkinLogoAppBanner,
@@ -127,6 +130,18 @@ public class GetDomainInfo extends AdminDocumentHandler {
         if (AttributeManager.getInstance().isMultiValued(key)) {
             for (String value : entry.getMultiAttr(key)) {
                 element.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, key).setText(value);
+            }
+        } else if (key.equals(ZAttrProvisioning.A_zimbraModernWebClientDisabled)) {
+            // checking whether it is a FOSS build or a NETWORK build
+            File zmLicenseFile = new File(zmlicensePath);
+            if (!zmLicenseFile.exists()) {
+                element.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, key).setText("TRUE");
+                ZimbraLog.account.info("Since it is a FOSS build, switching to Classic UI");
+            } else {
+                String value = entry.getAttr(key, null);
+                if (value != null) {
+                    element.addNonUniqueElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, key).setText(value);
+                }
             }
         } else {
             String value = entry.getAttr(key, null);
