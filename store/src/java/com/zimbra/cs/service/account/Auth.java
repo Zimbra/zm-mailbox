@@ -20,8 +20,6 @@
  */
 package com.zimbra.cs.service.account;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.service.AuthProviderException;
 import io.jsonwebtoken.Claims;
 
 import java.util.Arrays;
@@ -29,8 +27,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
@@ -41,13 +37,12 @@ import org.apache.commons.lang.StringUtils;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
@@ -329,20 +324,17 @@ public class Auth extends AccountDocumentHandler {
                         AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct, acctValuePassedIn);
                         appPasswords.authenticate(password);
                     } else {
-                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
+                        Element responseElement = authAccountInternal(prov, acct, code, authCtxt, context, request, twoFactorManager, zsc, tokenType);
+                        if (responseElement != null) {
+                            return responseElement;
+                        }
                         return needTwoFactorAuth(context, request, acct, twoFactorManager, zsc, tokenType, recoveryCode);
                     }
                 } else {
                     if (password != null || recoveryCode != null) {
-                        try {
-                            prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
-                        } catch (AccountServiceException ase) {
-                            if (AccountServiceException.CHANGE_PASSWORD.equals(ase.getCode())) {
-                                ZimbraLog.account.info("zimbraPasswordMustChange is enabled so creating a auth-token used to change password.");
-                                return needResetPassword(context, request, acct, twoFactorManager, zsc, tokenType);
-                            } else {
-                                throw ase;
-                            }
+                        Element responseElement = authAccountInternal(prov, acct, code, authCtxt, context, request, twoFactorManager, zsc, tokenType);
+                        if (responseElement != null) {
+                            return responseElement;
                         }
                     } else {
                         // it's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
@@ -485,6 +477,21 @@ public class Auth extends AccountDocumentHandler {
         }
     }
 
+    private Element authAccountInternal(Provisioning prov, Account acct, String code, Map<String, Object> authCtxt,
+            Map<String, Object> context, Element request, TwoFactorAuth twoFactorManager, ZimbraSoapContext zsc,
+            TokenType tokenType) throws ServiceException {
+        try {
+            prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
+            return null;
+        } catch (AccountServiceException ase) {
+            if (AccountServiceException.CHANGE_PASSWORD.equals(ase.getCode())) {
+                ZimbraLog.account.info("zimbraPasswordMustChange is enabled so creating an auth-token used to change password.");
+                return needResetPassword(context, request, acct, twoFactorManager, zsc, tokenType);
+            } else {
+                throw ase;
+            }
+        }
+    }
     /**
      * This method is used to create a temporary auth token with usage RESET_PASSWORD.
      * This auth token further be used for changing the password.
