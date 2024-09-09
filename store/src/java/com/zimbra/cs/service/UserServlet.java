@@ -907,7 +907,7 @@ public class UserServlet extends ZimbraServlet {
         if (context.formatter == null) {
             context.formatter = FormatterFactory.mFormatters.get(context.format);
             // check if its native formatter, and if onlyoffice formatter is available
-            if (context.formatter.getType().equals(FormatType.HTML_CONVERTED)) {
+            if (context.formatter.getType().equals(FormatType.HTML_CONVERTED) && context.req != null && "GET".equals(context.req.getMethod())) {
                 try {
                     Provisioning prov = Provisioning.getInstance();
                     Server server = prov.getServer(context.getAuthAccount());
