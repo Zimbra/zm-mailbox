@@ -110,7 +110,7 @@ public class Auth extends AdminDocumentHandler {
                 prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
             } catch (AccountServiceException ase) {
                 if (AccountServiceException.CHANGE_PASSWORD.equals(ase.getCode())) {
-                    ZimbraLog.account.info("zimbraPasswordMustChange is enabled so creating a auth-token used to change password.");
+                    ZimbraLog.account.info("zimbraPasswordMustChange is enabled so creating an auth-token used to change password.");
                     usage = Usage.RESET_PASSWORD;
                 } else {
                     throw ase;
@@ -120,7 +120,7 @@ public class Auth extends AdminDocumentHandler {
             AuthMech authedByMech = (AuthMech) authCtxt.get(AuthContext.AC_AUTHED_BY_MECH);
             TokenType tokenType = null;
 
-            if (AccountUtil.isTwoFactorAccount(acct)) {
+            if (usage != Usage.RESET_PASSWORD && AccountUtil.isTwoFactorAccount(acct)) {
                 if (StringUtil.isNullOrEmpty(twoFactorCode)) {
                     String reqTokenType = request.getAttribute(AccountConstants.A_TOKEN_TYPE, "");
                     tokenType = TokenType.fromCode(reqTokenType);
