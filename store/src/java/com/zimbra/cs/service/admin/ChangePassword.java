@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.Map;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -25,13 +27,12 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
-
-import java.util.Map;
 
 public class ChangePassword extends AdminDocumentHandler {
     @Override
@@ -113,7 +114,7 @@ public class ChangePassword extends AdminDocumentHandler {
         }
 
         Element response = zsc.createElement(AdminConstants.CHANGE_PASSWORD_RESPONSE);
-        if (!dryRun) {
+        if (!dryRun && Usage.AUTH == at.getUsage()) {
             at = AuthProvider.getAuthToken(acct);
             at.encodeAuthResp(response, true);
             response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
