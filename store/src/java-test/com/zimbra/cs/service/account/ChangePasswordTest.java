@@ -10,9 +10,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.service.AuthProvider;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,14 +20,16 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.mail.ServiceTestUtil;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.type.AccountSelector;
-import com.zimbra.soap.JaxbUtil;
 
 public class ChangePasswordTest {
     private static final String USERNAME_1 = "ron@zcs.fazigu.org";
@@ -114,7 +113,7 @@ public class ChangePasswordTest {
 
         Assert.assertFalse("handler.needsAuth()", handler.needsAuth(context));
     }
-    
+
     @Test
     public void testBasicHandlerWithResetPasswordAuthTokenUsageIfMustChangePasswordIsEnabled() throws Exception {
         AuthToken authToken = AuthProvider.getAuthToken(account3, AuthToken.Usage.RESET_PASSWORD , AuthToken.TokenType.AUTH);
@@ -130,8 +129,12 @@ public class ChangePasswordTest {
         final Element response = handler.handle(JaxbUtil.jaxbToElement(request), context);
         Assert.assertNotNull("response", response);
 
-        String at = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
-        Assert.assertNotNull("authtoken", at);
+        try {
+            response.getAttribute(AccountConstants.E_AUTH_TOKEN);
+        } catch (final ServiceException ex) {
+            Assert.assertEquals("service exception type", ServiceException.INVALID_REQUEST, ex.getCode());
+            Assert.assertTrue("exception message", ex.getMessage().contains("missing required attribute: authToken"));
+        }
     }
 
     @After
@@ -142,4 +145,3 @@ public class ChangePasswordTest {
         prov.deleteAccount(account3.getId());
     }
 }
-
