@@ -328,7 +328,7 @@ public class Auth extends AccountDocumentHandler {
                         if (responseElement != null) {
                             return responseElement;
                         }
-                        return needTwoFactorAuth(context, request, acct, twoFactorManager, zsc, tokenType, recoveryCode);
+                        return needTwoFactorAuth(context, request, acct, twoFactorManager, zsc, tokenType, recoveryCode, trustedToken);
                     }
                 } else {
                     if (password != null || recoveryCode != null) {
@@ -448,7 +448,7 @@ public class Auth extends AccountDocumentHandler {
     }
 
     private Element needTwoFactorAuth(Map<String, Object> context, Element requestElement, Account account, TwoFactorAuth auth,
-            ZimbraSoapContext zsc, TokenType tokenType, String recoveryCode) throws ServiceException {
+            ZimbraSoapContext zsc, TokenType tokenType, String recoveryCode, TrustedDeviceToken td) throws ServiceException {
         /* two cases here:
          * 1) the user needs to provide a two-factor code.
          *    in this case, the server returns a two-factor auth token in the response header that the client
@@ -459,20 +459,23 @@ public class Auth extends AccountDocumentHandler {
         if (!auth.twoFactorAuthEnabled()) {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED(getTwoFactorAuthRequiredSetupErrorMessage(account));
         } else {
+            HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
             Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
             AuthToken authToken = AuthProvider.getAuthToken(account, recoveryCode != null ? Usage.RESET_PASSWORD : Usage.TWO_FACTOR_AUTH, tokenType);
             response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
             response.addAttribute(AccountConstants.E_LIFETIME, authToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
             authToken.encodeAuthResp(response, false);
             if (recoveryCode != null) {
-                HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-                HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
                 boolean rememberMe = requestElement.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
                 authToken.setIgnoreSameSite(requestElement.getAttributeBool(AccountConstants.A_IGNORE_SAME_SITE_COOKIE, false));
                 authToken.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
             }
             response.addUniqueElement(AccountConstants.E_TRUSTED_DEVICES_ENABLED).setText(account.isFeatureTrustedDevicesEnabled() ? "true" : "false");
             AccountUtil.addTwoFactorAttributes(response, account);
+            if (td != null) {
+                td.encode(httpResp, response, ZimbraCookie.secureCookie(httpReq));
+            }
             return response;
         }
     }
