@@ -1563,6 +1563,9 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_license_election_leader_zimbraId = KnownKey.newKey("");
 
+    @Reloadable
+    public static final KnownKey zimbra_postfix_smtputf8 = KnownKey.newKey("no");
+
 
     static {
         // Automatically set the key name with the variable name.
