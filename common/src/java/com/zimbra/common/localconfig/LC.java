@@ -1568,6 +1568,9 @@ public final class LC {
 
     // ZBUG-4108: Toggle regexp stripping of HTML alt tags containing malicious script.
     public static final KnownKey zimbra_owasp_strip_alt_tags_with_handlers = KnownKey.newKey(true);
+    
+    @Reloadable
+    public static final KnownKey zimbra_postfix_smtputf8 = KnownKey.newKey("no");
 
     static {
         // Automatically set the key name with the variable name.
