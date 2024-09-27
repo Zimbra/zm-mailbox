@@ -179,7 +179,7 @@ public class Props2Js {
 
     public static String getCommentSafeString(String st) {
         return st.replaceAll("<", "") //make sure you can't start a "script" tag within the comment cuz genius IE supposedly exectutes it
-        .replaceAll("\n", ""); //make sure no newline can be injected to start a malicious script too
+        .replaceAll("[\\u000A\\u000D\\u2028\\u2029]", ""); //https://262.ecma-international.org/13.0/#sec-line-terminators
     }
 
     public static void main(String[] argv) throws Exception {
