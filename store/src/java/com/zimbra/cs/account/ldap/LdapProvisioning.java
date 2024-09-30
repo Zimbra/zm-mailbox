@@ -1163,7 +1163,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private String fixupAccountName(String emailAddress) throws ServiceException {
-        if(null == emailAddress){
+        if (null == emailAddress) {
             return null;
         }
         int index = emailAddress.indexOf('@');
@@ -1208,7 +1208,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private Account getAccountByNameInternal(String emailAddress, boolean loadFromMaster)
     throws ServiceException {
-        if(null == emailAddress){
+        if (null == emailAddress) {
             return null;
         }
         emailAddress = fixupAccountName(emailAddress);
