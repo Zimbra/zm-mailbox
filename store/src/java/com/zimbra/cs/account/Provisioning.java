@@ -634,7 +634,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public String getEmailAddrByDomainAlias(String emailAddress) throws ServiceException {
         String addr = null;
-
+        if (StringUtil.isNullOrEmpty(emailAddress)) {
+            return null;
+        }
         String parts[] = emailAddress.split("@");
         if (parts.length == 2) {
             Domain domain = getDomain(Key.DomainBy.name, parts[1], true);

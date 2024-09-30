@@ -1163,6 +1163,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private String fixupAccountName(String emailAddress) throws ServiceException {
+        if (StringUtil.isNullOrEmpty(emailAddress)) {
+            return null;
+        }
         int index = emailAddress.indexOf('@');
         String domain = null;
         if (index == -1) {
@@ -1205,7 +1208,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private Account getAccountByNameInternal(String emailAddress, boolean loadFromMaster)
     throws ServiceException {
-
+        if (StringUtil.isNullOrEmpty(emailAddress)) {
+            return null;
+        }
         emailAddress = fixupAccountName(emailAddress);
 
         Account account = accountCache.getByName(emailAddress);
