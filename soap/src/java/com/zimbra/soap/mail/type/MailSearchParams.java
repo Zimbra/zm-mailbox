@@ -51,7 +51,7 @@ public class MailSearchParams implements SearchParameters {
     private ZmBoolean includeTagDeleted;
 
     /**
-     * @zm-api-field-tag include-items-tagged-for-delete
+     * @zm-api-field-tag include-items-marked-muted
      * @zm-api-field-description Set to <b>1 (true)</b> to include items with the \Muted tag set in results
      */
     @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_MUTED /* includeTagMuted */, required=false)
