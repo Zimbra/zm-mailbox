@@ -57,7 +57,7 @@ public class ActionSelector {
      * <br />
      * For MsgAction     - delete|read|flag|tag|move|update|spam|trash
      * <br />
-     * For ConvAction    - delete|read|flag|priority|tag|move|spam|trash
+     * For ConvAction    - delete|read|flag|priority|tag|move|spam|trash|mute
      * <br />
      * For FolderAction  - read|delete|rename|move|trash|empty|color|[!]grant|revokeorphangrants|url|import|sync|fb|[!]check|update|[!]syncon|retentionpolicy|[!]disableactivesync|webofflinesyncdays
      * <br />
