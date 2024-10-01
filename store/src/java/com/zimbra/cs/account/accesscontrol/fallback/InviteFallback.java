@@ -29,7 +29,7 @@ import com.zimbra.cs.util.Zimbra;
 
 public class InviteFallback extends CheckRightFallback {
     
-    //
+    ////
     // allow the invite right if the authed user has admin folder right on the default calendar folder
     // (calendar folder in which the appointment is to be updated when the owner of the calendar receives 
     // an invite)
