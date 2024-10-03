@@ -35,6 +35,8 @@ import com.zimbra.cs.redolog.op.ModifyVolume;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.SetCurrentVolume;
 import com.zimbra.cs.store.IncomingDirectory;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.external.ExternalStoreManager;
 
 public final class VolumeManager {
 
@@ -215,7 +217,8 @@ public final class VolumeManager {
             if (vol.getType() == Volume.TYPE_MESSAGE || vol.getType() == Volume.TYPE_MESSAGE_SECONDARY) {
                 File path = new File(vol.getRootPath());
                 String[] files = path.list();
-                if (files != null && files.length > 0) {
+                StoreManager sm = StoreManager.getReaderSMInstance(id);
+                if (sm instanceof ExternalStoreManager || (files != null && files.length > 0)) {
                     //have to check DB to see if any of these files are referenced by mail_item; no FK anymore
                     DbConnection conn = DbPool.getConnection();
                     try {
