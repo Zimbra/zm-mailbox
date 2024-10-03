@@ -165,6 +165,11 @@ public final class NativeFormatter extends Formatter {
             handleMessagePart(context, mp, msg);
         } else {
             context.resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
+            context.resp.setCharacterEncoding(
+                    context.params.get("charset") == null
+                        ? context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Charsets.UTF_8.name())
+                        : context.params.get("charset")
+                );
             long size = msg.getSize();
             if (size > 0)
                 context.resp.setContentLength((int)size);
@@ -235,6 +240,11 @@ public final class NativeFormatter extends Formatter {
                     MimeConstants.CT_MESSAGE_RFC822.equals(contentType));
             if (simpleText) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
+                context.resp.setCharacterEncoding(
+                        context.params.get("charset") == null
+                            ? context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Charsets.UTF_8.name())
+                            : context.params.get("charset")
+                    );
             }
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly,
                     context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
