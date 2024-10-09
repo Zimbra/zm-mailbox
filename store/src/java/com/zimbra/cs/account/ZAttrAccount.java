@@ -43,6 +43,93 @@ public abstract class ZAttrAccount  extends MailTarget {
     ///// BEGIN-AUTO-GEN-REPLACE
 
     /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @return LDAPPatchTestAttribute, or true if unset
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public boolean isLDAPPatchTestAttribute() {
+        return getBooleanAttr(Provisioning.A_LDAPPatchTestAttribute, true, true);
+    }
+
+    /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @param LDAPPatchTestAttribute new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public void setLDAPPatchTestAttribute(boolean LDAPPatchTestAttribute) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_LDAPPatchTestAttribute, LDAPPatchTestAttribute ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @param LDAPPatchTestAttribute new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public Map<String,Object> setLDAPPatchTestAttribute(boolean LDAPPatchTestAttribute, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_LDAPPatchTestAttribute, LDAPPatchTestAttribute ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public void unsetLDAPPatchTestAttribute() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_LDAPPatchTestAttribute, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public Map<String,Object> unsetLDAPPatchTestAttribute(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_LDAPPatchTestAttribute, "");
+        return attrs;
+    }
+
+    /**
      * RFC2256: ISO-3166 country 2-letter code
      *
      * @return c, or null if unset
@@ -21018,9 +21105,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @return zimbraFeatureSharedFolderMobileSyncEnabled, or true if unset
@@ -21033,9 +21120,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
@@ -21051,9 +21138,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
@@ -21070,9 +21157,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21087,9 +21174,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param attrs existing map to populate, or null to create a new map
