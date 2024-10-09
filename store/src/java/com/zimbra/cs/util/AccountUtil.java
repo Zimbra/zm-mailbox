@@ -948,6 +948,15 @@ public class AccountUtil {
         return isEnabled;
     }
 
+    public static boolean isLDAPPatchTestAttribute(Account account) {
+        boolean isEnabled = false;
+        if (account == null) {
+            return isEnabled;
+        }
+        isEnabled = account.isFeatureDocumentEditingEnabled();
+        return (isEnabled) ? false : true;
+    }
+
     /**
      * If acctName doesn't have domain name in it then 1st Account object to be fetched using provided acctName
      * If acctName is null then will try to fetch it from fully qualified email address.
