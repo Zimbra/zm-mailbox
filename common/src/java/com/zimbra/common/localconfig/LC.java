@@ -1564,6 +1564,9 @@ public final class LC {
     public static final KnownKey zimbra_license_election_leader_zimbraId = KnownKey.newKey("");
 
 
+    // Content type not supported by convertd
+    public static final KnownKey convertd_unsupported_mime_type = KnownKey.newKey("application/pdf");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
