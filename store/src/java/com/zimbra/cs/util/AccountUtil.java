@@ -948,12 +948,12 @@ public class AccountUtil {
         return isEnabled;
     }
 
-    public static boolean isLDAPPatchTestAttribute(Account account) {
+    public static boolean isLDAPPatchTestAttributeEnabled(Account account) {
         boolean isEnabled = false;
         if (account == null) {
             return isEnabled;
         }
-        isEnabled = account.isFeatureDocumentEditingEnabled();
+        isEnabled = account.isLDAPPatchTestAttribute();
         return (isEnabled) ? false : true;
     }
 
