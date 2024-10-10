@@ -10555,7 +10555,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
 </attr>
-<attr id="4135" name="LDAPPatchTestAttribute" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.4">
+<attr id="4135" name="zimbraLDAPPatchTestAttribute" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.4">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
 </attr>

@@ -47,93 +47,6 @@ public abstract class ZAttrCos extends NamedEntry {
     ///// BEGIN-AUTO-GEN-REPLACE
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
-     * be enabled for shared folders having Admin or Manager permission
-     *
-     * @return LDAPPatchTestAttribute, or true if unset
-     *
-     * @since ZCS 10.1.4
-     */
-    @ZAttr(id=4135)
-    public boolean isLDAPPatchTestAttribute() {
-        return getBooleanAttr(Provisioning.A_LDAPPatchTestAttribute, true, true);
-    }
-
-    /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
-     * be enabled for shared folders having Admin or Manager permission
-     *
-     * @param LDAPPatchTestAttribute new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.4
-     */
-    @ZAttr(id=4135)
-    public void setLDAPPatchTestAttribute(boolean LDAPPatchTestAttribute) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_LDAPPatchTestAttribute, LDAPPatchTestAttribute ? TRUE : FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
-     * be enabled for shared folders having Admin or Manager permission
-     *
-     * @param LDAPPatchTestAttribute new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.4
-     */
-    @ZAttr(id=4135)
-    public Map<String,Object> setLDAPPatchTestAttribute(boolean LDAPPatchTestAttribute, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_LDAPPatchTestAttribute, LDAPPatchTestAttribute ? TRUE : FALSE);
-        return attrs;
-    }
-
-    /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
-     * be enabled for shared folders having Admin or Manager permission
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.4
-     */
-    @ZAttr(id=4135)
-    public void unsetLDAPPatchTestAttribute() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_LDAPPatchTestAttribute, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Feature to enable/disable the mobile sync for shared folders. Default
-     * value is TRUE. The option to sync the shared folders to the Mobile
-     * will be enabled for the users in the webclient. The option will only
-     * be enabled for shared folders having Admin or Manager permission
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.4
-     */
-    @ZAttr(id=4135)
-    public Map<String,Object> unsetLDAPPatchTestAttribute(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_LDAPPatchTestAttribute, "");
-        return attrs;
-    }
-
-    /**
      * RFC2256: common name(s) for which the entity is known by
      *
      * @return cn, or null if unset
@@ -21510,6 +21423,93 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetJunkMessagesIndexingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJunkMessagesIndexingEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @return zimbraLDAPPatchTestAttribute, or true if unset
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public boolean isLDAPPatchTestAttribute() {
+        return getBooleanAttr(Provisioning.A_zimbraLDAPPatchTestAttribute, true, true);
+    }
+
+    /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @param zimbraLDAPPatchTestAttribute new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public void setLDAPPatchTestAttribute(boolean zimbraLDAPPatchTestAttribute) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPPatchTestAttribute, zimbraLDAPPatchTestAttribute ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @param zimbraLDAPPatchTestAttribute new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public Map<String,Object> setLDAPPatchTestAttribute(boolean zimbraLDAPPatchTestAttribute, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPPatchTestAttribute, zimbraLDAPPatchTestAttribute ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public void unsetLDAPPatchTestAttribute() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPPatchTestAttribute, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
+     * be enabled for shared folders having Admin or Manager permission
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public Map<String,Object> unsetLDAPPatchTestAttribute(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPPatchTestAttribute, "");
         return attrs;
     }
 

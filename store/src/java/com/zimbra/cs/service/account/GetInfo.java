@@ -342,6 +342,8 @@ public class GetInfo extends AccountDocumentHandler  {
             } else if (Provisioning.A_zimbraFeatureDocumentEditingEnabled.equals(key)) { 
                 value = AccountUtil.isDocumentEditingEnabled(acct) ? 
                         ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
+            } else if (Provisioning.A_zimbraLDAPPatchTestAttribute.equals(key)) { 
+                value = AccountUtil.isLDAPPatchTestAttribute(acct);
             } else {
                 value = attrsMap.get(key);
 
