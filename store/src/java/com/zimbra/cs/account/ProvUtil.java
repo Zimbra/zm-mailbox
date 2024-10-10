@@ -545,8 +545,8 @@ public class ProvUtil implements HttpDebugListener {
         CREATE_ALWAYSONCLUSTER("createAlwaysOnCluster", "caoc",
                 "{name} [attr1 value1 [attr2 value2...]]", Category.ALWAYSONCLUSTER, 1, Integer.MAX_VALUE),
         CREATE_BULK_ACCOUNTS(
-                "createBulkAccounts", "cabulk", "{domain} {namemask} {number of accounts to create}", Category.MISC, 3,
-                3),
+                "createBulkAccounts", "cabulk", "{domain} {namemask} {number of accounts to create} {password}", Category.MISC, 4,
+                4),
         CREATE_CALENDAR_RESOURCE("createCalendarResource", "ccr",
                 "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
         CREATE_COS(
@@ -2136,11 +2136,11 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doCreateAccountsBulk(String[] args) throws ServiceException {
-        if (args.length < 3) {
+        if (args.length < 4) {
             usage();
         } else {
             String domain = args[1];
-            String password = "test123";
+            String password = args[4];
             String nameMask = args[2];
             int numAccounts = Integer.parseInt(args[3]);
             for (int ix = 0; ix < numAccounts; ix++) {
