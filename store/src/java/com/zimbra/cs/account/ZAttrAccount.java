@@ -21018,9 +21018,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @return zimbraFeatureSharedFolderMobileSyncEnabled, or true if unset
@@ -21033,9 +21033,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
@@ -21051,9 +21051,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param zimbraFeatureSharedFolderMobileSyncEnabled new value
@@ -21070,9 +21070,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21087,9 +21087,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @param attrs existing map to populate, or null to create a new map
