@@ -22,9 +22,11 @@ import java.util.Date;
 import java.util.Map;
 import java.util.List;
 
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning;
@@ -34,6 +36,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.MailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -47,6 +50,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.util.TagUtil;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -208,6 +212,48 @@ public class SaveDraft extends MailDocumentHandler {
                 Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
                 response.addElement(MailConstants.E_MSG);
                 return response;
+            }
+
+            long size=0;
+            String discardedFileNames = "";
+            try {
+                size=mm.getSize();
+                if (size == -1) {
+                    size = (long) ByteUtil.getDataLength(Mime.getInputStream(mm));
+                }
+
+
+                MimeMultipart mmp=(MimeMultipart) mm.getContent();
+                if (size>Provisioning.getInstance().getConfig().getMtaMaxMessageSize()){
+
+                    for(int j=mimeData.uploads.size()-1;j>=0;j--){
+                        FileUploadServlet.Upload up=mimeData.uploads.get(j);
+                        if(size<=Provisioning.getInstance().getConfig().getMtaMaxMessageSize()) break;
+                        String fileName= up.getName();
+                        for(int i =mmp.getCount()-1;i>=0;i--){
+                            BodyPart part=mmp.getBodyPart(i);
+                            if(BodyPart.ATTACHMENT.equalsIgnoreCase(part.getDisposition())&&fileName.equals(part.getFileName())){
+                                mmp.removeBodyPart(i);
+                                size-= (long) (up.getSize()*1.33);
+                                discardedFileNames=discardedFileNames.concat(fileName+",");
+                                FileUploadServlet.deleteUpload(up);
+                                mimeData.uploads.remove(up);
+
+                                break;
+                            }
+                        }
+                    }
+                    mm.setContent(mmp);
+                    mm.saveChanges();
+                }
+
+            } catch (MessagingException e) {
+                throw new RuntimeException(e);
+            }
+            msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
+
+            if(!discardedFileNames.isEmpty()){
+                throw new RuntimeException(discardedFileNames + " could not be uploaded because they exceed the limit of "+Provisioning.getInstance().getConfig().getMtaMaxMessageSize());
             }
 
             if (mailAddress != null && delegatorAccount != null) {
