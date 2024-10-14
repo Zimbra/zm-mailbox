@@ -398,7 +398,7 @@ public class Folder extends MailItem implements FolderStore {
     @Override public boolean inTrash() {
         if (mId <= Mailbox.HIGHEST_SYSTEM_ID)
             return (mId == Mailbox.ID_FOLDER_TRASH);
-        return parent.inTrash();
+        return null != parent ? parent.inTrash() : false;
     }
 
     /** Returns whether the folder is the Junk folder. */
