@@ -87,6 +87,8 @@ import net.fortuna.ical4j.model.property.XProperty;
 public class ZoneInfo2iCalendar {
 
     private static final String CRLF = "\r\n";
+    private static final String Z_PARAM = "%z";
+    private static final String ZERO_MINUTES_REGEX = "00$";
 
     // these are the characters that MUST be escaped: , ; " \n and \ -- note that \
     // becomes \\\\ here because it is double-unescaped during the compile process!
@@ -324,6 +326,9 @@ public class ZoneInfo2iCalendar {
         PropertyList props = new PropertyList();
         String tzname = getObservanceName(tznameFormat, rline);
         if (tzname != null) {
+            if (tzname.equals(Z_PARAM)) {
+                tzname = replaceTzNameVariable(standardOffset, daylightOffset);
+            }
             props.add(new TzName(tzname));
         }
         Time at = rline.getAt();
@@ -397,8 +402,29 @@ public class ZoneInfo2iCalendar {
         }
     }
 
+    private static String replaceTzNameVariable(Time standardOffset, Time daylightOffset) {
+        String stdOffset = null;
+        String dlOffset = null;
+        stdOffset = new TzOffsetTo(new UtcOffset(getUtcOffset(standardOffset))).getValue();
+        stdOffset = stdOffset.replaceAll(ZERO_MINUTES_REGEX, "");
+
+        if (daylightOffset != null) {
+            dlOffset = new TzOffsetTo(new UtcOffset(getUtcOffset(daylightOffset))).getValue();
+            dlOffset = dlOffset.replaceAll(ZERO_MINUTES_REGEX, "");
+        }
+
+        if (dlOffset == null || stdOffset.equals(dlOffset)) {
+            return stdOffset;
+        } else {
+            return stdOffset + "/" + dlOffset;
+        }
+    }
+
     private static Standard toStandardComp(Time gmtOffset, String tznameFormat) {
         PropertyList props = new PropertyList();
+        if (tznameFormat != null && tznameFormat.equals(Z_PARAM)) {
+            tznameFormat = replaceTzNameVariable(gmtOffset, null);
+        }
         if (tznameFormat != null && tznameFormat.length() > 0 && !tznameFormat.contains("%")) {
             props.add(new TzName(iCalEscape(tznameFormat)));
         }
