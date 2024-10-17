@@ -324,6 +324,9 @@ public class ZoneInfo2iCalendar {
         PropertyList props = new PropertyList();
         String tzname = getObservanceName(tznameFormat, rline);
         if (tzname != null) {
+            if (tzname.equals("%z")) {
+                tzname = replaceTzNameVariable(standardOffset, daylightOffset);
+            }
             props.add(new TzName(tzname));
         }
         Time at = rline.getAt();
@@ -397,8 +400,31 @@ public class ZoneInfo2iCalendar {
         }
     }
 
+    private static String replaceTzNameVariable(Time standardOffset, Time daylightOffset) {
+        String stdOffset = null;
+        String dlOffset = null;
+        stdOffset = new TzOffsetTo(new UtcOffset(getUtcOffset(standardOffset))).getValue();
+        stdOffset = stdOffset.replaceAll("00$", "");
+
+        if (daylightOffset != null) {
+            dlOffset = new TzOffsetTo(new UtcOffset(getUtcOffset(daylightOffset))).getValue();
+            dlOffset = dlOffset.replaceAll("00$", "");
+        }
+
+        if (dlOffset == null || stdOffset.equals(dlOffset)) {
+            return stdOffset;
+        } else {
+            return stdOffset + "/" + dlOffset;
+        }
+    }
+
     private static Standard toStandardComp(Time gmtOffset, String tznameFormat) {
         PropertyList props = new PropertyList();
+        if (tznameFormat != null && tznameFormat.equals("%z")) {
+            if (tznameFormat.equals("%z")) {
+                tznameFormat = replaceTzNameVariable(gmtOffset, null);
+            }
+        }
         if (tznameFormat != null && tznameFormat.length() > 0 && !tznameFormat.contains("%")) {
             props.add(new TzName(iCalEscape(tznameFormat)));
         }
