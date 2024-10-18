@@ -55,7 +55,7 @@ public class ModifyCos extends AdminDocumentHandler {
 
         checkRight(zsc, context, cos, attrs);
 
-        //zimbraMailAttachmentMaxSize should not be more than mtaMessageMaxSize
+        // zimbraMailAttachmentMaxSize should not be more than mtaMessageMaxSize
         validateMailAttachmentMaxSize(attrs);
 
         // pass in true to checkImmutable

@@ -133,7 +133,7 @@ public class ModifyAccount extends AdminDocumentHandler {
 
         String oldSuspendReason = account.getAccountSuspensionReason();
 
-        //zimbraMailAttachmentMaxSize should not be more than mtaMessageMaxSize
+        // zimbraMailAttachmentMaxSize should not be more than mtaMessageMaxSize
         validateMailAttachmentMaxSize(attrs);
 
         if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
