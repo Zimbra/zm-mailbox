@@ -69,21 +69,23 @@ public class ModifyCos extends AdminDocumentHandler {
         return response;
     }
 
-    void  validateMailAttachmentMaxSize(Map<String, Object> attrs) throws ServiceException {
-        if (!attrs.containsKey(Provisioning.A_zimbraMailAttachmentMaxSize)) return;
+    void validateMailAttachmentMaxSize(Map<String, Object> attrs) throws ServiceException {
 
-        String name= Provisioning.A_zimbraMailAttachmentMaxSize;
-        String value= attrs.get(name).toString();
-        long mtaMaxMessageSize=Provisioning.getInstance().getConfig().getMtaMaxMessageSize();
+        if (!attrs.containsKey(Provisioning.A_zimbraMailAttachmentMaxSize)) {
+            return;
+        }
+
+        String name = Provisioning.A_zimbraMailAttachmentMaxSize;
+        String value = attrs.get(name).toString();
+        long mtaMaxMessageSize = Provisioning.getInstance().getConfig().getMtaMaxMessageSize();
 
         try {
             long zimbraMailAttachmentMaxSize = Long.parseLong(value);
-
-            if(zimbraMailAttachmentMaxSize>mtaMaxMessageSize){
-                throw AccountServiceException.INVALID_ATTR_VALUE(name+" value("+zimbraMailAttachmentMaxSize+") larger than max allowed: "+mtaMaxMessageSize, null);
+            if (zimbraMailAttachmentMaxSize > mtaMaxMessageSize) {
+                throw AccountServiceException.INVALID_ATTR_VALUE(name + " value(" + zimbraMailAttachmentMaxSize + ") larger than max allowed: " + mtaMaxMessageSize, null);
             }
         } catch (NumberFormatException e) {
-            throw AccountServiceException.INVALID_ATTR_VALUE(name+" must be a valid long: "+value, e);
+            throw AccountServiceException.INVALID_ATTR_VALUE(name + " must be a valid long: " + value, e);
         }
     }
 

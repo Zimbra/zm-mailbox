@@ -7,7 +7,9 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,10 +23,11 @@ public class ModifyAccountTest {
     public void setUp() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
-}
+    }
+
     @Test
     public void testValidateMailAttachmentMaxSize_WithinLimit() {
-        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize,"10000");
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, "10000");
         try {
             modifyAccount.validateMailAttachmentMaxSize(attrs);
         } catch (ServiceException e) {
@@ -34,7 +37,7 @@ public class ModifyAccountTest {
 
     @Test
     public void testValidateMailAttachmentMaxSize_ExceedingLimit() {
-        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize,"100000000");
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, "100000000");
         try {
             modifyAccount.validateMailAttachmentMaxSize(attrs);
             fail("Exception should be thrown");
@@ -45,8 +48,8 @@ public class ModifyAccountTest {
     }
 
     @Test
-    public void testValidateMailAttachmentMaxSize_InvalidLong(){
-        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize,"19999abc");
+    public void testValidateMailAttachmentMaxSize_InvalidLong() {
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, "19999abc");
         try {
             modifyAccount.validateMailAttachmentMaxSize(attrs);
             fail("Exception should be thrown");
