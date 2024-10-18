@@ -18,14 +18,19 @@ package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.common.mailbox.ACLGrant;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.mailbox.Folder;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
@@ -358,7 +363,9 @@ public class WaitSetRequest extends MailDocumentHandler {
                     id = accountDetail.getId();
                 }
 
-                WaitSetMgr.checkRightForAdditionalAccount(id, zsc);
+                if (!checkSharedFolderPermission(zsc, accountDetail, id)) {
+                    WaitSetMgr.checkRightForAdditionalAccount(id, zsc);
+                }
 
                 String tokenStr = accountDetail.getToken();
                 SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
@@ -368,6 +375,68 @@ public class WaitSetRequest extends MailDocumentHandler {
             }
         }
         return toRet;
+    }
+
+    private static boolean checkSharedFolderPermission(ZimbraSoapContext zsc, WaitSetAddSpec accountDetail, String id) throws ServiceException {
+        String authAccountId = zsc.getRequestedAccountId();
+        String sFolderInterests = accountDetail.getFolderInterests();
+        if (sFolderInterests != null && !authAccountId.equals(id)) {
+            List<Integer> folderInterests = convertToIntegerList(sFolderInterests);
+            Account account = getAccountById(id);
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            List<Folder> folders = mailbox.getFolderList(null, SortBy.NONE);
+            return checkPermissions(authAccountId, folderInterests, folders);
+        }
+        return false;
+    }
+
+    private static List<Integer> convertToIntegerList(String folderInterests) {
+        return Splitter.on(',').trimResults().splitToList(folderInterests).stream()
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+    }
+
+    private static Account getAccountById(String id) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.getAccountById(id);
+        if (account == null) {
+            throw ServiceException.INVALID_REQUEST("Account not found", null);
+        }
+        return account;
+    }
+
+    private static boolean checkPermissions(String authAccountId, List<Integer> folderInterests, List<Folder> folders) {
+        ZimbraLog.soap.trace("Checking folder permissions");
+        // Create a map to store folder IDs and their corresponding ACL grants
+        Map<Integer, List<ACLGrant>> folderAclMap = new HashMap<>();
+        for (Folder folder : folders) {
+            folderAclMap.put(folder.getId(), folder.getACLGrants());
+        }
+
+        // Iterate over the folder interests
+        for (Integer folderInterest : folderInterests) {
+            List<ACLGrant> aclGrants = folderAclMap.get(folderInterest);
+            if (aclGrants == null) {
+                return false; // Folder not found
+            }
+
+            boolean hasRequiredPermissions = false;
+            for (ACLGrant aclGrant : aclGrants) {
+                if (authAccountId.equals(aclGrant.getGranteeId())) {
+                    String permissions = aclGrant.getPermissions();
+                    if (permissions.matches(".*[rwiax].*")) {
+                        hasRequiredPermissions = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasRequiredPermissions) {
+                return false; // Required permissions not found
+            }
+        }
+
+        return true; // All folders have the required permissions
     }
 
     private static List<String> parseRemoveAccounts(ZimbraSoapContext zsc, List<Id> ids)
