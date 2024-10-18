@@ -132,6 +132,10 @@ public class ModifyAccount extends AdminDocumentHandler {
         boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
 
         String oldSuspendReason = account.getAccountSuspensionReason();
+
+        // zimbraMailAttachmentMaxSize should not be more than mtaMessageMaxSize
+        validateMailAttachmentMaxSize(attrs);
+
         if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
             String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
             //clearing account suspension reason if new status is active and old status other than active.
@@ -304,6 +308,26 @@ public class ModifyAccount extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.MODIFY_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account);
         return response;
+    }
+
+    void validateMailAttachmentMaxSize(Map<String, Object> attrs) throws ServiceException {
+
+        if (!attrs.containsKey(Provisioning.A_zimbraMailAttachmentMaxSize)) {
+            return;
+        }
+
+        String name = Provisioning.A_zimbraMailAttachmentMaxSize;
+        String value = attrs.get(name).toString();
+        long mtaMaxMessageSize = Provisioning.getInstance().getConfig().getMtaMaxMessageSize();
+
+        try {
+            long zimbraMailAttachmentMaxSize = Long.parseLong(value);
+            if (zimbraMailAttachmentMaxSize > mtaMaxMessageSize) {
+                throw AccountServiceException.INVALID_ATTR_VALUE(name + " value(" + zimbraMailAttachmentMaxSize + ") larger than max allowed: " + mtaMaxMessageSize, null);
+            }
+        } catch (NumberFormatException e) {
+            throw AccountServiceException.INVALID_ATTR_VALUE(name + " must be a valid long: " + value, e);
+        }
     }
 
     public static String getStringAttrNewValue(String attrName, Map<String, Object> attrs) throws ServiceException {

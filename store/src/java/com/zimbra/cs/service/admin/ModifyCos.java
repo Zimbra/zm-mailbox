@@ -55,6 +55,9 @@ public class ModifyCos extends AdminDocumentHandler {
 
         checkRight(zsc, context, cos, attrs);
 
+        // zimbraMailAttachmentMaxSize should not be more than mtaMessageMaxSize
+        validateMailAttachmentMaxSize(attrs);
+
         // pass in true to checkImmutable
         prov.modifyAttrs(cos, attrs, true);
 
@@ -64,6 +67,26 @@ public class ModifyCos extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.MODIFY_COS_RESPONSE);
         GetCos.encodeCos(response, cos);
         return response;
+    }
+
+    void validateMailAttachmentMaxSize(Map<String, Object> attrs) throws ServiceException {
+
+        if (!attrs.containsKey(Provisioning.A_zimbraMailAttachmentMaxSize)) {
+            return;
+        }
+
+        String name = Provisioning.A_zimbraMailAttachmentMaxSize;
+        String value = attrs.get(name).toString();
+        long mtaMaxMessageSize = Provisioning.getInstance().getConfig().getMtaMaxMessageSize();
+
+        try {
+            long zimbraMailAttachmentMaxSize = Long.parseLong(value);
+            if (zimbraMailAttachmentMaxSize > mtaMaxMessageSize) {
+                throw AccountServiceException.INVALID_ATTR_VALUE(name + " value(" + zimbraMailAttachmentMaxSize + ") larger than max allowed: " + mtaMaxMessageSize, null);
+            }
+        } catch (NumberFormatException e) {
+            throw AccountServiceException.INVALID_ATTR_VALUE(name + " must be a valid long: " + value, e);
+        }
     }
 
     @Override
