@@ -7214,6 +7214,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMailRecallEnabled = "zimbraFeatureMailRecallEnabled";
 
     /**
+     * Secret key used in Mail Recall to make it more secure from spoof.
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4135)
+    public static final String A_zimbraFeatureMailRecallSecretKey = "zimbraFeatureMailRecallSecretKey";
+
+    /**
      * Time(in minutes) within which a message can be recalled. The default
      * time is 30 minutes and accepts value from 1 to 30.
      *
@@ -7508,9 +7516,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @since ZCS 10.1.0

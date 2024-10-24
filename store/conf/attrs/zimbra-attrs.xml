@@ -10339,7 +10339,7 @@ TODO: delete them permanently from here
 <attr id="4093" name="zimbraTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="9.0.0">
   <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
-<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
+<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" callback="GenerateSecretKeyCallback" since="10.1.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enables the mail recall functionality</desc>
@@ -10554,5 +10554,9 @@ TODO: delete them permanently from here
 <attr id="4134" name="zimbraFeatureSharedFolderMobileSyncEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
+</attr>
+
+<attr id="4135" name="zimbraFeatureMailRecallSecretKey" type="string" cardinality="single" optionalIn="globalConfig" since="10.1.0">
+  <desc>Secret key used in Mail Recall to make it more secure from spoof.</desc>
 </attr>
 </attrs>
