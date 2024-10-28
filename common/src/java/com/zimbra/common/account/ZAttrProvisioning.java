@@ -6991,6 +6991,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureDelayedIndexEnabled = "zimbraFeatureDelayedIndexEnabled";
 
     /**
+     * Feature to enable delivery status notification
+     *
+     * @since ZCS 10.1.4
+     */
+    @ZAttr(id=4135)
+    public static final String A_zimbraFeatureDeliveryStatusNotificationEnabled = "zimbraFeatureDeliveryStatusNotificationEnabled";
+
+    /**
      * enable end-user mail discarding defined in mail filters features
      *
      * @since ZCS 6.0.0_BETA1
@@ -7508,9 +7516,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @since ZCS 10.1.0
