@@ -132,7 +132,7 @@ public class SendMsg extends MailDocumentHandler {
                boolean noSaveToSent = request.getAttributeBool(MailConstants.A_NO_SAVE_TO_SENT, false);
                boolean fetchSavedMsg = request.getAttributeBool(MailConstants.A_FETCH_SAVED_MSG, false);
                boolean deliveryReport = false;
-               if (LC.delivery_report_enabled.booleanValue()) {
+               if (authAcct.getBooleanAttr(Provisioning.A_zimbraFeatureDeliveryStatusNotificationEnabled, false)) {
                    deliveryReport = request.getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false);
                }
 
