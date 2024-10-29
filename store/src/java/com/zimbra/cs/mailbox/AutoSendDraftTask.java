@@ -118,32 +118,36 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
         mailSender.setIdentity(StringUtil.isNullOrEmpty(msg.getDraftIdentityId()) ? null : mbox.getAccount().getIdentityById(msg.getDraftIdentityId()));
         Provisioning provisioning = Provisioning.getInstance();
         Account delegatorAccount = provisioning.getAccountById(getDelegatorAccountId());
-        if (delegatorAccount != null && Provisioning.onLocalServer(delegatorAccount)) {
-            delegatorMbox = MailboxManager.getInstance().getMailboxByAccount(delegatorAccount);
+        if (null != delegatorAccount) {
+            if (Provisioning.onLocalServer(delegatorAccount)) {
+                delegatorMbox = MailboxManager.getInstance().getMailboxByAccount(delegatorAccount);
             /* if delegator is on same server, just fetch the delegatorMbox object
             and use it for sending the Mime. */
-            mailSender.sendMimeMessage(new OperationContext(mbox), delegatorMbox, msg.getMimeMessage());
-        } else {
-            /* if delegator is on different server, invoke the saveDraft request on that server. */
-            Element reqForDelegatorAccount = getRequest();
-            AuthToken tokenForSetup = null;
-            if (delegatorAccount != null) {
-                try {
-                    tokenForSetup = AuthProvider.getAuthToken(delegatorAccount, AuthToken.Usage.AUTH);
-                } catch (AuthProviderException e) {
-                    throw AuthProviderException.FAILURE("Error while getting AuthToken of Delegator Account");
+                mailSender.sendMimeMessage(new OperationContext(mbox), delegatorMbox, msg.getMimeMessage());
+            } else {
+                /* if delegator is on different server, invoke the saveDraft request on that server. */
+                Element reqForDelegatorAccount = getRequest();
+                AuthToken tokenForSetup = null;
+                if (delegatorAccount != null) {
+                    try {
+                        tokenForSetup = AuthProvider.getAuthToken(delegatorAccount, AuthToken.Usage.AUTH);
+                    } catch (AuthProviderException e) {
+                        throw AuthProviderException.FAILURE("Error while getting AuthToken of Delegator Account");
+                    }
+                }
+                if (getServerName() != null && reqForDelegatorAccount != null) {
+                    String url = URLUtil.getSoapURL(getServerName(), true);
+                    SoapHttpTransport transport = new SoapHttpTransport(url);
+                    transport.setAuthToken(tokenForSetup.toZAuthToken());
+                    transport.setUserAgent(ZIMBRA_MAILBOX_APP, ZIMBRA_CONSTANT_VERSION);
+                    reqForDelegatorAccount.addAttribute(SaveDraft.IS_DELEGATED_REQUEST, true);
+                    reqForDelegatorAccount.addAttribute(SaveDraft.DELEGATEE_ACCOUNT_ID, mbox.getAccountId());
+                    // invoking the Soap call for SaveDraftRequest on a delegator's server.
+                    transport.invoke(reqForDelegatorAccount);
                 }
             }
-            if (getServerName() != null && reqForDelegatorAccount != null) {
-                String url = URLUtil.getSoapURL(getServerName(), true);
-                SoapHttpTransport transport = new SoapHttpTransport(url);
-                transport.setAuthToken(tokenForSetup.toZAuthToken());
-                transport.setUserAgent(ZIMBRA_MAILBOX_APP, ZIMBRA_CONSTANT_VERSION);
-                reqForDelegatorAccount.addAttribute(SaveDraft.IS_DELEGATED_REQUEST, true);
-                reqForDelegatorAccount.addAttribute(SaveDraft.DELEGATEE_ACCOUNT_ID, mbox.getAccountId());
-                // invoking the Soap call for SaveDraftRequest on a delegator's server.
-                transport.invoke(reqForDelegatorAccount);
-            }
+        } else {
+            mailSender.sendMimeMessage(new OperationContext(mbox), mbox, msg.getMimeMessage());
         }
         // now delete the draft
         mbox.delete(null, draftId, MailItem.Type.MESSAGE);
