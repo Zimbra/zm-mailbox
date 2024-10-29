@@ -118,7 +118,8 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
         mailSender.setIdentity(StringUtil.isNullOrEmpty(msg.getDraftIdentityId()) ? null : mbox.getAccount().getIdentityById(msg.getDraftIdentityId()));
         Provisioning provisioning = Provisioning.getInstance();
         Account delegatorAccount = provisioning.getAccountById(getDelegatorAccountId());
-        if (delegatorAccount != null && Provisioning.onLocalServer(delegatorAccount)) {
+        if (delegatorAccount != null) {
+            if (Provisioning.onLocalServer(delegatorAccount)) {
             delegatorMbox = MailboxManager.getInstance().getMailboxByAccount(delegatorAccount);
             /* if delegator is on same server, just fetch the delegatorMbox object
             and use it for sending the Mime. */
@@ -144,6 +145,10 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
                 // invoking the Soap call for SaveDraftRequest on a delegator's server.
                 transport.invoke(reqForDelegatorAccount);
             }
+        }
+        } else {
+            //if delegator account is null then flow will continue as existing
+             mailSender.sendMimeMessage(new OperationContext(mbox), mbox, msg.getMimeMessage());
         }
         // now delete the draft
         mbox.delete(null, draftId, MailItem.Type.MESSAGE);
