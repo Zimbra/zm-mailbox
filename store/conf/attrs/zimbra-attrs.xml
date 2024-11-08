@@ -10560,4 +10560,9 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Feature to enable delivery status notification</desc>
 </attr>
+
+<attr id="4136" name="zimbraFeaturePasswordExpiryReminderEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.4">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Feature to enable password expiry reminder</desc>
+</attr>
 </attrs>
