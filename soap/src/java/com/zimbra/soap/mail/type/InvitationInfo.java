@@ -80,14 +80,12 @@ public class InvitationInfo extends InviteComponent {
      * @zm-api-field-description Timezones
      */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
-    @GraphQLQuery(name=GqlConstants.TIMEZONES, description="Timezones")
     private final List<CalTZInfo> timezones = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Meeting notes parts
      */
     @XmlElement(name=MailConstants.E_MIMEPART /* mp */, required=false)
-    @GraphQLQuery(name=GqlConstants.MIME_PARTS, description="Meeting notes parts")
     private final List<MimePartInfo> mimeParts = Lists.newArrayList();
 
     /**

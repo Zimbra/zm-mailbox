@@ -69,7 +69,6 @@ public class Policy {
      * @zm-api-field-description Retention policy type
      */
     @XmlAttribute(name=MailConstants.A_RETENTION_POLICY_TYPE /* type */, required=false)
-    @GraphQLQuery(name="type", description="Policy type")
     private Type type;
 
     /**
@@ -77,7 +76,6 @@ public class Policy {
      * @zm-api-field-description ID
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
-    @GraphQLQuery(name="id", description="Policy id")
     private String id;
 
     /**
@@ -85,7 +83,6 @@ public class Policy {
      * @zm-api-field-description Name
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
-    @GraphQLQuery(name="name", description="Policy name")
     private String name;
 
     /**
@@ -93,7 +90,6 @@ public class Policy {
      * @zm-api-field-description Duration
      */
     @XmlAttribute(name=MailConstants.A_LIFETIME /* lifetime */, required=false)
-    @GraphQLQuery(name="lifetime", description="Policy duration")
     private String lifetime;
 
     /**

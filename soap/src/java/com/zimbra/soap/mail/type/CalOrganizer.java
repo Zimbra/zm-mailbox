@@ -90,7 +90,6 @@ public class CalOrganizer implements CalOrganizerInterface {
      * @zm-api-field-description Non-standard parameters (XPARAMs)
      */
     @XmlElement(name=MailConstants.E_CAL_XPARAM /* xparam */, required=false)
-    @GraphQLQuery(name=GqlConstants.XPARAMS, description="Non-standard parameters")
     private final List<XParam> xParams = Lists.newArrayList();
 
     public CalOrganizer() {

@@ -103,7 +103,6 @@ public class Folder {
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="id", description="The folder id")
     private String id;
 
     /**
@@ -112,7 +111,6 @@ public class Folder {
      */
     @XmlAttribute(name=MailConstants.A_UUID /* uuid */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="uuid", description="Item's UUID - a globally unique identifier")
     private String uuid;
 
     /**
@@ -121,7 +119,6 @@ public class Folder {
      * Cannot contain ':', '"', '/', or any character below 0x20
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
-    @GraphQLQuery(name="name", description="Name of folder; max length 128; whitespace is trimmed by server; Cannot contain ':', '\"', '/', or any character below 0x20")
     private String name;
 
     /**
@@ -129,7 +126,6 @@ public class Folder {
      * @zm-api-field-description Absolute Folder path
      */
     @XmlAttribute(name=MailConstants.A_ABS_FOLDER_PATH /* absFolderPath */, required=false)
-    @GraphQLQuery(name="absoluteFolderPath", description="Absolute Folder path")
     private String absoluteFolderPath;
 
     /**
@@ -137,7 +133,6 @@ public class Folder {
      * @zm-api-field-description ID of parent folder (absent for root folder)
      */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
-    @GraphQLQuery(name="parentId", description="ID of parent folder (absent for root folder)")
     private String parentId;
 
     /**
@@ -145,7 +140,6 @@ public class Folder {
      * @zm-api-field-description UUID of parent folder (absent for root folder)
      */
     @XmlAttribute(name=MailConstants.A_FOLDER_UUID /* luuid */, required=false)
-    @GraphQLQuery(name="parentFolderUuid", description="UUID of parent folder (absent for root folder)")
     private String folderUuid;
 
     /**
@@ -155,7 +149,6 @@ public class Folder {
      * sync is turned on(~), folder does n(o)t allow inferiors / children
      */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
-    @GraphQLQuery(name="flags", description="checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*), does not (i)nherit rights from parent, is a s(y)nc folder with external data source, sync is turned on(~), folder does n(o)t allow inferiors / children")
     private String flags;
 
     /**
@@ -163,7 +156,6 @@ public class Folder {
      * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
      */
     @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
-    @GraphQLQuery(name="color", description="color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7")
     private Integer color;
 
     /**
@@ -171,7 +163,6 @@ public class Folder {
      * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
      */
     @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
-    @GraphQLQuery(name="rgb", description="RGB color in format #rrggbb where r,g and b are hex digits")
     private String rgb;
 
     /**
@@ -179,7 +170,6 @@ public class Folder {
      * @zm-api-field-description Number of unread messages in folder
      */
     @XmlAttribute(name=MailConstants.A_UNREAD /* u */, required=false)
-    @GraphQLQuery(name="unreadCount", description="Number of unread messages in folder")
     private Integer unreadCount;
 
     /**
@@ -188,7 +178,6 @@ public class Folder {
      * <b>IMAP \Deleted</b> flag set
      */
     @XmlAttribute(name=MailConstants.A_IMAP_UNREAD /* i4u */, required=false)
-    @GraphQLQuery(name="imapUnreadCount", description="Number of unread messages with this tag, including those with the IMAP \\Deleted flag set")
     private Integer imapUnreadCount;
 
     /**
@@ -198,7 +187,6 @@ public class Folder {
      * possible values are the same as <b>&lt;SearchRequest></b>'s {types}: <b>conversation|message|contact|etc</b>
      */
     @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW /* view */, required=false)
-    @GraphQLQuery(name="view", description="Default type for the folder; used by web client to decide which view to use.")
     private View view = View.UNKNOWN;
 
     /**
@@ -206,7 +194,6 @@ public class Folder {
      * @zm-api-field-description Revision
      */
     @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
-    @GraphQLQuery(name="revision", description="Revision")
     private Integer revision;
 
     /**
@@ -214,7 +201,6 @@ public class Folder {
      * @zm-api-field-description Modified sequence
      */
     @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
-    @GraphQLQuery(name="modifiedSequence", description="Modified sequence")
     private Integer modifiedSequence;
 
     /**
@@ -222,7 +208,6 @@ public class Folder {
      * @zm-api-field-description Modified date in seconds
      */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
-    @GraphQLQuery(name="lastModified", description="Modified date in seconds")
     private Long changeDate;
 
     /**
@@ -230,7 +215,6 @@ public class Folder {
      * @zm-api-field-description Number of non-subfolder items in folder
      */
     @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
-    @GraphQLQuery(name="itemCount", description="Number of non-subfolder items in folder")
     private Integer itemCount;
 
     /**
@@ -239,7 +223,6 @@ public class Folder {
      * <b>IMAP \Deleted</b> flag set
      */
     @XmlAttribute(name=MailConstants.A_IMAP_NUM /* i4n */, required=false)
-    @GraphQLQuery(name="imapItemCount", description="Number of non-subfolder items in folder, including those with the IMAP \\Deleted flag set")
     private Integer imapItemCount;
 
     /**
@@ -247,7 +230,6 @@ public class Folder {
      * @zm-api-field-description Total size of all of non-subfolder items in folder
      */
     @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
-    @GraphQLQuery(name="totalSize", description="Total size of all non-subfolder items in folder")
     private Long totalSize;
 
     /**
@@ -255,7 +237,6 @@ public class Folder {
      * @zm-api-field-description Imap modified sequence
      */
     @XmlAttribute(name=MailConstants.A_IMAP_MODSEQ /* i4ms */, required=false)
-    @GraphQLQuery(name="imapModifiedSequence", description="Imap modified sequence")
     private Integer imapModifiedSequence;
 
     /**
@@ -263,7 +244,6 @@ public class Folder {
      * @zm-api-field-description IMAP UIDNEXT
      */
     @XmlAttribute(name=MailConstants.A_IMAP_UIDNEXT /* i4next */, required=false)
-    @GraphQLQuery(name="imapUidNext", description="IMAP UIDNEXT")
     private Integer imapUidNext;
 
     /**
@@ -271,11 +251,9 @@ public class Folder {
      * @zm-api-field-description URL (RSS, iCal, etc.) this folder syncs its contents to
      */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
-    @GraphQLQuery(name="url", description="URL (RSS, iCal, etc.) this folder syncs its contents to")
     private String url;
 
     @XmlAttribute(name=MailConstants.A_ACTIVESYNC_DISABLED /* activesyncdisabled */, required=false)
-    @GraphQLQuery(name="activeSyncDisabled", description="Active sync status")
     private ZmBoolean activeSyncDisabled;
 
     /**
@@ -283,7 +261,6 @@ public class Folder {
      * @zm-api-field-description Number of days for which web client would sync folder data for offline use
      */
     @XmlAttribute(name=MailConstants.A_WEB_OFFLINE_SYNC_DAYS /* webOfflineSyncDays */, required=false)
-    @GraphQLQuery(name="webOfflineSyncDays", description="Number of days for which web client would sync folder data for offline use")
     private Integer webOfflineSyncDays;
 
     /**
@@ -293,7 +270,6 @@ public class Folder {
      * folder
      */
     @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=false)
-    @GraphQLQuery(name="rights", description="For remote folders, the access rights the authenticated user has on the folder. c | i | r")
     private String perm;
 
     /**
@@ -301,7 +277,6 @@ public class Folder {
      * @zm-api-field-description Recursive
      */
     @XmlAttribute(name=MailConstants.A_RECURSIVE /* recursive */, required=false)
-    @GraphQLQuery(name="recursive", description="Recursive")
     private ZmBoolean recursive;
 
     /**
@@ -309,7 +284,6 @@ public class Folder {
      * @zm-api-field-description URL to the folder in the REST interface for rest-enabled apps (such as notebook)
      */
     @XmlAttribute(name=MailConstants.A_REST_URL /* rest */, required=false)
-    @GraphQLQuery(name="restUrl", description="URL to the folder in the REST interface for rest-enabled apps (such as notebook)")
     private String restUrl;
 
     /**
@@ -317,7 +291,6 @@ public class Folder {
      * @zm-api-field-description whether this folder can be deleted
      */
     @XmlAttribute(name=MailConstants.A_DELETABLE /* deletable */, required=false)
-    @GraphQLQuery(name="deleteable", description="Whether this folder can be deleted")
     private ZmBoolean deletable;
 
     /**
@@ -325,7 +298,6 @@ public class Folder {
      * @zm-api-field-description Custom metadata
      */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
-    @GraphQLQuery(name="metadatas", description="Custom metadatas")
     private final List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
     /**
@@ -333,7 +305,6 @@ public class Folder {
      */
     @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ACL /* acl */, required=false)
-    @GraphQLQuery(name="acl", description="ACL for sharing")
     private Acl acl;
 
     /**
@@ -344,14 +315,12 @@ public class Folder {
         @XmlElement(name=MailConstants.E_MOUNT /* link */, type=Mountpoint.class),
         @XmlElement(name=MailConstants.E_SEARCH /* search */, type=SearchFolder.class)
     })
-    @GraphQLQuery(name="subfolders", description="Subfolders")
     private final List<Folder> subfolders = new ArrayList<Folder>();
 
     /**
      * @zm-api-field-description Retention policy
      */
     @XmlElement(name=MailConstants.E_RETENTION_POLICY /* retentionPolicy */, required=false)
-    @GraphQLQuery(name="retentionPolicy", description="Retention policy")
     private RetentionPolicy retentionPolicy;
 
     public Folder() {

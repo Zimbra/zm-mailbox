@@ -50,7 +50,6 @@ public class Acl {
      *   Value of 0 indicates that these grants never expire.
      */
     @XmlAttribute(name=MailConstants.A_INTERNAL_GRANT_EXPIRY /* internalGrantExpiry */, required=false)
-    @GraphQLQuery(name="internalGrantExpiry", description="Time when grants to internal grantees expire.")
     private Long internalGrantExpiry;
 
     /**
@@ -61,14 +60,12 @@ public class Acl {
      *   Value of 0 indicates that these grants never expire.
      */
     @XmlAttribute(name=MailConstants.A_GUEST_GRANT_EXPIRY /* guestGrantExpiry */, required=false)
-    @GraphQLQuery(name="guestGrantExpiry", description="Time when grants to guest grantees expire.")
     private Long guestGrantExpiry;
 
     /**
      * @zm-api-field-description Grants
      */
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
-    @GraphQLQuery(name="grants", description="Grants")
     private List<Grant> grants = Lists.newArrayList();
 
     public Acl() {

@@ -38,7 +38,6 @@ public class PreAuth {
      */
     @XmlAttribute(required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="timestamp", description="Time stamp")
     private long timestamp;
     /**
      * @zm-api-field-tag expires
@@ -47,14 +46,12 @@ public class PreAuth {
      * notion of expiration (like a Kerberos TGT lifetime, for example).
      */
     @XmlAttribute
-    @GraphQLQuery(name="expires", description="Expiration time of the auth token, in milliseconds. Set to 0 to use the default for the account.")
     private Long expires;
     /**
      * @zm-api-field-tag computed-preauth-value
      * @zm-api-field-description Computed preauth value
      */
     @XmlValue
-    @GraphQLQuery(name="value", description="Computed preauth value")
     private String value;
 
     @GraphQLNonNull

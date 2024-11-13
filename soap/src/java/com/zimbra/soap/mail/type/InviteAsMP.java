@@ -114,7 +114,6 @@ public class InviteAsMP extends MessageCommon {
         @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */, type=ShareNotification.class),
         @XmlElement(name=MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION /* dlSubs */, type=DLSubscriptionNotification.class)
     })
-    @GraphQLQuery(name=GqlConstants.CONTENT_ELEMS, description="Content elements")
     private List<Object> contentElems = Lists.newArrayList();
 
     public InviteAsMP() {

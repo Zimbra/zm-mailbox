@@ -140,7 +140,7 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
     /**
      * @zm-api-field-description X Name rules
      */
-    @XmlElement(name=MailConstants.E_CAL_RULE_XNAME /* rule-x-name */, required=false)
+    @XmlElement(name=MailConstants.E_CAL_RULE_XNAME /* rule_x_name */, required=false)
     private final List<XNameRule> xNames = Lists.newArrayList();
 
     /**

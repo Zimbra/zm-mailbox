@@ -66,7 +66,6 @@ public class MimePartInfo {
      * @zm-api-field-description MIME Parts
      */
     @XmlElement(name=MailConstants.E_MIMEPART /* mp */, required=false)
-    @GraphQLQuery(name=GqlConstants.MIME_PARTS, description="Mime Parts")
     private final List<MimePartInfo> mimeParts = Lists.newArrayList();
 
     /**

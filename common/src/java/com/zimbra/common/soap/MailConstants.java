@@ -1050,7 +1050,7 @@ public final class MailConstants {
     public static final String E_CAL_RULE_BYMONTH = "bymonth";
     public static final String E_CAL_RULE_BYSETPOS = "bysetpos";
     public static final String E_CAL_RULE_WKST = "wkst";
-    public static final String E_CAL_RULE_XNAME = "rule-x-name";
+    public static final String E_CAL_RULE_XNAME = "rule_x_name";
 
     public static final String E_CAL_TZ = "tz";
     public static final String E_CAL_TZ_STANDARD = "standard";

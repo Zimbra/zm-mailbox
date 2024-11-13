@@ -47,7 +47,6 @@ public class Grant {
      */
     @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="permissions", description="Rights - Some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x), view (p)rivate, view (f)reebusy, (c)reate subfolder")
     private String perm;
 
     /**
@@ -65,7 +64,6 @@ public class Grant {
      */
     @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="granteeType", description="The type of grantee")
     private GrantGranteeType granteeType;
 
     /**
@@ -74,7 +72,6 @@ public class Grant {
      */
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="granteeId", description="The grantee id")
     private String granteeId;
 
     /**
@@ -89,7 +86,6 @@ public class Grant {
      * grant never expires.
      */
     @XmlAttribute(name=MailConstants.A_EXPIRY /* expiry */, required=false)
-    @GraphQLQuery(name="expiry", description="Time when this grant expires")
     private Long expiry;
 
     /**
@@ -99,7 +95,6 @@ public class Grant {
      * the address in the default domain.
      */
     @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
-    @GraphQLQuery(name="granteeName", description="Name or email address of the principal being granted rights.")
     private String granteeName;
 
     /**
@@ -107,7 +102,6 @@ public class Grant {
      * @zm-api-field-description Optional argument.  password when {grantee-type} is "guest"
      */
     @XmlAttribute(name=MailConstants.A_PASSWORD /* pw */, required=false)
-    @GraphQLQuery(name="password", description="Password for when granteeType is guest")
     private String guestPassword;
 
     /**
@@ -115,7 +109,6 @@ public class Grant {
      * @zm-api-field-description Optional argument.  Access key when {grantee-type} is "key"
      */
     @XmlAttribute(name=MailConstants.A_ACCESSKEY /* key */, required=false)
-    @GraphQLQuery(name="accessKey", description="Access key when granteeType is key")
     private String accessKey;
 
     public Grant() {

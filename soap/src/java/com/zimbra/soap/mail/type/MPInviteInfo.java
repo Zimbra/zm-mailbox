@@ -51,7 +51,6 @@ public class MPInviteInfo {
      * @zm-api-field-description Calendar item type - <b>appt|task</b>
      */
     @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE /* type */, required=true)
-    @GraphQLQuery(name=GqlConstants.CALENDAR_ITEM_TYPE, description="Calendar item type - appt|task")
     private final String calItemType;
 
     /**

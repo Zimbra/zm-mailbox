@@ -46,7 +46,6 @@ public class ActionResult {
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name=GqlConstants.IDS, description="Comma-separated list of ids which have been successfully processed")
     private final String id;
 
     /**
@@ -62,7 +61,6 @@ public class ActionResult {
      * @zm-api-field-description Comma-separated list of non-existent ids (if requested)
      */
     @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
-    @GraphQLQuery(name=GqlConstants.NON_EXISTENT_IDS, description="Comma-separated list of non-existent ids (if requested)")
     protected String nonExistentIds;
 
     /**

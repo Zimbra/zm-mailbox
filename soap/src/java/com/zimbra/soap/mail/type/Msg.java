@@ -142,7 +142,6 @@ public class Msg {
      * @zm-api-field-description Email address information
      */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
-    @GraphQLQuery(name=GqlConstants.EMAILADDRESSES, description="Email address information")
     private final List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_CAL_TZ but does no further processing.

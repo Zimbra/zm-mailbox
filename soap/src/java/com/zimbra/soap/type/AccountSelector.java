@@ -39,7 +39,6 @@ public class AccountSelector {
      */
     @XmlAttribute(name=AdminConstants.A_BY, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="accountBy", description="Select the meaning of {acct-selector-key}")
     private final AccountBy accountBy;
 
     /**
@@ -47,7 +46,6 @@ public class AccountSelector {
      * @zm-api-field-description The key used to identify the account. Meaning determined by <b>{acct-selector-by}</b>
      */
     @XmlValue
-    @GraphQLQuery(name="key", description="The key used to identify the account. Meaning determined by {acct-selector-by}")
     private final String key;
 
     /**

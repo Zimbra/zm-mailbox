@@ -36,7 +36,6 @@ public class DocumentActionResult extends ActionResult {
      * @zm-api-field-description Grantee Zimbra ID
      */
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
-    @GraphQLQuery(name="zimbraId", description="Grantee Zimbra Id")
     private String zimbraId;
 
     /**
@@ -44,7 +43,6 @@ public class DocumentActionResult extends ActionResult {
      * @zm-api-field-description Display name
      */
     @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
-    @GraphQLQuery(name="displayName", description="Display name")
     private String displayName;
 
     /**
@@ -52,7 +50,6 @@ public class DocumentActionResult extends ActionResult {
      * @zm-api-field-description Access key (Password)
      */
     @XmlAttribute(name=MailConstants.A_ACCESSKEY /* key */, required=false)
-    @GraphQLQuery(name="accessKey", description="Access key (password)")
     private String accessKey;
 
     /**

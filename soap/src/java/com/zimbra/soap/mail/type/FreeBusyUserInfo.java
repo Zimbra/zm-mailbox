@@ -48,7 +48,6 @@ public class FreeBusyUserInfo {
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name=GqlConstants.IDENTIFIER, description="Account identifier (email or id)")
     private final String id;
 
     /**

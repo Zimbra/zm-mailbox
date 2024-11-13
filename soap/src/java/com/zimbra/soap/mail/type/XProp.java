@@ -67,7 +67,6 @@ public class XProp implements XPropInterface {
      * @zm-api-field-description XPARAMs
      */
     @XmlElement(name=MailConstants.E_CAL_XPARAM, required=false)
-    @GraphQLQuery(name=GqlConstants.XPARAMS, description="XPARAMs")
     private List<XParam> xParams = Lists.newArrayList();
 
     /**

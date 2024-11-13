@@ -58,7 +58,6 @@ implements InviteComponentCommonInterface {
      * @zm-api-field-description RSVP flag.  Set if response requested, unset if no response requested
      */
     @XmlAttribute(name=MailConstants.A_CAL_RSVP /* rsvp */, required=false)
-    @GraphQLQuery(name=GqlConstants.RSVP, description="RSVP flag.  Set if response requested, unset if no response requested")
     private final ZmBoolean rsvp;
 
     /**
@@ -142,7 +141,6 @@ implements InviteComponentCommonInterface {
      * @zm-api-field-description x_uid
      */
     @XmlAttribute(name="x_uid", required=false)
-    @GraphQLQuery(name=GqlConstants.XUID, description="XUID")
     private String xUid;
 
     /**

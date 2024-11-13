@@ -61,7 +61,6 @@ public class Signature {
      * @zm-api-field-description Content of the signature
      */
     @XmlElement(name=AccountConstants.E_CONTENT)
-    @GraphQLQuery(name=GqlConstants.CONTENT_LIST, description="Content of the signature")
     private List<SignatureContent> contentList = new ArrayList<SignatureContent>();
 
     /**

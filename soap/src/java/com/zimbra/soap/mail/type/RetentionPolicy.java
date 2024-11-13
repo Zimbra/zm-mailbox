@@ -50,7 +50,6 @@ public class RetentionPolicy {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_KEEP, required=false)
     @XmlElement(name=MailConstants.E_POLICY, required=false)
-    @GraphQLQuery(name="keep", description="`Keep` retention policies")
     private List<Policy> keep = Lists.newArrayList();
 
     /**
@@ -59,7 +58,6 @@ public class RetentionPolicy {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_PURGE, required=false)
     @XmlElement(name=MailConstants.E_POLICY, required=false)
-    @GraphQLQuery(name="purge", description="`Purge` retention policies")
     private List<Policy> purge = Lists.newArrayList();
 
     public RetentionPolicy() {

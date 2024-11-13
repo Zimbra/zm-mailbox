@@ -66,7 +66,6 @@ implements InviteComponentInterface
      * @zm-api-field-description Categories - for iCalendar CATEGORY properties
      */
     @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */, required=false)
-    @GraphQLQuery(name=GqlConstants.CATEGORIES, description="for iCalendar CATEGORY properties")
     private final List<String> categories = Lists.newArrayList();
 
     /**
@@ -74,7 +73,6 @@ implements InviteComponentInterface
      * @zm-api-field-description Comments - for iCalendar COMMENT properties
      */
     @XmlElement(name=MailConstants.E_CAL_COMMENT /* comment */, required=false)
-    @GraphQLQuery(name=GqlConstants.COMMENTS, description="for iCalendar COMMENT properties")
     private final List<String> comments = Lists.newArrayList();
 
     /**
@@ -82,7 +80,6 @@ implements InviteComponentInterface
      * @zm-api-field-description Contacts - for iCalendar CONTACT properties
      */
     @XmlElement(name=MailConstants.E_CAL_CONTACT /* contact */, required=false)
-    @GraphQLQuery(name=GqlConstants.CONTACTS, description="for iCalendar CONTACT properties")
     private final List<String> contacts = Lists.newArrayList();
 
     /**
@@ -95,21 +92,18 @@ implements InviteComponentInterface
      * @zm-api-field-description Attendees
      */
     @XmlElement(name=MailConstants.E_CAL_ATTENDEE /* at */, required=false)
-    @GraphQLQuery(name=GqlConstants.ATTENDEES, description="List of attendees")
     private final List<CalendarAttendee> attendees = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Alarm information
      */
     @XmlElement(name=MailConstants.E_CAL_ALARM /* alarm */, required=false)
-    @GraphQLQuery(name=GqlConstants.ALARMS, description="Alarm information")
     private final List<AlarmInfo> alarms = Lists.newArrayList();
 
     /**
      * @zm-api-field-description iCalender XPROP properties
      */
     @XmlElement(name=MailConstants.E_CAL_XPROP /* xprop */, required=false)
-    @GraphQLQuery(name=GqlConstants.XPROPS, description="for iCalendar XPROP properties")
     private final List<XProp> xProps = Lists.newArrayList();
 
     /**
@@ -150,7 +144,6 @@ implements InviteComponentInterface
      * @zm-api-field-description RECURRENCE-ID, if this is an exception
      */
     @XmlElement(name=MailConstants.E_CAL_EXCEPTION_ID /* exceptId */, required=false)
-    @GraphQLQuery(name=GqlConstants.EXCEPTION_ID, description="Recurrence id, if this is an exception")
     private ExceptionRecurIdInfo exceptionId;
 
     // For JSON, wrapped in array because ToXML.encodeDtStart used addElement instead of addUniqueElement :-(

@@ -63,7 +63,6 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
      */
     @XmlAttribute(name=MailConstants.A_CAL_RULE_FREQ /* freq */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name=GqlConstants.FREQUENCY, description="Frequency. SEC, MIN, HOU, DAI, WEE, MON, YEA")
     private final String frequency;
 
     /**
@@ -150,8 +149,7 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
     /**
      * @zm-api-field-description X Name rules
      */
-    @XmlElement(name=MailConstants.E_CAL_RULE_XNAME /* rule-x-name */, required=false)
-    @GraphQLQuery(name=GqlConstants.X_NAMES, description="X Name rules")
+    @XmlElement(name=MailConstants.E_CAL_RULE_XNAME /* rule_x_name */, required=false)
     private final List<XNameRule> xNames = Lists.newArrayList();
 
     /**

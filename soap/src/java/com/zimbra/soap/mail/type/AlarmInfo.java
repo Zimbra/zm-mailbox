@@ -109,7 +109,6 @@ public class AlarmInfo implements AlarmInfoInterface {
      * @zm-api-field-description Attendee information
      */
     @XmlElement(name=MailConstants.E_CAL_ATTENDEE /* at */, required=false)
-    @GraphQLQuery(name=GqlConstants.ATTENDEES, description="Attendee information")
     private List<CalendarAttendee> attendees = Lists.newArrayList();
 
     /**
@@ -129,7 +128,6 @@ public class AlarmInfo implements AlarmInfoInterface {
      * </pre>
      */
     @XmlElement(name=MailConstants.E_CAL_XPROP /* xprop */, required=false)
-    @GraphQLQuery(name=GqlConstants.XPROPS, description="Non-standard properties")
     private List<XProp> xProps = Lists.newArrayList();
 
     /**

@@ -71,7 +71,6 @@ public class AuthResponse {
      */
     @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="authToken", description="The authorization token")
     private String authToken;
     /**
      * @zm-api-field-description Life time for the authorization

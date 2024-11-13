@@ -42,7 +42,6 @@ public class Session {
      * @zm-api-field-description Session type - currently only set if value is "admin"
      */
     @XmlAttribute(name=HeaderConstants.A_TYPE, required=false)
-    @GraphQLQuery(name="type", description="Session type - currently only set if value is admin")
     private String type;
 
     /**
@@ -51,7 +50,6 @@ public class Session {
      */
     @XmlAttribute(name=HeaderConstants.A_ID, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="id", description="Session ID")
     private String id;
 
     public Session() {
