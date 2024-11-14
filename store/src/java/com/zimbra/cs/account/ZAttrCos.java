@@ -14305,7 +14305,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable password expiry reminder
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
      *
      * @return zimbraFeaturePasswordExpiryReminderEnabled, or false if unset
      *
@@ -14317,7 +14318,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable password expiry reminder
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
      *
      * @param zimbraFeaturePasswordExpiryReminderEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14332,7 +14334,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable password expiry reminder
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
      *
      * @param zimbraFeaturePasswordExpiryReminderEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14348,7 +14351,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable password expiry reminder
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14362,7 +14366,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Feature to enable password expiry reminder
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

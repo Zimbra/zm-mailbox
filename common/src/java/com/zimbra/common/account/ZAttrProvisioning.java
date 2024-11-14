@@ -7402,7 +7402,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureOutOfOfficeReplyEnabled = "zimbraFeatureOutOfOfficeReplyEnabled";
 
     /**
-     * Feature to enable password expiry reminder
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
      *
      * @since ZCS 10.1.4
      */
