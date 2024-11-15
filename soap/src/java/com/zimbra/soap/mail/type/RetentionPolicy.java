@@ -44,20 +44,8 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 @GraphQLType(name="RetentionPolicy", description="The retention policy")
 public class RetentionPolicy {
 
-    /**
-     * @zm-api-field-description "Keep" retention policies
-     */
-    @ZimbraJsonArrayForWrapper
-    @XmlElementWrapper(name=MailConstants.E_KEEP, required=false)
-    @XmlElement(name=MailConstants.E_POLICY, required=false)
     private List<Policy> keep = Lists.newArrayList();
 
-    /**
-     * @zm-api-field-description "Purge" retention policies
-     */
-    @ZimbraJsonArrayForWrapper
-    @XmlElementWrapper(name=MailConstants.E_PURGE, required=false)
-    @XmlElement(name=MailConstants.E_POLICY, required=false)
     private List<Policy> purge = Lists.newArrayList();
 
     public RetentionPolicy() {
@@ -90,11 +78,23 @@ public class RetentionPolicy {
         }
     }
 
+    /**
+     * @zm-api-field-description "Keep" retention policies
+     */
+    @ZimbraJsonArrayForWrapper
+    @XmlElementWrapper(name=MailConstants.E_KEEP, required=false)
+    @XmlElement(name=MailConstants.E_POLICY, required=false)
     @GraphQLQuery(name="keep", description="`Keep` retention policies")
     public List<Policy> getKeepPolicy() {
         return Collections.unmodifiableList(keep);
     }
 
+    /**
+     * @zm-api-field-description "Purge" retention policies
+     */
+    @ZimbraJsonArrayForWrapper
+    @XmlElementWrapper(name=MailConstants.E_PURGE, required=false)
+    @XmlElement(name=MailConstants.E_POLICY, required=false)
     @GraphQLQuery(name="purge", description="`Purge` retention policies")
     public List<Policy> getPurgePolicy() {
         return Collections.unmodifiableList(purge);
