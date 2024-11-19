@@ -218,4 +218,40 @@ public class FilterUtilTest {
         String regex = FilterUtil.sieveToJavaRegex("coyote@**.com");
         Assert.assertEquals("coyote@(.*?)(.*)\\.com", regex);
     }
+
+    @Test
+    public void testGetExtendedInfo() throws Exception {
+        String content =
+                "Return-Path: <dummy@dev.zimbra.com>\n"
+                + "Date: Tue, 29 Oct 2024 10:15:47 +0900 (JST)\n"
+                + "From: Dummy <dummy@dev.zimbra.com>\n"
+                + "To: user1@dev.zimbra.com\n"
+                + "Subject: ZBUG-4479: valid From header\n"
+                + "MIME-Version: 1.0\n"
+                + "Content-Type: text/plain; charset=utf-8\n"
+                + "Content-Transfer-Encoding: 7bit\n"
+                + "\n"
+                + "test message";
+        ParsedMessage parsedMessage = new ParsedMessage(content.getBytes(), false);
+        String result = FilterUtil.getExtendedInfo(parsedMessage.getMimeMessage());
+        Assert.assertEquals(", sender=dummy@dev.zimbra.com, MsgId=null", result);
+    }
+
+    @Test
+    public void testGetExtendedInfoExceptionCase() throws Exception {
+        String content =
+                "Return-Path: <dummy@dev.zimbra.com>\n"
+                + "Date: Tue, 29 Oct 2024 10:15:47 +0900 (JST)\n"
+                + "From: xxx>xxx@yyyyyh<\n"
+                + "To: user1@dev.zimbra.com\n"
+                + "Subject: ZBUG-4479: invalid From header\n"
+                + "MIME-Version: 1.0\n"
+                + "Content-Type: text/plain; charset=utf-8\n"
+                + "Content-Transfer-Encoding: 7bit\n"
+                + "\n"
+                + "test message";
+        ParsedMessage parsedMessage = new ParsedMessage(content.getBytes(), false);
+        String result = FilterUtil.getExtendedInfo(parsedMessage.getMimeMessage());
+        Assert.assertEquals(", sender=xxx>xxx@yyyyyh<, MsgId=null", result);
+    }
 }

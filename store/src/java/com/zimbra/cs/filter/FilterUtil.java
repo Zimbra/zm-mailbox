@@ -1109,8 +1109,8 @@ public final class FilterUtil {
 
     public static String getExtendedInfo(MimeMessage msg) {
         String sender = Mime.getSender(msg);
-        sender = (sender.contains("<")) ? sender.substring(sender.indexOf("<") + 1, sender.length() - 1) : sender;
-        return ", sender=" + sender +  ", MsgId=" + Mime.getMessageID(msg);
+        return ", sender=" + ((sender.contains("<") && (sender.indexOf("<") < sender.indexOf(">"))) ?
+                sender.substring(sender.indexOf("<") + 1, sender.indexOf(">")) : sender) + ", MsgId=" + Mime.getMessageID(msg);
     }
 }
 
