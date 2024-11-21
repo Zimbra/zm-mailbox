@@ -10584,5 +10584,10 @@ TODO: delete them permanently from here
 <attr id="4140" name="zimbraPrefMailDeliveryStatusNotification" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="10.1.8">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether web UI should always request delivery status notification for outgoing messages</desc>
+ </attr>
+
+<attr id="4141" name="zimbraFeaturePasswordExpiryReminderEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.7">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Feature to enable/disable password expiry reminder. The default value is FALSE.</desc>
 </attr>
 </attrs>
