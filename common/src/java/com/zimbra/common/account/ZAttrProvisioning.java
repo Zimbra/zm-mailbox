@@ -7419,6 +7419,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureOutOfOfficeReplyEnabled = "zimbraFeatureOutOfOfficeReplyEnabled";
 
     /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4141)
+    public static final String A_zimbraFeaturePasswordExpiryReminderEnabled = "zimbraFeaturePasswordExpiryReminderEnabled";
+
+    /**
      * Deprecated since: 8.0.0. Deprecated per bug 56924. Orig desc: whether
      * people search feature is enabled
      *

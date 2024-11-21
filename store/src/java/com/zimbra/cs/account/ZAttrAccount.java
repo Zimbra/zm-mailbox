@@ -19916,6 +19916,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @return zimbraFeaturePasswordExpiryReminderEnabled, or false if unset
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4141)
+    public boolean isFeaturePasswordExpiryReminderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, false, true);
+    }
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @param zimbraFeaturePasswordExpiryReminderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4141)
+    public void setFeaturePasswordExpiryReminderEnabled(boolean zimbraFeaturePasswordExpiryReminderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, zimbraFeaturePasswordExpiryReminderEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @param zimbraFeaturePasswordExpiryReminderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4141)
+    public Map<String,Object> setFeaturePasswordExpiryReminderEnabled(boolean zimbraFeaturePasswordExpiryReminderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, zimbraFeaturePasswordExpiryReminderEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4141)
+    public void unsetFeaturePasswordExpiryReminderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4141)
+    public Map<String,Object> unsetFeaturePasswordExpiryReminderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 8.0.0. Deprecated per bug 56924. Orig desc: whether
      * people search feature is enabled
      *
