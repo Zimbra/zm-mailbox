@@ -1548,6 +1548,8 @@ public final class LC {
 
     public final static KnownKey zimbra_10_locator_upgrade_thread_count = KnownKey.newKey(5);
 
+    public final static KnownKey zimbra_password_expiry_reminder_thread_count = KnownKey.newKey(5);
+
     // ZBUG-2547 : zimbra_strict_unclosed_comment_tag if this is false we relax rule
     // of allowing unclosed tag based on zimbra_skip_tags_with_unclosed_cdata value
     // zimbra_skip_tags_with_unclosed_cdata : Set values , based on this tags would be checked for closed comment
