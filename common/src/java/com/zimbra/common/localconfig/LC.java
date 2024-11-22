@@ -982,6 +982,7 @@ public final class LC {
     public static final KnownKey httpclient_soaphttptransport_retry_count = KnownKey.newKey(2);
     public static final KnownKey httpclient_soaphttptransport_so_timeout = KnownKey.newKey(300 * Constants.MILLIS_PER_SECOND);
     public static final KnownKey httpclient_soaphttptransport_keepalive_connections = KnownKey.newKey(true);
+    public static final KnownKey ignore_imap_uid_range_search = KnownKey.newKey(true);
 
     /**
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
