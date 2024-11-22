@@ -992,6 +992,7 @@ public final class LC {
     public static final KnownKey httpclient_mdm_devices_limit_per_server = KnownKey.newKey(50);
     public static final KnownKey httpclient_mdm_devices_total_limit= KnownKey.newKey(500);
 
+    public static final KnownKey ignore_imap_uid_range_search = KnownKey.newKey(true);
 
     /**
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
