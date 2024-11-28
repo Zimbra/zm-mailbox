@@ -9437,6 +9437,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 ldapAttribute = (String) args[1];
                 types.add(ObjectType.accounts);
                 filter = filterFactory.accountsByCosesAndFeatureCheck(cosIds, ldapAttribute);
+                ZimbraLog.store.info("-->>> accountsByCosAndFeatureCheck Filter : "+filter.toFilterString());
                 break;
             case internalUserAccountsByCosWithLdapFeature:// single cos id
                 boolean isAccountsByCosWithLdapFeatureCheck =
@@ -9451,6 +9452,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 ldapAttribute = (String) args[1];
                 types.add(ObjectType.accounts);
                 filter = filterFactory.accountsByCosAndFeatureCheck(cosId, ldapAttribute);
+                ZimbraLog.store.info("-->>> accountsByCosAndFeatureCheck Filter : "+filter.toFilterString());
                 break;
             case internalUserAccountsWithLdapFeatureCheck: // accounts with a feature enabled or disabled
                 boolean isAccountsWithLdapFeatureCheck =
