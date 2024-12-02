@@ -98,7 +98,10 @@ public class ChangePassword extends AccountDocumentHandler {
             throw ServiceException.PERM_DENIED("cannot access account");
         }
 
-        acct = AuthProvider.validateAuthToken(prov, at, false, usage);
+        Account authTokenAcct = AuthProvider.validateAuthToken(prov, at, false, usage);
+        if (!AuthToken.isAnyAdmin(at)) {
+            acct = authTokenAcct;
+        }
         if (acct == null) {
             throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
         }
