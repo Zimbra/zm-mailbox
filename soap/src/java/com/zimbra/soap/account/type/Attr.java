@@ -52,6 +52,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 @GraphQLType(name=GqlConstants.CLASS_ATTR, description="Attributes")
 public class Attr implements KeyAndValue {
 
+    @GraphQLIgnore
     public static Function<Attr, Attr> COPY = new Function<Attr, Attr>() {
         @Override
         public Attr apply(Attr from) {
