@@ -140,6 +140,7 @@ public class FileUploadServlet extends ZimbraServlet {
         BlobInputStream blobInputStream;
         final static TikaConfig tikaConfig = TikaConfig.getDefaultConfig();
         final static Detector detector = tikaConfig.getDetector();
+        static String ctype ;
 
         Upload(String acctId, FileItem attachment) throws ServiceException {
             this(acctId, attachment, attachment.getName());
@@ -156,6 +157,7 @@ public class FileUploadServlet extends ZimbraServlet {
             file      = attachment;
             Account acct = Provisioning.getInstance().getAccount(acctId);
             MimeType mimeType = null;
+            ctype =file.getContentType();
             if (file == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
             } else {
@@ -216,6 +218,14 @@ public class FileUploadServlet extends ZimbraServlet {
             MediaType mediaType = null;
             try {
                 TikaInputStream stream = TikaInputStream.get(fileItem.getInputStream());
+                if (ctype != null && ctype.equalsIgnoreCase("text/xml")){
+                    try {
+                        mimeType= MimeTypes.getDefaultMimeTypes().forName("application/xml");
+                    } catch (MimeTypeException e) {
+                        mLog.warn("Failed to create MimeType for XML", e);
+                        return null;
+                    }
+                }
                 if (new File(customMimeTypesPath).isFile()) {
                     MimeTypes customMimeTypes = MimeTypesFactory.create(new URL("file://" + customMimeTypesPath));
                     mediaType = new CompositeDetector(customMimeTypes, detector).detect(stream, metadata);
