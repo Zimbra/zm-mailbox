@@ -325,7 +325,12 @@ public class L10nUtil {
         // license notification email for exceeding usage count for feature
         licenseFeaureOnHoldNotifierSubject,
         licenseFeaureOnHoldNotifierBodyText,
-        licenseFeaureOnHoldNotifierBodyHtml
+        licenseFeaureOnHoldNotifierBodyHtml,
+
+        // send password expiry reminder email
+        passwordExpiryNotifierSubject,
+        passwordExpiryNotifierBodyText,
+        passwordExpiryNotifierBodyHtml
 
         // add other messages in the future...
     }

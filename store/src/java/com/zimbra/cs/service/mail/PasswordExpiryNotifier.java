@@ -19,6 +19,7 @@ package com.zimbra.cs.service.mail;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
@@ -41,6 +42,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -96,9 +98,11 @@ public class PasswordExpiryNotifier implements Runnable {
                         Provisioning.A_zimbraMailDeliveryAddress,
                         Provisioning.A_cn});
         ZLdapFilterFactory filterFactory = ZLdapFilterFactory.getInstance();
+        ZLdapFilter filterServer = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraMailHost, LC.zimbra_server_hostname.value());
         ZLdapFilter filterPasswordExpiryReminderEnabled = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "TRUE");
         ZLdapFilter filterPasswordMaxAge = filterFactory.negate(filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraPasswordMaxAge, "0"));
-        searchOpts.setFilter(filterFactory.andWith(filterPasswordExpiryReminderEnabled, filterPasswordMaxAge));
+        ZLdapFilter filterReminderAndMaxAgeEnabled = filterFactory.andWith(filterPasswordExpiryReminderEnabled, filterPasswordMaxAge);
+        searchOpts.setFilter(filterFactory.andWith(filterServer, filterReminderAndMaxAgeEnabled));
         searchOpts.setIncludeType(SearchAccountsOptions.IncludeType.ACCOUNTS_ONLY);
         return ldapProv.searchDirectory(searchOpts);
     }
@@ -149,31 +153,17 @@ public class PasswordExpiryNotifier implements Runnable {
             MimeMessage mimeMessage = new MimeMessage(session);
             mimeMessage.setFrom(new InternetAddress("no-reply", "Password Expiration Notification"));
             mimeMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(account.getAttr(Provisioning.A_zimbraMailDeliveryAddress)));
-            mimeMessage.setSubject("Your password expires in " + deadline + " Days");
             String userName = account.getAttr(Provisioning.A_cn);
-            String textContent = "Dear " + userName + ",\n" +
-                    "\n" +
-                    "Your account password expires in " + deadline + " Days, on " + expiresOn + ".\n" +
-                    "\n" +
-                    "To maintain access to your account, please reset your password before the expiration date.\n" +
-                    "\n" +
-                    "You will continue to receive the notifications daily until the password is changed or expires.\n" +
-                    "\n" +
-                    "This is an automated email notification.";
-            String htmlContent = "<html>" +
-                    "<body>" +
-                    "<p>Dear " + userName + ",</p>" +
-                    "<p>Your account password expires in <strong>" + deadline + " Days</strong>, on <strong>" + expiresOn + "</strong>.</p>" +
-                    "<p>To maintain access to your account, please reset your password before the expiration date.</p>" +
-                    "<p>You will continue to receive the notifications daily until the password is changed or expires.</p>" +
-                    "<p>This is an automated email notification.</p>" +
-                    "</body>" +
-                    "</html>";
+            Locale locale = account.getLocale();
+            String textBodyMessage = L10nUtil.getMessage(L10nUtil.MsgKey.passwordExpiryNotifierBodyText, locale, userName, (int)deadline, expiresOn);
+            String htmlBodyMessage = L10nUtil.getMessage(L10nUtil.MsgKey.passwordExpiryNotifierBodyHtml, locale, userName, (int)deadline, expiresOn);
+            String subject = L10nUtil.getMessage(L10nUtil.MsgKey.passwordExpiryNotifierSubject, locale, (int) deadline);
+            mimeMessage.setSubject(subject);
             Multipart multipart = new MimeMultipart();
             MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setText(textContent);
+            textPart.setText(textBodyMessage);
             MimeBodyPart htmlPart = new MimeBodyPart();
-            htmlPart.setContent(htmlContent, "text/html");
+            htmlPart.setContent(htmlBodyMessage, "text/html");
             multipart.addBodyPart(textPart);
             multipart.addBodyPart(htmlPart);
             mimeMessage.setContent(multipart);
