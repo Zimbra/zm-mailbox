@@ -113,6 +113,7 @@ public class DavContext {
     private String mCollectionPath;
     private RequestProp mResponseProp;
     private String mDavCompliance;
+    public static boolean noFileExtension;
     /**
      * "actingAsDelegateFor" is used to form part of the scheduling inbox or scheduling outbox URL used
      * for scheduling on behalf of another user (the principal we are acting as a delegate for).
@@ -254,6 +255,11 @@ public class DavContext {
                 URI uri = HttpUtil.getUriFromFragments(fragments, req.getQueryString(), true, false);
                 mUri = uri.getPath();
             }
+            int lastDot = mUri.lastIndexOf(".");
+            noFileExtension = mUri.endsWith("/")
+                    || !(lastDot > 0
+                    && lastDot < mUri.length() - 1
+                    && mUri.substring(lastDot + 1).matches("[a-zA-Z0-9]+"));
 
             int index = mUri.indexOf('/', 1);
             if (index > 0) {
@@ -363,7 +369,6 @@ public class DavContext {
         }
         return null;
     }
-
     public String getActingAsDelegateFor() {
         return actingAsDelegateFor;
     }

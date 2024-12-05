@@ -41,6 +41,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.carddav.CustomXmlDetector;
 import org.apache.commons.fileupload.DefaultFileItem;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadBase;
@@ -216,7 +218,11 @@ public class FileUploadServlet extends ZimbraServlet {
             MediaType mediaType = null;
             try {
                 TikaInputStream stream = TikaInputStream.get(fileItem.getInputStream());
-                if (new File(customMimeTypesPath).isFile()) {
+                if (DavContext.noFileExtension) {
+                    Detector customXmlDetector = new CustomXmlDetector(detector, fileItem);
+                    mediaType = customXmlDetector.detect(stream, metadata);
+                    DavContext.noFileExtension=false;
+                } else if (new File(customMimeTypesPath).isFile()) {
                     MimeTypes customMimeTypes = MimeTypesFactory.create(new URL("file://" + customMimeTypesPath));
                     mediaType = new CompositeDetector(customMimeTypes, detector).detect(stream, metadata);
                 } else {
