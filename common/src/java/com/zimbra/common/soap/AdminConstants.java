@@ -99,6 +99,9 @@ public final class AdminConstants {
     public static final String E_GET_ALL_DOMAINS_REQUEST = "GetAllDomainsRequest";
     public static final String E_GET_ALL_DOMAINS_RESPONSE = "GetAllDomainsResponse";
 
+    public static final String E_CREATE_ZULIP_REALM_REQUEST = "CreateZulipRealmRequest";
+    public static final String E_CREATE_ZULIP_REALM_RESPONSE = "CreateZulipRealmResponse";
+
     public static final String E_CREATE_COS_REQUEST = "CreateCosRequest";
     public static final String E_CREATE_COS_RESPONSE = "CreateCosResponse";
     public static final String E_COPY_COS_REQUEST = "CopyCosRequest";
@@ -618,6 +621,9 @@ public final class AdminConstants {
     public static final QName DELETE_DOMAIN_RESPONSE = QName.get(E_DELETE_DOMAIN_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_DOMAINS_REQUEST = QName.get(E_GET_ALL_DOMAINS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_DOMAINS_RESPONSE = QName.get(E_GET_ALL_DOMAINS_RESPONSE, NAMESPACE);
+
+    public static final QName CREATE_ZULIP_REALM_REQUEST = QName.get(E_CREATE_ZULIP_REALM_REQUEST, NAMESPACE);
+    public static final QName CREATE_ZULIP_REALM_RESPONSE = QName.get(E_CREATE_ZULIP_REALM_RESPONSE, NAMESPACE);
 
     public static final QName CREATE_COS_REQUEST = QName.get(E_CREATE_COS_REQUEST, NAMESPACE);
     public static final QName CREATE_COS_RESPONSE = QName.get(E_CREATE_COS_RESPONSE, NAMESPACE);
@@ -1618,6 +1624,7 @@ public final class AdminConstants {
     public static final String E_LDAP_FILTER = "ldapFilter";
     public static final String A_CLEAR_FILTER = "clearFilter";
 
+    public static final String A_ZULIP_DOMAIN = "zulipDomain";
     public static final String E_DEVICES = "devices";
 
     public static final String A_SM_RUNTIME_SWITCH_STATUS = "status";

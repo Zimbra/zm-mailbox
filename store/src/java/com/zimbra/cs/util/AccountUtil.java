@@ -948,6 +948,29 @@ public class AccountUtil {
         return isEnabled;
     }
 
+    public static boolean isZulipChatEnabled(Account account) {
+        boolean isEnabled = false;
+        if (account == null) {
+            return isEnabled;
+        }
+        isEnabled = account.isFeatureZulipChatEnabled();
+
+        if (isEnabled) {
+            Provisioning prov = Provisioning.getInstance();
+            try {
+                Domain domain = prov.getDomainById(account.getDomainId());
+                if (domain != null && !Boolean.valueOf(domain.getAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, ProvisioningConstants.TRUE))) {
+                    ZimbraLog.account.debug("Zulip: chat is disabled on domain, won't be available for user '%s'", account.getName());
+                    isEnabled = false;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.account.debug(String.format("Zulip: failed to get zulip chat enabled status on domain '%s' for user '%s'. "
+                        + "User account level zulip chat enabled status will be used.", account.getDomainName(), account.getName()), e);
+            }
+        }
+        return isEnabled;
+    }
+
     /**
      * If acctName doesn't have domain name in it then 1st Account object to be fetched using provided acctName
      * If acctName is null then will try to fetch it from fully qualified email address.

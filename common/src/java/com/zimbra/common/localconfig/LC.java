@@ -1561,6 +1561,12 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_license_election_leader_zimbraId = KnownKey.newKey("");
 
+    // base host for zulip
+    public static final KnownKey zulip_base_host = KnownKey.newKey("");
+
+    // zulip jwt secret
+    public static final KnownKey zulip_jwt_secret = KnownKey.newKey("");
+
 
     static {
         // Automatically set the key name with the variable name.
