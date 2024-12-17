@@ -1000,6 +1000,7 @@ public final class LC {
     public static final KnownKey lds_client_max_per_route = KnownKey.newKey(20);
     public static final KnownKey lds_client_max_idle_time_seconds = KnownKey.newKey(20);
     public static final KnownKey ignore_imap_uid_range_search = KnownKey.newKey(true);
+    public static final KnownKey cross_mailbox_max_thread_pool_size = KnownKey.newKey(20);
 
     /**
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
