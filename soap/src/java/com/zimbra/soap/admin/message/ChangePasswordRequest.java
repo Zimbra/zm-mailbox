@@ -25,6 +25,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+/**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
+ * @zm-api-command-description Change Password
+ */
 @XmlRootElement(name= AdminConstants.E_CHANGE_PASSWORD_REQUEST)
 @XmlType(propOrder = {})
 public class ChangePasswordRequest {
