@@ -17,10 +17,14 @@
 package com.zimbra.cs.service.mail;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -28,10 +32,12 @@ import com.zimbra.cs.account.SearchAccountsOptions;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
+import javax.activation.DataHandler;
 import javax.mail.Message;
-import javax.mail.Multipart;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -96,7 +102,8 @@ public class PasswordExpiryNotifier implements Runnable {
                         Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled,
                         Provisioning.A_zimbraPasswordModifiedTime,
                         Provisioning.A_zimbraMailDeliveryAddress,
-                        Provisioning.A_cn});
+                        Provisioning.A_cn,
+                        Provisioning.A_zimbraPrefLocale});
         ZLdapFilterFactory filterFactory = ZLdapFilterFactory.getInstance();
         ZLdapFilter filterServer = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraMailHost, LC.zimbra_server_hostname.value());
         ZLdapFilter filterPasswordExpiryReminderEnabled = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "TRUE");
@@ -149,8 +156,9 @@ public class PasswordExpiryNotifier implements Runnable {
      */
     private static void sendMail(Account account, long deadline, String expiresOn) {
         try {
+            MimeMultipart mmp = new ZMimeMultipart("alternative");
             Session session = JMSession.getSmtpSession(account);
-            MimeMessage mimeMessage = new MimeMessage(session);
+            MimeMessage mimeMessage = new Mime.FixedMimeMessage(session);
             mimeMessage.setFrom(new InternetAddress("no-reply", "Password Expiration Notification"));
             mimeMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(account.getAttr(Provisioning.A_zimbraMailDeliveryAddress)));
             String userName = account.getAttr(Provisioning.A_cn);
@@ -158,15 +166,16 @@ public class PasswordExpiryNotifier implements Runnable {
             String textBodyMessage = L10nUtil.getMessage(L10nUtil.MsgKey.passwordExpiryNotifierBodyText, locale, userName, (int)deadline, expiresOn);
             String htmlBodyMessage = L10nUtil.getMessage(L10nUtil.MsgKey.passwordExpiryNotifierBodyHtml, locale, userName, (int)deadline, expiresOn);
             String subject = L10nUtil.getMessage(L10nUtil.MsgKey.passwordExpiryNotifierSubject, locale, (int) deadline);
-            mimeMessage.setSubject(subject);
-            Multipart multipart = new MimeMultipart();
-            MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setText(textBodyMessage);
-            MimeBodyPart htmlPart = new MimeBodyPart();
-            htmlPart.setContent(htmlBodyMessage, "text/html");
-            multipart.addBodyPart(textPart);
-            multipart.addBodyPart(htmlPart);
-            mimeMessage.setContent(multipart);
+            String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
+            MimeBodyPart textPart = new ZMimeBodyPart();
+            textPart.setText(textBodyMessage, MimeConstants.P_CHARSET_UTF8);
+            mmp.addBodyPart(textPart);
+            MimeBodyPart htmlPart = new ZMimeBodyPart();
+            htmlPart.setDataHandler(new DataHandler(new AccountUtil.HtmlPartDataSource(htmlBodyMessage)));
+            mmp.addBodyPart(htmlPart);
+            mimeMessage.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
+            mimeMessage.setContent(mmp);
+            mimeMessage.saveChanges();
             Transport.send(mimeMessage);
         } catch (Exception e) {
             ZimbraLog.store.error("Failed to send email for account %s ", account.getName(), e);
