@@ -314,6 +314,12 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CreateDomainResponse.class,
             com.zimbra.soap.admin.message.CreateZulipRealmRequest.class,
             com.zimbra.soap.admin.message.CreateZulipRealmResponse.class,
+            com.zimbra.soap.admin.message.ProvZulipAccountsRequest.class,
+            com.zimbra.soap.admin.message.ProvZulipAccountsResponse.class,
+            com.zimbra.soap.admin.message.ManageZulipAccountRequest.class,
+            com.zimbra.soap.admin.message.ManageZulipAccountResponse.class,
+            com.zimbra.soap.admin.message.GetAllZulipAccountsRequest.class,
+            com.zimbra.soap.admin.message.GetAllZulipAccountsResponse.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountRequest.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountResponse.class,
             com.zimbra.soap.admin.message.CreateLDAPEntryRequest.class,
@@ -1685,7 +1691,7 @@ public final class JaxbUtil {
         ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
         return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
     }
-    
+
     public static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
         return new DeleteItemNotification(itemId, type);
     }

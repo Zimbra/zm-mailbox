@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2021 Synacor, Inc.
+ * Copyright (C) 2024 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -19,36 +19,20 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.admin.type.DomainSelector;
 
 /**
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
- * @zm-api-command-description Create a Zulip realm
+ * @zm-api-command-description Get all Zulip accounts
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_CREATE_ZULIP_REALM_REQUEST)
-public class CreateZulipRealmRequest  extends AdminAttrsImpl {
-    /**
-     * @zm-api-field-tag domainId
-     * @zm-api-field-description domain id, id of sub domain
-     */
-    @XmlAttribute(name=AdminConstants.A_ID /* domain Id(sub domain) */, required=true)
-    private String domainId;
-
-    /**
-     * @zm-api-field-tag domainName
-     * @zm-api-field-description zulip domain name
-     */
-    @XmlAttribute(name=AdminConstants.A_ZULIP_DOMAIN /* full domain name */, required=true)
-    private String domainName;
-
+@XmlRootElement(name=AdminConstants.E_GET_ALL_ZULIP_ACCOUNTS_REQUEST)
+public class GetAllZulipAccountsRequest {
     /**
      * @zm-api-field-description Domain
      */
@@ -59,43 +43,15 @@ public class CreateZulipRealmRequest  extends AdminAttrsImpl {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private CreateZulipRealmRequest() {
+    private GetAllZulipAccountsRequest() {
         this((DomainSelector) null);
     }
 
-    public CreateZulipRealmRequest(DomainSelector domain) {
+    public GetAllZulipAccountsRequest(DomainSelector domain) {
         this.domain = domain;
     }
 
     public DomainSelector getDomain() {
         return domain;
-    }
-
-    /**
-     * @return the domainId
-     */
-    public String getDomainId() {
-        return domainId;
-    }
-
-    /**
-     * @param domainId the domainId to set
-     */
-    public void setDomainId(String domainId) {
-        this.domainId = domainId;
-    }
-
-    /**
-     * @return the domainName
-     */
-    public String getDomainName() {
-        return domainName;
-    }
-
-    /**
-     * @param domainName the domainName to set
-     */
-    public void setDomainName(String domainName) {
-        this.domainName = domainName;
     }
 }
