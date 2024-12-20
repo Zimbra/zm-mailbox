@@ -94,6 +94,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         COS_BY_ID(SINGLETON.cosById("{COS-ID}")),
         COSES_BY_MAILHOST_POOL(SINGLETON.cosesByMailHostPool("{SERVER-ID}")),
         COSES_ON_UCSERVICE(SINGLETON.cosesOnUCService("{UCSERVICE-ID}")),
+        COSES_WITH_LDAP_FEATURE_CHECK(SINGLETON.cosesWithLdapFeatureCheck("{LDAP_ATTRIBUTE}", "{LDAP_VALUE}")),
 
         CREATED_LATEROREQUAL(SINGLETON.createdLaterOrEqual("{GENERALIZED_TIME}")),
         DATA_SOURCE_BY_ID(SINGLETON.dataSourceById("{DATA-SOURCE-ID}")),
@@ -422,7 +423,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter cosById(String id);
     public abstract ZLdapFilter cosesByMailHostPool(String serverId);
     public abstract ZLdapFilter cosesOnUCService(String ucServiceId);
-
+    public abstract ZLdapFilter cosesWithLdapFeatureCheck(String ldapAttribute, String ldapValue);
     /*
      * data source
      */
