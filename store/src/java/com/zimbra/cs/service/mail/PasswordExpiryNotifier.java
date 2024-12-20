@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchAccountsOptions;
+import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -51,6 +52,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 
 public class PasswordExpiryNotifier implements Runnable {
@@ -96,22 +98,51 @@ public class PasswordExpiryNotifier implements Runnable {
      * @throws ServiceException If there is an issue during the LDAP search.
      */
     private static List<NamedEntry> findAccountsWithMaxAgePasswordAndReminderEnabled(LdapProv ldapProv) throws ServiceException {
-        SearchAccountsOptions searchOpts = new SearchAccountsOptions(
+        SearchAccountsOptions searchAcctOpts = new SearchAccountsOptions(
+                new String[]{
+                Provisioning.A_zimbraPasswordMaxAge,
+                Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled,
+                Provisioning.A_zimbraPasswordModifiedTime,
+                Provisioning.A_zimbraMailDeliveryAddress,
+                Provisioning.A_cn,
+                Provisioning.A_zimbraPrefLocale});
+        SearchAccountsOptions searchAccFromCosOpts = new SearchAccountsOptions(
+                new String[]{
+                Provisioning.A_zimbraPasswordMaxAge,
+                Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled,
+                Provisioning.A_zimbraPasswordModifiedTime,
+                Provisioning.A_zimbraMailDeliveryAddress,
+                Provisioning.A_cn,
+                Provisioning.A_zimbraPrefLocale,
+                Provisioning.A_zimbraCOSId});
+        SearchDirectoryOptions searchCosOpts = new SearchDirectoryOptions(
                 new String[]{
                         Provisioning.A_zimbraPasswordMaxAge,
-                        Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled,
-                        Provisioning.A_zimbraPasswordModifiedTime,
-                        Provisioning.A_zimbraMailDeliveryAddress,
-                        Provisioning.A_cn,
-                        Provisioning.A_zimbraPrefLocale});
+                        Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled}
+        );
         ZLdapFilterFactory filterFactory = ZLdapFilterFactory.getInstance();
+        // filtering Coses
+        ZLdapFilter filterPasswordExpiryReminderEnabledCos = filterFactory.cosesWithLdapFeatureCheck(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "TRUE");
+        ZLdapFilter filterPasswordMaxAgeCos = filterFactory.negate(filterFactory.cosesWithLdapFeatureCheck(Provisioning.A_zimbraPasswordMaxAge, "0"));
+        searchCosOpts.setFilter(filterFactory.andWith(filterPasswordExpiryReminderEnabledCos, filterPasswordMaxAgeCos));
+        searchCosOpts.addType(SearchDirectoryOptions.ObjectType.coses);
+        List<NamedEntry> coses=  ldapProv.searchDirectory(searchCosOpts);
+        List<String> cosIds = coses.stream()
+                .map(NamedEntry::getId)
+                .collect(Collectors.toList());
+        // filtering Accounts with inherited attributes
         ZLdapFilter filterServer = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraMailHost, LC.zimbra_server_hostname.value());
+        ZLdapFilter filterReminderEnabledAtCos = filterFactory.accountsByCosesAndFeatureCheck(cosIds,Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled);
+        searchAccFromCosOpts.setFilter(filterFactory.andWith(filterServer, filterReminderEnabledAtCos));
+        List<NamedEntry> accountsWithAttributesInherited = ldapProv.searchDirectory(searchAccFromCosOpts);
+        // filtering accounts with set attributes
         ZLdapFilter filterPasswordExpiryReminderEnabled = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "TRUE");
         ZLdapFilter filterPasswordMaxAge = filterFactory.negate(filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraPasswordMaxAge, "0"));
         ZLdapFilter filterReminderAndMaxAgeEnabled = filterFactory.andWith(filterPasswordExpiryReminderEnabled, filterPasswordMaxAge);
-        searchOpts.setFilter(filterFactory.andWith(filterServer, filterReminderAndMaxAgeEnabled));
-        searchOpts.setIncludeType(SearchAccountsOptions.IncludeType.ACCOUNTS_ONLY);
-        return ldapProv.searchDirectory(searchOpts);
+        searchAcctOpts.setFilter(filterFactory.andWith(filterServer, filterReminderAndMaxAgeEnabled));
+        List<NamedEntry> accountsWithAttributesSet = ldapProv.searchDirectory(searchAcctOpts);
+        accountsWithAttributesInherited.addAll(accountsWithAttributesSet);
+        return accountsWithAttributesInherited;
     }
 
     /**
