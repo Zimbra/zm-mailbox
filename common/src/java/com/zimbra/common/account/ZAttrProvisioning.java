@@ -4795,6 +4795,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraChatAllowUnencryptedPassword = "zimbraChatAllowUnencryptedPassword";
 
     /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public static final String A_zimbraChatBaseHost = "zimbraChatBaseHost";
+
+    /**
      * enable dedicated log for the chat conversation (needed by some
      * jurisdictions)
      *
@@ -4810,6 +4819,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2103)
     public static final String A_zimbraChatHistoryEnabled = "zimbraChatHistoryEnabled";
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public static final String A_zimbraChatJwtSecret = "zimbraChatJwtSecret";
 
     /**
      * enable XMPP server

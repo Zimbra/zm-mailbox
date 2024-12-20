@@ -10152,6 +10152,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @return zimbraChatBaseHost, or null if unset
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public String getChatBaseHost() {
+        return getAttr(Provisioning.A_zimbraChatBaseHost, null, true);
+    }
+
+    /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @param zimbraChatBaseHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public void setChatBaseHost(String zimbraChatBaseHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatBaseHost, zimbraChatBaseHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @param zimbraChatBaseHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public Map<String,Object> setChatBaseHost(String zimbraChatBaseHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatBaseHost, zimbraChatBaseHost);
+        return attrs;
+    }
+
+    /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public void unsetChatBaseHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatBaseHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public Map<String,Object> unsetChatBaseHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatBaseHost, "");
+        return attrs;
+    }
+
+    /**
      * enable dedicated log for the chat conversation (needed by some
      * jurisdictions)
      *
@@ -10225,6 +10302,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetChatConversationAuditEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraChatConversationAuditEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @return zimbraChatJwtSecret, or null if unset
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public String getChatJwtSecret() {
+        return getAttr(Provisioning.A_zimbraChatJwtSecret, null, true);
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @param zimbraChatJwtSecret new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public void setChatJwtSecret(String zimbraChatJwtSecret) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatJwtSecret, zimbraChatJwtSecret);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @param zimbraChatJwtSecret new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public Map<String,Object> setChatJwtSecret(String zimbraChatJwtSecret, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatJwtSecret, zimbraChatJwtSecret);
+        return attrs;
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public void unsetChatJwtSecret() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatJwtSecret, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public Map<String,Object> unsetChatJwtSecret(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatJwtSecret, "");
         return attrs;
     }
 
