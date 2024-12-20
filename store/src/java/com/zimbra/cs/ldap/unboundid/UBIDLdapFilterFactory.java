@@ -420,7 +420,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
 
 
-
     /*
      * Mail target (accounts and groups)
      */
@@ -1013,6 +1012,16 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         Filter.createEqualityFilter(Provisioning.A_zimbraUCServiceId, usServiceId),
                         FILTER_ALL_COSES));
+    }
+
+    @Override
+    public ZLdapFilter cosesWithLdapFeatureCheck(String ldapAttribute, String ldapValue) {
+        return new UBIDLdapFilter(
+                FilterId.COSES_WITH_LDAP_FEATURE_CHECK,
+                Filter.createANDFilter(
+                        FILTER_ALL_COSES,
+                        Filter.createEqualityFilter(ldapAttribute, ldapValue)
+                ));
     }
 
 
