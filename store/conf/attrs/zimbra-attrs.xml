@@ -10560,4 +10560,12 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Feature to enable delivery status notification</desc>
 </attr>
+
+<attr id="4136" name="zimbraZulipJwtSecret" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="10.1.5">
+  <desc>Zulip JWT secret</desc>
+</attr>
+
+<attr id="4137" name="zimbraZulipBaseHost" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="10.1.5">
+  <desc>Zulip server base host</desc>
+</attr>
 </attrs>

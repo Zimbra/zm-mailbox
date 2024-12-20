@@ -19081,12 +19081,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
 
     /**
+     * Zulip server base host
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public static final String A_zimbraZulipBaseHost = "zimbraZulipBaseHost";
+
+    /**
      * Zulip chat domain ID
      *
      * @since ZCS 9.0.0
      */
     @ZAttr(id=4082)
     public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
+
+    /**
+     * Zulip JWT secret
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public static final String A_zimbraZulipJwtSecret = "zimbraZulipJwtSecret";
 
     ///// END-AUTO-GEN-REPLACE
 }

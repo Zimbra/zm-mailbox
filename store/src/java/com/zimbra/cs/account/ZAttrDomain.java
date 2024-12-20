@@ -29514,6 +29514,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Zulip server base host
+     *
+     * @return zimbraZulipBaseHost, or null if unset
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public String getZulipBaseHost() {
+        return getAttr(Provisioning.A_zimbraZulipBaseHost, null, true);
+    }
+
+    /**
+     * Zulip server base host
+     *
+     * @param zimbraZulipBaseHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public void setZulipBaseHost(String zimbraZulipBaseHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipBaseHost, zimbraZulipBaseHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip server base host
+     *
+     * @param zimbraZulipBaseHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public Map<String,Object> setZulipBaseHost(String zimbraZulipBaseHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipBaseHost, zimbraZulipBaseHost);
+        return attrs;
+    }
+
+    /**
+     * Zulip server base host
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public void unsetZulipBaseHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipBaseHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip server base host
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4137)
+    public Map<String,Object> unsetZulipBaseHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipBaseHost, "");
+        return attrs;
+    }
+
+    /**
      * Zulip chat domain ID
      *
      * @return zimbraZulipChatDomainId, or null if unset
@@ -29582,6 +29654,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetZulipChatDomainId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipChatDomainId, "");
+        return attrs;
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @return zimbraZulipJwtSecret, or null if unset
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public String getZulipJwtSecret() {
+        return getAttr(Provisioning.A_zimbraZulipJwtSecret, null, true);
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @param zimbraZulipJwtSecret new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public void setZulipJwtSecret(String zimbraZulipJwtSecret) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipJwtSecret, zimbraZulipJwtSecret);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @param zimbraZulipJwtSecret new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public Map<String,Object> setZulipJwtSecret(String zimbraZulipJwtSecret, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipJwtSecret, zimbraZulipJwtSecret);
+        return attrs;
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public void unsetZulipJwtSecret() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipJwtSecret, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.5
+     */
+    @ZAttr(id=4136)
+    public Map<String,Object> unsetZulipJwtSecret(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipJwtSecret, "");
         return attrs;
     }
 
