@@ -19081,7 +19081,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
 
     /**
-     * Zulip server base host
+     * Zulip server base host Requires server restart if updating from empty
+     * value.
      *
      * @since ZCS 10.1.5
      */
