@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2015, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -24,17 +24,19 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.listeners.AccountListener;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.RenameAccountRequest;
 
@@ -72,6 +74,7 @@ public class RenameAccount extends AdminDocumentHandler {
         RenameAccountRequest req = zsc.elementToJaxb(request);
         String id = req.getId();
         String newName = req.getNewName();
+        boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
 
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         defendAgainstAccountHarvesting(account, AccountBy.id, id, zsc, Admin.R_renameAccount);
@@ -85,11 +88,40 @@ public class RenameAccount extends AdminDocumentHandler {
         checkDomainRightByEmail(zsc, newName, Admin.R_createAccount);
 
         Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
-        prov.renameAccount(id, newName);
-        if (mbox != null) {
-            mbox.renameMailbox(oldName, newName);
+        try {
+            AccountListener.invokeOnAccountRename(account, oldName, newName, zsc,
+                rollbackOnFailure);
+        } catch (ServiceException se) {
+            ZimbraLog.account.error(se.getMessage());
+            throw se;
         }
 
+        try {
+            prov.renameAccount(id, newName);
+            if (mbox != null) {
+                mbox.renameMailbox(oldName, newName);
+            }
+        } catch (ServiceException se) {
+            if (rollbackOnFailure) {
+                ZimbraLog.account.debug(
+                    "Exception occured while renaming account in zimbra for %s, roll back listener updates.",
+                    account.getMail());
+                // roll back rename updates
+                try {
+                    AccountListener.invokeOnAccountRename(account, newName, oldName, zsc,
+                        rollbackOnFailure);
+                } catch (ServiceException sse) {
+                    ZimbraLog.account.error(sse.getMessage());
+                    throw sse;
+                }
+            } else {
+                ZimbraLog.account.warn(
+                    "No rollback on account listener for zimbra rename account failure, there may be inconsistency in account. %s",
+                    se.getMessage());
+            }
+            throw se;
+        }
+        
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "RenameAccount","name", oldName, "newName", newName}));
 
