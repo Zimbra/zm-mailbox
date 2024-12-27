@@ -28,42 +28,42 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlRootElement(name=AdminConstants.E_CREATE_ZULIP_REALM_RESPONSE)
 public class CreateZulipRealmResponse {
     /**
-     * @zm-api-field-tag domainId
+     * @zm-api-field-tag zulipDomainId
      * @zm-api-field-description zulip domain id
      */
     @XmlElement(name=AdminConstants.A_ID /* domain id */, required=true)
-    private String domainId;
+    private String zulipDomainId;
 
     /**
      * @zm-api-field-tag domainName
-     * @zm-api-field-description zulip domain name
+     * @zm-api-field-description zimbra domain name
      */
     @XmlElement(name=AdminConstants.A_DOMAIN /* domain name */, required=true)
     private String domainName;
 
     /**
-     * @return the domainId
+     * @return the zulip domainId
      */
-    public String getDomainId() {
-        return domainId;
+    public String getZulipDomainId() {
+        return zulipDomainId;
     }
 
     /**
-     * @param domainId the domainId to set
+     * @param zulipDomainId the zulip domainId to set
      */
-    public void setDomainId(String domainId) {
-        this.domainId = domainId;
+    public void setZulipDomainId(String zulipDomainId) {
+        this.zulipDomainId = zulipDomainId;
     }
 
     /**
-     * @return the domainName
+     * @return the zimbra domain name
      */
     public String getDomainName() {
         return domainName;
     }
 
     /**
-     * @param domainName the domainName to set
+     * @param domainName the zimbra domainName to set
      */
     public void setDomainName(String domainName) {
         this.domainName = domainName;
