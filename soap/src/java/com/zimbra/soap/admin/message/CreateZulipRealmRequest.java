@@ -36,21 +36,14 @@ import com.zimbra.soap.admin.type.DomainSelector;
 @XmlRootElement(name=AdminConstants.E_CREATE_ZULIP_REALM_REQUEST)
 public class CreateZulipRealmRequest  extends AdminAttrsImpl {
     /**
-     * @zm-api-field-tag domainId
-     * @zm-api-field-description domain id, id of sub domain
+     * @zm-api-field-tag zulip-domainId
+     * @zm-api-field-description zulip domain id, id of sub domain
      */
     @XmlAttribute(name=AdminConstants.A_ID /* domain Id(sub domain) */, required=true)
-    private String domainId;
+    private String zulipDomainId;
 
     /**
-     * @zm-api-field-tag domainName
-     * @zm-api-field-description zulip domain name
-     */
-    @XmlAttribute(name=AdminConstants.A_ZULIP_DOMAIN /* full domain name */, required=true)
-    private String domainName;
-
-    /**
-     * @zm-api-field-description Domain
+     * @zm-api-field-description Zimbra domain
      */
     @XmlElement(name=AdminConstants.E_DOMAIN /* zimbra domin */, required=true)
     private final DomainSelector domain;
@@ -72,30 +65,16 @@ public class CreateZulipRealmRequest  extends AdminAttrsImpl {
     }
 
     /**
-     * @return the domainId
+     * @return the zulip domainId
      */
-    public String getDomainId() {
-        return domainId;
+    public String getZulipDomainId() {
+        return zulipDomainId;
     }
 
     /**
-     * @param domainId the domainId to set
+     * @param zulipDomainId the zulipDomainId to set
      */
-    public void setDomainId(String domainId) {
-        this.domainId = domainId;
-    }
-
-    /**
-     * @return the domainName
-     */
-    public String getDomainName() {
-        return domainName;
-    }
-
-    /**
-     * @param domainName the domainName to set
-     */
-    public void setDomainName(String domainName) {
-        this.domainName = domainName;
+    public void setZulipDomainId(String zulipDomainId) {
+        this.zulipDomainId = zulipDomainId;
     }
 }
