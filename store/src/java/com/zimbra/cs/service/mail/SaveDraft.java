@@ -28,7 +28,6 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -71,6 +70,7 @@ public class SaveDraft extends MailDocumentHandler {
     public static final String IS_DELEGATED_REQUEST = "isDelegatedReq";
     public static final String DELEGATEE_ACCOUNT_ID = "delegateeAccountId";
     private static final String MAIL_SMTP_FROM = "mail.smtp.from";
+    private static final String MAIL_AUTOSEND_TIME = "mail.autosend.time";
 
     @Override
     protected String[] getProxiedIdPath(Element request) {
@@ -178,6 +178,7 @@ public class SaveDraft extends MailDocumentHandler {
                     if (null != mailAddress) {
                         mSession.getProperties().setProperty(MAIL_SMTP_FROM, mailAddress);
                     }
+                    mSession.getProperties().setProperty(MAIL_AUTOSEND_TIME, String.valueOf(autoSendTime));
                     // always throws MessagingException. The api call here is checking if MessagingException is an instance of SendFailedException
                     // then get the list of invalid e-mail addresses.
                     MailUtil.validateRcptAddresses(mSession, mm.getAllRecipients());
