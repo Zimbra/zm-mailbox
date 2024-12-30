@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
+import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.account.Key.AccountBy;
@@ -69,6 +70,7 @@ public class SaveDraft extends MailDocumentHandler {
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
     public static final String IS_DELEGATED_REQUEST = "isDelegatedReq";
     public static final String DELEGATEE_ACCOUNT_ID = "delegateeAccountId";
+    private static final String MAIL_SMTP_FROM = "mail.smtp.from";
 
     @Override
     protected String[] getProxiedIdPath(Element request) {
@@ -170,10 +172,15 @@ public class SaveDraft extends MailDocumentHandler {
 
             if (autoSendTime != 0) {
                 AccountUtil.checkQuotaWhenSendMail(mbox);
+                Session mSession = null;
                 try {
+                    mSession = JMSession.getSmtpSession(mbox.getAccount());
+                    if (null != mailAddress) {
+                        mSession.getProperties().setProperty(MAIL_SMTP_FROM, mailAddress);
+                    }
                     // always throws MessagingException. The api call here is checking if MessagingException is an instance of SendFailedException
                     // then get the list of invalid e-mail addresses.
-                    MailUtil.validateRcptAddresses(JMSession.getSmtpSession(mbox.getAccount()), mm.getAllRecipients());
+                    MailUtil.validateRcptAddresses(mSession, mm.getAllRecipients());
                 } catch (MessagingException mex) {
                     if (mex instanceof SendFailedException) {
                         SendFailedException sfex = (SendFailedException) mex;
