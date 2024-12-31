@@ -459,24 +459,29 @@ public final class NativeFormatter extends Formatter {
             }
             resp.addHeader("Content-Description", desc);
         }
-        // defang when the html and svg attachment was requested with disposition inline
-        if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
-            BrowserDefang defanger = DefangFactory.getDefanger(contentType);
-            String content = defanger.defang(Mime.getTextReader(is, contentType, defaultCharset), true);
-            resp.setContentType(contentType);
-            String charset = Mime.getCharset(contentType);
-            resp.setCharacterEncoding(Strings.isNullOrEmpty(charset) ? Charsets.UTF_8.name() : charset);
-            if (!content.isEmpty()) {
-                resp.setContentLength(content.getBytes().length);
-            }
-            resp.getWriter().write(content);
+        if (Strings.isNullOrEmpty(contentType)) {
+            log.debug("ContentType is empty.");
         } else {
-            // flash attachment may contain a malicious script hence..
-            if (contentType.startsWith(MimeConstants.CT_APPLICATION_SHOCKWAVE_FLASH)) {
-                disp = Part.ATTACHMENT;
+            // defang when the html and svg attachment was requested with disposition inline
+            if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
+                contentType = Mime.getContentType(contentType).toLowerCase();
+                BrowserDefang defanger = DefangFactory.getDefanger(contentType);
+                String content = defanger.defang(Mime.getTextReader(is, contentType, defaultCharset), true);
+                resp.setContentType(contentType);
+                String charset = Mime.getCharset(contentType);
+                resp.setCharacterEncoding(Strings.isNullOrEmpty(charset) ? Charsets.UTF_8.name() : charset);
+                if (!content.isEmpty()) {
+                    resp.setContentLength(content.getBytes().length);
+                }
+                resp.getWriter().write(content);
+            } else {
+                // flash attachment may contain a malicious script hence..
+                if (contentType.startsWith(MimeConstants.CT_APPLICATION_SHOCKWAVE_FLASH)) {
+                    disp = Part.ATTACHMENT;
+                }
+                resp.setContentType(contentType);
+                sendbackBinaryData(req, resp, is, contentType, disp, filename, size);
             }
-            resp.setContentType(contentType);
-            sendbackBinaryData(req, resp, is, contentType, disp, filename, size);
         }
     }
 
@@ -616,12 +621,9 @@ public final class NativeFormatter extends Formatter {
         }
         PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
         boolean isSafe = false;
-        HttpUtil.Browser browser = HttpUtil.guessBrowser(req);
-        if (browser != HttpUtil.Browser.IE) {
+        if (Part.ATTACHMENT.equals(disposition)) {
             isSafe = true;
-        } else if (disposition.equals(Part.ATTACHMENT)) {
-            isSafe = true;
-            if (isScriptableContent(contentType)) {
+            if (!Strings.isNullOrEmpty(contentType) && isScriptableContent(contentType)) {
                 resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
             }
         }
@@ -664,10 +666,6 @@ public final class NativeFormatter extends Formatter {
      * @return true if there's a possiblilty that <script> is valid, false if not
      */
     private static boolean isScriptableContent(String contentType) {
-        // Make sure we don't have to worry about a null content type;
-        if (Strings.isNullOrEmpty(contentType)) {
-            return false;
-        }
         contentType = Mime.getContentType(contentType).toLowerCase();
         // only set no-open for 'script type content'
         return SCRIPTABLE_CONTENT_TYPES.contains(contentType);
