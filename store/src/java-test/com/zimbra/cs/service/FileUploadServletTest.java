@@ -16,8 +16,6 @@
  */
 package com.zimbra.cs.service;
 
-import static org.junit.Assert.assertTrue;
-
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +25,7 @@ import java.util.UUID;
 
 import javax.servlet.http.Cookie;
 
+import org.apache.tika.mime.MediaType;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,6 +50,12 @@ import com.zimbra.cs.service.account.Auth;
 import com.zimbra.cs.service.mail.ServiceTestUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.soap.SoapServlet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class FileUploadServletTest {
     private static FileUploadServlet servlet;
@@ -373,5 +378,76 @@ public class FileUploadServletTest {
         servlet.doPost(mockreq, resp);
         String respStrg = resp.output.toString();
         assertTrue(respStrg.contains("200"));
+    }
+
+    @Test
+    public void testMediaTypeIsPlainNullOrEmpty() {
+        assertTrue(FileUploadServlet.Upload.mediaTypeIsPlainNullOrEmpty(null));
+        assertTrue(FileUploadServlet.Upload.mediaTypeIsPlainNullOrEmpty(""));
+        assertTrue(FileUploadServlet.Upload.mediaTypeIsPlainNullOrEmpty(" "));
+        assertTrue(FileUploadServlet.Upload.mediaTypeIsPlainNullOrEmpty("text/plain"));
+        assertFalse(FileUploadServlet.Upload.mediaTypeIsPlainNullOrEmpty("application/json"));
+        assertFalse(FileUploadServlet.Upload.mediaTypeIsPlainNullOrEmpty("text/xml"));
+    }
+
+    @Test
+    public void testIsContentTypeXML() {
+        assertFalse(FileUploadServlet.Upload.isContentTypeXML(null));
+        assertFalse(FileUploadServlet.Upload.isContentTypeXML(""));
+        assertFalse(FileUploadServlet.Upload.isContentTypeXML(" "));
+        assertTrue(FileUploadServlet.Upload.isContentTypeXML("text/xml"));
+        assertTrue(FileUploadServlet.Upload.isContentTypeXML("application/xml"));
+        assertFalse(FileUploadServlet.Upload.isContentTypeXML("application/json"));
+        assertFalse(FileUploadServlet.Upload.isContentTypeXML("text/plain"));
+    }
+
+    @Test
+    public void testForSpecialCase_text_xml() {
+        Object[][] scenarios = {
+                // {initialMediaType, contentType, expectedMediaType}
+                // case 1
+                   {"text/plain", "text/xml", "text/xml"},
+                // case 2
+                   {"text/plain", "application/json", null},
+                // case 3
+                   {"application/json", "text/xml", null},
+                // case 4
+                   {"application/json", "application/json", null},
+                // case 5
+                   {null,"text/xml","text/xml"},
+                // case 6
+                   {"","text/xml","text/xml"},
+                // case 7
+                   {"text/plain", null, null},
+                // case 8
+                  {"application/json", null, null}
+        };
+
+        for (Object[] scenario : scenarios) {
+            String initialMediaType = (String) scenario[0];
+            String contentType = (String) scenario[1];
+            String expectedMediaType = (String) scenario[2];
+            MediaType mediaType = null;
+
+            // Actual logic under test
+            if (FileUploadServlet.Upload.mediaTypeIsPlainNullOrEmpty(initialMediaType) &&
+                    FileUploadServlet.Upload.isContentTypeXML(contentType)) {
+                mediaType = MediaType.parse(contentType);
+            }
+
+            // Assertions
+            if (expectedMediaType == null) {
+                assertNull("Failed for scenario: " + scenarioToString(scenario), mediaType);
+            } else {
+                assertNotNull("Failed for scenario: " + scenarioToString(scenario), mediaType);
+                assertEquals("Failed for scenario: " + scenarioToString(scenario), expectedMediaType, mediaType.toString());
+            }
+        }
+    }
+
+    // Helper method to format scenario data for debugging
+    private String scenarioToString(Object[] scenario) {
+        return String.format("initialMediaType='%s', contentType='%s', expectedMediaType='%s'",
+                scenario[0], scenario[1], scenario[2]);
     }
 }
