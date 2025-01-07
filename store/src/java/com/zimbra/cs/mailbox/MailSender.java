@@ -535,6 +535,11 @@ public class MailSender {
         return sendMimeMessage(octxt, mbox, mm);
     }
 
+    public ItemId sendMimeMessage(OperationContext operationContext, Mailbox delegatorMbox, MimeMessage mimeMessage, boolean deliveryReport) throws ServiceException {
+        mDeliveryReport = deliveryReport;
+        return sendMimeMessage(operationContext, delegatorMbox, mimeMessage);
+    }
+
     /**
      * Sends a message.
      */
