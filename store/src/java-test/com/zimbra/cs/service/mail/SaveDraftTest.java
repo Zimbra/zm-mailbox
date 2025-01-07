@@ -126,4 +126,68 @@ public class SaveDraftTest {
         Assert.assertEquals("picked up modified content", MODIFIED_CONTENT, response.getElement(MailConstants.E_MSG).getElement(MailConstants.E_MIMEPART).getAttribute(MailConstants.E_CONTENT));
     }
 
+    @Test
+    public void deliveryReportEnabled() throws Exception {
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+
+        // create a draft via SOAP
+        Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element m = request.addNonUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.E_SUBJECT, "dinner appt");
+        m.addUniqueElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain").addAttribute(MailConstants.E_CONTENT, ORIGINAL_CONTENT);
+        m.addAttribute(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, "1");
+
+        Element response = new SaveDraft() {
+            @Override
+            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
+                    Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
+
+                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
+            }
+        }.handle(request, ServiceTestUtil.getRequestContext(acct));
+
+        Assert.assertTrue(response.getElement(MailConstants.E_MSG).getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false));
+    }
+
+    @Test
+    public void deliveryReportDisabled() throws Exception {
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+
+        // create a draft via SOAP
+        Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element m = request.addNonUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.E_SUBJECT, "dinner appt");
+        m.addUniqueElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain").addAttribute(MailConstants.E_CONTENT, ORIGINAL_CONTENT);
+        m.addAttribute(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, "0");
+
+        Element response = new SaveDraft() {
+            @Override
+            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
+                                               Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
+
+                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
+            }
+        }.handle(request, ServiceTestUtil.getRequestContext(acct));
+
+        Assert.assertFalse(response.getElement(MailConstants.E_MSG).getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false));
+    }
+
+    @Test
+    public void deliveryReportNotSet() throws Exception {
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+
+        // create a draft via SOAP
+        Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element m = request.addNonUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.E_SUBJECT, "dinner appt");
+        m.addUniqueElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain").addAttribute(MailConstants.E_CONTENT, ORIGINAL_CONTENT);
+
+        Element response = new SaveDraft() {
+            @Override
+            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
+                                               Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
+
+                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
+            }
+        }.handle(request, ServiceTestUtil.getRequestContext(acct));
+
+        Assert.assertFalse(response.getElement(MailConstants.E_MSG).getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false));
+    }
 }

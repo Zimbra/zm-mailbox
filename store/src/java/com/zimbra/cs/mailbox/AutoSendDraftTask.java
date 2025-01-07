@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapHttpTransport;
@@ -46,6 +47,7 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
     private Element request;
     public static final String ZIMBRA_MAILBOX_APP = "ZIMBRA_MAILBOX_APP";
     public static final String ZIMBRA_CONSTANT_VERSION = "1.0";
+    public static final String DELIVERY_RECEIPT_ENABLED = "1";
 
 
     public Server getServerName() {
@@ -118,12 +120,16 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
         mailSender.setIdentity(StringUtil.isNullOrEmpty(msg.getDraftIdentityId()) ? null : mbox.getAccount().getIdentityById(msg.getDraftIdentityId()));
         Provisioning provisioning = Provisioning.getInstance();
         Account delegatorAccount = provisioning.getAccountById(getDelegatorAccountId());
+        boolean deliveryReport = false;
         if (null != delegatorAccount) {
+            if (delegatorAccount.getBooleanAttr(Provisioning.A_zimbraFeatureDeliveryStatusNotificationEnabled, false)) {
+                deliveryReport = DELIVERY_RECEIPT_ENABLED.equals(msg.getMimeMessage().getHeader(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, null));
+            }
             if (Provisioning.onLocalServer(delegatorAccount)) {
                 delegatorMbox = MailboxManager.getInstance().getMailboxByAccount(delegatorAccount);
             /* if delegator is on same server, just fetch the delegatorMbox object
             and use it for sending the Mime. */
-                mailSender.sendMimeMessage(new OperationContext(mbox), delegatorMbox, msg.getMimeMessage());
+                mailSender.sendMimeMessage(new OperationContext(mbox), delegatorMbox, msg.getMimeMessage(), deliveryReport);
             } else {
                 /* if delegator is on different server, invoke the saveDraft request on that server. */
                 Element reqForDelegatorAccount = getRequest();
