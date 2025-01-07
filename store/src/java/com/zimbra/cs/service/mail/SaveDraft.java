@@ -159,6 +159,7 @@ public class SaveDraft extends MailDocumentHandler {
                 Date d = new Date();
                 mm.setSentDate(d);
                 date = d.getTime();
+                mm.setHeader(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, msgElem.getAttribute(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, "0"));
             } catch (Exception ignored) {
             }
 
@@ -210,8 +211,12 @@ public class SaveDraft extends MailDocumentHandler {
                 }
                 if (oct != null && delegatorMbox != null) {
                     mm = ParseMimeMessage.parseMimeMsgSoap(zsc, oct, delegatorMbox, msgElem, null, mimeData);
+                    boolean deliveryReport = false;
+                    if (delegatorAccount.getBooleanAttr(Provisioning.A_zimbraFeatureDeliveryStatusNotificationEnabled, false)) {
+                        deliveryReport = msgElem.getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false);
+                    }
                     SendMsg.doSendMessage(oct, delegatorMbox, mm, mimeData.uploads, null, "r", null, null, false,
-                            false, false, false);
+                            false, false, deliveryReport);
                 }
                 Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
                 response.addElement(MailConstants.E_MSG);
