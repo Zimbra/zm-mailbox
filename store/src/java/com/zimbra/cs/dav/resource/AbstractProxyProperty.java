@@ -46,13 +46,13 @@ public abstract class AbstractProxyProperty extends ResourceProperty {
         ArrayList<Pair<Mountpoint,ZFolder>> mps = new ArrayList<Pair<Mountpoint,ZFolder>>();
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
             for (MailItem item : mbox.getItemList(ctxt.getOperationContext(), MailItem.Type.MOUNTPOINT)) {
                 Mountpoint mp = (Mountpoint)item;
                 // skip non-calendar mountpoints
                 if (mp.getDefaultView() != MailItem.Type.APPOINTMENT && mp.getDefaultView() != MailItem.Type.TASK) {
                     continue;
                 }
-                ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
                 ZMailbox zmbx = RemoteCollection.getRemoteMailbox(zat, mp.getOwnerId());
                 // skip dangling mountpoints
                 if (zmbx == null) {
