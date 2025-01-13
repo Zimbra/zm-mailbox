@@ -24,9 +24,11 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -40,7 +42,9 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.util.ZAuthTokenHolder;
 
 /**
  * RFC 2518bis section 5.
@@ -109,10 +113,24 @@ public class Collection extends MailItemResource {
     @Override
     public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
         ArrayList<DavResource> children = new ArrayList<DavResource>();
-
+        ZAuthToken zat = null;
         try {
             ctxt.setCollectionPath(getUri());
             List<MailItem> items = getChildrenMailItem(ctxt);
+
+            if (ctxt.getOperationContext() != null) {
+                final AuthToken authToken = ctxt.getOperationContext().getAuthToken();
+                if (authToken != null && !authToken.isExpired()) {
+                    zat = authToken.toZAuthToken();
+                    ZimbraLog.store.info("--> using context auth, auth value : " + zat.getValue());
+                }
+            }
+            if (zat == null) {
+                zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
+                ZimbraLog.store.info("--> fetching new auth token, auth value : " + zat.getValue());
+            }
+            // test if this can hold the re-usable token at global level
+            ZAuthTokenHolder.setToken(zat);
             for (MailItem item : items) {
                 DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, item);
                 if (rs != null)
@@ -120,6 +138,9 @@ public class Collection extends MailItemResource {
             }
         } catch (ServiceException e) {
             ZimbraLog.dav.error("can't get children from folder: id="+mId, e);
+        } finally {
+            // clearing it anyway
+            ZAuthTokenHolder.clearToken();
         }
         // this is where we add the phantom folder for attachment browser.
         if (isRootCollection()) {

@@ -28,6 +28,7 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -43,6 +44,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.ZAuthTokenHolder;
 
 public class RemoteCollection extends Collection {
 
@@ -65,19 +67,12 @@ public class RemoteCollection extends Collection {
 
     public RemoteCollection(DavContext ctxt, String path, Account user) throws DavException, ServiceException {
         super(path, user.getName());
-        ZAuthToken zat = null;
-        if (ctxt.getOperationContext() != null && ctxt.getOperationContext().getAuthToken() != null) {
-            if (!ctxt.getOperationContext().getAuthToken().isExpired() && !ctxt.getOperationContext().getAuthToken().toZAuthToken().isEmpty()) {
-                zat = ctxt.getOperationContext().getAuthToken().toZAuthToken();
-                ZimbraLog.store.info("--> remote target - using context auth");
-            } else {
-                ZimbraLog.store.info("--> remote target - context auth expired, fetching new auth token from AuthProvider");
-                zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
-            }
-        } else {
-            ZimbraLog.store.info("--> remote target - context auth not available, fetching new auth token from AuthProvider");
+        ZAuthToken zat = ZAuthTokenHolder.getToken();
+        if (zat == null) {
             zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
+            ZimbraLog.store.info("--> local target - creating new, auth value : " + zat.getValue());
         }
+        ZimbraLog.store.info("--> re-usable auth value : " + zat.getValue());
         ZMailbox mbox = getRemoteMailbox(zat, user.getId());
         ZFolder folder = mbox.getFolderByPath(path);
         if (folder == null)
@@ -121,20 +116,12 @@ public class RemoteCollection extends Collection {
         return zmbx;
     }
     protected void getMountpointTarget(DavContext ctxt) throws ServiceException {
-        //ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
-        ZAuthToken zat = null;
-        if (ctxt.getOperationContext() != null && ctxt.getOperationContext().getAuthToken() != null) {
-            if (!ctxt.getOperationContext().getAuthToken().isExpired() && !ctxt.getOperationContext().getAuthToken().toZAuthToken().isEmpty()) {
-                zat = ctxt.getOperationContext().getAuthToken().toZAuthToken();
-                ZimbraLog.store.info("--> local target - using context auth");
-            } else {
-                ZimbraLog.store.info("--> local target - context auth expired, fetching new auth token from AuthProvider");
-                zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
-            }
-        } else {
-            ZimbraLog.store.info("--> local target - context auth not available, fetching new auth token from AuthProvider");
+        ZAuthToken zat = ZAuthTokenHolder.getToken();
+        if (zat == null) {
             zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
+            ZimbraLog.store.info("--> local target - creating new, auth value : " + zat.getValue());
         }
+        ZimbraLog.store.info("--> re-usable auth value : " + zat.getValue());
         ZMailbox zmbx = getRemoteMailbox(zat, mRemoteOwnerId);
         if (zmbx == null)
             return;
