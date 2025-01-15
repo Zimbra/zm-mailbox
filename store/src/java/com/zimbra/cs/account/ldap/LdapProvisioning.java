@@ -2304,6 +2304,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             } else {
                 searchObjectsOptions.setUseControl(opts.isUseControl());
             }
+            if (opts.getLimit() != 0) {
+                searchObjectsOptions.setLimit(opts.getLimit());
+            }
+            if (opts.getOffset() != 0) {
+                searchObjectsOptions.setOffset(opts.getOffset());
+            }
             searchObjectsOptions.setManageDSAit(opts.isManageDSAit());
             zlc.searchPaged(searchObjectsOptions);
         } catch (LdapSizeLimitExceededException e) {
