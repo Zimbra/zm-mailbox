@@ -45,6 +45,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -76,45 +79,86 @@ public class PasswordExpiryNotifier implements Runnable {
     protected static void sendReminder() {
         try {
             LdapProv ldapProv = LdapProv.getInst();
-            List<NamedEntry> accounts = findAccountsWithMaxAgePasswordAndReminderEnabled(ldapProv);
-            ExecutorService emailSenderExecutor = Executors.newFixedThreadPool(PASSWORD_REMINDER_THREAD_COUNT);
-            for (int i = 0; i < accounts.size(); i += PASSWORD_REMINDER_BATCH_SIZE) {
-                final List<NamedEntry> batch = accounts.subList(i, Math.min(i + PASSWORD_REMINDER_BATCH_SIZE, accounts.size()));
-                emailSenderExecutor.submit(() -> filterAccountsAndSendMail(batch));
-            }
-            emailSenderExecutor.shutdown();
+            findAccountsWithMaxAgePasswordAndReminderInheritedFromCos(ldapProv);
+            findAccountsWithMaxAgePasswordAndReminderSet(ldapProv);
         } catch (ServiceException e) {
             ZimbraLog.store.error("Failed to send reminder", e);
         }
     }
 
     /**
-     * Finding accounts that meet the following conditions:
-     * - The account has the password expiry reminder feature enabled
-     * - The account's password is not set to never expire (i.e., max age is not zero)
+     * Finds accounts that meet the following conditions:
+     * - The account has the password expiry reminder feature explicitly enabled.
+     * - The account's password is not set to never expire (i.e., the maximum password age is not zero).
      *
-     * @param ldapProv The instance of the LdapProv used to perform the LDAP search.
-     * @return A list of {@link NamedEntry} objects representing the accounts that meet the conditions.
-     * @throws ServiceException If there is an issue during the LDAP search.
+     * This method searches for accounts that have the password expiry reminder feature enabled and also have
+     * a non-zero password max age. It processes the results in batches and, for each batch, a task is created
+     * for sending notifications.
+     *
+     * @param ldapProv The instance of the LdapProv used to perform the LDAP search and handle directory operations.
+     * @throws ServiceException If there is an issue during the LDAP search or processing of the accounts.
      */
-    private static List<NamedEntry> findAccountsWithMaxAgePasswordAndReminderEnabled(LdapProv ldapProv) throws ServiceException {
+    private static void findAccountsWithMaxAgePasswordAndReminderSet(LdapProv ldapProv) throws ServiceException {
         SearchAccountsOptions searchAcctOpts = new SearchAccountsOptions(
                 new String[]{
-                Provisioning.A_zimbraPasswordMaxAge,
-                Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled,
-                Provisioning.A_zimbraPasswordModifiedTime,
-                Provisioning.A_zimbraMailDeliveryAddress,
-                Provisioning.A_cn,
-                Provisioning.A_zimbraPrefLocale});
+                        Provisioning.A_zimbraPasswordMaxAge,
+                        Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled,
+                        Provisioning.A_zimbraPasswordModifiedTime,
+                        Provisioning.A_zimbraMailDeliveryAddress,
+                        Provisioning.A_cn,
+                        Provisioning.A_zimbraPrefLocale});
+        ZLdapFilterFactory filterFactory = ZLdapFilterFactory.getInstance();
+        // filtering accounts with set attributes
+        ZLdapFilter filterServer = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraMailHost, LC.zimbra_server_hostname.value());
+        ZLdapFilter filterPasswordExpiryReminderEnabled = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "TRUE");
+        ZLdapFilter filterPasswordMaxAge = filterFactory.negate(filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraPasswordMaxAge, "0"));
+        ZLdapFilter filterReminderAndMaxAgeEnabled = filterFactory.andWith(filterPasswordExpiryReminderEnabled, filterPasswordMaxAge);
+        searchAcctOpts.setFilter(filterFactory.andWith(filterServer, filterReminderAndMaxAgeEnabled));
+        searchAcctOpts.setResultPageSize(PASSWORD_REMINDER_BATCH_SIZE);
+        searchAcctOpts.setUseControl(true);
+        searchAcctOpts.setLimit(PASSWORD_REMINDER_BATCH_SIZE);
+        int offset = 0;
+        List<NamedEntry> accountsWithAttributesSet;
+        ExecutorService emailSenderExecutor = Executors.newFixedThreadPool(PASSWORD_REMINDER_THREAD_COUNT);
+        do {
+            searchAcctOpts.setOffset(offset);
+            accountsWithAttributesSet = ldapProv.searchDirectory(searchAcctOpts);
+            final List<NamedEntry> batch = accountsWithAttributesSet;
+            emailSenderExecutor.submit(() -> filterAccountsAndSendMail(batch));
+            offset += PASSWORD_REMINDER_BATCH_SIZE;
+        } while (!accountsWithAttributesSet.isEmpty());
+        emailSenderExecutor.shutdown();
+        // wait for the executor to finish processing all tasks
+        while (!emailSenderExecutor.isTerminated()) {
+        }
+        // after all emails are processed and sent, clear the file
+        clearSentEmailsFile();
+    }
+
+    /**
+     * Finds accounts that meet the following conditions:
+     * - The account has the password expiry reminder feature enabled.
+     * - The account's password is not set to never expire (i.e., max password age is not zero).
+     *
+     * This method first filters the Classes of Service (COS) that have the password expiry reminder feature enabled
+     * and ensure their password max age is not set to zero. Then, it retrieves accounts that inherit these attributes
+     * from their COS and have the corresponding feature enabled.
+     *
+     * The results are processed in batches, and for each batch, a thread is created to send notifications.
+     *
+     * @param ldapProv The instance of the LdapProv used to perform the LDAP search and manage the directory operations.
+     * @throws ServiceException If there is an issue during the LDAP search or processing of the accounts.
+     */
+    private static void findAccountsWithMaxAgePasswordAndReminderInheritedFromCos(LdapProv ldapProv) throws ServiceException {
         SearchAccountsOptions searchAccFromCosOpts = new SearchAccountsOptions(
                 new String[]{
-                Provisioning.A_zimbraPasswordMaxAge,
-                Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled,
-                Provisioning.A_zimbraPasswordModifiedTime,
-                Provisioning.A_zimbraMailDeliveryAddress,
-                Provisioning.A_cn,
-                Provisioning.A_zimbraPrefLocale,
-                Provisioning.A_zimbraCOSId});
+                        Provisioning.A_zimbraPasswordMaxAge,
+                        Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled,
+                        Provisioning.A_zimbraPasswordModifiedTime,
+                        Provisioning.A_zimbraMailDeliveryAddress,
+                        Provisioning.A_cn,
+                        Provisioning.A_zimbraPrefLocale,
+                        Provisioning.A_zimbraCOSId});
         SearchDirectoryOptions searchCosOpts = new SearchDirectoryOptions(
                 new String[]{
                         Provisioning.A_zimbraPasswordMaxAge,
@@ -134,15 +178,43 @@ public class PasswordExpiryNotifier implements Runnable {
         ZLdapFilter filterServer = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraMailHost, LC.zimbra_server_hostname.value());
         ZLdapFilter filterReminderEnabledAtCos = filterFactory.accountsByCosesAndFeatureCheck(cosIds,Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled);
         searchAccFromCosOpts.setFilter(filterFactory.andWith(filterServer, filterReminderEnabledAtCos));
-        List<NamedEntry> accountsWithAttributesInherited = ldapProv.searchDirectory(searchAccFromCosOpts);
-        // filtering accounts with set attributes
-        ZLdapFilter filterPasswordExpiryReminderEnabled = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "TRUE");
-        ZLdapFilter filterPasswordMaxAge = filterFactory.negate(filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraPasswordMaxAge, "0"));
-        ZLdapFilter filterReminderAndMaxAgeEnabled = filterFactory.andWith(filterPasswordExpiryReminderEnabled, filterPasswordMaxAge);
-        searchAcctOpts.setFilter(filterFactory.andWith(filterServer, filterReminderAndMaxAgeEnabled));
-        List<NamedEntry> accountsWithAttributesSet = ldapProv.searchDirectory(searchAcctOpts);
-        accountsWithAttributesInherited.addAll(accountsWithAttributesSet);
-        return accountsWithAttributesInherited;
+        searchAccFromCosOpts.setResultPageSize(PASSWORD_REMINDER_BATCH_SIZE);
+        searchAccFromCosOpts.setUseControl(true);
+        searchAccFromCosOpts.setLimit(PASSWORD_REMINDER_BATCH_SIZE);
+        int offset = 0;
+        List<NamedEntry> accountsWithAttributesInherited;
+        ExecutorService emailSenderExecutor = Executors.newFixedThreadPool(PASSWORD_REMINDER_THREAD_COUNT);
+        do {
+            searchAccFromCosOpts.setOffset(offset);
+            accountsWithAttributesInherited = ldapProv.searchDirectory(searchAccFromCosOpts);
+            final List<NamedEntry> batch = accountsWithAttributesInherited;
+            emailSenderExecutor.submit(() -> filterAccountsAndSendMail(batch));
+            offset += PASSWORD_REMINDER_BATCH_SIZE;
+        } while (!accountsWithAttributesInherited.isEmpty());
+        emailSenderExecutor.shutdown();
+        // wait for the executor to finish processing all tasks
+        while (!emailSenderExecutor.isTerminated()) {
+        }
+        // after all emails are processed and sent, clear the file
+        clearSentEmailsFile();
+    }
+
+    /**
+     * Clears the contents of the file specified by the constant `SENT_EMAILS_FILE` by truncating it.
+     * This method is used to empty the file after all emails have been successfully sent, ensuring
+     * that the list of sent emails is reset for future operations.
+     *
+     * @throws IOException If an error occurs while writing to the file.
+     */
+    private static void clearSentEmailsFile() {
+        try {
+            // create a new FileWriter with append=false to truncate the file
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(EmailTracker.getSentEmailsFile(), false))) {
+                writer.write(""); // writing an empty string to truncate the file
+            }
+        } catch (IOException e) {
+            ZimbraLog.store.error("Failed to clear the sent emails file: " + e.getMessage());
+        }
     }
 
     /**
@@ -187,6 +259,9 @@ public class PasswordExpiryNotifier implements Runnable {
      */
     private static void sendMail(Account account, long deadline, String expiresOn) {
         try {
+            if (EmailTracker.isEmailSent(account.getAttr(Provisioning.A_zimbraMailDeliveryAddress))) {
+                return;
+            }
             MimeMultipart mmp = new ZMimeMultipart("alternative");
             Session session = JMSession.getSmtpSession(account);
             MimeMessage mimeMessage = new Mime.FixedMimeMessage(session);
@@ -208,6 +283,7 @@ public class PasswordExpiryNotifier implements Runnable {
             mimeMessage.setContent(mmp);
             mimeMessage.saveChanges();
             Transport.send(mimeMessage);
+            EmailTracker.markEmailAsSent(account.getAttr(Provisioning.A_zimbraMailDeliveryAddress));
         } catch (Exception e) {
             ZimbraLog.store.error("Failed to send email for account %s ", account.getName(), e);
             throw new RuntimeException(e);

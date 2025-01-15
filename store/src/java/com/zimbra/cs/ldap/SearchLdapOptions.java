@@ -111,6 +111,8 @@ public class SearchLdapOptions {
     private boolean isManageDSAit = false;
     private SearchGalResult searchGalResult;
     private GalOp galOp;
+    private int limit = 0;
+    private int offset = 0;
 
     // TODO: retire this
     public SearchLdapOptions(String searchbase, String filterStr,
@@ -243,5 +245,21 @@ public class SearchLdapOptions {
 
     public void setSearchGalResult(SearchGalResult result) {
         this.searchGalResult = result;
+    }
+
+    public int getLimit() {
+        return limit;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 }
