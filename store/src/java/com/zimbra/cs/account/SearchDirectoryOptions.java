@@ -140,6 +140,8 @@ public class SearchDirectoryOptions {
     private final boolean useConnPool = true; // TODO: retire this
     private int maxResults = ALL_RESULTS;
     private int resultPageSize = DEFAULT_LIMIT;
+    private int limit = 0;
+    private int offset = 0;
 
     /*
      * search base
@@ -506,4 +508,19 @@ public class SearchDirectoryOptions {
         this.habRootGroupDn = baseDn;
     }
 
+    public int getLimit() {
+        return limit;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
 }

@@ -546,6 +546,12 @@ public class UBIDLdapContext extends ZLdapContext {
         int pageOffset = 0;
         int currentPage = 0;
         int index = 0;
+        if (searchOptions.getLimit() != 0) {
+            limit = searchOptions.getLimit();
+        }
+        if (searchOptions.getOffset() != 0){
+            offset = searchOptions.getOffset();
+        }
         if (offset > 0) {
             pageCount = offset / pageSize;
             pageOffset = offset % pageSize;
