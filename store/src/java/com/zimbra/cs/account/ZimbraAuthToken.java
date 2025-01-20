@@ -284,13 +284,15 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         }
         try {
             Account acct = Provisioning.getInstance().get(AccountBy.id, properties.getAccountId());
-            try {
-                acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
-            } catch (ServiceException e) {
-                LOG.error("unable to de-register auth token", e);
+            if (Provisioning.getInstance().getLocalServer().getLowestSupportedAuthVersion() > 1) {
+                try {
+                    acct.cleanExpiredTokens(); //house keeping. If we are issuing a new token, clean up old ones.
+                } catch (ServiceException e) {
+                    LOG.error("unable to de-register auth token", e);
+                }
+                Expiration expiration = new AbsoluteExpiration(properties.getExpires());
+                acct.addAuthTokens(String.valueOf(properties.getTokenID()), properties.getServerVersion(), expiration);
             }
-            Expiration expiration = new AbsoluteExpiration(properties.getExpires());
-            acct.addAuthTokens(String.valueOf(properties.getTokenID()), properties.getServerVersion(), expiration);
         } catch (ServiceException e) {
             LOG.error("unable to register auth token", e);
         }
@@ -379,6 +381,12 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         }
         try {
             Provisioning prov = Provisioning.getInstance();
+            // support older clients if zimbraLowestSupportedAuthVersion is less
+            // than 2
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            if (localServer.getLowestSupportedAuthVersion() < 2) {
+                return true;
+            }
             Account acct = prov.getAccountById(properties.getAccountId());
             if (acct != null) {
                 if (isRegisteredInternal(acct)) {
