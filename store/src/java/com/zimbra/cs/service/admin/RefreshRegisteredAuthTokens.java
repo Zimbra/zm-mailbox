@@ -48,6 +48,12 @@ public class RefreshRegisteredAuthTokens extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
+        Provisioning prov = Provisioning.getInstance();
+        Server localServer = prov.getLocalServer();
+        if(localServer.getLowestSupportedAuthVersion() < 2) {
+            return zsc.jaxbToElement(new RefreshRegisteredAuthTokensResponse());
+        }
+
         RefreshRegisteredAuthTokensRequest req = zsc.elementToJaxb(request);
         List<String> tokens = req.getTokens();
         if(tokens != null && !tokens.isEmpty()) {
