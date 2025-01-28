@@ -4798,7 +4798,7 @@ public class ZAttrProvisioning {
      * Zimbra Chat server base host Requires server restart if updating from
      * empty value.
      *
-     * @since ZCS 10.1.5
+     * @since ZCS 10.1.6
      */
     @ZAttr(id=4137)
     public static final String A_zimbraChatBaseHost = "zimbraChatBaseHost";
@@ -4823,7 +4823,7 @@ public class ZAttrProvisioning {
     /**
      * Zimbra Chat JWT secret
      *
-     * @since ZCS 10.1.5
+     * @since ZCS 10.1.6
      */
     @ZAttr(id=4136)
     public static final String A_zimbraChatJwtSecret = "zimbraChatJwtSecret";

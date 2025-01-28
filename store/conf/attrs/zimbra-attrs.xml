@@ -10556,11 +10556,11 @@ TODO: delete them permanently from here
   <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
 </attr>
 
-<attr id="4136" name="zimbraChatJwtSecret" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="10.1.5">
+<attr id="4136" name="zimbraChatJwtSecret" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="10.1.6">
   <desc>Zimbra Chat JWT secret</desc>
 </attr>
 
-<attr id="4137" name="zimbraChatBaseHost" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" requiresRestart="mailbox" since="10.1.5">
+<attr id="4137" name="zimbraChatBaseHost" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" requiresRestart="mailbox" since="10.1.6">
   <desc>Zimbra Chat server base host
         Requires server restart if updating from empty value.
   </desc>
