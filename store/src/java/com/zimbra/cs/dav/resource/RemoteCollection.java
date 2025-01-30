@@ -117,9 +117,20 @@ public class RemoteCollection extends Collection {
     }
     protected void getMountpointTarget(DavContext ctxt) throws ServiceException {
         ZAuthToken zat = ZAuthTokenHolder.getToken();
-        if (zat == null) {
-            zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
-            ZimbraLog.store.info("--> local target - creating new, auth value : " + zat.getValue());
+        if(zat == null) {
+            if (ctxt.getOperationContext() != null) {
+                final AuthToken authToken = ctxt.getOperationContext().getAuthToken();
+                if (authToken != null && !authToken.isExpired()) {
+                    zat = authToken.toZAuthToken();
+                    ZimbraLog.store.info("--> using context auth, auth value : " + zat.getValue());
+                }
+            }
+            else {
+                zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
+                ZimbraLog.store.info("--> fetching new auth token, auth value : " + zat.getValue());
+            }
+            // test if this can hold the re-usable token at global level
+            ZAuthTokenHolder.setToken(zat);
         }
         ZimbraLog.store.info("--> re-usable auth value : " + zat.getValue());
         ZMailbox zmbx = getRemoteMailbox(zat, mRemoteOwnerId);
