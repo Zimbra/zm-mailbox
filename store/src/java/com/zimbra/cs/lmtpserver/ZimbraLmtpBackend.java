@@ -441,6 +441,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             } catch (Exception e) {
                 ZimbraLog.lmtp.warn("Exception delivering remote mail", e);
                 setDeliveryStatuses(env.getRemoteRecipients(), LmtpReply.TEMPORARY_FAILURE);
+            } finally {
+                if(bs != null){
+                    bs.close();
+                }
+                if(bis != null){
+                    bis.close();
+                }
             }
         } catch (ServiceException e) {
             ZimbraLog.lmtp.warn("Exception delivering mail (temporary failure)", e);
@@ -448,6 +455,20 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         } finally {
             if (cis != null) {
                 cis.release();
+            }
+            if(inEEW != null){
+                try {
+                    inEEW.close();
+                } catch (IOException e) {
+                    ZimbraLog.lmtp.warn("Unable to close input stream for External Email Warning");
+                }
+            }
+            if(in != null){
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    ZimbraLog.lmtp.warn("Unable to close input stream for External Email Warning");
+                }
             }
 
             if (blob != null) {
