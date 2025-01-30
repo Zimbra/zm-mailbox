@@ -27,6 +27,7 @@ import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.cs.volume.Volume;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 
 import com.google.common.io.ByteStreams;
@@ -103,6 +104,11 @@ public final class MockStoreManager extends StoreManager {
 
     @Override
     public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox) throws IOException {
+        return new MockStagedBlob(mbox, ByteStreams.toByteArray(data));
+    }
+
+    @Override
+    public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox, Volume volume) throws IOException {
         return new MockStagedBlob(mbox, ByteStreams.toByteArray(data));
     }
 
