@@ -6504,6 +6504,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalAccountStatusCheckInterval = "zimbraExternalAccountStatusCheckInterval";
 
     /**
+     * Sets the base warning text for External Email Warning (EEW)
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4139)
+    public static final String A_zimbraExternalEmailWarningMessage = "zimbraExternalEmailWarningMessage";
+
+    /**
      * the handler class for getting all groups an account belongs to in the
      * external directory
      *
@@ -7045,6 +7053,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1185)
     public static final String A_zimbraFeatureExportFolderEnabled = "zimbraFeatureExportFolderEnabled";
+
+    /**
+     * Feature to enable/disable External Email Warning (EEW)
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4138)
+    public static final String A_zimbraFeatureExternalEmailWarningEnabled = "zimbraFeatureExternalEmailWarningEnabled";
 
     /**
      * whether external feedback feature is enabled
