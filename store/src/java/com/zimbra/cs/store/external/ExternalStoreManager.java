@@ -277,8 +277,8 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         if (supports(StoreFeature.RESUMABLE_UPLOAD) && blob instanceof ExternalUploadedBlob) {
             ZimbraLog.store.debug("blob already uploaded, just need to commit");
             String locator = ((ExternalResumableUpload) this).finishUpload((ExternalUploadedBlob) blob);
-            if (locator != null) {
-                ZimbraLog.store.debug("wrote to locator %s",locator);
+            if (null != locator) {
+                ZimbraLog.store.debug("wrote to locator %s", locator);
                 localCache.put(locator, getContent(blob));
             } else {
                 ZimbraLog.store.warn("blob staging returned null locator");
@@ -288,7 +288,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
             InputStream is = getContent(blob);
             try {
                 StagedBlob staged = stage(is, blob.getRawSize(), mbox, volume);
-                if (staged != null && staged.getLocator() != null) {
+                if (null != staged && null != staged.getLocator()) {
                     localCache.put(staged.getLocator(), getContent(blob));
                 }
                 return staged;
@@ -348,7 +348,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
 
         try {
             String locator = writeStreamToStore(pin, actualSize, mbox, volume.getId());
-            if (locator != null) {
+            if (null != locator) {
                 ZimbraLog.store.debug("wrote to locator %s",locator);
             } else {
                 ZimbraLog.store.warn("blob staging returned null locator");
