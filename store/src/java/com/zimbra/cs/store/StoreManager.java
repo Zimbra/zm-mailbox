@@ -47,6 +47,7 @@ public abstract class StoreManager {
      */
     private static short currentVolumeId;
     private static Integer diskStreamingThreshold;
+    private static final int actualSizeforUnstagedBlob = -1;
 
 
     public static StoreManager getInstance () {
@@ -318,7 +319,7 @@ public abstract class StoreManager {
      */
     public StagedBlob stage(InputStream data, Mailbox mbox)
     throws IOException, ServiceException {
-        return stage(data, -1, mbox);
+        return stage(data, actualSizeforUnstagedBlob, mbox);
     }
 
     /**
@@ -333,7 +334,7 @@ public abstract class StoreManager {
      */
     public StagedBlob stage(InputStream data, Mailbox mbox, Volume volume)
             throws IOException, ServiceException {
-        return stage(data, -1, mbox, volume);
+        return stage(data, actualSizeforUnstagedBlob, mbox, volume);
     }
 
     /**
