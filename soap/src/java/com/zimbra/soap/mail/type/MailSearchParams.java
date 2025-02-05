@@ -272,6 +272,11 @@ public class MailSearchParams implements SearchParameters {
      *             from messages in the conversation (maximum of 8 of each)
      *     </ul>
      * </td> </tr>
+     * <tr> <td> <b>3</b> </td> <td>
+     *     <ul>
+     *         <li>returned sent messages will contain the sets of all "From:" Senders and "To:", "Cc:", "Bcc:", Recipients
+     *     </ul>
+     * </td> </tr>
      * </table>
      */
     @XmlAttribute(name=MailConstants.A_RECIPIENTS /* recip */, required=false)
