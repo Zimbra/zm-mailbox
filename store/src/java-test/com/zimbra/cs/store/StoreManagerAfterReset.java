@@ -18,6 +18,7 @@ package com.zimbra.cs.store;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.volume.Volume;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,6 +57,11 @@ public class StoreManagerAfterReset extends StoreManager {
 
     @Override
     public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox) throws IOException, ServiceException {
+        return null;
+    }
+
+    @Override
+    public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox, Volume volume) throws IOException, ServiceException {
         return null;
     }
 
