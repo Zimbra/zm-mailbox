@@ -274,7 +274,9 @@ public class MailSearchParams implements SearchParameters {
      * </td> </tr>
      * <tr> <td> <b>3</b> </td> <td>
      *     <ul>
-     *         <li>returned sent messages will contain the sets of all "From:" Senders and "To:", "Cc:", "Bcc:", Recipients
+     *         <li>returned sent messages will contain the sets of all "From:" Senders and "To:", "Cc:", "Bcc:" Recipients
+     *         <li>returned conversations will contain an aggregated list of (maximum of 8 of each) "From:" Senders and
+     *             "To:" Recipients from messages in the conversation
      *     </ul>
      * </td> </tr>
      * </table>
