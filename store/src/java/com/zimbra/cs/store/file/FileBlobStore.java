@@ -121,7 +121,7 @@ public final class FileBlobStore extends StoreManager {
     @Override
     public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox, Volume volume) throws IOException, ServiceException {
         // mailbox store is on the same volume as incoming directory, so no need to stage the blob
-        throw ServiceException.FAILURE("Operation can not be completed because ExternalStoreManager is not available", null);
+        throw ServiceException.FAILURE("Operation can not be completed because the required StoreManager is not available", null);
     }
 
     @Override
