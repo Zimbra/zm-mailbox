@@ -33,12 +33,18 @@ public final class ModifyOutgoingFilterRules extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
+        String OUTGOING_FILTER_RULE = "outgoingFilterRule";
 
         if (!canModifyOptions(zsc, account)) {
             throw ServiceException.PERM_DENIED("cannot modify options");
         }
 
         ModifyOutgoingFilterRulesRequest req = zsc.elementToJaxb(request);
+
+        if (!checkForwardFilterAttr(account, req.getFilterRules(), OUTGOING_FILTER_RULE)) {
+            throw ServiceException.PERM_DENIED("feature MailForwardingInFilters is not enabled");
+        }
+
         RuleManager.setOutgoingXMLRules(account, req.getFilterRules());
         return zsc.jaxbToElement(new ModifyOutgoingFilterRulesResponse());
     }

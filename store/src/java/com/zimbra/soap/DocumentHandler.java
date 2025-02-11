@@ -18,10 +18,17 @@
 package com.zimbra.soap;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
+import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
+import com.zimbra.soap.mail.type.FilterAction;
+import com.zimbra.soap.mail.type.FilterRule;
 import org.dom4j.QName;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -58,6 +65,7 @@ public abstract class DocumentHandler {
 
     private QName responseQName;
     private long proxyTimeout = -1;
+    String INCOMING_FILTER_RULE = "incomingFilterRule";
 
     @VisibleForTesting
     public void setResponseQName(QName response) {
@@ -256,6 +264,52 @@ public abstract class DocumentHandler {
             // if we're modifying our own options, we just need the appropriate feature enabled
             return acct.getBooleanAttr(Provisioning.A_zimbraFeatureOptionsEnabled, true);
         }
+    }
+
+    /**
+     * Return whether creation or modification of filter having mail forwarding instruction
+     * is permitted or not.
+     * On basis of attribute zimbraFeatureMailForwardingInFiltersEnabled.
+     * If zimbraFeatureMailForwardingInFiltersEnabled is disabled, mail forwarding filter creation should be restricted.
+     */
+    public boolean checkForwardFilterAttr(Account account, List<FilterRule> filterRules, String filterRuleType) throws ServiceException {
+        if (!account.isFeatureMailForwardingInFiltersEnabled() && !filterRules.isEmpty()) {
+            for (FilterRule filterRule:filterRules) {
+                if (Objects.requireNonNull(filterRule.getFilterActions()).stream().anyMatch(FilterAction.RedirectAction.class::isInstance)  && !checkIfFilterAlreadyExists(filterRule, account, filterRuleType)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean checkIfFilterAlreadyExists(FilterRule filterRule, Account account, String filterRuleType) throws ServiceException {
+        List<FilterRule> existingFilterRules = INCOMING_FILTER_RULE.equals(filterRuleType) ? RuleManager.getIncomingRulesAsXML(account) : RuleManager.getOutgoingRulesAsXML(account);
+        for (FilterRule existingFilterRule:existingFilterRules) {
+            if (filterRule.getName().equals(existingFilterRule.getName()) &&
+                    isFilterActionSame(filterRule, existingFilterRule)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isFilterActionSame(FilterRule filterRule, FilterRule existingFilterRule) {
+        List<FilterAction> filterActions = filterRule.getFilterActions();
+        List<FilterAction> existingFilterActions = existingFilterRule.getFilterActions();
+        if (filterActions == null || existingFilterActions == null) {
+            return false;
+        }
+
+        for (FilterAction filterAction : filterActions) {
+            if (filterAction instanceof FilterAction.RedirectAction) {
+                String redirectAddress = ((FilterAction.RedirectAction) filterAction).getAddress();
+                if (redirectAddress != null && existingFilterActions.stream().filter(action -> action instanceof FilterAction.RedirectAction).noneMatch(action -> redirectAddress.equals(((FilterAction.RedirectAction) action).getAddress()))) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /** Returns whether domain admin auth is sufficient to run this command.
