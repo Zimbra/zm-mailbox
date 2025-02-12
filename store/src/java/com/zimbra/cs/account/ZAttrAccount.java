@@ -52993,6 +52993,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether web UI should always request delivery status notification for
+     * outgoing messages
+     *
+     * @return zimbraPrefMailDeliveryStatusNotification, or false if unset
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public boolean isPrefMailDeliveryStatusNotification() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefMailDeliveryStatusNotification, false, true);
+    }
+
+    /**
+     * whether web UI should always request delivery status notification for
+     * outgoing messages
+     *
+     * @param zimbraPrefMailDeliveryStatusNotification new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public void setPrefMailDeliveryStatusNotification(boolean zimbraPrefMailDeliveryStatusNotification) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailDeliveryStatusNotification, zimbraPrefMailDeliveryStatusNotification ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether web UI should always request delivery status notification for
+     * outgoing messages
+     *
+     * @param zimbraPrefMailDeliveryStatusNotification new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public Map<String,Object> setPrefMailDeliveryStatusNotification(boolean zimbraPrefMailDeliveryStatusNotification, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailDeliveryStatusNotification, zimbraPrefMailDeliveryStatusNotification ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether web UI should always request delivery status notification for
+     * outgoing messages
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public void unsetPrefMailDeliveryStatusNotification() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailDeliveryStatusNotification, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether web UI should always request delivery status notification for
+     * outgoing messages
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public Map<String,Object> unsetPrefMailDeliveryStatusNotification(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailDeliveryStatusNotification, "");
+        return attrs;
+    }
+
+    /**
      * Flash icon when a new email arrives
      *
      * @return zimbraPrefMailFlashIcon, or false if unset
