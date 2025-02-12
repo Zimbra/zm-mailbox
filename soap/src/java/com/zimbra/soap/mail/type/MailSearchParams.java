@@ -268,8 +268,15 @@ public class MailSearchParams implements SearchParameters {
      * <tr> <td> <b>2</b> </td> <td>
      *     <ul>
      *         <li>returned sent messages will contain the sets of both "From:" Senders and "To:" Recipients
-     *         <li>returned conversations will contain an aggregated list of "From:" Senders and "To:" Recipients
-     *             from messages in the conversation (maximum of 8 of each)
+     *         <li>returned conversations will contain an aggregated list of (maximum of 8 of each) "From:" Senders and
+     *            "To:" Recipients from messages in the conversation
+     *     </ul>
+     * </td> </tr>
+     * <tr> <td> <b>3</b> </td> <td>
+     *     <ul>
+     *         <li>returned sent messages will contain the sets of all "From:" Senders and "To:", "Cc:", "Bcc:" Recipients
+     *         <li>returned conversations will contain an aggregated list of (maximum of 8 of each) "From:" Senders and
+     *             "To:" Recipients from messages in the conversation
      *     </ul>
      * </td> </tr>
      * </table>
