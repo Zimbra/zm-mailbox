@@ -105,14 +105,22 @@ public class Auth extends AdminDocumentHandler {
 
             Map<String, Object> authCtxt = AccountUtil.getAdminAuthContext(context, acctName, zsc);
             context.put(Provisioning.AUTH_MODE_KEY, AuthMode.PASSWORD);
-
-            prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+            Usage usage = Usage.AUTH;
+            try {
+                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+            } catch (AccountServiceException ase) {
+                if (AccountServiceException.CHANGE_PASSWORD.equals(ase.getCode())) {
+                    ZimbraLog.account.info("zimbraPasswordMustChange is enabled so creating an auth-token used to change password.");
+                    usage = Usage.RESET_PASSWORD;
+                } else {
+                    throw ase;
+                }
+            }
 
             AuthMech authedByMech = (AuthMech) authCtxt.get(AuthContext.AC_AUTHED_BY_MECH);
-            Usage usage = Usage.AUTH;
             TokenType tokenType = null;
 
-            if (AccountUtil.isTwoFactorAccount(acct)) {
+            if (usage != Usage.RESET_PASSWORD && AccountUtil.isTwoFactorAccount(acct)) {
                 if (StringUtil.isNullOrEmpty(twoFactorCode)) {
                     String reqTokenType = request.getAttribute(AccountConstants.A_TOKEN_TYPE, "");
                     tokenType = TokenType.fromCode(reqTokenType);
@@ -157,7 +165,9 @@ public class Auth extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         at.setCsrfTokenEnabled(csrfSupport);
-        if (at.getUsage() == Usage.TWO_FACTOR_AUTH) {
+        if (at.getUsage() == Usage.RESET_PASSWORD) {
+            response.addUniqueElement(AccountConstants.E_RESET_PWD).setText("true");
+        } else if (at.getUsage() == Usage.TWO_FACTOR_AUTH) {
             response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
             AccountUtil.addTwoFactorAttributes(response, acct);
         } else {

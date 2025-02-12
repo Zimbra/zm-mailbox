@@ -999,6 +999,7 @@ public final class LC {
     public static final KnownKey lds_client_max_connection = KnownKey.newKey(100);
     public static final KnownKey lds_client_max_per_route = KnownKey.newKey(20);
     public static final KnownKey lds_client_max_idle_time_seconds = KnownKey.newKey(20);
+    public static final KnownKey ignore_imap_uid_range_search = KnownKey.newKey(true);
 
     /**
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.

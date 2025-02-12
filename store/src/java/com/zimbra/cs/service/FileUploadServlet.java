@@ -214,6 +214,7 @@ public class FileUploadServlet extends ZimbraServlet {
             metadata.add(Metadata.RESOURCE_NAME_KEY, fileItem.getName());
             String customMimeTypesPath = LC.custom_mimetypes.value();
             MediaType mediaType = null;
+            String contentType = fileItem.getContentType();
             try {
                 TikaInputStream stream = TikaInputStream.get(fileItem.getInputStream());
                 if (new File(customMimeTypesPath).isFile()) {
@@ -221,6 +222,10 @@ public class FileUploadServlet extends ZimbraServlet {
                     mediaType = new CompositeDetector(customMimeTypes, detector).detect(stream, metadata);
                 } else {
                     mediaType = detector.detect(stream, metadata);
+                }
+                // special-case text/xml to avoid detection of text/plain
+                if (mediaTypeIsPlainNullOrEmpty(String.valueOf(mediaType)) && isContentTypeXML(contentType)) {
+                    mediaType = MediaType.parse(contentType);
                 }
                 mimeType = tikaConfig.getMimeRepository().forName(mediaType.toString());
                 mLog.debug("Content type detected by tika: %s.", mimeType.toString());
@@ -230,6 +235,16 @@ public class FileUploadServlet extends ZimbraServlet {
                 mLog.warn("Cannot get content for upload", exp);
             }
             return mimeType;
+        }
+
+        public static boolean mediaTypeIsPlainNullOrEmpty(String mediaType) {
+            return StringUtils.isBlank(mediaType) || MimeConstants.CT_TEXT_PLAIN.equals(mediaType);
+        }
+
+        public static boolean isContentTypeXML(String contentType) {
+            return !StringUtil.isNullOrEmpty(contentType) &&
+                    (MimeConstants.CT_TEXT_XML.equals(contentType) ||
+                            MimeConstants.CT_TEXT_XML_LEGACY.equals(contentType));
         }
 
         public static String getExtension(MimeType mimeType) {

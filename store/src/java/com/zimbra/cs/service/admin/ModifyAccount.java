@@ -132,6 +132,10 @@ public class ModifyAccount extends AdminDocumentHandler {
         boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
 
         String oldSuspendReason = account.getAccountSuspensionReason();
+
+        // zimbraMailAttachmentMaxSize should not be more than mtaMessageMaxSize
+        validateMailAttachmentMaxSize(attrs);
+
         if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
             String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
             //clearing account suspension reason if new status is active and old status other than active.
