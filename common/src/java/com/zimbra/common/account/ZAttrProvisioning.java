@@ -14630,6 +14630,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefMailDefaultCharset = "zimbraPrefMailDefaultCharset";
 
     /**
+     * whether web UI should always request delivery status notification for
+     * outgoing messages
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4140)
+    public static final String A_zimbraPrefMailDeliveryStatusNotification = "zimbraPrefMailDeliveryStatusNotification";
+
+    /**
      * Flash icon when a new email arrives
      *
      * @since ZCS 5.0.7
