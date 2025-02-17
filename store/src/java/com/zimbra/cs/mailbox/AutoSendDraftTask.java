@@ -47,7 +47,6 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
     private Element request;
     public static final String ZIMBRA_MAILBOX_APP = "ZIMBRA_MAILBOX_APP";
     public static final String ZIMBRA_CONSTANT_VERSION = "1.0";
-    public static final String DELIVERY_RECEIPT_ENABLED = "1";
 
 
     public Server getServerName() {
@@ -123,7 +122,7 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
         boolean deliveryReport = false;
         if (null != delegatorAccount) {
             if (delegatorAccount.getBooleanAttr(Provisioning.A_zimbraFeatureDeliveryStatusNotificationEnabled, false)) {
-                deliveryReport = DELIVERY_RECEIPT_ENABLED.equals(msg.getMimeMessage().getHeader(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, null));
+                deliveryReport = Boolean.parseBoolean(msg.getMimeMessage().getHeader(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, null));
             }
             if (Provisioning.onLocalServer(delegatorAccount)) {
                 delegatorMbox = MailboxManager.getInstance().getMailboxByAccount(delegatorAccount);
