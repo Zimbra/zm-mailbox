@@ -10157,7 +10157,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatBaseHost, or null if unset
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4137)
     public String getChatBaseHost() {
@@ -10171,7 +10171,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatBaseHost new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4137)
     public void setChatBaseHost(String zimbraChatBaseHost) throws com.zimbra.common.service.ServiceException {
@@ -10188,7 +10188,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4137)
     public Map<String,Object> setChatBaseHost(String zimbraChatBaseHost, Map<String,Object> attrs) {
@@ -10203,7 +10203,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4137)
     public void unsetChatBaseHost() throws com.zimbra.common.service.ServiceException {
@@ -10219,7 +10219,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4137)
     public Map<String,Object> unsetChatBaseHost(Map<String,Object> attrs) {
@@ -10310,7 +10310,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraChatJwtSecret, or null if unset
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4136)
     public String getChatJwtSecret() {
@@ -10323,7 +10323,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraChatJwtSecret new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4136)
     public void setChatJwtSecret(String zimbraChatJwtSecret) throws com.zimbra.common.service.ServiceException {
@@ -10339,7 +10339,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4136)
     public Map<String,Object> setChatJwtSecret(String zimbraChatJwtSecret, Map<String,Object> attrs) {
@@ -10353,7 +10353,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4136)
     public void unsetChatJwtSecret() throws com.zimbra.common.service.ServiceException {
@@ -10368,7 +10368,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.6
+     * @since ZCS 10.1.7
      */
     @ZAttr(id=4136)
     public Map<String,Object> unsetChatJwtSecret(Map<String,Object> attrs) {
