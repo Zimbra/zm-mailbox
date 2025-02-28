@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class SaveDraftMsg extends Msg {
@@ -77,6 +78,13 @@ public class SaveDraftMsg extends Msg {
     @XmlAttribute(name=MailConstants.A_AUTO_SEND_TIME /* autoSendTime */, required=false)
     private Long autoSendTime;
 
+    /**
+     * @zm-api-field-tag delivery-receipt-notification
+     * @zm-api-field-description If set, delivery receipt notification will be sent.
+     */
+    @XmlAttribute(name=MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION /* deliveryReport */, required=false)
+    private ZmBoolean deliveryReport;
+
     public SaveDraftMsg() {
     }
 
@@ -92,6 +100,9 @@ public class SaveDraftMsg extends Msg {
     public void setAutoSendTime(Long autoSendTime) {
         this.autoSendTime = autoSendTime;
     }
+    public void setDeliveryReport(Boolean deliveryReport) {
+        this.deliveryReport = ZmBoolean.fromBool(deliveryReport);
+    }
 
     public Integer getId() { return id; }
     public String getDraftAccountId() { return draftAccountId; }
@@ -101,6 +112,7 @@ public class SaveDraftMsg extends Msg {
     public String getRgb() { return rgb; }
     public Byte getColor() { return color; }
     public Long getAutoSendTime() { return autoSendTime; }
+    public Boolean getDeliveryReport() { return ZmBoolean.toBool(deliveryReport); }
 
     @Override
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
@@ -112,7 +124,8 @@ public class SaveDraftMsg extends Msg {
             .add("tagNames", tagNames)
             .add("rgb", rgb)
             .add("color", color)
-            .add("autoSendTime", autoSendTime);
+            .add("autoSendTime", autoSendTime)
+            .add("deliveryReport", deliveryReport);
     }
 
     @Override

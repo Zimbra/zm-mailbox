@@ -56,6 +56,13 @@ extends Msg {
     @XmlAttribute(name=MailConstants.A_DATASOURCE_ID /* dsId */, required=false)
     private String dataSourceId;
 
+    /**
+     * @zm-api-field-tag delivery-receipt-notification
+     * @zm-api-field-description If set, delivery receipt notification will be sent.
+     */
+    @XmlAttribute(name=MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION /* deliveryReport */, required=false)
+    private ZmBoolean deliveryReport;
+
     public MsgToSend() {
     }
 
@@ -73,13 +80,18 @@ extends Msg {
     public void setDataSourceId(String dsId) { this.dataSourceId = dsId; }
     public String getDataSourceId() { return dataSourceId; }
 
+    @GraphQLInputField(name=GqlConstants.DELIVERY_RECEIPT_NOTIFICATION, description="Whether to enable DSN for the outgoing message")
+    public void setDeliveryReport(Boolean deliveryReport) { this.deliveryReport = ZmBoolean.fromBool(deliveryReport); }
+    public Boolean getDeliveryReport() { return ZmBoolean.toBool(deliveryReport); }
+
     @Override
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("draftId", draftId)
             .add("sendFromDraft", sendFromDraft)
-            .add("dataSourceId", dataSourceId);
+            .add("dataSourceId", dataSourceId)
+            .add("deliveryReport", deliveryReport);
     }
 
     @Override
