@@ -10571,6 +10571,16 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="4138" name="zimbraFeatureExternalEmailWarningEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.9">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Feature to enable/disable External Email Warning (EEW)</desc>
+</attr>
+
+<attr id="4139" name="zimbraExternalEmailWarningMessage" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.9">
+  <desc>Sets the base warning text for External Email Warning (EEW)</desc>
+  <globalConfigValue>This message originated outside of your organization.</globalConfigValue>
+</attr>
+
 <attr id="4140" name="zimbraPrefMailDeliveryStatusNotification" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="10.1.8">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether web UI should always request delivery status notification for outgoing messages</desc>

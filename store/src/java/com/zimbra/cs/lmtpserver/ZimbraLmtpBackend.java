@@ -34,6 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.account.Key;
 import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Function;
@@ -345,21 +346,29 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         // initializing input stream and blob for External Email Warning (EEW)
         InputStream inEEW = null;
         Blob blobEEW = null;
-        if (ExternalEmailWarning.getInstance().isEnabled()) {
-            // duplicating input stream for EEW
+        ExternalEmailWarning.getInstance().findRecipientsWithEEWEnabled(env.getRecipients());
+        HashMap<Account, Blob> eewMessageMap= new HashMap<>();
+        for (LmtpAddress recipient : env.getRecipients()) {
             try {
-                for (int i = 0; i < CHARSET_NAMES.length; i++) {
-                    final String charsetName = CHARSET_NAMES[i];
-                    // copy input stream and evaluate content encoding
-                    final byte[] ba = IOUtils.toByteArray(in);
-                    IOUtils.closeQuietly(in);
-                    in = new ByteArrayInputStream(ba);
-                    final String content = new String(ba, charsetName);
-                    // if current encoding is suitable, use it; otherwise, continue or use default
-                    if (!content.contains(GARBLED_CHARACTER) || i == CHARSET_NAMES.length - 1) {
-                        final String contentEEW = ExternalEmailWarning.getInstance().getUpdatedContent(content);
-                        inEEW = IOUtils.toInputStream(contentEEW, charsetName);
-                        break;
+                String rcptEmail = recipient.getEmailAddress();
+                Account account = Provisioning.getInstance().get(Key.AccountBy.name, rcptEmail);
+                if (ExternalEmailWarning.getInstance().isEnabled(account)) {
+                    // duplicating input stream for EEW
+                    for (int i = 0; i < CHARSET_NAMES.length; i++) {
+                        final String charsetName = CHARSET_NAMES[i];
+                        // copy input stream and evaluate content encoding
+                        final byte[] ba = IOUtils.toByteArray(in);
+                        IOUtils.closeQuietly(in);
+                        in = new ByteArrayInputStream(ba);
+                        final String content = new String(ba, charsetName);
+                        // if current encoding is suitable, use it; otherwise, continue or use default
+                        if (!content.contains(GARBLED_CHARACTER) || i == CHARSET_NAMES.length - 1) {
+                            String contentEEW = ExternalEmailWarning.getInstance().getUpdatedContent(content, account);
+                            inEEW = IOUtils.toInputStream(contentEEW, charsetName);
+                            blobEEW = StoreManager.getInstance().storeIncoming(inEEW);
+                            eewMessageMap.put(account, blobEEW);
+                            break;
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -430,7 +439,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             try {
                 // invoke for non-EEW and EEW
-                deliverMessageToLocalMailboxes(blob, blobEEW, bis, data, mm, env);
+                deliverMessageToLocalMailboxes(blob, eewMessageMap, bis, data, mm, env);
             } catch (Exception e) {
                 ZimbraLog.lmtp.warn("Exception delivering mail (temporary failure)", e);
                 setDeliveryStatuses(env.getLocalRecipients(), LmtpReply.TEMPORARY_FAILURE);
@@ -459,18 +468,22 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 }
             }
             // deleting blob for EEW
-            try {
-                if (blobEEW != null) {
-                    StoreManager.getInstance().delete(blobEEW);
+                if (eewMessageMap != null) {
+                    eewMessageMap.values().forEach(b -> {
+                        try {
+                            StoreManager.getInstance().delete(b);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                    eewMessageMap.clear();
                 }
-            } catch (IOException e) {
-                ZimbraLog.lmtp.warn("failed to delete blob for EEW", e);
-            }
+
         }
     }
 
     // invoke for non-EEW and EEW
-    private void deliverMessageToLocalMailboxes(Blob blob, Blob blobEEW, BlobInputStream bis, byte[] data, MimeMessage mm, LmtpEnvelope env)
+    private void deliverMessageToLocalMailboxes(Blob blob, HashMap<Account, Blob> blobEEWMap, BlobInputStream bis, byte[] data, MimeMessage mm, LmtpEnvelope env)
         throws ServiceException, IOException {
 
         List<LmtpAddress> recipients = env.getLocalRecipients();
@@ -527,10 +540,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     if (mm != null) {
                         pmo = new ParsedMessageOptions().setContent(mm).setDigest(blob.getDigest()).setSize(blob.getRawSize());
                     } else {
-                        if (blobEEW != null && ExternalEmailWarning.getInstance().isEnabled()
+                        if (blobEEWMap.get(account) != null && ExternalEmailWarning.getInstance().isEnabled(account)
                                 && ExternalEmailWarning.getInstance().isExternal(account.getName(), envSender)) {
                             // instantiaing parsed message options for EEW
-			    pmo = new ParsedMessageOptions(blobEEW, data);
+			    pmo = new ParsedMessageOptions(blobEEWMap.get(account), data);
                         } else {
                             // instantiaing parsed message options for non-EEW
                             pmo = new ParsedMessageOptions(blob, data);
@@ -601,9 +614,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             // instantiating delivery context for EEW
             DeliveryContext sharedDeliveryCtxtEEW = new DeliveryContext(shared, targetMailboxIds);
-            if (blobEEW != null && ExternalEmailWarning.getInstance().isEnabled()) {
-                sharedDeliveryCtxtEEW.setIncomingBlob(blobEEW);
-            }
 
             // We now know which addresses are valid and which ParsedMessage
             // version each recipient needs.  Deliver!
@@ -696,12 +706,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 // Get msgid first, to avoid having to reopen and reparse the blob
                                 // file if Mailbox.addMessageInternal() closes it.
                                 pm.getMessageID();
-                                if (blobEEW != null && ExternalEmailWarning.getInstance().isEnabled()
+                                if (blobEEWMap.get(account) != null && ExternalEmailWarning.getInstance().isEnabled(account)
                                         && ExternalEmailWarning.getInstance().isExternal(account.getName(),
                                                 envSender)) {
                                     // invoking for EEW
+                                        sharedDeliveryCtxtEEW.setIncomingBlob(blobEEWMap.get(account));
                                     addedMessageIds = RuleManager.applyRulesToIncomingMessage(null, mbox, pm,
-                                            (int) blobEEW.getRawSize(), rcptEmail, env, sharedDeliveryCtxtEEW,
+                                            (int) blobEEWMap.get(account).getRawSize(), rcptEmail, env, sharedDeliveryCtxtEEW,
                                             Mailbox.ID_FOLDER_INBOX, false, true);
                                 } else {
                                     // invoking for non-EEW

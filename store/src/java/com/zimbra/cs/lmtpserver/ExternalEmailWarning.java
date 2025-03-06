@@ -18,13 +18,19 @@ package com.zimbra.cs.lmtpserver;
 
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
 import org.apache.commons.lang.StringEscapeUtils;
 
-import com.zimbra.common.localconfig.LC;
 
 /**
  * ExternalEmailWarning is a singleton class that provides assorted utilities
@@ -36,20 +42,14 @@ import com.zimbra.common.localconfig.LC;
 public class ExternalEmailWarning {
 
     private static ExternalEmailWarning instance;
-    private boolean isEnabled;
     private String baseWarningMessage;
     private String textPlainWarning;
     private String textHtmlWarning;
     private String encodedTextPlainWarning;
     private String encodedTextHtmlWarning;
+    private HashSet<Domain> eewEnabledDomainsSet;
 
     private ExternalEmailWarning() {
-        isEnabled = LC.zimbra_external_email_warning_enabled.booleanValue();
-        baseWarningMessage = LC.zimbra_external_email_warning_message.value();
-        textPlainWarning = StringEscapeUtils.escapeHtml(baseWarningMessage) + "\r\n";
-        textHtmlWarning = "<div><p>" + baseWarningMessage + "</p><hr/></div>";
-        encodedTextPlainWarning = Base64.getEncoder().encodeToString(textPlainWarning.getBytes());
-        encodedTextHtmlWarning = Base64.getEncoder().encodeToString(textHtmlWarning.getBytes());
     }
 
     public static ExternalEmailWarning getInstance() {
@@ -68,8 +68,36 @@ public class ExternalEmailWarning {
      * 
      * @return true if EEW feature is enabled.
      */
-    public boolean isEnabled() {
-        return isEnabled;
+    public boolean isEnabled(Account account) throws ServiceException {
+        return eewEnabledDomainsSet.contains(Provisioning.getInstance().getDomain(account));
+    }
+
+    /**
+     * Checks if each recipient in the list has External Email Warning (EEW) enabled.
+     * If a recipient has EEW enabled, their account is added to the {@code eewEnabledAccountsSet}.
+     * 
+     * @param recipients a list of recipients to check
+     */
+    public void findRecipientsWithEEWEnabled(List<LmtpAddress> recipients) {
+        if (null == eewEnabledDomainsSet) {
+            eewEnabledDomainsSet = new HashSet<>();
+        }
+        for (LmtpAddress recipient : recipients) {
+            try {
+                String rcptEmail = recipient.getEmailAddress();
+                Account account = Provisioning.getInstance().get(Key.AccountBy.name, rcptEmail);
+                if (null != account) {
+                    Domain domain = Provisioning.getInstance().getDomain(account);
+                    if (null != domain) {
+                        if (!eewEnabledDomainsSet.contains(domain) && domain.isFeatureExternalEmailWarningEnabled()) {
+                            eewEnabledDomainsSet.add(domain);
+                        }
+                    }
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.lmtp.warn("Error retrieving account recipient: " + recipient.getEmailAddress(), e);
+            }
+        }
     }
 
     /**
@@ -190,8 +218,17 @@ public class ExternalEmailWarning {
      *            string representation of mime message in RFC822 format
      * @return updated string with warning note
      */
-    public String getUpdatedContent(String content) {
+    public String getUpdatedContent(String content, Account account) {
         if (content != null) {
+            try {
+                baseWarningMessage = Provisioning.getInstance().getDomain(account).getExternalEmailWarningMessage();
+            } catch (ServiceException e) {
+                ZimbraLog.lmtp.warn("Error while retrieving external email warning message", e);
+            }
+            textPlainWarning = StringEscapeUtils.escapeHtml(baseWarningMessage) + "\r\n";
+            textHtmlWarning = "<div><p>" + baseWarningMessage + "</p><hr/></div>";
+            encodedTextPlainWarning = Base64.getEncoder().encodeToString(textPlainWarning.getBytes());
+            encodedTextHtmlWarning = Base64.getEncoder().encodeToString(textHtmlWarning.getBytes());
             final Matcher ctTextPlainMatcher = CONTENT_TYPE_TEXT_PLAIN_PATTERN.matcher(content);
             final Matcher ctBase64TextPlainMatcher = CONTENT_TRANSFER_BASE64_TEXT_PLAIN_PATTERN.matcher(content);
             if (ctTextPlainMatcher.find()) {
