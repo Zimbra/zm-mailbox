@@ -159,7 +159,7 @@ public class SaveDraft extends MailDocumentHandler {
                 Date d = new Date();
                 mm.setSentDate(d);
                 date = d.getTime();
-                mm.setHeader(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, msgElem.getAttribute(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, "0"));
+                mm.setHeader(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, String.valueOf(msgElem.getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false)));
             } catch (Exception ignored) {
             }
 

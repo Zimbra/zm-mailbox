@@ -1503,9 +1503,6 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_remote_cmd_channel_timeout_min = KnownKey.newKey(10);
 
-    @Supported
-    public static final KnownKey delivery_report_enabled = KnownKey.newKey(true);
-
     public static final KnownKey invite_ignore_x_alt_description = KnownKey.newKey(true);
 
     // TODO: ZCS-11319 move the following from LC to LDAP property.
