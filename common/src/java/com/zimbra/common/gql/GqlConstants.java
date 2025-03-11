@@ -710,4 +710,5 @@ public class GqlConstants {
 
     // GetAccount - admin api
     public static final String APPLY_COS = "applyCos";
+    public static final String DELIVERY_RECEIPT_NOTIFICATION = "deliveryReport";
 }
