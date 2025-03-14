@@ -62,7 +62,7 @@ public class StoreManagerAfterReset extends StoreManager {
 
     @Override
     public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox, Volume volume) throws IOException, ServiceException {
-        throw ServiceException.UNSUPPORTED();
+        return null;
     }
 
     @Override
