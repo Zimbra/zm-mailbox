@@ -29,7 +29,6 @@ import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.store.helper.ClassHelper;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 
 import java.io.IOException;
@@ -299,41 +298,12 @@ public abstract class StoreManager {
      * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
      *
      * @param data the data stream
-     * @param actualSize the content size, or {@code -1} if the content size is not available
-     * @param callback callback, or {@code null}
-     * @param mbox the mailbox
-     * @param volume the volume
-     */
-    public abstract StagedBlob stage(InputStream data, long actualSize, Mailbox mbox, Volume volume)
-            throws IOException, ServiceException;
-
-    /**
-     * Stage an incoming <code>InputStream</code> to an
-     * appropriate place for subsequent storage in a <code>Mailbox</code> via
-     * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
-     *
-     * @param data the data stream
      * @param callback callback, or {@code null}
      * @param mbox the mailbox
      */
     public StagedBlob stage(InputStream data, Mailbox mbox)
     throws IOException, ServiceException {
         return stage(data, -1, mbox);
-    }
-
-    /**
-     * Stage an incoming <code>InputStream</code> to an
-     * appropriate place for subsequent storage in a <code>Mailbox</code> via
-     * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
-     *
-     * @param data the data stream
-     * @param callback callback, or {@code null}
-     * @param mbox the mailbox
-     * @param volume the volume
-     */
-    public StagedBlob stage(InputStream data, Mailbox mbox, Volume volume)
-            throws IOException, ServiceException {
-        return stage(data, -1, mbox, volume);
     }
 
     /**

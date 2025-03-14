@@ -39,21 +39,6 @@ public interface ExternalBlobIO {
     String writeStreamToStore(InputStream in, long actualSize, Mailbox mbox) throws IOException, ServiceException;
 
     /**
-     * Write data to blob store
-     *
-     * @param in:         InputStream containing data to be written
-     * @param actualSize: size of data in stream, or -1 if size is unknown. To be used by implementor for optimization where possible
-     * @param mbox:       Mailbox which contains the blob. Can optionally be used by store for partitioning
-     * @param destVolId:  Destination Volume id on which we need to store the blob
-     * @return locator string for the stored blob, unique identifier created by storage protocol
-     * @throws IOException
-     * @throws ServiceException
-     */
-    default String writeStreamToStore(InputStream in, long actualSize, Mailbox mbox, short destVolId) throws IOException, ServiceException {
-        return null;
-    }
-
-    /**
      * Create an input stream for reading data from blob store
      * @param locator: identifier string for the blob as returned from write operation
      * @param mbox: Mailbox which contains the blob. Can optionally be used by store for partitioning
