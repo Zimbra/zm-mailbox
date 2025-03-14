@@ -50,7 +50,7 @@ public interface ExternalBlobIO {
      * @throws ServiceException
      */
     default String writeStreamToStore(InputStream in, long actualSize, Mailbox mbox, short destVolId) throws IOException, ServiceException {
-        throw ServiceException.UNSUPPORTED();
+        return null;
     }
 
     /**
