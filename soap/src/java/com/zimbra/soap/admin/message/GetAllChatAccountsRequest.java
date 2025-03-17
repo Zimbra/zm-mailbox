@@ -17,40 +17,41 @@
 
 package com.zimbra.soap.admin.message;
 
-import java.util.Collections;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AccountInfo;
+import com.zimbra.soap.admin.type.DomainSelector;
 
+/**
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required true
+ * @zm-api-command-description Get all Chat accounts
+ */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_ALL_ZULIP_ACCOUNTS_RESPONSE)
-public class GetAllZulipAccountsResponse {
+@XmlRootElement(name=AdminConstants.E_GET_ALL_CHAT_ACCOUNTS_REQUEST)
+public class GetAllChatAccountsRequest {
     /**
-     * @zm-api-field-description Information on accounts
+     * @zm-api-field-description Domain
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT, required=false)
-    private List <AccountInfo> accountList = Lists.newArrayList();
+    @XmlElement(name=AdminConstants.E_DOMAIN /* zimbra domin */, required=true)
+    private final DomainSelector domain;
 
-    public void setAccountList(Iterable <AccountInfo> accounts) {
-        this.accountList.clear();
-        if (accounts != null) {
-            Iterables.addAll(this.accountList, accounts);
-        }
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private GetAllChatAccountsRequest() {
+        this((DomainSelector) null);
     }
 
-    public void addAccount(AccountInfo account ) {
-        this.accountList.add(account);
+    public GetAllChatAccountsRequest(DomainSelector domain) {
+        this.domain = domain;
     }
 
-    public List <AccountInfo> getAccountList() {
-        return Collections.unmodifiableList(accountList);
+    public DomainSelector getDomain() {
+        return domain;
     }
 }

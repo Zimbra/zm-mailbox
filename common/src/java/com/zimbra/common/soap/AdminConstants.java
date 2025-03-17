@@ -99,14 +99,14 @@ public final class AdminConstants {
     public static final String E_GET_ALL_DOMAINS_REQUEST = "GetAllDomainsRequest";
     public static final String E_GET_ALL_DOMAINS_RESPONSE = "GetAllDomainsResponse";
 
-    public static final String E_CREATE_ZULIP_REALM_REQUEST = "CreateZulipRealmRequest";
-    public static final String E_CREATE_ZULIP_REALM_RESPONSE = "CreateZulipRealmResponse";
-    public static final String E_PROV_ZULIP_ACCOUNTS_REQUEST = "ProvZulipAccountsRequest";
-    public static final String E_PROV_ZULIP_ACCOUNTS_RESPONSE = "ProvZulipAccountsResponse";
-    public static final String E_MANAGE_ZULIP_ACCOUNT_REQUEST = "ManageZulipAccountRequest";
-    public static final String E_MANAGE_ZULIP_ACCOUNT_RESPONSE = "ManageZulipAccountResponse";
-    public static final String E_GET_ALL_ZULIP_ACCOUNTS_REQUEST = "GetAllZulipAccountsRequest";
-    public static final String E_GET_ALL_ZULIP_ACCOUNTS_RESPONSE = "GetAllZulipAccountsResponse";
+    public static final String E_CREATE_CHAT_REALM_REQUEST = "CreateChatRealmRequest";
+    public static final String E_CREATE_CHAT_REALM_RESPONSE = "CreateChatRealmResponse";
+    public static final String E_PROV_CHAT_ACCOUNTS_REQUEST = "ProvChatAccountsRequest";
+    public static final String E_PROV_CHAT_ACCOUNTS_RESPONSE = "ProvChatAccountsResponse";
+    public static final String E_MANAGE_CHAT_ACCOUNT_REQUEST = "ManageChatAccountRequest";
+    public static final String E_MANAGE_CHAT_ACCOUNT_RESPONSE = "ManageChatAccountResponse";
+    public static final String E_GET_ALL_CHAT_ACCOUNTS_REQUEST = "GetAllChatAccountsRequest";
+    public static final String E_GET_ALL_CHAT_ACCOUNTS_RESPONSE = "GetAllChatAccountsResponse";
 
     public static final String E_CREATE_COS_REQUEST = "CreateCosRequest";
     public static final String E_CREATE_COS_RESPONSE = "CreateCosResponse";
@@ -628,14 +628,14 @@ public final class AdminConstants {
     public static final QName GET_ALL_DOMAINS_REQUEST = QName.get(E_GET_ALL_DOMAINS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_DOMAINS_RESPONSE = QName.get(E_GET_ALL_DOMAINS_RESPONSE, NAMESPACE);
 
-    public static final QName CREATE_ZULIP_REALM_REQUEST = QName.get(E_CREATE_ZULIP_REALM_REQUEST, NAMESPACE);
-    public static final QName CREATE_ZULIP_REALM_RESPONSE = QName.get(E_CREATE_ZULIP_REALM_RESPONSE, NAMESPACE);
-    public static final QName PROV_ZULIP_ACCOUNTS_REQUEST = QName.get(E_PROV_ZULIP_ACCOUNTS_REQUEST, NAMESPACE);
-    public static final QName PROV_ZULIP_ACCOUNTS_RESPONSE = QName.get(E_PROV_ZULIP_ACCOUNTS_RESPONSE, NAMESPACE);
-    public static final QName MANAGE_ZULIP_ACCOUNT_REQUEST = QName.get(E_MANAGE_ZULIP_ACCOUNT_REQUEST, NAMESPACE);
-    public static final QName MANAGE_ZULIP_ACCOUNT_RESPONSE = QName.get(E_MANAGE_ZULIP_ACCOUNT_RESPONSE, NAMESPACE);
-    public static final QName GET_ALL_ZULIP_ACCOUNTS_REQUEST = QName.get(E_GET_ALL_ZULIP_ACCOUNTS_REQUEST, NAMESPACE);
-    public static final QName GET_ALL_ZULIP_ACCOUNTS_RESPONSE = QName.get(E_GET_ALL_ZULIP_ACCOUNTS_RESPONSE, NAMESPACE);
+    public static final QName CREATE_CHAT_REALM_REQUEST = QName.get(E_CREATE_CHAT_REALM_REQUEST, NAMESPACE);
+    public static final QName CREATE_CHAT_REALM_RESPONSE = QName.get(E_CREATE_CHAT_REALM_RESPONSE, NAMESPACE);
+    public static final QName PROV_CHAT_ACCOUNTS_REQUEST = QName.get(E_PROV_CHAT_ACCOUNTS_REQUEST, NAMESPACE);
+    public static final QName PROV_CHAT_ACCOUNTS_RESPONSE = QName.get(E_PROV_CHAT_ACCOUNTS_RESPONSE, NAMESPACE);
+    public static final QName MANAGE_CHAT_ACCOUNT_REQUEST = QName.get(E_MANAGE_CHAT_ACCOUNT_REQUEST, NAMESPACE);
+    public static final QName MANAGE_CHAT_ACCOUNT_RESPONSE = QName.get(E_MANAGE_CHAT_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName GET_ALL_CHAT_ACCOUNTS_REQUEST = QName.get(E_GET_ALL_CHAT_ACCOUNTS_REQUEST, NAMESPACE);
+    public static final QName GET_ALL_CHAT_ACCOUNTS_RESPONSE = QName.get(E_GET_ALL_CHAT_ACCOUNTS_RESPONSE, NAMESPACE);
 
     public static final QName CREATE_COS_REQUEST = QName.get(E_CREATE_COS_REQUEST, NAMESPACE);
     public static final QName CREATE_COS_RESPONSE = QName.get(E_CREATE_COS_RESPONSE, NAMESPACE);
@@ -1636,7 +1636,7 @@ public final class AdminConstants {
     public static final String E_LDAP_FILTER = "ldapFilter";
     public static final String A_CLEAR_FILTER = "clearFilter";
 
-    public static final String A_ZULIP_DOMAIN = "zulipDomain";
+    public static final String A_CHAT_DOMAIN = "chatDomain";
     public static final String E_DEVICES = "devices";
 
     public static final String A_SM_RUNTIME_SWITCH_STATUS = "status";

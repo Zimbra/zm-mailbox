@@ -19,56 +19,55 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
- * @zm-api-command-description Provision Zulip accounts
- * <br />
- * If account is specified, the account is provisioned on Zulip. <br />
- * If not, all accounts in the domain are provisioned.
- * Accounts whose zimbraAccountStatus is not active, zimbraIsSystemAccount is TRUE
- * or zimbraFeatureZulipChatEnabled is FALSE is skipped.
+ * @zm-api-command-description Manage Chat account
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_PROV_ZULIP_ACCOUNTS_REQUEST)
-public class ProvZulipAccountsRequest {
+@XmlRootElement(name=AdminConstants.E_MANAGE_CHAT_ACCOUNT_REQUEST)
+public class ManageChatAccountRequest {
     /**
-     * @zm-api-field-description Domain
+     * @zm-api-field-tag "get|activate|deactivate"
+     * @zm-api-field-description Action to perform
+     * <table>
+     * <tr> <td> <b>get</b> </td> <td> get Chat account</td> </tr>
+     * <tr> <td> <b>activate</b> </td> <td> activate Chat account</td> </tr>
+     * <tr> <td> <b>deactivate</b> </td> <td> deactivate Chat account</td> </tr>
+     * <tr> <td> <b>delete</b> </td> <td> delete Chat account</td> </tr>
+     * </table>
      */
-    @XmlElement(name=AdminConstants.E_DOMAIN /* zimbra domin */, required=true)
-    private final DomainSelector domain;
+    @XmlAttribute(name=AdminConstants.E_ACTION, required=true)
+    private final String action;
 
     /**
      * @zm-api-field-description Account
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT /* zimbra domin */, required=false)
-    private final AccountSelector account;
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
+    private AccountSelector account;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private ProvZulipAccountsRequest() {
-        this((DomainSelector) null, (AccountSelector) null);
+    private ManageChatAccountRequest() {
+        this((AccountSelector) null, (String) null);
     }
 
-    public ProvZulipAccountsRequest(DomainSelector domain, AccountSelector account) {
-        this.domain = domain;
+    public ManageChatAccountRequest(AccountSelector account, String action) {
         this.account = account;
+        this.action = action;
     }
 
-    public DomainSelector getDomain() {
-        return domain;
-    }
+    public AccountSelector getAccount() { return account; }
 
-    public AccountSelector getAccount() {
-        return account;
-    }
+    public String getAction() { return action; }
+
 }

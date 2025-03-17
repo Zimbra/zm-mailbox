@@ -25,8 +25,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_PROV_ZULIP_ACCOUNTS_RESPONSE)
-public class ProvZulipAccountsResponse {
+@XmlRootElement(name=AdminConstants.E_PROV_CHAT_ACCOUNTS_RESPONSE)
+public class ProvChatAccountsResponse {
     /**
      * @zm-api-field-tag numSucceeded
      * @zm-api-field-description Number of accounts that created successfully

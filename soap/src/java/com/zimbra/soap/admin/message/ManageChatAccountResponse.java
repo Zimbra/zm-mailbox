@@ -19,39 +19,13 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
-/**
- * @zm-api-command-auth-required true
- * @zm-api-command-admin-auth-required true
- * @zm-api-command-description Get all Zulip accounts
- */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_ALL_ZULIP_ACCOUNTS_REQUEST)
-public class GetAllZulipAccountsRequest {
-    /**
-     * @zm-api-field-description Domain
-     */
-    @XmlElement(name=AdminConstants.E_DOMAIN /* zimbra domin */, required=true)
-    private final DomainSelector domain;
+@XmlRootElement(name=AdminConstants.E_MANAGE_CHAT_ACCOUNT_RESPONSE)
+public class ManageChatAccountResponse extends AdminAttrsImpl {
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private GetAllZulipAccountsRequest() {
-        this((DomainSelector) null);
-    }
-
-    public GetAllZulipAccountsRequest(DomainSelector domain) {
-        this.domain = domain;
-    }
-
-    public DomainSelector getDomain() {
-        return domain;
-    }
 }
