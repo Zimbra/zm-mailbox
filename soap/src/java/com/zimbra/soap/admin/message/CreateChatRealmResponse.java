@@ -25,14 +25,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_CREATE_ZULIP_REALM_RESPONSE)
-public class CreateZulipRealmResponse {
+@XmlRootElement(name=AdminConstants.E_CREATE_CHAT_REALM_RESPONSE)
+public class CreateChatRealmResponse {
     /**
-     * @zm-api-field-tag zulipDomainId
-     * @zm-api-field-description zulip domain id
+     * @zm-api-field-tag chatDomainId
+     * @zm-api-field-description chat domain id
      */
     @XmlElement(name=AdminConstants.A_ID /* domain id */, required=true)
-    private String zulipDomainId;
+    private String chatDomainId;
 
     /**
      * @zm-api-field-tag domainName
@@ -42,17 +42,17 @@ public class CreateZulipRealmResponse {
     private String domainName;
 
     /**
-     * @return the zulip domainId
+     * @return the chat domainId
      */
-    public String getZulipDomainId() {
-        return zulipDomainId;
+    public String getChatDomainId() {
+        return chatDomainId;
     }
 
     /**
-     * @param zulipDomainId the zulip domainId to set
+     * @param chatDomainId the chat domainId to set
      */
-    public void setZulipDomainId(String zulipDomainId) {
-        this.zulipDomainId = zulipDomainId;
+    public void setChatDomainId(String chatDomainId) {
+        this.chatDomainId = chatDomainId;
     }
 
     /**

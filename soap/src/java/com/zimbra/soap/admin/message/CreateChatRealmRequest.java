@@ -24,50 +24,57 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.admin.type.AdminAttrsImpl;
+import com.zimbra.soap.admin.type.DomainSelector;
 
 /**
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
- * @zm-api-command-description Manage Zulip account
+ * @zm-api-command-description Create a Chat realm
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_MANAGE_ZULIP_ACCOUNT_REQUEST)
-public class ManageZulipAccountRequest {
+@XmlRootElement(name=AdminConstants.E_CREATE_CHAT_REALM_REQUEST)
+public class CreateChatRealmRequest  extends AdminAttrsImpl {
     /**
-     * @zm-api-field-tag "get|activate|deactivate"
-     * @zm-api-field-description Action to perform
-     * <table>
-     * <tr> <td> <b>get</b> </td> <td> get Zulip account</td> </tr>
-     * <tr> <td> <b>activate</b> </td> <td> activate Zulip account</td> </tr>
-     * <tr> <td> <b>deactivate</b> </td> <td> deactivate Zulip account</td> </tr>
-     * <tr> <td> <b>delete</b> </td> <td> delete Zulip account</td> </tr>
-     * </table>
+     * @zm-api-field-tag chat-domainId
+     * @zm-api-field-description chat domain id, id of sub domain
      */
-    @XmlAttribute(name=AdminConstants.E_ACTION, required=true)
-    private final String action;
+    @XmlAttribute(name=AdminConstants.A_ID /* domain Id(sub domain) */, required=true)
+    private String chatDomainId;
 
     /**
-     * @zm-api-field-description Account
+     * @zm-api-field-description Zimbra domain
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
-    private AccountSelector account;
+    @XmlElement(name=AdminConstants.E_DOMAIN /* zimbra domin */, required=true)
+    private final DomainSelector domain;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private ManageZulipAccountRequest() {
-        this((AccountSelector) null, (String) null);
+    private CreateChatRealmRequest() {
+        this((DomainSelector) null);
     }
 
-    public ManageZulipAccountRequest(AccountSelector account, String action) {
-        this.account = account;
-        this.action = action;
+    public CreateChatRealmRequest(DomainSelector domain) {
+        this.domain = domain;
     }
 
-    public AccountSelector getAccount() { return account; }
+    public DomainSelector getDomain() {
+        return domain;
+    }
 
-    public String getAction() { return action; }
+    /**
+     * @return the chat domainId
+     */
+    public String getChatDomainId() {
+        return chatDomainId;
+    }
 
+    /**
+     * @param chatDomainId the chatDomainId to set
+     */
+    public void setChatDomainId(String chatDomainId) {
+        this.chatDomainId = chatDomainId;
+    }
 }

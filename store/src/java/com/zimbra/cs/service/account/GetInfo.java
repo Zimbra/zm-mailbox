@@ -337,7 +337,7 @@ public class GetInfo extends AccountDocumentHandler  {
                 value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ?
                         ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
             } else if (Provisioning.A_zimbraFeatureZulipChatEnabled.equals(key)) {
-                value = AccountUtil.isZulipChatEnabled(acct) ?
+                value = AccountUtil.isChatEnabled(acct) ?
                         ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
             } else if (Provisioning.A_zimbraMailQuota.equals(key)) {
                 // setting effective quota value refer ZBUG-1869 

@@ -19,62 +19,56 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
- * @zm-api-command-description Create a Zulip realm
+ * @zm-api-command-description Provision Chat accounts
+ * <br />
+ * If account is specified, the account is provisioned on Chat. <br />
+ * If not, all accounts in the domain are provisioned.
+ * Accounts whose zimbraAccountStatus is not active, zimbraIsSystemAccount is TRUE
+ * or zimbraFeatureZulipChatEnabled is FALSE is skipped.
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_CREATE_ZULIP_REALM_REQUEST)
-public class CreateZulipRealmRequest  extends AdminAttrsImpl {
+@XmlRootElement(name=AdminConstants.E_PROV_CHAT_ACCOUNTS_REQUEST)
+public class ProvChatAccountsRequest {
     /**
-     * @zm-api-field-tag zulip-domainId
-     * @zm-api-field-description zulip domain id, id of sub domain
-     */
-    @XmlAttribute(name=AdminConstants.A_ID /* domain Id(sub domain) */, required=true)
-    private String zulipDomainId;
-
-    /**
-     * @zm-api-field-description Zimbra domain
+     * @zm-api-field-description Domain
      */
     @XmlElement(name=AdminConstants.E_DOMAIN /* zimbra domin */, required=true)
     private final DomainSelector domain;
 
     /**
+     * @zm-api-field-description Account
+     */
+    @XmlElement(name=AdminConstants.E_ACCOUNT /* zimbra domin */, required=false)
+    private final AccountSelector account;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private CreateZulipRealmRequest() {
-        this((DomainSelector) null);
+    private ProvChatAccountsRequest() {
+        this((DomainSelector) null, (AccountSelector) null);
     }
 
-    public CreateZulipRealmRequest(DomainSelector domain) {
+    public ProvChatAccountsRequest(DomainSelector domain, AccountSelector account) {
         this.domain = domain;
+        this.account = account;
     }
 
     public DomainSelector getDomain() {
         return domain;
     }
 
-    /**
-     * @return the zulip domainId
-     */
-    public String getZulipDomainId() {
-        return zulipDomainId;
-    }
-
-    /**
-     * @param zulipDomainId the zulipDomainId to set
-     */
-    public void setZulipDomainId(String zulipDomainId) {
-        this.zulipDomainId = zulipDomainId;
+    public AccountSelector getAccount() {
+        return account;
     }
 }
