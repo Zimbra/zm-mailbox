@@ -2182,6 +2182,7 @@ public class ProxyConfGen
 {
     private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
     private static final int DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE = 64;
+    private static final int DEFAULT_WEB_MAP_HASH_BUCKET_SIZE = 64;
     private static Log mLog = LogFactory.getLog (ProxyConfGen.class);
     private static Options mOptions = new Options();
     private static boolean mDryRun = false;
@@ -3022,6 +3023,7 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.webclient.:servers", new WebUpstreamClientServersVar());
         mConfVars.put("web.server_names.max_size", new ProxyConfVar("web.server_names.max_size", "proxy_server_names_hash_max_size", DEFAULT_SERVERS_NAME_HASH_MAX_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash max size, needed to be increased if too many virtual host names are added"));
         mConfVars.put("web.server_names.bucket_size", new ProxyConfVar("web.server_names.bucket_size", "proxy_server_names_hash_bucket_size", DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash bucket size, needed to be increased if too many virtual host names are added"));
+        mConfVars.put("web.map_hash_bucket_size", new ProxyConfVar("web.map_hash_bucket_size", "proxy_web_map_hash_bucket_size", DEFAULT_WEB_MAP_HASH_BUCKET_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the map hash bucket size needs to be increased if generated hash value of server is big"));
         mConfVars.put("web.ssl.upstream.:servers", new WebSSLUpstreamServersVar());
         mConfVars.put("web.ssl.upstream.webclient.:servers", new WebSSLUpstreamClientServersVar());
         mConfVars.put("web.uploadmax", new ProxyConfVar("web.uploadmax", Provisioning.A_zimbraFileUploadMaxSize, new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
