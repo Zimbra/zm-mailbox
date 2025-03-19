@@ -36,6 +36,24 @@ public class Attach {
     private String mUri;
     private String mBinaryB64Data;
     private String fileName;
+    private String mContentid;
+    private boolean isInline;
+
+    public boolean isInline() {
+        return isInline;
+    }
+
+    public void setInline(boolean inline) {
+        isInline = inline;
+    }
+
+    public String getmContentid() {
+        return mContentid;
+    }
+
+    public void setmContentid(String mContentid) {
+        this.mContentid = mContentid;
+    }
 
     protected Attach(String uri, String contentType) {
         mUri = uri;

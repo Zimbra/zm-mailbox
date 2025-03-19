@@ -34,7 +34,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-
+import javax.activation.DataSource;
+import javax.mail.util.ByteArrayDataSource;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
@@ -487,11 +488,10 @@ public class CalendarMailSender {
                 (List <Attach>)null, replyToSender);
     }
 
-    public static MimeMessage createCalendarMessage(
+    public static MimeMessage createCalendarMessage1(
             Account account, Address fromAddr, Address senderAddr, List<Address> toAddrs,
             String subject, String desc, String descHtml,
-            String uid, ZCalendar.ZVCalendar cal, List <Attach> attaches, boolean replyToSender)
-    throws ServiceException {
+            String uid, ZCalendar.ZVCalendar cal, List <Attach> attaches, boolean replyToSender) throws ServiceException {
         if (desc == null)
             desc = "";
         try {
@@ -587,6 +587,144 @@ public class CalendarMailSender {
         }
     }
 
+    public static MimeMessage createCalendarMessage(
+            Account account, Address fromAddr, Address senderAddr, List<Address> toAddrs,
+            String subject, String desc, String descHtml,
+            String uid, ZCalendar.ZVCalendar cal, List<Attach> attaches, boolean replyToSender)
+            throws ServiceException {
+        if (desc == null)
+            desc = "";
+        try {
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(account));
+            MimeMultipart mpAlternatives = new ZMimeMultipart("alternative");
+
+            if (attaches != null && !attaches.isEmpty()) {
+                MimeMultipart mpMixed = new ZMimeMultipart("mixed");
+                mm.setContent(mpMixed);
+                MimeBodyPart mbpWrapper = new ZMimeBodyPart();
+                mbpWrapper.setContent(mpAlternatives);
+                mpMixed.addBodyPart(mbpWrapper);
+                // create list of inline attachments
+                // create html wrapper
+                //if end of for loop inline list is greater than 0 then
+                  // create related part
+                  // add text/html to related part
+                  // add all inline attachment parts in order to related part
+                // add related part to alternative part if using htmlwrapper so that we  can add html directly
+                // add alternative part to the mixed part
+
+                for (Attach attach : attaches) {
+                    byte[] rawData = attach.getDecodedData();
+                    if (rawData == null) {
+                        continue;
+                    }
+                    if (!attach.isInline()) {
+                        ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT, true /* use2231 */);
+                        String ctypeAsString = attach.getContentType();
+                        if (ctypeAsString == null) {
+                            ctypeAsString = MimeConstants.CT_APPLICATION_OCTET_STREAM;
+                        }
+                        ContentType ctype = new ContentType(ctypeAsString);
+                        if (attach.getFileName() != null) {
+                            ctype.setParameter("name", attach.getFileName());
+                            cdisp.setParameter("filename", attach.getFileName());
+                        }
+                        MimeBodyPart mbp2 = new ZMimeBodyPart();
+                        ByteArrayDataSource bads = new ByteArrayDataSource(rawData, ctypeAsString);
+                        mbp2.setDataHandler(new DataHandler(bads));
+                        mbp2.setHeader("Content-Type", ctype.toString());
+                        mbp2.setHeader("Content-Disposition", cdisp.toString());
+                        mbp2.setHeader("Content-Transfer-Encoding", "base64");
+                        mpMixed.addBodyPart(mbp2);
+                    }
+                    if(attach.isInline()){
+                        MimeBodyPart imagePart = new ZMimeBodyPart();
+                        byte[] imageByteArray = attach.getDecodedData();
+                        DataSource fds = new ByteArrayDataSource(imageByteArray, attach.getContentType());
+                        imagePart.setDataHandler(new DataHandler(fds));
+                        imagePart.setHeader("Content-ID", "<" + attach.getmContentid() + ">");
+                        imagePart.setDisposition(MimeBodyPart.INLINE);
+                        mpAlternatives.addBodyPart(imagePart);
+                    }
+                }
+            } else {
+                mm.setContent(mpAlternatives);
+            }
+
+            // Add the text as DESCRIPTION property in the iCalendar part.
+            desc = desc.replaceAll("(?i)\\[?cid:[^\\s\\]]+\\]?", "").trim();
+            cal.addDescription(desc, null);
+
+            // TEXT part
+            MimeBodyPart textPart = new ZMimeBodyPart();
+            textPart.setText(desc, MimeConstants.P_CHARSET_UTF8);
+            mpAlternatives.addBodyPart(textPart);
+
+            // HTML part with inline image
+            MimeBodyPart htmlPart = new ZMimeBodyPart();
+           // MimeBodyPart htmlWrapper = htmlPart;
+            if (descHtml != null) {
+                htmlPart.setContent(descHtml, "text/html; charset=utf-8");
+
+            } else {
+                htmlPart.setText(desc, MimeConstants.P_CHARSET_UTF8);
+
+            }
+            /*if(inlineAttachment >0){
+               ....
+               ....
+               ....
+               htmlWrapper = relatedPart
+
+            }
+
+             */
+            mpAlternatives.addBodyPart(htmlPart);   //change html part to html wrapper
+
+           /*// Inline image part
+            if (attaches != null) {
+                for (Attach attach : attaches) {
+                    if (attach.isInline()) {
+                        MimeBodyPart imagePart = new ZMimeBodyPart();
+                        byte[] imageByteArray = attach.getDecodedData();
+                        DataSource fds = new ByteArrayDataSource(imageByteArray, attach.getContentType());
+                        imagePart.setDataHandler(new DataHandler(fds));
+                        imagePart.setHeader("Content-ID", "<" + attach.getmContentid() + ">");
+                        imagePart.setDisposition(MimeBodyPart.INLINE);
+                        mpAlternatives.addBodyPart(imagePart);
+                    }
+                }
+            }
+*/
+            // CALENDAR part
+            MimeBodyPart icalPart = makeICalIntoMimePart(cal);
+            mpAlternatives.addBodyPart(icalPart);
+
+            // MESSAGE HEADERS
+            if (subject != null) {
+                mm.setSubject(subject, MimeConstants.P_CHARSET_UTF8);
+            }
+
+            if (toAddrs != null) {
+                Address[] addrs = new Address[toAddrs.size()];
+                toAddrs.toArray(addrs);
+                mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
+            }
+            if (fromAddr != null)
+                mm.setFrom(fromAddr);
+            if (senderAddr != null) {
+                mm.setSender(senderAddr);
+                if (replyToSender) {
+                    mm.setReplyTo(new Address[]{senderAddr});
+                }
+            }
+            mm.setSentDate(new Date());
+            mm.saveChanges();
+            return mm;
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Messaging Exception while building MimeMessage from invite", e);
+        }
+    }
     private static class CalendarPartReplacingVisitor extends MimeVisitor {
 
         private final String mUid;
