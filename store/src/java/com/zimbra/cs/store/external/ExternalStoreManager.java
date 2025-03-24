@@ -179,6 +179,11 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
+    public BlobBuilder getBlobBuilder(Volume volume) throws IOException, ServiceException {
+        throw new UnsupportedOperationException("method not supported");
+    }
+
+    @Override
     public InputStream getContent(MailboxBlob mblob) throws IOException {
         if (mblob == null) {
             return null;
@@ -242,6 +247,12 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
 
         MailboxBlob mblob = new ExternalMailboxBlob(destMbox, destMsgId, destRevision, staged.getLocator());
         return mblob.setSize(staged.getSize()).setDigest(staged.getDigest());
+    }
+
+    @Override
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision, Volume volume) throws IOException,
+            ServiceException {
+       throw new UnsupportedOperationException("method not supported");
     }
 
     @Override
@@ -367,6 +378,12 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
         builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
         return builder.init().append(data).finish();
+    }
+
+    @Override
+    public Blob storeIncoming(InputStream data, boolean storeAsIs, Volume volume) throws IOException,
+            ServiceException {
+        throw new UnsupportedOperationException("method not supported");
     }
 
     /**
