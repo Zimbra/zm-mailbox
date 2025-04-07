@@ -18,6 +18,7 @@
 package com.zimbra.client;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -3508,7 +3509,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
             // parse the response
             if (statusCode == HttpServletResponse.SC_OK) {
-                return new GetMethodInputStream(response.getEntity().getContent());
+                // copy the response content to a ByteArrayInputStream to allow multiple reads even after the connection is released
+                InputStream inputStream = new GetMethodInputStream(response.getEntity().getContent());
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    byteArrayOutputStream.write(buffer, 0, bytesRead);
+                }
+                return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
             } else {
                 String msg = String.format("GET from %s failed, status=%d.  %s", uri, statusCode, response.getStatusLine().getReasonPhrase());
                 throw ServiceException.FAILURE(msg, null);
@@ -3516,6 +3525,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         } catch (IOException | HttpException e) {
             String msg = String.format("Unable to get resource from '%s' : %s", uri, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
+        } finally {
+            // release the connection to the connection manager
+            if (get != null) {
+                get.releaseConnection();
+            }
         }
     }
 
