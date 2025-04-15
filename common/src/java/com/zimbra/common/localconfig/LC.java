@@ -455,6 +455,8 @@ public final class LC {
 
     public static final KnownKey empty_folder_batch_sleep_ms = KnownKey.newKey(1L);
 
+    public static final KnownKey ajax_uri_max_assets_requests_allowed = KnownKey.newKey(20);
+
     @Supported
     public static final KnownKey ldap_cache_account_maxsize = KnownKey.newKey(20000);
 
