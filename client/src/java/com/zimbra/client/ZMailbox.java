@@ -3499,8 +3499,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             if (statusCode == HttpServletResponse.SC_OK) {
                 // copy the response content to a ByteArrayInputStream to allow multiple reads even after the connection is released
                 try (InputStream inputStream = new GetMethodInputStream(response.getEntity().getContent())) {
-                    byte[] contentBytes = inputStream.readAllBytes();
-                    return new ByteArrayInputStream(contentBytes);
+                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        byteArrayOutputStream.write(buffer, 0, bytesRead);
+                    }
+                    return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
                 }
             } else {
                 String msg = String.format("GET from %s failed, status=%d.  %s", uri, statusCode, response.getStatusLine().getReasonPhrase());
