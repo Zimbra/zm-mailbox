@@ -29,19 +29,7 @@ import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -3510,14 +3498,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             // parse the response
             if (statusCode == HttpServletResponse.SC_OK) {
                 // copy the response content to a ByteArrayInputStream to allow multiple reads even after the connection is released
-                InputStream inputStream = new GetMethodInputStream(response.getEntity().getContent());
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    byteArrayOutputStream.write(buffer, 0, bytesRead);
+                try (InputStream inputStream = new GetMethodInputStream(response.getEntity().getContent())) {
+                    byte[] contentBytes = inputStream.readAllBytes();
+                    return new ByteArrayInputStream(contentBytes);
                 }
-                return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
             } else {
                 String msg = String.format("GET from %s failed, status=%d.  %s", uri, statusCode, response.getStatusLine().getReasonPhrase());
                 throw ServiceException.FAILURE(msg, null);
@@ -3527,9 +3511,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             throw ZClientException.IO_ERROR(msg, e);
         } finally {
             // release the connection to the connection manager
-            if (get != null) {
-                get.releaseConnection();
-            }
+            Optional.ofNullable(get).ifPresent(HttpGet::releaseConnection);
         }
     }
 
