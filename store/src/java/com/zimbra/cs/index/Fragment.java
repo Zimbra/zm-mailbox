@@ -176,7 +176,7 @@ public class Fragment {
     }
 
     public static String getFragment(String content, Source item) {
-        String remainder = content.trim();
+        String remainder = content == null ? "" : content.trim();
         String backup    = remainder;
         StringBuilder fragment = new StringBuilder();
         String result;
