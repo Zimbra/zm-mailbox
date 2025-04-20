@@ -1438,6 +1438,8 @@ public final class LC {
 
     public static final KnownKey enable_delegated_admin_ldap_access = KnownKey.newKey(true);
 
+    public static final KnownKey primary_store_manager_class = KnownKey.newKey("");
+    public static final KnownKey secondary_store_manager_class = KnownKey.newKey("");
     // OAuth2 Social
     public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");

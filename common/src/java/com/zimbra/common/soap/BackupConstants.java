@@ -55,6 +55,8 @@ public final class BackupConstants {
     public static final String E_UNREGISTER_MAILBOX_MOVE_OUT_RESPONSE = "UnregisterMailboxMoveOutResponse";
     public static final String E_QUERY_MAILBOX_MOVE_REQUEST = "QueryMailboxMoveRequest";
     public static final String E_QUERY_MAILBOX_MOVE_RESPONSE = "QueryMailboxMoveResponse";
+    public static final String E_GET_MAILBOX_CURRENT_VOLUMES_REQUEST = "GetMailboxCurrentVolumesRequest";
+    public static final String E_GET_MAILBOX_CURRENT_VOLUMES_RESPONSE = "GetMailboxCurrentVolumesResponse";
 
     public static final QName EXPORTMAILBOX_REQUEST = QName.get(E_EXPORTMAILBOX_REQUEST, NAMESPACE);
     public static final QName EXPORTMAILBOX_RESPONSE = QName.get(E_EXPORTMAILBOX_RESPONSE, NAMESPACE);
@@ -92,6 +94,8 @@ public final class BackupConstants {
     public static final QName UNREGISTER_MAILBOX_MOVE_OUT_RESPONSE = QName.get(E_UNREGISTER_MAILBOX_MOVE_OUT_RESPONSE, NAMESPACE);
     public static final QName QUERY_MAILBOX_MOVE_REQUEST = QName.get(E_QUERY_MAILBOX_MOVE_REQUEST, NAMESPACE);
     public static final QName QUERY_MAILBOX_MOVE_RESPONSE = QName.get(E_QUERY_MAILBOX_MOVE_RESPONSE, NAMESPACE);
+    public static final QName GET_MAILBOX_CURRENT_VOLUMES_REQUEST = QName.get(E_GET_MAILBOX_CURRENT_VOLUMES_REQUEST, NAMESPACE);
+    public static final QName GET_MAILBOX_CURRENT_VOLUMES_RESPONSE = QName.get(E_GET_MAILBOX_CURRENT_VOLUMES_RESPONSE, NAMESPACE);
 
     public static final String ZM_SCHEDULE_BACKUP = "zmschedulebackup";
 
