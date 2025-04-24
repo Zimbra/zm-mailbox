@@ -1394,7 +1394,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="237" name="zimbraAttachmentsScanEnabled" type="boolean" cardinality="single" optionalIn="server,globalConfig" requiresRestart="mailbox">
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>Whether to scan attachments during compose</desc>
+  <desc>Whether to scan attachments during compose
+        Require Server Restart</desc>
 </attr>
 
 <attr id="238" name="zimbraAttachmentsScanClass" type="cstring" max="256" cardinality="single" optionalIn="globalConfig">

@@ -3545,7 +3545,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAttachmentsScanClass = "zimbraAttachmentsScanClass";
 
     /**
-     * Whether to scan attachments during compose
+     * Whether to scan attachments during compose Require Server Restart
      */
     @ZAttr(id=237)
     public static final String A_zimbraAttachmentsScanEnabled = "zimbraAttachmentsScanEnabled";

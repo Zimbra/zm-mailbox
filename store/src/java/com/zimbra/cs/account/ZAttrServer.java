@@ -2123,7 +2123,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to scan attachments during compose
+     * Whether to scan attachments during compose Require Server Restart
      *
      * @return zimbraAttachmentsScanEnabled, or false if unset
      */
@@ -2133,7 +2133,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to scan attachments during compose
+     * Whether to scan attachments during compose Require Server Restart
      *
      * @param zimbraAttachmentsScanEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2146,7 +2146,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to scan attachments during compose
+     * Whether to scan attachments during compose Require Server Restart
      *
      * @param zimbraAttachmentsScanEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2160,7 +2160,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to scan attachments during compose
+     * Whether to scan attachments during compose Require Server Restart
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -2172,7 +2172,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to scan attachments during compose
+     * Whether to scan attachments during compose Require Server Restart
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
