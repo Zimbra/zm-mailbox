@@ -3128,10 +3128,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs)
-    throws ServiceException {
+            throws ServiceException {
         SearchDirectoryOptions opts = new SearchDirectoryOptions(retAttrs);
         opts.setFilter(filterFactory.allDomains());
         opts.setTypes(ObjectType.domains);
+        opts.setUseControl(true);
+        opts.setResultPageSize(1000);
         searchDirectoryInternal(opts, visitor);
     }
 
