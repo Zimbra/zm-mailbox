@@ -10556,6 +10556,11 @@ TODO: delete them permanently from here
   <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
 </attr>
 
+<attr id="4135" name="zimbraFeatureDeliveryStatusNotificationEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.8">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Feature to enable delivery status notification</desc>
+</attr>
+
 <attr id="4136" name="zimbraChatJwtSecret" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="10.1.7">
   <desc>Zimbra Chat JWT secret</desc>
 </attr>
@@ -10566,12 +10571,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="4135" name="zimbraFeatureDeliveryStatusNotificationEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.4">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Feature to enable delivery status notification</desc>
-</attr>
-
-<attr id="4140" name="zimbraPrefMailDeliveryStatusNotification" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="10.1.7">
+<attr id="4140" name="zimbraPrefMailDeliveryStatusNotification" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="10.1.8">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether web UI should always request delivery status notification for outgoing messages</desc>
 </attr>
