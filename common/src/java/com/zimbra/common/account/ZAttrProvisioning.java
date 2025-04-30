@@ -7010,7 +7010,7 @@ public class ZAttrProvisioning {
     /**
      * Feature to enable delivery status notification
      *
-     * @since ZCS 10.1.4
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4135)
     public static final String A_zimbraFeatureDeliveryStatusNotificationEnabled = "zimbraFeatureDeliveryStatusNotificationEnabled";
@@ -14633,7 +14633,7 @@ public class ZAttrProvisioning {
      * whether web UI should always request delivery status notification for
      * outgoing messages
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4140)
     public static final String A_zimbraPrefMailDeliveryStatusNotification = "zimbraPrefMailDeliveryStatusNotification";
