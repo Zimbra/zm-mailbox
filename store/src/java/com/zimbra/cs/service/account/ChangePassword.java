@@ -82,7 +82,9 @@ public class ChangePassword extends AccountDocumentHandler {
         if (acct == null) {
             throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
         }
-
+        if (!acct.isFeatureChangePasswordEnabled()) {
+            throw ServiceException.OPERATION_DENIED("Change Password feature is not enabled on the account");
+        }
         Usage usage = Usage.AUTH;
         if (authTokenEl != null) {
             try {
