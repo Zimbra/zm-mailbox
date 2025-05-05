@@ -35,15 +35,21 @@ public class ChangePasswordTest {
     private static final String USERNAME_1 = "ron@zcs.fazigu.org";
     private static final String USERNAME_2 = "rob@zcs.fazigu.org";
     private static final String USERNAME_3 = "rock@zcs.fazigu.org";
+    private static final String USERNAME_4 = "testEnabled@zcs.fazigu.org";
+    private static final String USERNAME_5 = "testDisabled@zcs.fazigu.org";
     private static final String PASSWORD_1 = "H3@pBigPassw0rd";
     private static final String PASSWORD_2 = "An0therP@$$w0rd";
     private static final String PASSWORD_3 = "An0therP@1$$w0rd";
+    private static final String PASSWORD_4 = "An0therP@1$$word";
+    private static final String PASSWORD_5   = "AnotherP@1$$w0rd";
 
     private static final MockProvisioning prov = new MockProvisioning();
 
     private Account account1;
     private Account account2;
     private Account account3;
+    private Account account4;
+    private Account account5;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -67,6 +73,14 @@ public class ChangePasswordTest {
         attrs3.put(Provisioning.A_zimbraId, LdapUtil.generateUUID());
         attrs3.put(Provisioning.A_zimbraPasswordMustChange, "TRUE");
         account3 = prov.createAccount(USERNAME_3, PASSWORD_3, attrs3);
+
+        final Map<String,Object> attrs4 = new HashMap<>(1);
+        attrs4.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, true);
+        account4 = prov.createAccount(USERNAME_4, PASSWORD_4, attrs4);
+
+        final Map<String,Object> attrs5 = new HashMap<>(1);
+        attrs5.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, false);
+        account5 = prov.createAccount(USERNAME_5, PASSWORD_5, attrs5);
     }
 
     @Test
@@ -112,6 +126,42 @@ public class ChangePasswordTest {
         final Map<String,Object> context = Collections.emptyMap();
 
         Assert.assertFalse("handler.needsAuth()", handler.needsAuth(context));
+    }
+
+    @Test
+    public void testZimbraFeatureChangePasswordEnabled() throws Exception {
+        final ChangePasswordRequest request = new ChangePasswordRequest()
+                .setAccount(AccountSelector.fromName(USERNAME_4)) // Not the authed user from context below
+                .setOldPassword(PASSWORD_4)
+                .setPassword(PASSWORD_4);
+        final ChangePassword handler = new ChangePassword();
+        final Map<String,Object> context = ServiceTestUtil.getRequestContext(account4);
+        Element response = null;
+        try {
+            response = handler.handle(JaxbUtil.jaxbToElement(request), context);
+        } catch (final ServiceException ex) {
+            Assert.fail("expected handler to execute the request");
+        }
+        Assert.assertNotNull("response", response);
+        final String authToken = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
+        Assert.assertNotNull("authtoken", authToken);
+    }
+
+    @Test
+    public void testZimbraFeatureChangePasswordDisabled() throws Exception {
+        final ChangePasswordRequest request = new ChangePasswordRequest()
+                .setAccount(AccountSelector.fromName(USERNAME_5)) // Not the authed user from context below
+                .setOldPassword(PASSWORD_5)
+                .setPassword(PASSWORD_5);
+        final ChangePassword handler = new ChangePassword();
+        final Map<String,Object> context = ServiceTestUtil.getRequestContext(account5);
+        try {
+            handler.handle(JaxbUtil.jaxbToElement(request), context);
+        } catch (final ServiceException ex) {
+            Assert.assertEquals("service exception type", ServiceException.OPERATION_DENIED, ex.getCode());
+            return;
+        }
+        Assert.fail("expected handler to fail");
     }
 
     @Test
