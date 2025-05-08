@@ -3515,50 +3515,108 @@ public class ProxyConfGen
      * @return
      */
     public static Map<String, String> generateChatConfig() {
+        ZimbraLog.store.debug("Generating chat configuration using visitor pattern...");
         Provisioning prov = Provisioning.getInstance();
-        List<Domain> domains = null;
-        try {
-            domains = prov.getAllDomains();
-        } catch (ServiceException e) {
-            ZimbraLog.store.debug("Error occurred while fetching domain");
-        }
-
         StringBuilder upstreamConfig = new StringBuilder();
-        StringBuilder mapConfig = new StringBuilder("map $proxy_host $proxy_chat_host {\n");
+        StringBuilder mapConfig = new StringBuilder();
         Set<String> generatedHashes = new HashSet<>();
-
-        for (Domain domain : domains) {
-            String chatDomainId = domain.getAttr("zimbraZulipChatDomainId", "");
-            String chatBaseHost = domain.getAttr("zimbraChatBaseHost", "");
-
-            if (chatDomainId.isEmpty() || chatBaseHost.isEmpty()) {
-                continue;
-            }
-            String upstreamHash = HttpUtil.fetchEncoded(chatBaseHost);
-            if (!generatedHashes.contains(upstreamHash)) {
-                upstreamConfig.append(String.format("upstream %s {\n", upstreamHash));
-                upstreamConfig.append(String.format("    server %s:443 fail_timeout=0s max_fails=0;\n", chatBaseHost));
-                upstreamConfig.append("}\n\n");
-                generatedHashes.add(upstreamHash);
-            }
-
-            upstreamConfig.append(String.format("upstream %s-%s {\n", chatDomainId, upstreamHash));
-            upstreamConfig.append(String.format("    server %s.%s:443 fail_timeout=0s max_fails=0;\n", chatDomainId, chatBaseHost));
-            upstreamConfig.append("}\n\n");
-
-            mapConfig.append(String.format("    %s-%s %s.%s;\n", chatDomainId, upstreamHash, chatDomainId, chatBaseHost));
+        String globalChatBaseHost = "";
+        try {
+            globalChatBaseHost = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraChatBaseHost, "");
+        } catch (ServiceException e) {
+            ZimbraLog.store.error("Error fetching global config attribute zimbraChatBaseHost", e);
         }
-        mapConfig.append("}\n");
-        Map<String, String> chatConfig = new HashMap<>();
-        chatConfig.put("upstreamConfig", upstreamConfig.toString());
-        chatConfig.put("mapConfig", mapConfig.toString());
-        return chatConfig;
+        ChatConfigVisitor chatVisitor = new ChatConfigVisitor(upstreamConfig, mapConfig, globalChatBaseHost, generatedHashes);
+        String[] requiredAttrs = {
+                Provisioning.A_zimbraDomainName,
+                Provisioning.A_zimbraId,
+                Provisioning.A_zimbraZulipChatDomainId,
+                Provisioning.A_zimbraChatBaseHost
+        };
+
+        long startTime = System.currentTimeMillis();
+        try {
+            prov.getAllDomains(chatVisitor, requiredAttrs);
+        } catch (ServiceException e) {
+            ZimbraLog.store.error("Failed to generate chat configuration", e);
+            return Collections.emptyMap();
+        } finally {
+            chatVisitor.finalizeMapConfig();
+        }
+        long endTime = System.currentTimeMillis();
+        ZimbraLog.store.debug("Chat config generation completed in %d ms.", (endTime - startTime));
+        Map<String, String> resultChatConfig = new HashMap<>();
+        resultChatConfig.put("upstreamConfig", upstreamConfig.toString());
+        resultChatConfig.put("mapConfig", mapConfig.toString());
+
+        ZimbraLog.store.debug("Generated chat upstream config:\n%s", upstreamConfig.toString());
+        ZimbraLog.store.debug("Generated chat map config:\n%s", mapConfig.toString());
+        return resultChatConfig;
     }
 
     public static void main(String[] args) throws ServiceException, ProxyConfException {
         int exitCode = createConf(args);
         System.exit(exitCode);
     }
+
+    private static class ChatConfigVisitor implements NamedEntry.Visitor {
+
+        private final StringBuilder upstreamConfig;
+        private final StringBuilder mapConfig;
+        private final String globalChatBaseHost;
+        private final Set<String> generatedHashes;
+        private int processedCount = 0;
+
+        public ChatConfigVisitor(StringBuilder upstreamConfig, StringBuilder mapConfig, String globalChatBaseHost, Set<String> generatedHashes) {
+            this.upstreamConfig = upstreamConfig;
+            this.mapConfig = mapConfig;
+            this.globalChatBaseHost = globalChatBaseHost;
+            this.generatedHashes = generatedHashes;
+            this.mapConfig.append("map $proxy_host $proxy_chat_host {\n");
+        }
+
+        @Override
+        public void visit(NamedEntry entry) throws ServiceException {
+            if (!(entry instanceof Domain)) {
+                ZimbraLog.store.warn("ChatConfigVisitor received non-Domain entry: %s", entry.getName());
+                return;
+            }
+            Domain domain = (Domain) entry;
+            processedCount++;
+            try {
+                String chatDomainId = domain.getAttr(Provisioning.A_zimbraZulipChatDomainId, "");
+                String chatBaseHost = domain.getAttr(Provisioning.A_zimbraChatBaseHost, "");
+                if (chatBaseHost.isEmpty() && !globalChatBaseHost.isEmpty()) {
+                    chatBaseHost = globalChatBaseHost;
+                }
+                if (chatDomainId.isEmpty() || chatBaseHost.isEmpty()) {
+                    return;
+                }
+
+                String upstreamHash = HttpUtil.fetchEncoded(chatBaseHost);
+                if (!generatedHashes.contains(upstreamHash)) {
+                    upstreamConfig.append(String.format("upstream %s {\n", upstreamHash));
+                    upstreamConfig.append(String.format("    server %s:443 fail_timeout=0s max_fails=0;\n", chatBaseHost));
+                    upstreamConfig.append("}\n\n");
+                    generatedHashes.add(upstreamHash);
+                }
+
+                upstreamConfig.append(String.format("upstream %s-%s {\n", chatDomainId, upstreamHash));
+                upstreamConfig.append(String.format("    server %s.%s:443 fail_timeout=0s max_fails=0;\n", chatDomainId, chatBaseHost));
+                upstreamConfig.append("}\n\n");
+                mapConfig.append(String.format("    %s-%s %s.%s;\n", chatDomainId, upstreamHash, chatDomainId, chatBaseHost));
+
+            } catch (Exception e) {
+                ZimbraLog.store.error("Error processing domain '%s' (ID: %s) for chat config", domain.getName(), domain.getId(), e);
+            }
+        }
+
+        public void finalizeMapConfig() {
+            this.mapConfig.append("}\n");
+            ZimbraLog.store.debug("Finished processing %d total domains for chat config.", processedCount);
+        }
+    }
+
 }
 
 
