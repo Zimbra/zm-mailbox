@@ -14310,7 +14310,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraFeaturePasswordExpiryReminderEnabled, or false if unset
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.9
      */
     @ZAttr(id=4141)
     public boolean isFeaturePasswordExpiryReminderEnabled() {
@@ -14324,7 +14324,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraFeaturePasswordExpiryReminderEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.9
      */
     @ZAttr(id=4141)
     public void setFeaturePasswordExpiryReminderEnabled(boolean zimbraFeaturePasswordExpiryReminderEnabled) throws com.zimbra.common.service.ServiceException {
@@ -14341,7 +14341,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.9
      */
     @ZAttr(id=4141)
     public Map<String,Object> setFeaturePasswordExpiryReminderEnabled(boolean zimbraFeaturePasswordExpiryReminderEnabled, Map<String,Object> attrs) {
@@ -14356,7 +14356,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.9
      */
     @ZAttr(id=4141)
     public void unsetFeaturePasswordExpiryReminderEnabled() throws com.zimbra.common.service.ServiceException {
@@ -14372,7 +14372,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.9
      */
     @ZAttr(id=4141)
     public Map<String,Object> unsetFeaturePasswordExpiryReminderEnabled(Map<String,Object> attrs) {
