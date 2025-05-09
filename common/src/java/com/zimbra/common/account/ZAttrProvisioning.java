@@ -7422,7 +7422,7 @@ public class ZAttrProvisioning {
      * Feature to enable/disable password expiry reminder. The default value
      * is FALSE.
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.9
      */
     @ZAttr(id=4141)
     public static final String A_zimbraFeaturePasswordExpiryReminderEnabled = "zimbraFeaturePasswordExpiryReminderEnabled";
