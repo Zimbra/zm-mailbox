@@ -139,7 +139,9 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         if (mblob == null) {
             return true;
         }
-        localCache.remove(mblob.getLocator());
+        if (localCache != null) {
+            localCache.remove(mblob.getLocator());
+        }
         return deleteFromStore(mblob.getLocator(), mblob.getMailbox());
     }
 

@@ -26,6 +26,7 @@ import com.zimbra.cs.imap.ImapDaemon;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.util.MailItemHelper;
+import com.zimbra.cs.store.external.ExternalStoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.store.helper.ClassHelper;
 import com.zimbra.cs.util.Zimbra;
@@ -154,6 +155,13 @@ public abstract class StoreManager {
         }
         ZimbraLog.store.info("Fallback: master StoreManager will be used for reading");
         return getInstance();
+    }
+
+    /*
+    following api checks if storeManager instance is External
+     */
+    public boolean checkIfStoreManagerIsExternal() {
+        return (this instanceof ExternalStoreManager) ? supports(StoreFeature.CENTRALIZED) : !supports(StoreFeature.CENTRALIZED);
     }
 
 
