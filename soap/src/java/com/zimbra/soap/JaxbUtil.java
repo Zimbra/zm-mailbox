@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2020, 2021, 2023 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2020, 2021, 2023, 2024, 2025 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -252,6 +252,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CancelPendingAccountOnlyRemoteWipeResponse.class,
             com.zimbra.soap.admin.message.CancelPendingRemoteWipeRequest.class,
             com.zimbra.soap.admin.message.CancelPendingRemoteWipeResponse.class,
+            com.zimbra.soap.admin.message.ChangePasswordRequest.class,
+            com.zimbra.soap.admin.message.ChangePasswordResponse.class,
             com.zimbra.soap.admin.message.CheckAuthConfigRequest.class,
             com.zimbra.soap.admin.message.CheckAuthConfigResponse.class,
             com.zimbra.soap.admin.message.CheckBlobConsistencyRequest.class,
@@ -310,6 +312,14 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CreateHABGroupResponse.class,
             com.zimbra.soap.admin.message.CreateDomainRequest.class,
             com.zimbra.soap.admin.message.CreateDomainResponse.class,
+            com.zimbra.soap.admin.message.CreateChatRealmRequest.class,
+            com.zimbra.soap.admin.message.CreateChatRealmResponse.class,
+            com.zimbra.soap.admin.message.ProvChatAccountsRequest.class,
+            com.zimbra.soap.admin.message.ProvChatAccountsResponse.class,
+            com.zimbra.soap.admin.message.ManageChatAccountRequest.class,
+            com.zimbra.soap.admin.message.ManageChatAccountResponse.class,
+            com.zimbra.soap.admin.message.GetAllChatAccountsRequest.class,
+            com.zimbra.soap.admin.message.GetAllChatAccountsResponse.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountRequest.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountResponse.class,
             com.zimbra.soap.admin.message.CreateLDAPEntryRequest.class,
@@ -1681,7 +1691,7 @@ public final class JaxbUtil {
         ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
         return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
     }
-    
+
     public static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
         return new DeleteItemNotification(itemId, type);
     }

@@ -113,6 +113,7 @@ public class SmtpTransport extends Transport {
     private SmtpConnection connection;
     private final boolean ssl;
     private final String protocol;
+    private static final String MAIL_AUTOSEND_TIME = "mail.autosend.time";
 
     /**
      * Constructs a new {@link SmtpTransport}.
@@ -241,7 +242,11 @@ public class SmtpTransport extends Transport {
                 connection.sendMessage(rcpts, (MimeMessage) msg);
             }
         } catch (MessagingException e) {
-            ZimbraLog.smtp.warn("Failed to send message", e);
+            // after receipt validation , messaging exception is always thrown while scheduling msg
+            // skipping warning as it is known exception, nothing to do with sending actual msg
+            if (null == session.getProperty(MAIL_AUTOSEND_TIME)) {
+                ZimbraLog.smtp.warn("Failed to send message", e);
+            }
             notify(e, msg, rcpts);
         } catch (IOException e) {
             ZimbraLog.smtp.warn("Failed to send message", e);

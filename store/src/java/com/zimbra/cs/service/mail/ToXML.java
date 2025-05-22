@@ -1594,6 +1594,8 @@ public final class ToXML {
                     m.addAttribute(MailConstants.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo),
                             Element.Disposition.CONTENT);
                 }
+                boolean deliveryReport = Boolean.parseBoolean(mm.getHeader(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, null));
+                    m.addAttribute(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, deliveryReport);
                 if (msg.getDraftAutoSendTime() != 0) {
                     m.addAttribute(MailConstants.A_AUTO_SEND_TIME, msg.getDraftAutoSendTime());
                 }

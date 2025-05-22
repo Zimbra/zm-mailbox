@@ -397,12 +397,18 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         } else {
             ZimbraLog.filter.info("Redirecting message to %s.", addr);
         }
-        try {
-            handler.redirect(addr);
-        } catch (Exception e) {
-            ZimbraLog.filter.warn("Unable to redirect to %s.  Filing message to %s.",
-                                  addr, handler.getDefaultFolderPath(), e);
+        if (!account.isFeatureMailForwardingInFiltersEnabled()) {
+            ZimbraLog.filter.warn("Redirection to %s is rejected as attribute mailForwarding is disabled.  Filing message to %s.",
+                    addr, handler.getDefaultFolderPath());
             keep(KeepType.EXPLICIT_KEEP);
+        } else {
+            try {
+                handler.redirect(addr);
+            } catch (Exception e) {
+                ZimbraLog.filter.warn("Unable to redirect to %s.  Filing message to %s.",
+                        addr, handler.getDefaultFolderPath(), e);
+                keep(KeepType.EXPLICIT_KEEP);
+            }
         }
     }
 

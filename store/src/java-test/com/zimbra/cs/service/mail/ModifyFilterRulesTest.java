@@ -803,4 +803,61 @@ public class ModifyFilterRulesTest {
             Assert.assertEquals("parse error: Invalid replaceheader action: replaceheader action is not allowed in user scripts", e.getMessage());
         }
     }
+
+    @Test
+    public void testRedirectFilterActionWhenAttriIsDisabled() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            account.setFeatureMailForwardingEnabled(false);
+            FilterRule rule = new FilterRule("testSetIncomingXMLRules_EmptyAddress", true);
+
+            FilterTest.AddressTest test = new FilterTest.AddressTest();
+            test.setHeader("to");
+            test.setStringComparison("is");
+            test.setPart("all");
+            test.setValue(null);
+            test.setIndex(0);
+
+            FilterTests tests = new FilterTests("anyof");
+            tests.addTest(test);
+
+            FilterAction action = new FilterAction.RedirectAction("test@syn.com");
+            action.setIndex(0);
+
+            rule.setFilterTests(tests);
+            rule.addFilterAction(action);
+
+            List<FilterRule> filterRuleList = new ArrayList<FilterRule>();
+            filterRuleList.add(rule);
+            RuleManager.setIncomingXMLRules(account, filterRuleList);
+
+            String xml = "<ModifyFilterRulesRequest xmlns=\"urn:zimbraMail\">\n" +
+                    "      <filterRules>\n" +
+                    "        <filterRule name=\"t60\" active=\"1\">\n" +
+                    "          <filterTests condition=\"anyof\" index=\"1\">\n" +
+                    "            <headerTest stringComparison=\"matches\" header=\"subject\" value=\"*\"/>\n" +
+                    "          </filterTests>\n" +
+                    "          <filterActions index=\"2\">\n" +
+                    "            <actionReplaceheader>\n" +
+                    "              <newValue>new_header_value</newValue>\n" +
+                    "              <test>\n" +
+                    "                <headerName>sub2</headerName>\n" +
+                    "                <headerValue>test testing</headerValue>\n" +
+                    "              </test>\n" +
+                    "            </actionReplaceheader>\n" +
+                    "          </filterActions>\n" +
+                    "        </filterRule>\n" +
+                    "      </filterRules>\n" +
+                    "</ModifyFilterRulesRequest>";
+
+
+            Element request = Element.parseXML(xml);
+            new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ServiceException);
+            Assert.assertEquals("feature MailForwardingInFilters is not enabled", e.getMessage());
+        }
+    }
 }

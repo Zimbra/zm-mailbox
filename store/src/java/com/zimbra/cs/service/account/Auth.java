@@ -20,7 +20,6 @@
  */
 package com.zimbra.cs.service.account;
 
-import com.zimbra.common.localconfig.LC;
 import io.jsonwebtoken.Claims;
 
 import java.util.Arrays;
@@ -28,8 +27,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
@@ -40,13 +37,12 @@ import org.apache.commons.lang.StringUtils;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
@@ -328,12 +324,18 @@ public class Auth extends AccountDocumentHandler {
                         AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct, acctValuePassedIn);
                         appPasswords.authenticate(password);
                     } else {
-                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
-                        return needTwoFactorAuth(context, request, acct, twoFactorManager, zsc, tokenType, recoveryCode);
+                        Element responseElement = authAccountInternal(prov, acct, code, authCtxt, context, request, twoFactorManager, zsc, tokenType);
+                        if (responseElement != null) {
+                            return responseElement;
+                        }
+                        return needTwoFactorAuth(context, request, acct, twoFactorManager, zsc, tokenType, recoveryCode, trustedToken);
                     }
                 } else {
                     if (password != null || recoveryCode != null) {
-                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
+                        Element responseElement = authAccountInternal(prov, acct, code, authCtxt, context, request, twoFactorManager, zsc, tokenType);
+                        if (responseElement != null) {
+                            return responseElement;
+                        }
                     } else {
                         // it's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
                         if (!twoFactorAuthWithToken) {
@@ -446,7 +448,7 @@ public class Auth extends AccountDocumentHandler {
     }
 
     private Element needTwoFactorAuth(Map<String, Object> context, Element requestElement, Account account, TwoFactorAuth auth,
-            ZimbraSoapContext zsc, TokenType tokenType, String recoveryCode) throws ServiceException {
+            ZimbraSoapContext zsc, TokenType tokenType, String recoveryCode, TrustedDeviceToken td) throws ServiceException {
         /* two cases here:
          * 1) the user needs to provide a two-factor code.
          *    in this case, the server returns a two-factor auth token in the response header that the client
@@ -457,22 +459,63 @@ public class Auth extends AccountDocumentHandler {
         if (!auth.twoFactorAuthEnabled()) {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED(getTwoFactorAuthRequiredSetupErrorMessage(account));
         } else {
+            HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
             Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
             AuthToken authToken = AuthProvider.getAuthToken(account, recoveryCode != null ? Usage.RESET_PASSWORD : Usage.TWO_FACTOR_AUTH, tokenType);
             response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
             response.addAttribute(AccountConstants.E_LIFETIME, authToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
             authToken.encodeAuthResp(response, false);
             if (recoveryCode != null) {
-                HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-                HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
                 boolean rememberMe = requestElement.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
                 authToken.setIgnoreSameSite(requestElement.getAttributeBool(AccountConstants.A_IGNORE_SAME_SITE_COOKIE, false));
                 authToken.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
             }
             response.addUniqueElement(AccountConstants.E_TRUSTED_DEVICES_ENABLED).setText(account.isFeatureTrustedDevicesEnabled() ? "true" : "false");
             AccountUtil.addTwoFactorAttributes(response, account);
+            if (td != null) {
+                td.encode(httpResp, response, ZimbraCookie.secureCookie(httpReq));
+            }
             return response;
         }
+    }
+
+    private Element authAccountInternal(Provisioning prov, Account acct, String code, Map<String, Object> authCtxt,
+            Map<String, Object> context, Element request, TwoFactorAuth twoFactorManager, ZimbraSoapContext zsc,
+            TokenType tokenType) throws ServiceException {
+        try {
+            prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
+            return null;
+        } catch (AccountServiceException ase) {
+            if (AccountServiceException.CHANGE_PASSWORD.equals(ase.getCode())) {
+                ZimbraLog.account.info("zimbraPasswordMustChange is enabled so creating an auth-token used to change password.");
+                return needResetPassword(context, request, acct, twoFactorManager, zsc, tokenType);
+            } else {
+                throw ase;
+            }
+        }
+    }
+    /**
+     * This method is used to create a temporary auth token with usage RESET_PASSWORD.
+     * This auth token further be used for changing the password.
+     * This will be executed iff zimbraPasswordMustChange is set to true
+     * @param context
+     * @param requestElement
+     * @param account
+     * @param auth
+     * @param zsc
+     * @param tokenType
+     * @return response
+     * @throws ServiceException
+     */
+    private Element needResetPassword(Map<String, Object> context, Element requestElement, Account account, TwoFactorAuth auth,
+                                       ZimbraSoapContext zsc, TokenType tokenType) throws ServiceException {
+        Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
+        AuthToken authToken = AuthProvider.getAuthToken(account, Usage.RESET_PASSWORD, tokenType);
+        response.addAttribute(AccountConstants.E_LIFETIME, authToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+        response.addUniqueElement(AccountConstants.E_RESET_PWD).setText("true");
+        authToken.encodeAuthResp(response, false);
+        return response;
     }
 
     private String getTwoFactorAuthRequiredSetupErrorMessage(Account account) {

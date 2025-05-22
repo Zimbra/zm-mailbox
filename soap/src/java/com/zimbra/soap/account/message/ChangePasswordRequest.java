@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
@@ -31,8 +32,7 @@ import com.zimbra.soap.type.AccountSelector;
    <password>...</password>
    [<virtualHost>{virtual-host}</virtualHost>]
  </ChangePasswordRequest>
- * @zm-api-command-auth-required false - This command can be sent before authenticating. The command handler will
- * internally make sure the old password provided matches the current password of the account.
+ * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Change Password
 */
@@ -66,6 +66,9 @@ public class ChangePasswordRequest {
 
     @XmlElement(name=AccountConstants.E_DRYRUN, required=false)
     private boolean dryRun;
+
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=false)
+    private AuthToken authToken;
 
     public ChangePasswordRequest() {
     }
@@ -117,6 +120,9 @@ public class ChangePasswordRequest {
     public void setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
     }
+
+    public AuthToken getAuthToken() { return authToken; }
+    public ChangePasswordRequest setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
 
 
 }

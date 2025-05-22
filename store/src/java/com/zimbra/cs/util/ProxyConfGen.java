@@ -58,13 +58,15 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
-import com.zimbra.cs.service.SharedFileServletContext;
+import static com.zimbra.cs.util.ProxyConfGen.chatConfig;
 
 enum ProxyConfOverride {
     NONE,
@@ -1216,6 +1218,28 @@ class OnlyOfficeSpellCheckerServersVar extends ProxyConfVar {
     }
 }
 
+class ChatUpstreamServersVar extends ProxyConfVar {
+    public ChatUpstreamServersVar() {
+        super("web.upstream.chat", null, null, ProxyConfValueType.STRING, ProxyConfOverride.CUSTOM,
+                "List of upstream chat servers and their hashcode");
+    }
+    @Override
+    public void update() throws ServiceException {
+        mValue = chatConfig.get("upstreamConfig");
+    }
+}
+
+class ChatUpstreamMapEntriesVar extends ProxyConfVar {
+    public ChatUpstreamMapEntriesVar() {
+        super("web.upstream.chat.map_entries", null, null, ProxyConfValueType.STRING, ProxyConfOverride.CUSTOM,
+                "Mapping between proxy host and chat upstream host");
+    }
+    @Override
+    public void update() throws ServiceException {
+        mValue = chatConfig.get("mapConfig");
+    }
+}
+
 class AddHeadersVar extends ProxyConfVar {
     private final ArrayList<String> rhdr;
     private final String key;
@@ -2158,6 +2182,7 @@ public class ProxyConfGen
 {
     private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
     private static final int DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE = 64;
+    private static final int DEFAULT_WEB_MAP_HASH_BUCKET_SIZE = 64;
     private static Log mLog = LogFactory.getLog (ProxyConfGen.class);
     private static Options mOptions = new Options();
     private static boolean mDryRun = false;
@@ -2205,6 +2230,7 @@ public class ProxyConfGen
     static final int    ZIMBRA_UPSTREAM_SSL_ZX_PORT = 8743;
     static final int    ZIMBRA_UPSTREAM_ONLYOFFICE_DOCSERVICE_PORT = 7084;
     static final int    ZIMBRA_UPSTREAM_ONLYOFFICE_SPELLCHECKER_PORT = 7085;
+    static Map<String, String> chatConfig;
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -2997,6 +3023,7 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.webclient.:servers", new WebUpstreamClientServersVar());
         mConfVars.put("web.server_names.max_size", new ProxyConfVar("web.server_names.max_size", "proxy_server_names_hash_max_size", DEFAULT_SERVERS_NAME_HASH_MAX_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash max size, needed to be increased if too many virtual host names are added"));
         mConfVars.put("web.server_names.bucket_size", new ProxyConfVar("web.server_names.bucket_size", "proxy_server_names_hash_bucket_size", DEFAULT_SERVERS_NAME_HASH_BUCKET_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the server names hash bucket size, needed to be increased if too many virtual host names are added"));
+        mConfVars.put("web.map_hash_bucket_size", new ProxyConfVar("web.map_hash_bucket_size", "proxy_web_map_hash_bucket_size", DEFAULT_WEB_MAP_HASH_BUCKET_SIZE, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "the map hash bucket size needs to be increased if generated hash value of server is big"));
         mConfVars.put("web.ssl.upstream.:servers", new WebSSLUpstreamServersVar());
         mConfVars.put("web.ssl.upstream.webclient.:servers", new WebSSLUpstreamClientServersVar());
         mConfVars.put("web.uploadmax", new ProxyConfVar("web.uploadmax", Provisioning.A_zimbraFileUploadMaxSize, new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
@@ -3081,6 +3108,8 @@ public class ProxyConfGen
 
         mConfVars.put("web.upstream.onlyoffice.docservice", new OnlyOfficeDocServiceServersVar());
         mConfVars.put("web.upstream.onlyoffice.spellchecker", new OnlyOfficeSpellCheckerServersVar());
+        mConfVars.put("web.upstream.chat", new ChatUpstreamServersVar());
+        mConfVars.put("web.upstream.chat.map_entries", new ChatUpstreamMapEntriesVar());
 
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
@@ -3198,7 +3227,7 @@ public class ProxyConfGen
         mProv = Provisioning.getInstance();
         ProxyConfVar.configSource = mProv.getConfig();
         ProxyConfVar.serverSource = mProv.getLocalServer();
-
+        chatConfig = generateChatConfig();
         if (cl.hasOption('h')) {
             usage(null);
             exitCode = 0;
@@ -3368,6 +3397,8 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.upstream")), new File(mConfIncludesDir, getConfFileName("docs.upstream")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("onlyoffice.common")), new File(mConfIncludesDir, getConfFileName("onlyoffice.common")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("onlyoffice.upstream")), new File(mConfIncludesDir, getConfFileName("onlyoffice.upstream")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("chat.common")), new File(mConfIncludesDir, getConfFileName("chat.common")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("chat.upstream")), new File(mConfIncludesDir, getConfFileName("chat.upstream")));
         } catch (ProxyConfException pe) {
             handleException(pe);
             exitCode = 1;
@@ -3479,10 +3510,113 @@ public class ProxyConfGen
         return false;
     }
 
+    /**
+     * Method used to generate chat server hashcode and mapping between proxy host and upstream host
+     * @return
+     */
+    public static Map<String, String> generateChatConfig() {
+        ZimbraLog.store.debug("Generating chat configuration using visitor pattern...");
+        Provisioning prov = Provisioning.getInstance();
+        StringBuilder upstreamConfig = new StringBuilder();
+        StringBuilder mapConfig = new StringBuilder();
+        Set<String> generatedHashes = new HashSet<>();
+        String globalChatBaseHost = "";
+        try {
+            globalChatBaseHost = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraChatBaseHost, "");
+        } catch (ServiceException e) {
+            ZimbraLog.store.error("Error fetching global config attribute zimbraChatBaseHost", e);
+        }
+        ChatConfigVisitor chatVisitor = new ChatConfigVisitor(upstreamConfig, mapConfig, globalChatBaseHost, generatedHashes);
+        String[] requiredAttrs = {
+                Provisioning.A_zimbraDomainName,
+                Provisioning.A_zimbraId,
+                Provisioning.A_zimbraZulipChatDomainId,
+                Provisioning.A_zimbraChatBaseHost
+        };
+
+        long startTime = System.currentTimeMillis();
+        try {
+            prov.getAllDomains(chatVisitor, requiredAttrs);
+        } catch (ServiceException e) {
+            ZimbraLog.store.error("Failed to generate chat configuration", e);
+            return Collections.emptyMap();
+        } finally {
+            chatVisitor.finalizeMapConfig();
+        }
+        long endTime = System.currentTimeMillis();
+        ZimbraLog.store.debug("Chat config generation completed in %d ms.", (endTime - startTime));
+        Map<String, String> resultChatConfig = new HashMap<>();
+        resultChatConfig.put("upstreamConfig", upstreamConfig.toString());
+        resultChatConfig.put("mapConfig", mapConfig.toString());
+
+        ZimbraLog.store.debug("Generated chat upstream config:\n%s", upstreamConfig.toString());
+        ZimbraLog.store.debug("Generated chat map config:\n%s", mapConfig.toString());
+        return resultChatConfig;
+    }
+
     public static void main(String[] args) throws ServiceException, ProxyConfException {
         int exitCode = createConf(args);
         System.exit(exitCode);
     }
+
+    private static class ChatConfigVisitor implements NamedEntry.Visitor {
+
+        private final StringBuilder upstreamConfig;
+        private final StringBuilder mapConfig;
+        private final String globalChatBaseHost;
+        private final Set<String> generatedHashes;
+        private int processedCount = 0;
+
+        public ChatConfigVisitor(StringBuilder upstreamConfig, StringBuilder mapConfig, String globalChatBaseHost, Set<String> generatedHashes) {
+            this.upstreamConfig = upstreamConfig;
+            this.mapConfig = mapConfig;
+            this.globalChatBaseHost = globalChatBaseHost;
+            this.generatedHashes = generatedHashes;
+            this.mapConfig.append("map $proxy_host $proxy_chat_host {\n");
+        }
+
+        @Override
+        public void visit(NamedEntry entry) throws ServiceException {
+            if (!(entry instanceof Domain)) {
+                ZimbraLog.store.warn("ChatConfigVisitor received non-Domain entry: %s", entry.getName());
+                return;
+            }
+            Domain domain = (Domain) entry;
+            processedCount++;
+            try {
+                String chatDomainId = domain.getAttr(Provisioning.A_zimbraZulipChatDomainId, "");
+                String chatBaseHost = domain.getAttr(Provisioning.A_zimbraChatBaseHost, "");
+                if (chatBaseHost.isEmpty() && !globalChatBaseHost.isEmpty()) {
+                    chatBaseHost = globalChatBaseHost;
+                }
+                if (chatDomainId.isEmpty() || chatBaseHost.isEmpty()) {
+                    return;
+                }
+
+                String upstreamHash = HttpUtil.fetchEncoded(chatBaseHost);
+                if (!generatedHashes.contains(upstreamHash)) {
+                    upstreamConfig.append(String.format("upstream %s {\n", upstreamHash));
+                    upstreamConfig.append(String.format("    server %s:443 fail_timeout=0s max_fails=0;\n", chatBaseHost));
+                    upstreamConfig.append("}\n\n");
+                    generatedHashes.add(upstreamHash);
+                }
+
+                upstreamConfig.append(String.format("upstream %s-%s {\n", chatDomainId, upstreamHash));
+                upstreamConfig.append(String.format("    server %s.%s:443 fail_timeout=0s max_fails=0;\n", chatDomainId, chatBaseHost));
+                upstreamConfig.append("}\n\n");
+                mapConfig.append(String.format("    %s-%s %s.%s;\n", chatDomainId, upstreamHash, chatDomainId, chatBaseHost));
+
+            } catch (Exception e) {
+                ZimbraLog.store.error("Error processing domain '%s' (ID: %s) for chat config", domain.getName(), domain.getId(), e);
+            }
+        }
+
+        public void finalizeMapConfig() {
+            this.mapConfig.append("}\n");
+            ZimbraLog.store.debug("Finished processing %d total domains for chat config.", processedCount);
+        }
+    }
+
 }
 
 

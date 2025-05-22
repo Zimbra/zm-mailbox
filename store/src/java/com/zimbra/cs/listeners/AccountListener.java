@@ -124,6 +124,39 @@ public abstract class AccountListener {
         }
     }
 
+    public static void invokeOnAccountRename(Account acct, String oldName, String newName,
+            ZimbraSoapContext zsc, boolean rollbackOnFailure) throws ServiceException {
+            ZimbraLog.account.debug("Account %s renamed from '%s' to '%s'", acct.getName(), oldName,
+                newName);
+            ArrayList<AccountListenerEntry> notifiedListeners = new ArrayList<AccountListenerEntry>();
+            String requestVia = zsc.getVia();
+            try {
+                // invoke listeners
+                Map<String, AccountListenerEntry> sortedListeners = ListenerUtil
+                    .sortByPriority(mListeners);
+                for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+                    AccountListenerEntry listenerInstance = listener.getValue();
+                    if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
+                        ZimbraLog.account.debug(
+                            "Account rename request received from \"%s\", no need to call \"%s\".",
+                            requestVia, listenerInstance.getListenerName());
+                        continue;
+                    }
+                    listenerInstance.getAccountListener().onAccountRename(acct, oldName, newName);
+                    notifiedListeners.add(listenerInstance);
+                }
+            } catch (ServiceException se) {
+                if (rollbackOnFailure) {
+                    rollbackAccountRename(notifiedListeners, acct, oldName, newName);
+                } else {
+                    ZimbraLog.account.warn(
+                        "No rollback on account listener for zimbra rename account failure, there may be inconsistency in account. %s",
+                        se.getMessage());
+                }
+                throw se;
+            }
+        }
+
     public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus, ZimbraSoapContext zsc, boolean rollbackOnFailure)
             throws ServiceException {
         ZimbraLog.account.debug("Account status for %s changed from '%s' to '%s'", acct.getName(),
@@ -325,6 +358,21 @@ public abstract class AccountListener {
         }
 
         return notify;
+    }
+
+    private static void rollbackAccountRename(ArrayList<AccountListenerEntry> notifiedListeners, Account acct, String oldName, String newName) {
+        if (!notifiedListeners.isEmpty()) {
+            for(int i = 0; i < notifiedListeners.size(); i++)
+            {
+                AccountListenerEntry listenerInstance = notifiedListeners.get(i);
+                ZimbraLog.account.debug("Rollback account listener rename request from \"%s\".", listenerInstance.getListenerName());
+                try {
+                    listenerInstance.getAccountListener().onAccountRename(acct, newName, oldName);
+                } catch (ServiceException se) {
+                    ZimbraLog.account.debug("Rollback account listener rename change failed from \"%s\". %s", listenerInstance.getListenerName(), se.getMessage());
+                }
+            }
+        }
     }
 
     private static void rollbackChangedStatus(ArrayList<AccountListenerEntry> notifiedListeners, Account acct, String oldStatus, String newStatus) {

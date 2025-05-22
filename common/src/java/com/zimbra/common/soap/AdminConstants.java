@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021, 2022, 2023 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021, 2022, 2023, 2024, 2025 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,11 +16,11 @@
  */
 package com.zimbra.common.soap;
 
-import org.dom4j.Namespace;
-import org.dom4j.QName;
-
 import java.util.Arrays;
 import java.util.List;
+
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 
 public final class AdminConstants {
 
@@ -42,6 +42,8 @@ public final class AdminConstants {
 
     public static final String E_AUTH_REQUEST = "AuthRequest";
     public static final String E_AUTH_RESPONSE = "AuthResponse";
+    public static final String E_CHANGE_PASSWORD_REQUEST = "ChangePasswordRequest";
+    public static final String E_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
     public static final String E_CREATE_ACCOUNT_REQUEST = "CreateAccountRequest";
     public static final String E_CREATE_ACCOUNT_RESPONSE = "CreateAccountResponse";
     public static final String E_CREATE_GAL_SYNC_ACCOUNT_REQUEST = "CreateGalSyncAccountRequest";
@@ -96,6 +98,15 @@ public final class AdminConstants {
     public static final String E_DELETE_DOMAIN_RESPONSE = "DeleteDomainResponse";
     public static final String E_GET_ALL_DOMAINS_REQUEST = "GetAllDomainsRequest";
     public static final String E_GET_ALL_DOMAINS_RESPONSE = "GetAllDomainsResponse";
+
+    public static final String E_CREATE_CHAT_REALM_REQUEST = "CreateChatRealmRequest";
+    public static final String E_CREATE_CHAT_REALM_RESPONSE = "CreateChatRealmResponse";
+    public static final String E_PROV_CHAT_ACCOUNTS_REQUEST = "ProvChatAccountsRequest";
+    public static final String E_PROV_CHAT_ACCOUNTS_RESPONSE = "ProvChatAccountsResponse";
+    public static final String E_MANAGE_CHAT_ACCOUNT_REQUEST = "ManageChatAccountRequest";
+    public static final String E_MANAGE_CHAT_ACCOUNT_RESPONSE = "ManageChatAccountResponse";
+    public static final String E_GET_ALL_CHAT_ACCOUNTS_REQUEST = "GetAllChatAccountsRequest";
+    public static final String E_GET_ALL_CHAT_ACCOUNTS_RESPONSE = "GetAllChatAccountsResponse";
 
     public static final String E_CREATE_COS_REQUEST = "CreateCosRequest";
     public static final String E_CREATE_COS_RESPONSE = "CreateCosResponse";
@@ -599,6 +610,8 @@ public final class AdminConstants {
     public static final QName SEARCH_ACCOUNTS_RESPONSE = QName.get(E_SEARCH_ACCOUNTS_RESPONSE, NAMESPACE);
     public static final QName RENAME_ACCOUNT_REQUEST = QName.get(E_RENAME_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName RENAME_ACCOUNT_RESPONSE = QName.get(E_RENAME_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName CHANGE_PASSWORD_REQUEST = QName.get(E_CHANGE_PASSWORD_REQUEST, NAMESPACE);
+    public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName CHANGE_PRIMARY_EMAIL_REQUEST = QName.get(E_CHANGE_PRIMARY_EMAIL_REQUEST, NAMESPACE);
     public static final QName CHANGE_PRIMARY_EMAIL_RESPONSE = QName.get(E_CHANGE_PRIMARY_EMAIL_RESPONSE, NAMESPACE);
 
@@ -614,6 +627,15 @@ public final class AdminConstants {
     public static final QName DELETE_DOMAIN_RESPONSE = QName.get(E_DELETE_DOMAIN_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_DOMAINS_REQUEST = QName.get(E_GET_ALL_DOMAINS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_DOMAINS_RESPONSE = QName.get(E_GET_ALL_DOMAINS_RESPONSE, NAMESPACE);
+
+    public static final QName CREATE_CHAT_REALM_REQUEST = QName.get(E_CREATE_CHAT_REALM_REQUEST, NAMESPACE);
+    public static final QName CREATE_CHAT_REALM_RESPONSE = QName.get(E_CREATE_CHAT_REALM_RESPONSE, NAMESPACE);
+    public static final QName PROV_CHAT_ACCOUNTS_REQUEST = QName.get(E_PROV_CHAT_ACCOUNTS_REQUEST, NAMESPACE);
+    public static final QName PROV_CHAT_ACCOUNTS_RESPONSE = QName.get(E_PROV_CHAT_ACCOUNTS_RESPONSE, NAMESPACE);
+    public static final QName MANAGE_CHAT_ACCOUNT_REQUEST = QName.get(E_MANAGE_CHAT_ACCOUNT_REQUEST, NAMESPACE);
+    public static final QName MANAGE_CHAT_ACCOUNT_RESPONSE = QName.get(E_MANAGE_CHAT_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName GET_ALL_CHAT_ACCOUNTS_REQUEST = QName.get(E_GET_ALL_CHAT_ACCOUNTS_REQUEST, NAMESPACE);
+    public static final QName GET_ALL_CHAT_ACCOUNTS_RESPONSE = QName.get(E_GET_ALL_CHAT_ACCOUNTS_RESPONSE, NAMESPACE);
 
     public static final QName CREATE_COS_REQUEST = QName.get(E_CREATE_COS_REQUEST, NAMESPACE);
     public static final QName CREATE_COS_RESPONSE = QName.get(E_CREATE_COS_RESPONSE, NAMESPACE);
@@ -1614,6 +1636,7 @@ public final class AdminConstants {
     public static final String E_LDAP_FILTER = "ldapFilter";
     public static final String A_CLEAR_FILTER = "clearFilter";
 
+    public static final String A_CHAT_DOMAIN = "chatDomain";
     public static final String E_DEVICES = "devices";
 
     public static final String A_SM_RUNTIME_SWITCH_STATUS = "status";

@@ -284,7 +284,7 @@ public final class ParseMimeMessage {
                 long mailAttachmentMaxSize = account.getMailAttachmentMaxSize();
                 Config config = Provisioning.getInstance().getConfig();
                 long mtaMaxMsgSize = config.getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
-                if (mailAttachmentMaxSize > mtaMaxMsgSize) {
+                if (mailAttachmentMaxSize > mtaMaxMsgSize || mailAttachmentMaxSize == 0) {
                     maxSize = mtaMaxMsgSize;
                 } else {
                     maxSize = mailAttachmentMaxSize;

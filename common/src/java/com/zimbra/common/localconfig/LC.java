@@ -999,6 +999,7 @@ public final class LC {
     public static final KnownKey lds_client_max_connection = KnownKey.newKey(100);
     public static final KnownKey lds_client_max_per_route = KnownKey.newKey(20);
     public static final KnownKey lds_client_max_idle_time_seconds = KnownKey.newKey(20);
+    public static final KnownKey ignore_imap_uid_range_search = KnownKey.newKey(true);
 
     /**
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
@@ -1462,7 +1463,7 @@ public final class LC {
     public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(true);
 
     // file content type blacklist
-    public static final KnownKey zimbra_file_content_type_blacklist = KnownKey.newKey("application/x-ms*");
+    public static final KnownKey zimbra_file_content_type_blacklist = KnownKey.newKey("application/x-ms*,application/x-dosexec");
 
     public static final KnownKey enable_delegated_admin_ldap_access = KnownKey.newKey(true);
 
@@ -1519,9 +1520,6 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_remote_cmd_channel_timeout_min = KnownKey.newKey(10);
 
-    @Supported
-    public static final KnownKey delivery_report_enabled = KnownKey.newKey(true);
-
     public static final KnownKey invite_ignore_x_alt_description = KnownKey.newKey(true);
 
     // TODO: ZCS-11319 move the following from LC to LDAP property.
@@ -1558,6 +1556,7 @@ public final class LC {
     public static final KnownKey zimbra_allowed_redirect_url = KnownKey.newKey("");
 
     public static final KnownKey zimbra_two_factor_auth_resend_email_wait_seconds = KnownKey.newKey(1); // 1 sec
+    public static final KnownKey proxy_web_map_hash_bucket_size = KnownKey.newKey(64);
 
     // 10.1.0 licensing config
     @Supported

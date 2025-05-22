@@ -57,12 +57,15 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.CosSelector.CosBy;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.type.AccountSelector;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @since Oct 4, 2004
@@ -117,6 +120,26 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             acct = prov.get(accountBy, value, false, authToken);
         }
         return acct;
+    }
+
+    public void validateMailAttachmentMaxSize(Map<String, Object> attrs) throws ServiceException {
+
+        if (!attrs.containsKey(Provisioning.A_zimbraMailAttachmentMaxSize)) {
+            return;
+        }
+
+        String name = Provisioning.A_zimbraMailAttachmentMaxSize;
+        String value = attrs.get(name).toString();
+        long mtaMaxMessageSize = Provisioning.getInstance().getConfig().getMtaMaxMessageSize();
+
+        try {
+            long zimbraMailAttachmentMaxSize = Long.parseLong(value);
+            if (zimbraMailAttachmentMaxSize > mtaMaxMessageSize) {
+                throw AccountServiceException.INVALID_ATTR_VALUE(name + " value(" + zimbraMailAttachmentMaxSize + ") larger than max allowed: " + mtaMaxMessageSize, null);
+            }
+        } catch (NumberFormatException e) {
+            throw AccountServiceException.INVALID_ATTR_VALUE(name + " must be a valid long: " + value, e);
+        }
     }
 
     private CalendarResource getCalendarResource(Provisioning prov, Key.CalendarResourceBy crBy, String value)

@@ -4795,6 +4795,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraChatAllowUnencryptedPassword = "zimbraChatAllowUnencryptedPassword";
 
     /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4137)
+    public static final String A_zimbraChatBaseHost = "zimbraChatBaseHost";
+
+    /**
      * enable dedicated log for the chat conversation (needed by some
      * jurisdictions)
      *
@@ -4810,6 +4819,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2103)
     public static final String A_zimbraChatHistoryEnabled = "zimbraChatHistoryEnabled";
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public static final String A_zimbraChatJwtSecret = "zimbraChatJwtSecret";
 
     /**
      * enable XMPP server
@@ -6991,6 +7008,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureDelayedIndexEnabled = "zimbraFeatureDelayedIndexEnabled";
 
     /**
+     * Feature to enable delivery status notification
+     *
+     * @since ZCS 10.1.8
+     */
+    @ZAttr(id=4135)
+    public static final String A_zimbraFeatureDeliveryStatusNotificationEnabled = "zimbraFeatureDeliveryStatusNotificationEnabled";
+
+    /**
      * enable end-user mail discarding defined in mail filters features
      *
      * @since ZCS 6.0.0_BETA1
@@ -7508,9 +7533,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
 
     /**
-     * Feature to enable/disable the mobile sync for shared folders. Default 
-     * value is TRUE. The option to sync the shared folders to the Mobile 
-     * will be enabled for the users in the webclient. The option will only 
+     * Feature to enable/disable the mobile sync for shared folders. Default
+     * value is TRUE. The option to sync the shared folders to the Mobile
+     * will be enabled for the users in the webclient. The option will only
      * be enabled for shared folders having Admin or Manager permission
      *
      * @since ZCS 10.1.0
@@ -14603,6 +14628,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=469)
     public static final String A_zimbraPrefMailDefaultCharset = "zimbraPrefMailDefaultCharset";
+
+    /**
+     * whether web UI should always request delivery status notification for
+     * outgoing messages
+     *
+     * @since ZCS 10.1.8
+     */
+    @ZAttr(id=4140)
+    public static final String A_zimbraPrefMailDeliveryStatusNotification = "zimbraPrefMailDeliveryStatusNotification";
 
     /**
      * Flash icon when a new email arrives
