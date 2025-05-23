@@ -7051,6 +7051,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (server != null) {
             SearchAccountsOptions searchOpts = new SearchAccountsOptions(domain);
             searchOpts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
+            searchOpts.setUseControl(true);
+            searchOpts.setResultPageSize(1000);
             searchAccountsOnServerInternal(server, searchOpts, visitor);
         } else {
             getAllAccounts(domain, visitor);
