@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 
 import java.io.*;
@@ -23,7 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class EmailTracker {
-    private static final String SENT_EMAILS_FILE = "/tmp/sent_emails.txt";
+    private static final String SENT_EMAILS_FILE = LC.zimbra_tmp_directory.value()+"/sent_emails.txt";
     private static final Set<String> sentEmails = new HashSet<>();
 
     static {
