@@ -41,7 +41,6 @@ public class ManageChatAccountRequest {
      * <tr> <td> <b>get</b> </td> <td> get Chat account</td> </tr>
      * <tr> <td> <b>activate</b> </td> <td> activate Chat account</td> </tr>
      * <tr> <td> <b>deactivate</b> </td> <td> deactivate Chat account</td> </tr>
-     * <tr> <td> <b>delete</b> </td> <td> delete Chat account</td> </tr>
      * </table>
      */
     @XmlAttribute(name=AdminConstants.E_ACTION, required=true)
