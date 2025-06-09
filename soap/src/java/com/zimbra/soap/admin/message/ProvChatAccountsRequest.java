@@ -33,7 +33,7 @@ import com.zimbra.soap.type.AccountSelector;
  * <br />
  * If account is specified, the account is provisioned on Chat. <br />
  * If not, all accounts in the domain are provisioned.
- * Accounts whose zimbraAccountStatus is not active, zimbraIsSystemAccount is TRUE
+ * An Account whose zimbraAccountStatus is not active, zimbraIsSystemAccount is TRUE
  * or zimbraFeatureZulipChatEnabled is FALSE is skipped.
  */
 @XmlAccessorType(XmlAccessType.NONE)
