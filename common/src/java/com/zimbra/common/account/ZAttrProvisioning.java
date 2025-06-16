@@ -9517,6 +9517,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLicenseNotificationEmail = "zimbraLicenseNotificationEmail";
 
     /**
+     * License Pre expiry notification sent time
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4142)
+    public static final String A_zimbraLicensePreExpiryNotificationLastSentTime = "zimbraLicensePreExpiryNotificationLastSentTime";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)

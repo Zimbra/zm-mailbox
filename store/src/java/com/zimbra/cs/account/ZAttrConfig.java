@@ -29065,6 +29065,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * License Pre expiry notification sent time
+     *
+     * @return zimbraLicensePreExpiryNotificationLastSentTime, or null if unset
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4142)
+    public String getLicensePreExpiryNotificationLastSentTime() {
+        return getAttr(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, null, true);
+    }
+
+    /**
+     * License Pre expiry notification sent time
+     *
+     * @param zimbraLicensePreExpiryNotificationLastSentTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4142)
+    public void setLicensePreExpiryNotificationLastSentTime(String zimbraLicensePreExpiryNotificationLastSentTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, zimbraLicensePreExpiryNotificationLastSentTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * License Pre expiry notification sent time
+     *
+     * @param zimbraLicensePreExpiryNotificationLastSentTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4142)
+    public Map<String,Object> setLicensePreExpiryNotificationLastSentTime(String zimbraLicensePreExpiryNotificationLastSentTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, zimbraLicensePreExpiryNotificationLastSentTime);
+        return attrs;
+    }
+
+    /**
+     * License Pre expiry notification sent time
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4142)
+    public void unsetLicensePreExpiryNotificationLastSentTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * License Pre expiry notification sent time
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.0
+     */
+    @ZAttr(id=4142)
+    public Map<String,Object> unsetLicensePreExpiryNotificationLastSentTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, "");
+        return attrs;
+    }
+
+    /**
      * Whether to bind to port on startup irrespective of whether the server
      * is enabled. Useful when port to bind is privileged and must be bound
      * early.
