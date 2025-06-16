@@ -71,7 +71,7 @@ public abstract class ExtensionHttpHandler {
      * @throws ServletException
      */
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-        throw new ServletException("HTTP GET requests are not supported");
+        resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "HTTP GET requests are not supported");
     }
 
     /**

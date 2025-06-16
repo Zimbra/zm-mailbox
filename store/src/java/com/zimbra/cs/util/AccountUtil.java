@@ -1082,7 +1082,10 @@ public class AccountUtil {
         boolean isDelegatedAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false);
         boolean isAdminAccount = (isDomainAdmin || isAdmin || isDelegatedAdmin);
         if (!isAdminAccount) {
-            throw ServiceException.PERM_DENIED("not an admin account");
+            AuthFailedServiceException authFailedServiceException = AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+                    acct.getName(), "account not found");
+            AuthListener.invokeOnException(authFailedServiceException);
+            throw authFailedServiceException;
         }
     }
 
