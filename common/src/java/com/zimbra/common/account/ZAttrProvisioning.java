@@ -9519,7 +9519,7 @@ public class ZAttrProvisioning {
     /**
      * License Pre expiry notification sent time
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
     public static final String A_zimbraLicensePreExpiryNotificationLastSentTime = "zimbraLicensePreExpiryNotificationLastSentTime";

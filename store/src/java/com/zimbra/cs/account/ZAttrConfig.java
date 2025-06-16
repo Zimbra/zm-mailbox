@@ -29069,7 +29069,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraLicensePreExpiryNotificationLastSentTime, or null if unset
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
     public String getLicensePreExpiryNotificationLastSentTime() {
@@ -29082,7 +29082,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraLicensePreExpiryNotificationLastSentTime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
     public void setLicensePreExpiryNotificationLastSentTime(String zimbraLicensePreExpiryNotificationLastSentTime) throws com.zimbra.common.service.ServiceException {
@@ -29098,7 +29098,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
     public Map<String,Object> setLicensePreExpiryNotificationLastSentTime(String zimbraLicensePreExpiryNotificationLastSentTime, Map<String,Object> attrs) {
@@ -29112,7 +29112,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
     public void unsetLicensePreExpiryNotificationLastSentTime() throws com.zimbra.common.service.ServiceException {
@@ -29127,7 +29127,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.0
+     * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
     public Map<String,Object> unsetLicensePreExpiryNotificationLastSentTime(Map<String,Object> attrs) {
