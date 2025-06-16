@@ -28921,6 +28921,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * License Pre expiry notification sent details
+     *
+     * @return zimbraLicensePreExpiryReminderSentDetails, or null if unset
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4142)
+    public String getLicensePreExpiryReminderSentDetails() {
+        return getAttr(Provisioning.A_zimbraLicensePreExpiryReminderSentDetails, null, true);
+    }
+
+    /**
+     * License Pre expiry notification sent details
+     *
+     * @param zimbraLicensePreExpiryReminderSentDetails new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4142)
+    public void setLicensePreExpiryReminderSentDetails(String zimbraLicensePreExpiryReminderSentDetails) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryReminderSentDetails, zimbraLicensePreExpiryReminderSentDetails);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * License Pre expiry notification sent details
+     *
+     * @param zimbraLicensePreExpiryReminderSentDetails new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4142)
+    public Map<String,Object> setLicensePreExpiryReminderSentDetails(String zimbraLicensePreExpiryReminderSentDetails, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryReminderSentDetails, zimbraLicensePreExpiryReminderSentDetails);
+        return attrs;
+    }
+
+    /**
+     * License Pre expiry notification sent details
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4142)
+    public void unsetLicensePreExpiryReminderSentDetails() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryReminderSentDetails, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * License Pre expiry notification sent details
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4142)
+    public Map<String,Object> unsetLicensePreExpiryReminderSentDetails(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryReminderSentDetails, "");
+        return attrs;
+    }
+
+    /**
      * Whether to bind to port on startup irrespective of whether the server
      * is enabled. Useful when port to bind is privileged and must be bound
      * early.
