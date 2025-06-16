@@ -10595,7 +10595,4 @@ TODO: delete them permanently from here
   <desc>License Pre expiry notification sent time</desc>
 </attr>
 
-  <attr id="4129" name="zimbraOfflineNetworkRealtimeLicense" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.0">
-    <desc>Zimbra offline network license code</desc>
-  </attr>
 </attrs>
