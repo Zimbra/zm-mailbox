@@ -29067,43 +29067,43 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * License Pre expiry notification sent time
      *
-     * @return zimbraLicensePreExpiryNotificationLastSentTime, or null if unset
+     * @return zimbraLicensePreExpiryReminderSentTime, or null if unset
      *
      * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
-    public String getLicensePreExpiryNotificationLastSentTime() {
-        return getAttr(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, null, true);
+    public String getLicensePreExpiryReminderSentTime() {
+        return getAttr(Provisioning.A_zimbraLicensePreExpiryReminderSentTime, null, true);
     }
 
     /**
      * License Pre expiry notification sent time
      *
-     * @param zimbraLicensePreExpiryNotificationLastSentTime new value
+     * @param zimbraLicensePreExpiryReminderSentTime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
-    public void setLicensePreExpiryNotificationLastSentTime(String zimbraLicensePreExpiryNotificationLastSentTime) throws com.zimbra.common.service.ServiceException {
+    public void setLicensePreExpiryReminderSentTime(String zimbraLicensePreExpiryReminderSentTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, zimbraLicensePreExpiryNotificationLastSentTime);
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryReminderSentTime, zimbraLicensePreExpiryReminderSentTime);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * License Pre expiry notification sent time
      *
-     * @param zimbraLicensePreExpiryNotificationLastSentTime new value
+     * @param zimbraLicensePreExpiryReminderSentTime new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
-    public Map<String,Object> setLicensePreExpiryNotificationLastSentTime(String zimbraLicensePreExpiryNotificationLastSentTime, Map<String,Object> attrs) {
+    public Map<String,Object> setLicensePreExpiryReminderSentTime(String zimbraLicensePreExpiryReminderSentTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, zimbraLicensePreExpiryNotificationLastSentTime);
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryReminderSentTime, zimbraLicensePreExpiryReminderSentTime);
         return attrs;
     }
 
@@ -29115,9 +29115,9 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
-    public void unsetLicensePreExpiryNotificationLastSentTime() throws com.zimbra.common.service.ServiceException {
+    public void unsetLicensePreExpiryReminderSentTime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, "");
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryReminderSentTime, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -29130,9 +29130,9 @@ public abstract class ZAttrConfig extends Entry {
      * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
-    public Map<String,Object> unsetLicensePreExpiryNotificationLastSentTime(Map<String,Object> attrs) {
+    public Map<String,Object> unsetLicensePreExpiryReminderSentTime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLicensePreExpiryNotificationLastSentTime, "");
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryReminderSentTime, "");
         return attrs;
     }
 

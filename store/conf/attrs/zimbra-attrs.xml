@@ -10591,7 +10591,7 @@ TODO: delete them permanently from here
   <desc>Feature to enable/disable password expiry reminder. The default value is FALSE.</desc>
 </attr>
 
-<attr id="4142" name="zimbraLicensePreExpiryNotificationLastSentTime" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.10">
+<attr id="4142" name="zimbraLicensePreExpiryReminderSentTime" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.10">
   <desc>License Pre expiry notification sent time</desc>
 </attr>
 
