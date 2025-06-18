@@ -92,6 +92,9 @@ public class ExternalEmailWarning {
                         if (!eewEnabledDomainsSet.contains(domain) && domain.isFeatureExternalEmailWarningEnabled()) {
                             eewEnabledDomainsSet.add(domain);
                         }
+                        else if (eewEnabledDomainsSet.contains(domain) && !domain.isFeatureExternalEmailWarningEnabled()) {
+                            eewEnabledDomainsSet.remove(domain);
+                        }
                     }
                 }
             } catch (ServiceException e) {
