@@ -21,6 +21,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +36,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
@@ -86,6 +90,7 @@ public class SoapEngine {
     public static final String ZIMBRA_ENGINE  = "zimbra.engine";
     public static final String ZIMBRA_SESSION = "zimbra.session";
     public static final String JWT_SALT = "jwt.salt";
+    private static final Set<String> ENFORCE_CSRF = new HashSet<>(Arrays.asList(AccountConstants.E_RESET_PASSWORD_REQUEST));
 
     /** context name of request IP
      *
@@ -367,7 +372,7 @@ public class SoapEngine {
                     //was trying to get the jwt salt from soap context, if any issue occurred ignore.
                 }
             } else {
-                doCsrfCheck = doCsrfCheck && handler.needsAuth(context);
+                doCsrfCheck = doCsrfCheck && (handler.needsAuth(context) || ENFORCE_CSRF.contains(doc.getName()));
             }
         }
 
