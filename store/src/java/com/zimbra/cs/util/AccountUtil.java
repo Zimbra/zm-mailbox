@@ -1082,8 +1082,10 @@ public class AccountUtil {
         boolean isDelegatedAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false);
         boolean isAdminAccount = (isDomainAdmin || isAdmin || isDelegatedAdmin);
         if (!isAdminAccount) {
-            AuthFailedServiceException authFailedServiceException = AuthFailedServiceException.AUTH_FAILED(acct.getName(),
-                    acct.getName(), "account not found");
+            String acctUserName = acct.getName().split("@",2)[0];
+            AuthFailedServiceException authFailedServiceException = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acctUserName,
+                    "account not found");
+            ZimbraLog.store.info("Admin Authentication failed for %s as the account doesn't have admin rights", acct.getName());
             AuthListener.invokeOnException(authFailedServiceException);
             throw authFailedServiceException;
         }

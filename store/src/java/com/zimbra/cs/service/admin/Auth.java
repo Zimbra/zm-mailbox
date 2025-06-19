@@ -1,3 +1,4 @@
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -97,7 +98,14 @@ public class Auth extends AdminDocumentHandler {
 
             // make sure that the authenticated account is active and has not been deleted/disabled since the last request
             if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
-                throw ServiceException.PERM_DENIED("Error in Authentication");
+                if (null != acctName && null != name) {
+                    AccountServiceException.AuthFailedServiceException authFailedServiceException = AccountServiceException.AuthFailedServiceException.AUTH_FAILED(acctName,
+                            name, "account not found");
+                    AuthListener.invokeOnException(authFailedServiceException);
+                    throw authFailedServiceException;
+                } else {
+                    throw ServiceException.PERM_DENIED("Error in Authentication");
+                }
             }
 
             // check account is admin
