@@ -2404,10 +2404,8 @@ public class ProxyConfGen
                 }
             }
         };
-
         mProv.getAllDomains(visitor,
             attrsNeeded.toArray(new String[attrsNeeded.size()]));
-
         return result;
     }
 
@@ -3108,9 +3106,10 @@ public class ProxyConfGen
 
         mConfVars.put("web.upstream.onlyoffice.docservice", new OnlyOfficeDocServiceServersVar());
         mConfVars.put("web.upstream.onlyoffice.spellchecker", new OnlyOfficeSpellCheckerServersVar());
-        mConfVars.put("web.upstream.chat", new ChatUpstreamServersVar());
-        mConfVars.put("web.upstream.chat.map_entries", new ChatUpstreamMapEntriesVar());
-
+        if (LC.proxy_chat_config_enabled.booleanValue()) {
+            mConfVars.put("web.upstream.chat", new ChatUpstreamServersVar());
+            mConfVars.put("web.upstream.chat.map_entries", new ChatUpstreamMapEntriesVar());
+        }
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
         ArrayList<String> rhdr = new ArrayList<String>();
@@ -3227,7 +3226,13 @@ public class ProxyConfGen
         mProv = Provisioning.getInstance();
         ProxyConfVar.configSource = mProv.getConfig();
         ProxyConfVar.serverSource = mProv.getLocalServer();
-        chatConfig = generateChatConfig();
+        if (LC.proxy_chat_config_enabled.booleanValue()) {
+            // this is enabled by default, set it to false
+            // when chat config is not enabled and having high number of domains
+            chatConfig = generateChatConfig();
+        } else {
+            mLog.info("proxy_chat_config_enabled is disabled, ignoring writing chat config");
+        }
         if (cl.hasOption('h')) {
             usage(null);
             exitCode = 0;
@@ -3397,8 +3402,10 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.upstream")), new File(mConfIncludesDir, getConfFileName("docs.upstream")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("onlyoffice.common")), new File(mConfIncludesDir, getConfFileName("onlyoffice.common")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("onlyoffice.upstream")), new File(mConfIncludesDir, getConfFileName("onlyoffice.upstream")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("chat.common")), new File(mConfIncludesDir, getConfFileName("chat.common")));
-            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("chat.upstream")), new File(mConfIncludesDir, getConfFileName("chat.upstream")));
+            if (LC.proxy_chat_config_enabled.booleanValue()) {
+                expandTemplate(new File(mTemplateDir, getConfTemplateFileName("chat.common")), new File(mConfIncludesDir, getConfFileName("chat.common")));
+                expandTemplate(new File(mTemplateDir, getConfTemplateFileName("chat.upstream")), new File(mConfIncludesDir, getConfFileName("chat.upstream")));
+            }
         } catch (ProxyConfException pe) {
             handleException(pe);
             exitCode = 1;
