@@ -1542,6 +1542,8 @@ public final class LC {
 
     public static final KnownKey zimbra_two_factor_auth_resend_email_wait_seconds = KnownKey.newKey(1); // 1 sec
     public static final KnownKey proxy_web_map_hash_bucket_size = KnownKey.newKey(64);
+    @Supported
+    public static final KnownKey proxy_chat_config_enabled = KnownKey.newKey(true);
 
     // 10.1.0 licensing config
     @Supported
