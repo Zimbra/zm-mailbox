@@ -10595,4 +10595,9 @@ TODO: delete them permanently from here
   <desc>License Pre expiry notification sent details</desc>
 </attr>
 
+<attr id="4143" name="zimbraLicensePreExpiryMailAlertEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="10.1.11">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>License Pre expiry notification mail enabled info. The default value is TRUE</desc>
+</attr>
+
 </attrs>
