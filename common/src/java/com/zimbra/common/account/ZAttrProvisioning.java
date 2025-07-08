@@ -9517,6 +9517,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLicenseNotificationEmail = "zimbraLicenseNotificationEmail";
 
     /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public static final String A_zimbraLicensePreExpiryMailAlertEnabled = "zimbraLicensePreExpiryMailAlertEnabled";
+
+    /**
      * License Pre expiry notification sent details
      *
      * @since ZCS 10.1.10
