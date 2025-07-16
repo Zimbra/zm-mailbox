@@ -10600,4 +10600,8 @@ TODO: delete them permanently from here
   <desc>License Pre expiry notification mail enabled info. The default value is TRUE</desc>
 </attr>
 
+<attr id="4144" name="zimbraLicenseNotificationEmailForLicensePreExpiry" type="email" cardinality="multi" max="5" optionalIn="globalConfig" since="10.1.11" callback="LicensePreExpiryNotificationMail">
+  <desc>Email address for receiving Zimbra license notifications for License Pre Expiry</desc>
+</attr>
+
 </attrs>
