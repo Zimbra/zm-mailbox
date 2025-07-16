@@ -29142,6 +29142,149 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Email address for receiving Zimbra license notifications for License
+     * Pre Expiry
+     *
+     * @return zimbraLicenseNotificationEmailForLicensePreExpiry, or empty array if unset
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4144)
+    public String[] getLicenseNotificationEmailForLicensePreExpiry() {
+        return getMultiAttr(Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, true, true);
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications for License
+     * Pre Expiry
+     *
+     * @param zimbraLicenseNotificationEmailForLicensePreExpiry new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4144)
+    public void setLicenseNotificationEmailForLicensePreExpiry(String[] zimbraLicenseNotificationEmailForLicensePreExpiry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, zimbraLicenseNotificationEmailForLicensePreExpiry);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications for License
+     * Pre Expiry
+     *
+     * @param zimbraLicenseNotificationEmailForLicensePreExpiry new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4144)
+    public Map<String,Object> setLicenseNotificationEmailForLicensePreExpiry(String[] zimbraLicenseNotificationEmailForLicensePreExpiry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, zimbraLicenseNotificationEmailForLicensePreExpiry);
+        return attrs;
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications for License
+     * Pre Expiry
+     *
+     * @param zimbraLicenseNotificationEmailForLicensePreExpiry new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4144)
+    public void addLicenseNotificationEmailForLicensePreExpiry(String zimbraLicenseNotificationEmailForLicensePreExpiry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, zimbraLicenseNotificationEmailForLicensePreExpiry);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications for License
+     * Pre Expiry
+     *
+     * @param zimbraLicenseNotificationEmailForLicensePreExpiry new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4144)
+    public Map<String,Object> addLicenseNotificationEmailForLicensePreExpiry(String zimbraLicenseNotificationEmailForLicensePreExpiry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, zimbraLicenseNotificationEmailForLicensePreExpiry);
+        return attrs;
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications for License
+     * Pre Expiry
+     *
+     * @param zimbraLicenseNotificationEmailForLicensePreExpiry existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4144)
+    public void removeLicenseNotificationEmailForLicensePreExpiry(String zimbraLicenseNotificationEmailForLicensePreExpiry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, zimbraLicenseNotificationEmailForLicensePreExpiry);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications for License
+     * Pre Expiry
+     *
+     * @param zimbraLicenseNotificationEmailForLicensePreExpiry existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4144)
+    public Map<String,Object> removeLicenseNotificationEmailForLicensePreExpiry(String zimbraLicenseNotificationEmailForLicensePreExpiry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, zimbraLicenseNotificationEmailForLicensePreExpiry);
+        return attrs;
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications for License
+     * Pre Expiry
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4144)
+    public void unsetLicenseNotificationEmailForLicensePreExpiry() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address for receiving Zimbra license notifications for License
+     * Pre Expiry
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4144)
+    public Map<String,Object> unsetLicenseNotificationEmailForLicensePreExpiry(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, "");
+        return attrs;
+    }
+
+    /**
      * License Pre expiry notification sent details
      *
      * @return zimbraLicensePreExpiryReminderSentDetails, or null if unset
