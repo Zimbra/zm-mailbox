@@ -4795,6 +4795,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraChatAllowUnencryptedPassword = "zimbraChatAllowUnencryptedPassword";
 
     /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4137)
+    public static final String A_zimbraChatBaseHost = "zimbraChatBaseHost";
+
+    /**
      * enable dedicated log for the chat conversation (needed by some
      * jurisdictions)
      *
@@ -4810,6 +4819,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2103)
     public static final String A_zimbraChatHistoryEnabled = "zimbraChatHistoryEnabled";
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public static final String A_zimbraChatJwtSecret = "zimbraChatJwtSecret";
 
     /**
      * enable XMPP server
@@ -6504,6 +6521,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalAccountStatusCheckInterval = "zimbraExternalAccountStatusCheckInterval";
 
     /**
+     * Sets the base warning text for External Email Warning (EEW)
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4139)
+    public static final String A_zimbraExternalEmailWarningMessage = "zimbraExternalEmailWarningMessage";
+
+    /**
      * the handler class for getting all groups an account belongs to in the
      * external directory
      *
@@ -6993,7 +7018,7 @@ public class ZAttrProvisioning {
     /**
      * Feature to enable delivery status notification
      *
-     * @since ZCS 10.1.4
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4135)
     public static final String A_zimbraFeatureDeliveryStatusNotificationEnabled = "zimbraFeatureDeliveryStatusNotificationEnabled";
@@ -7045,6 +7070,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1185)
     public static final String A_zimbraFeatureExportFolderEnabled = "zimbraFeatureExportFolderEnabled";
+
+    /**
+     * Feature to enable/disable External Email Warning (EEW)
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4138)
+    public static final String A_zimbraFeatureExternalEmailWarningEnabled = "zimbraFeatureExternalEmailWarningEnabled";
 
     /**
      * whether external feedback feature is enabled
@@ -7400,6 +7433,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=366)
     public static final String A_zimbraFeatureOutOfOfficeReplyEnabled = "zimbraFeatureOutOfOfficeReplyEnabled";
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4141)
+    public static final String A_zimbraFeaturePasswordExpiryReminderEnabled = "zimbraFeaturePasswordExpiryReminderEnabled";
 
     /**
      * Deprecated since: 8.0.0. Deprecated per bug 56924. Orig desc: whether
@@ -9473,6 +9515,23 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4132)
     public static final String A_zimbraLicenseNotificationEmail = "zimbraLicenseNotificationEmail";
+
+    /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public static final String A_zimbraLicensePreExpiryMailAlertEnabled = "zimbraLicensePreExpiryMailAlertEnabled";
+
+    /**
+     * License Pre expiry notification sent details
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4142)
+    public static final String A_zimbraLicensePreExpiryReminderSentDetails = "zimbraLicensePreExpiryReminderSentDetails";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname
@@ -14616,7 +14675,7 @@ public class ZAttrProvisioning {
      * whether web UI should always request delivery status notification for
      * outgoing messages
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4140)
     public static final String A_zimbraPrefMailDeliveryStatusNotification = "zimbraPrefMailDeliveryStatusNotification";

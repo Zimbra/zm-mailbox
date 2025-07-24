@@ -403,22 +403,14 @@ public class UserServlet extends ZimbraServlet {
                 ZimbraLog.addAccountNameToContext(context.getAuthAccount().getName());
             }
 
-            if (context.targetAccount != null && !context.targetAccount.isFeatureExportFolderEnabled()) {
-                // classic web app refresh uses export contact with format "contact folder", excluding this format
-                if( !(context.format == FormatType.CONTACT_FOLDER)) {
-                    throw ServiceException.PERM_DENIED(L10nUtil.getMessage(MsgKey.errPermissionDenied, req));
-                }
-            }
-
             doAuthGet(req, resp, context);
 
             if (allowDocumentAccessedTimeLogging(context)) {
                 logDocumentAccessedTime(context);
             }
         } catch (ServiceException se) {
-            if (se.getCode() == ServiceException.PERM_DENIED) {
-                sendError(context, req, resp, se.getMessage());
-            } else if (se instanceof NoSuchItemException) {
+            if (se.getCode() == ServiceException.PERM_DENIED ||
+                    se instanceof NoSuchItemException) {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
             } else if (se.getCode() == ServiceException.AUTH_REQUIRED) {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
@@ -789,11 +781,6 @@ public class UserServlet extends ZimbraServlet {
                     }
                 }
             }
-            if (context.targetAccount != null && !context.targetAccount.isFeatureImportFolderEnabled()) {
-                // dummy auth successful set for handling the proper error msg in sendError
-                context.setCsrfAuthSucceeded(true);
-                throw ServiceException.PERM_DENIED(L10nUtil.getMessage(MsgKey.errPermissionDenied, req));
-            }
             Folder folder = null;
             String filename = null;
             Mailbox mbox = UserServletUtil.getTargetMailbox(context);
@@ -870,9 +857,7 @@ public class UserServlet extends ZimbraServlet {
 
             context.formatter.save(context, ctype, folder, filename);
         } catch (ServiceException se) {
-            if (se.getCode() == ServiceException.PERM_DENIED) {
-                sendError(context, req, resp, se.getMessage());
-            } else if (se instanceof NoSuchItemException) {
+            if (se.getCode() == ServiceException.PERM_DENIED || se instanceof NoSuchItemException) {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
             } else if (se.getCode() == AccountServiceException.MAINTENANCE_MODE
                     || se.getCode() == AccountServiceException.ACCOUNT_INACTIVE) {

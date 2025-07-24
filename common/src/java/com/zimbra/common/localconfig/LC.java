@@ -66,23 +66,6 @@ public final class LC {
     public static final KnownKey zimbra_tmp_directory = KnownKey.newKey("${zimbra_home}/data/tmp");
 
     /**
-     * Sets whether the External Email Warning (EEW) feature is enabled.
-     */
-    @Supported
-    public static final KnownKey zimbra_external_email_warning_enabled = KnownKey.newKey(false);
-
-    /**
-     * Sets the base message or warning for External Email Warning (EEW).
-     * 
-     * This string will be used and adapted for both text/plain and text/html parts
-     * in an email. Please do not attempt to use HTML mark up here, it will be
-     * escaped anyways.
-     */
-    @Supported
-    public static final KnownKey zimbra_external_email_warning_message = KnownKey
-            .newKey("This message originated outside of your organization.");
-
-    /**
      * Sets whether the HybridBlobmover feature is enabled.
      */
     @Supported
@@ -454,6 +437,8 @@ public final class LC {
     public static final KnownKey postjournal_smtp_read_timeout = KnownKey.newKey(60);
 
     public static final KnownKey empty_folder_batch_sleep_ms = KnownKey.newKey(1L);
+
+    public static final KnownKey ajax_uri_max_assets_requests_allowed = KnownKey.newKey(20);
 
     @Supported
     public static final KnownKey ldap_cache_account_maxsize = KnownKey.newKey(20000);
@@ -1463,7 +1448,7 @@ public final class LC {
     public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(true);
 
     // file content type blacklist
-    public static final KnownKey zimbra_file_content_type_blacklist = KnownKey.newKey("application/x-ms*");
+    public static final KnownKey zimbra_file_content_type_blacklist = KnownKey.newKey("application/x-ms*,application/x-dosexec");
 
     public static final KnownKey enable_delegated_admin_ldap_access = KnownKey.newKey(true);
 
@@ -1546,6 +1531,8 @@ public final class LC {
 
     public final static KnownKey zimbra_10_locator_upgrade_thread_count = KnownKey.newKey(5);
 
+    public final static KnownKey zimbra_password_expiry_reminder_thread_count = KnownKey.newKey(5);
+
     // ZBUG-2547 : zimbra_strict_unclosed_comment_tag if this is false we relax rule
     // of allowing unclosed tag based on zimbra_skip_tags_with_unclosed_cdata value
     // zimbra_skip_tags_with_unclosed_cdata : Set values , based on this tags would be checked for closed comment
@@ -1556,6 +1543,9 @@ public final class LC {
     public static final KnownKey zimbra_allowed_redirect_url = KnownKey.newKey("");
 
     public static final KnownKey zimbra_two_factor_auth_resend_email_wait_seconds = KnownKey.newKey(1); // 1 sec
+    public static final KnownKey proxy_web_map_hash_bucket_size = KnownKey.newKey(64);
+    @Supported
+    public static final KnownKey proxy_chat_config_enabled = KnownKey.newKey(true);
 
     // 10.1.0 licensing config
     @Supported

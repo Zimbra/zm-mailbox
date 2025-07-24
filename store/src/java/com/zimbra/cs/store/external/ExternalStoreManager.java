@@ -44,6 +44,7 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.VolumeMailboxBlob;
+import com.zimbra.cs.volume.Volume;
 
 /**
  * Abstract base class for external store integration.
@@ -138,7 +139,9 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         if (mblob == null) {
             return true;
         }
-        localCache.remove(mblob.getLocator());
+        if (localCache != null) {
+            localCache.remove(mblob.getLocator());
+        }
         return deleteFromStore(mblob.getLocator(), mblob.getMailbox());
     }
 
@@ -272,6 +275,31 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         }
     }
 
+    public StagedBlob stage(Blob blob, Mailbox mbox, Volume volume) throws IOException, ServiceException {
+        if (supports(StoreFeature.RESUMABLE_UPLOAD) && blob instanceof ExternalUploadedBlob) {
+            ZimbraLog.store.debug("blob already uploaded, just need to commit");
+            String locator = ((ExternalResumableUpload) this).finishUpload((ExternalUploadedBlob) blob);
+            if (null != locator) {
+                ZimbraLog.store.debug("wrote to locator %s", locator);
+                localCache.put(locator, getContent(blob));
+            } else {
+                ZimbraLog.store.warn("blob staging returned null locator");
+            }
+            return new ExternalStagedBlob(mbox, blob.getDigest(), blob.getRawSize(), locator);
+        } else {
+            InputStream is = getContent(blob);
+            try {
+                StagedBlob staged = stage(is, blob.getRawSize(), mbox, volume);
+                if (null != staged && null != staged.getLocator()) {
+                    localCache.put(staged.getLocator(), getContent(blob));
+                }
+                return staged;
+            } finally {
+                ByteUtil.closeStream(is);
+            }
+        }
+    }
+
     @Override
     public StagedBlob stage(InputStream in, long actualSize, Mailbox mbox) throws ServiceException, IOException {
         if (actualSize < 0) {
@@ -303,7 +331,35 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         }
     }
 
+    public StagedBlob stage(InputStream in, long actualSize, Mailbox mbox, Volume volume) throws ServiceException, IOException {
+        if (actualSize < 0) {
+            Blob blob = storeIncoming(in);
+            try {
+                return stage(blob, mbox, volume);
+            } finally {
+                quietDelete(blob);
+            }
+        }
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw ServiceException.FAILURE("SHA-256 digest not found", e);
+        }
+        ByteUtil.PositionInputStream pin = new ByteUtil.PositionInputStream(new DigestInputStream(in, digest));
 
+        try {
+            String locator = writeStreamToStore(pin, actualSize, mbox, volume.getId());
+            if (null != locator) {
+                ZimbraLog.store.debug("wrote to locator %s",locator);
+            } else {
+                ZimbraLog.store.warn("blob staging returned null locator");
+            }
+            return new ExternalStagedBlob(mbox, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), locator);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to stage blob", e);
+        }
+    }
     @Override
     public Blob storeIncoming(InputStream data, boolean storeAsIs) throws IOException,
     ServiceException {

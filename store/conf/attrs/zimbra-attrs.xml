@@ -1392,7 +1392,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether list of well known time zones is displayed in calendar UI</desc>
 </attr>
 
-<attr id="237" name="zimbraAttachmentsScanEnabled" type="boolean" cardinality="single" optionalIn="server,globalConfig">
+<attr id="237" name="zimbraAttachmentsScanEnabled" type="boolean" cardinality="single" optionalIn="server,globalConfig" requiresRestart="mailbox">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to scan attachments during compose</desc>
 </attr>
@@ -10556,13 +10556,48 @@ TODO: delete them permanently from here
   <desc>Feature to enable/disable the mobile sync for shared folders. Default value is TRUE. The option to sync the shared folders to the Mobile will be enabled for the users in the webclient. The option will only be enabled for shared folders having Admin or Manager permission</desc>
 </attr>
 
-<attr id="4135" name="zimbraFeatureDeliveryStatusNotificationEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.4">
+<attr id="4135" name="zimbraFeatureDeliveryStatusNotificationEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.8">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Feature to enable delivery status notification</desc>
 </attr>
 
-<attr id="4140" name="zimbraPrefMailDeliveryStatusNotification" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="10.1.7">
+<attr id="4136" name="zimbraChatJwtSecret" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="10.1.7">
+  <desc>Zimbra Chat JWT secret</desc>
+</attr>
+
+<attr id="4137" name="zimbraChatBaseHost" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" requiresRestart="mailbox" since="10.1.7">
+  <desc>Zimbra Chat server base host
+        Requires server restart if updating from empty value.
+  </desc>
+</attr>
+
+<attr id="4138" name="zimbraFeatureExternalEmailWarningEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.9">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Feature to enable/disable External Email Warning (EEW)</desc>
+</attr>
+
+<attr id="4139" name="zimbraExternalEmailWarningMessage" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.9">
+  <desc>Sets the base warning text for External Email Warning (EEW)</desc>
+  <globalConfigValue>This message originated outside of your organization.</globalConfigValue>
+</attr>
+
+<attr id="4140" name="zimbraPrefMailDeliveryStatusNotification" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="10.1.8">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether web UI should always request delivery status notification for outgoing messages</desc>
+ </attr>
+
+<attr id="4141" name="zimbraFeaturePasswordExpiryReminderEnabled" type="boolean" cardinality="single" optionalIn="cos,account" flags="accountInherited,accountInfo" since="10.1.10">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Feature to enable/disable password expiry reminder. The default value is FALSE.</desc>
 </attr>
+
+<attr id="4142" name="zimbraLicensePreExpiryReminderSentDetails" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.10">
+  <desc>License Pre expiry notification sent details</desc>
+</attr>
+
+<attr id="4143" name="zimbraLicensePreExpiryMailAlertEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="10.1.11">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>License Pre expiry notification mail enabled info. The default value is TRUE</desc>
+</attr>
+
 </attrs>

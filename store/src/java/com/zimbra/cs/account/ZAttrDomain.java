@@ -5049,6 +5049,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @return zimbraChatBaseHost, or null if unset
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4137)
+    public String getChatBaseHost() {
+        return getAttr(Provisioning.A_zimbraChatBaseHost, null, true);
+    }
+
+    /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @param zimbraChatBaseHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4137)
+    public void setChatBaseHost(String zimbraChatBaseHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatBaseHost, zimbraChatBaseHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @param zimbraChatBaseHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4137)
+    public Map<String,Object> setChatBaseHost(String zimbraChatBaseHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatBaseHost, zimbraChatBaseHost);
+        return attrs;
+    }
+
+    /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4137)
+    public void unsetChatBaseHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatBaseHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Chat server base host Requires server restart if updating from
+     * empty value.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4137)
+    public Map<String,Object> unsetChatBaseHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatBaseHost, "");
+        return attrs;
+    }
+
+    /**
      * enable dedicated log for the chat conversation (needed by some
      * jurisdictions)
      *
@@ -5122,6 +5199,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetChatConversationAuditEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraChatConversationAuditEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @return zimbraChatJwtSecret, or null if unset
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public String getChatJwtSecret() {
+        return getAttr(Provisioning.A_zimbraChatJwtSecret, null, true);
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @param zimbraChatJwtSecret new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public void setChatJwtSecret(String zimbraChatJwtSecret) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatJwtSecret, zimbraChatJwtSecret);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @param zimbraChatJwtSecret new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public Map<String,Object> setChatJwtSecret(String zimbraChatJwtSecret, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatJwtSecret, zimbraChatJwtSecret);
+        return attrs;
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public void unsetChatJwtSecret() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatJwtSecret, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra Chat JWT secret
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.7
+     */
+    @ZAttr(id=4136)
+    public Map<String,Object> unsetChatJwtSecret(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatJwtSecret, "");
         return attrs;
     }
 
@@ -9122,6 +9271,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Sets the base warning text for External Email Warning (EEW)
+     *
+     * @return zimbraExternalEmailWarningMessage, or "This message originated outside of your organization." if unset
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4139)
+    public String getExternalEmailWarningMessage() {
+        return getAttr(Provisioning.A_zimbraExternalEmailWarningMessage, "This message originated outside of your organization.", true);
+    }
+
+    /**
+     * Sets the base warning text for External Email Warning (EEW)
+     *
+     * @param zimbraExternalEmailWarningMessage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4139)
+    public void setExternalEmailWarningMessage(String zimbraExternalEmailWarningMessage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalEmailWarningMessage, zimbraExternalEmailWarningMessage);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the base warning text for External Email Warning (EEW)
+     *
+     * @param zimbraExternalEmailWarningMessage new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4139)
+    public Map<String,Object> setExternalEmailWarningMessage(String zimbraExternalEmailWarningMessage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalEmailWarningMessage, zimbraExternalEmailWarningMessage);
+        return attrs;
+    }
+
+    /**
+     * Sets the base warning text for External Email Warning (EEW)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4139)
+    public void unsetExternalEmailWarningMessage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalEmailWarningMessage, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the base warning text for External Email Warning (EEW)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4139)
+    public Map<String,Object> unsetExternalEmailWarningMessage(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalEmailWarningMessage, "");
+        return attrs;
+    }
+
+    /**
      * the handler class for getting all groups an account belongs to in the
      * external directory
      *
@@ -11222,6 +11443,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetFeatureDistributionListFolderEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureDistributionListFolderEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Feature to enable/disable External Email Warning (EEW)
+     *
+     * @return zimbraFeatureExternalEmailWarningEnabled, or false if unset
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4138)
+    public boolean isFeatureExternalEmailWarningEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureExternalEmailWarningEnabled, false, true);
+    }
+
+    /**
+     * Feature to enable/disable External Email Warning (EEW)
+     *
+     * @param zimbraFeatureExternalEmailWarningEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4138)
+    public void setFeatureExternalEmailWarningEnabled(boolean zimbraFeatureExternalEmailWarningEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureExternalEmailWarningEnabled, zimbraFeatureExternalEmailWarningEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable External Email Warning (EEW)
+     *
+     * @param zimbraFeatureExternalEmailWarningEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4138)
+    public Map<String,Object> setFeatureExternalEmailWarningEnabled(boolean zimbraFeatureExternalEmailWarningEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureExternalEmailWarningEnabled, zimbraFeatureExternalEmailWarningEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Feature to enable/disable External Email Warning (EEW)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4138)
+    public void unsetFeatureExternalEmailWarningEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureExternalEmailWarningEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable External Email Warning (EEW)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.9
+     */
+    @ZAttr(id=4138)
+    public Map<String,Object> unsetFeatureExternalEmailWarningEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureExternalEmailWarningEnabled, "");
         return attrs;
     }
 

@@ -2304,6 +2304,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             } else {
                 searchObjectsOptions.setUseControl(opts.isUseControl());
             }
+            if (opts.getLimit() != 0) {
+                searchObjectsOptions.setLimit(opts.getLimit());
+            }
+            if (opts.getOffset() != 0) {
+                searchObjectsOptions.setOffset(opts.getOffset());
+            }
             searchObjectsOptions.setManageDSAit(opts.isManageDSAit());
             zlc.searchPaged(searchObjectsOptions);
         } catch (LdapSizeLimitExceededException e) {
@@ -3128,10 +3134,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs)
-    throws ServiceException {
+            throws ServiceException {
         SearchDirectoryOptions opts = new SearchDirectoryOptions(retAttrs);
         opts.setFilter(filterFactory.allDomains());
         opts.setTypes(ObjectType.domains);
+        opts.setUseControl(true);
+        opts.setResultPageSize(1000);
         searchDirectoryInternal(opts, visitor);
     }
 
@@ -7049,6 +7057,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (server != null) {
             SearchAccountsOptions searchOpts = new SearchAccountsOptions(domain);
             searchOpts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
+            searchOpts.setUseControl(true);
+            searchOpts.setResultPageSize(1000);
             searchAccountsOnServerInternal(server, searchOpts, visitor);
         } else {
             getAllAccounts(domain, visitor);

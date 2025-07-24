@@ -65,7 +65,6 @@ import org.apache.http.config.SocketConfig;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -405,8 +404,6 @@ public class FeedManager {
                     throw ServiceException.INVALID_REQUEST("invalid url for feed: " + url, null);
                 }
 
-                DefaultRedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
-                clientBuilder.setRedirectStrategy(redirectStrategy);
 
                 get.addHeader("User-Agent", HTTP_USER_AGENT);
                 get.addHeader("Accept", HTTP_ACCEPT);
@@ -415,7 +412,7 @@ public class FeedManager {
                     get.addHeader("If-Modified-Since", lastSyncAt);
                 }
 
-                HttpClient client = clientBuilder.build();
+                HttpClient client = clientBuilder.disableRedirectHandling().build();
                 HttpResponse response = HttpClientUtil.executeMethod(client, get, context);
 
                 Header locationHeader = response.getFirstHeader("location");

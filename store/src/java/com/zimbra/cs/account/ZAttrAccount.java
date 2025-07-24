@@ -16169,7 +16169,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraFeatureDeliveryStatusNotificationEnabled, or false if unset
      *
-     * @since ZCS 10.1.4
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4135)
     public boolean isFeatureDeliveryStatusNotificationEnabled() {
@@ -16182,7 +16182,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraFeatureDeliveryStatusNotificationEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.4
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4135)
     public void setFeatureDeliveryStatusNotificationEnabled(boolean zimbraFeatureDeliveryStatusNotificationEnabled) throws com.zimbra.common.service.ServiceException {
@@ -16198,7 +16198,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.4
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4135)
     public Map<String,Object> setFeatureDeliveryStatusNotificationEnabled(boolean zimbraFeatureDeliveryStatusNotificationEnabled, Map<String,Object> attrs) {
@@ -16212,7 +16212,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.4
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4135)
     public void unsetFeatureDeliveryStatusNotificationEnabled() throws com.zimbra.common.service.ServiceException {
@@ -16227,7 +16227,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.4
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4135)
     public Map<String,Object> unsetFeatureDeliveryStatusNotificationEnabled(Map<String,Object> attrs) {
@@ -19912,6 +19912,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureOutOfOfficeReplyEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureOutOfOfficeReplyEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @return zimbraFeaturePasswordExpiryReminderEnabled, or false if unset
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4141)
+    public boolean isFeaturePasswordExpiryReminderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, false, true);
+    }
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @param zimbraFeaturePasswordExpiryReminderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4141)
+    public void setFeaturePasswordExpiryReminderEnabled(boolean zimbraFeaturePasswordExpiryReminderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, zimbraFeaturePasswordExpiryReminderEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @param zimbraFeaturePasswordExpiryReminderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4141)
+    public Map<String,Object> setFeaturePasswordExpiryReminderEnabled(boolean zimbraFeaturePasswordExpiryReminderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, zimbraFeaturePasswordExpiryReminderEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4141)
+    public void unsetFeaturePasswordExpiryReminderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Feature to enable/disable password expiry reminder. The default value
+     * is FALSE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.10
+     */
+    @ZAttr(id=4141)
+    public Map<String,Object> unsetFeaturePasswordExpiryReminderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "");
         return attrs;
     }
 
@@ -52998,7 +53075,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraPrefMailDeliveryStatusNotification, or false if unset
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4140)
     public boolean isPrefMailDeliveryStatusNotification() {
@@ -53012,7 +53089,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraPrefMailDeliveryStatusNotification new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4140)
     public void setPrefMailDeliveryStatusNotification(boolean zimbraPrefMailDeliveryStatusNotification) throws com.zimbra.common.service.ServiceException {
@@ -53029,7 +53106,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4140)
     public Map<String,Object> setPrefMailDeliveryStatusNotification(boolean zimbraPrefMailDeliveryStatusNotification, Map<String,Object> attrs) {
@@ -53044,7 +53121,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4140)
     public void unsetPrefMailDeliveryStatusNotification() throws com.zimbra.common.service.ServiceException {
@@ -53060,7 +53137,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.7
+     * @since ZCS 10.1.8
      */
     @ZAttr(id=4140)
     public Map<String,Object> unsetPrefMailDeliveryStatusNotification(Map<String,Object> attrs) {
