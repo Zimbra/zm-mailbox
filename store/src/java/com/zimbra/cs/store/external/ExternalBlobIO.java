@@ -21,6 +21,7 @@ import java.io.InputStream;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.store.MailboxBlob;
 
 /**
  * Interface for the simplest blob store integration possible
@@ -70,4 +71,8 @@ public interface ExternalBlobIO {
      * @throws IOException
      */
     boolean deleteFromStore(String locator, Mailbox mbox) throws IOException;
+
+     String returnS3BucketName(String locator);
+
+     boolean deleteBlobsInBulk(Iterable<MailboxBlob.MailboxBlobInfo> blobs, Integer mailboxId);
 }

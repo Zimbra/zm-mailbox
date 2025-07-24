@@ -26,6 +26,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.store.MailboxBlob;
 
 /**
  * Simple ExternalStoreManager implementation that is intended for use in storing
@@ -76,8 +77,23 @@ public class ImapTransientStoreManager extends ExternalStoreManager {
     }
 
     @Override
+    public String returnS3BucketName(String locator) {
+        return null;
+    }
+
+    @Override
+    public boolean deleteBlobsInBulk(Iterable<MailboxBlob.MailboxBlobInfo> blobs, Integer mailboxId) {
+        return false;
+    }
+
+    @Override
     public boolean supports(StoreFeature feature) {
         return feature == StoreFeature.CENTRALIZED ? false : super.supports(feature);
+    }
+
+    @Override
+    public boolean deleteBucketObjects(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws ServiceException {
+        return false;
     }
 
     private File createBlobFile(Mailbox mbox) throws IOException {

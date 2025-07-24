@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.cs.store.MailboxBlob;
 import org.apache.commons.io.filefilter.FileFileFilter;
 import com.zimbra.common.localconfig.LC;
 
@@ -102,6 +103,16 @@ public class SimpleStoreManager extends ExternalStoreManager {
     }
 
     @Override
+    public String returnS3BucketName(String locator) {
+        return null;
+    }
+
+    @Override
+    public boolean deleteBlobsInBulk(Iterable<MailboxBlob.MailboxBlobInfo> blobs, Integer mailboxId) {
+        return false;
+    }
+
+    @Override
     public List<String> getAllBlobPaths(Mailbox mbox) throws IOException {
         File dir = new File(dirName(mbox));
         if (dir.exists()) {
@@ -123,5 +134,10 @@ public class SimpleStoreManager extends ExternalStoreManager {
         } else {
             return super.supports(feature);
         }
+    }
+
+    @Override
+    public boolean deleteBucketObjects(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws ServiceException {
+        return false;
     }
 }

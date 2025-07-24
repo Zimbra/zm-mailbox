@@ -2493,15 +2493,20 @@ public class Mailbox implements MailboxStore {
             for (short id : volumeIds) {
                 StoreManager sm = StoreManager.getReaderSMInstance(id);
                 // if sm is of ExternalStoreManager deleteStore will always be true
+                boolean ifSMisExternal = sm.checkIfStoreManagerIsExternal();
                 deleteStore = (deleteBlobs == DeleteBlobs.ALWAYS
-                        || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && sm.checkIfStoreManagerIsExternal()));
+                        || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && ifSMisExternal));
                 SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = null;
                 if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
                     blobs = DbMailItem.getAllBlobs(this);
                 }
                 if (deleteStore) {
                     try {
-                        sm.deleteStore(this, blobs);
+                        if(ifSMisExternal){
+                            sm.deleteBucketObjects(this, blobs);
+                        } else {
+                            sm.deleteStore(this, blobs);
+                        }
                     } catch (IOException iox) {
                         ZimbraLog.store.warn("Unable to delete message data", iox);
                     }

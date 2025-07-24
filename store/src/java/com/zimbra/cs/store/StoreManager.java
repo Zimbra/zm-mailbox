@@ -572,4 +572,6 @@ public abstract class StoreManager {
     public IncomingBlob newIncomingBlob(String id, Object ctxt) throws IOException, ServiceException {
         return new BufferingIncomingBlob(id, getBlobBuilder(), ctxt);
     }
+
+    public abstract boolean deleteBucketObjects(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws ServiceException;
 }

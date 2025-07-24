@@ -411,6 +411,11 @@ public final class FileBlobStore extends StoreManager {
         return true;
     }
 
+    @Override
+    public boolean deleteBucketObjects(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws ServiceException {
+        return false;
+    }
+
     private File getMailboxBlobFile(Mailbox mbox, int itemId, int revision, short volumeId, boolean check)
     throws ServiceException {
         File file = new File(getBlobPath(mbox, itemId, revision, volumeId));

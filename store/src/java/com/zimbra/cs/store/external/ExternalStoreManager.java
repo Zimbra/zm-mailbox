@@ -43,7 +43,6 @@ import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.file.VolumeMailboxBlob;
 import com.zimbra.cs.volume.Volume;
 
 /**

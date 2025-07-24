@@ -23,6 +23,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import com.zimbra.cs.store.MailboxBlob;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
@@ -235,8 +236,23 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
     }
 
     @Override
+    public String returnS3BucketName(String locator) {
+        return null;
+    }
+
+    @Override
+    public boolean deleteBlobsInBulk(Iterable<MailboxBlob.MailboxBlobInfo> blobs, Integer mailboxId) {
+        return false;
+    }
+
+    @Override
     public ExternalResumableIncomingBlob newIncomingBlob(String id, Object ctxt) throws IOException, ServiceException {
         return new TritonIncomingBlob(id, url, getBlobBuilder(), ctxt, newDigest(), hashType);
+    }
+
+    @Override
+    public boolean deleteBucketObjects(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws ServiceException {
+        return false;
     }
 
     @Override
