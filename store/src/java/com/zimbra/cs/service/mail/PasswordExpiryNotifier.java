@@ -167,8 +167,7 @@ public class PasswordExpiryNotifier implements Runnable {
         ZLdapFilterFactory filterFactory = ZLdapFilterFactory.getInstance();
         // filtering Coses
         ZLdapFilter filterPasswordExpiryReminderEnabledCos = filterFactory.cosesWithLdapFeatureCheck(Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled, "TRUE");
-        ZLdapFilter filterPasswordMaxAgeCos = filterFactory.negate(filterFactory.cosesWithLdapFeatureCheck(Provisioning.A_zimbraPasswordMaxAge, "0"));
-        searchCosOpts.setFilter(filterFactory.andWith(filterPasswordExpiryReminderEnabledCos, filterPasswordMaxAgeCos));
+        searchCosOpts.setFilter(filterPasswordExpiryReminderEnabledCos);
         searchCosOpts.addType(SearchDirectoryOptions.ObjectType.coses);
         List<NamedEntry> coses=  ldapProv.searchDirectory(searchCosOpts);
         List<String> cosIds = coses.stream()
@@ -177,7 +176,9 @@ public class PasswordExpiryNotifier implements Runnable {
         // filtering Accounts with inherited attributes
         ZLdapFilter filterServer = filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraMailHost, LC.zimbra_server_hostname.value());
         ZLdapFilter filterReminderEnabledAtCos = filterFactory.accountsByCosesAndFeatureCheck(cosIds,Provisioning.A_zimbraFeaturePasswordExpiryReminderEnabled);
-        searchAccFromCosOpts.setFilter(filterFactory.andWith(filterServer, filterReminderEnabledAtCos));
+        ZLdapFilter filterPasswordMaxAge = filterFactory.negate(filterFactory.accountsWithLdapFeatureCheck(Provisioning.A_zimbraPasswordMaxAge, "0"));
+        ZLdapFilter filterReminderAndMaxAgeEnabled = filterFactory.andWith(filterReminderEnabledAtCos, filterPasswordMaxAge);
+        searchAccFromCosOpts.setFilter(filterFactory.andWith(filterServer, filterReminderAndMaxAgeEnabled));
         searchAccFromCosOpts.setResultPageSize(PASSWORD_REMINDER_BATCH_SIZE);
         searchAccFromCosOpts.setUseControl(true);
         searchAccFromCosOpts.setLimit(PASSWORD_REMINDER_BATCH_SIZE);
@@ -228,16 +229,18 @@ public class PasswordExpiryNotifier implements Runnable {
     private static void filterAccountsAndSendMail(List<NamedEntry> batch) {
         for (NamedEntry ne : batch) {
             Account account = (Account) ne;
-            int maxAge = account.getIntAttr(Provisioning.A_zimbraPasswordMaxAge, 0);
-            Date lastChange = account.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordModifiedTime, null);
-            if (lastChange != null) {
-                long last = lastChange.getTime();
-                long curr = System.currentTimeMillis();
-                long expires = last + (Constants.MILLIS_PER_DAY * maxAge);
-                String expiresOn = formatter.format(new Date(expires));
-                long deadline = Math.round((float) (curr - expires) / -86400000);
-                if (deadline > 0 && deadline <= 10) {
-                    sendMail(account, deadline, expiresOn);
+            if (account.isFeaturePasswordExpiryReminderEnabled()) {
+                int maxAge = account.getIntAttr(Provisioning.A_zimbraPasswordMaxAge, 0);
+                Date lastChange = account.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordModifiedTime, null);
+                if (lastChange != null) {
+                    long last = lastChange.getTime();
+                    long curr = System.currentTimeMillis();
+                    long expires = last + (Constants.MILLIS_PER_DAY * maxAge);
+                    String expiresOn = formatter.format(new Date(expires));
+                    long deadline = Math.round((float) (curr - expires) / -86400000);
+                    if (deadline > 0 && deadline <= 10) {
+                        sendMail(account, deadline, expiresOn);
+                    }
                 }
             }
         }
