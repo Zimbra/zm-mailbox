@@ -10604,4 +10604,9 @@ TODO: delete them permanently from here
   <desc>Email address for receiving Zimbra license notifications for License Pre Expiry</desc>
 </attr>
 
+    <attr id="4145" name="zimbraJunkMail" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="10.1.12">
+        <defaultCOSValue>0</defaultCOSValue>
+        <desc>idle timeout</desc>
+    </attr>
+
 </attrs>

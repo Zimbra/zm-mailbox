@@ -9433,6 +9433,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraItemActionBatchSize = "zimbraItemActionBatchSize";
 
     /**
+     * idle timeout. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public static final String A_zimbraJunkMail = "zimbraJunkMail";
+
+    /**
      * Whether to index junk messages
      *
      * @since ZCS 5.0.0
@@ -9517,15 +9528,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLicenseNotificationEmail = "zimbraLicenseNotificationEmail";
 
     /**
-     * License Pre expiry notification mail enabled info. The default value
-     * is TRUE
-     *
-     * @since ZCS 10.1.11
-     */
-    @ZAttr(id=4143)
-    public static final String A_zimbraLicensePreExpiryMailAlertEnabled = "zimbraLicensePreExpiryMailAlertEnabled";
-
-    /**
      * Email address for receiving Zimbra license notifications for License
      * Pre Expiry
      *
@@ -9533,6 +9535,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4144)
     public static final String A_zimbraLicenseNotificationEmailForLicensePreExpiry = "zimbraLicenseNotificationEmailForLicensePreExpiry";
+
+    /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public static final String A_zimbraLicensePreExpiryMailAlertEnabled = "zimbraLicensePreExpiryMailAlertEnabled";
 
     /**
      * License Pre expiry notification sent details
