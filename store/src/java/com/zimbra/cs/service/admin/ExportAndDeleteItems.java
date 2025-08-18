@@ -20,7 +20,9 @@ package com.zimbra.cs.service.admin;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
+import com.zimbra.common.util.ZimbraLog;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
@@ -72,6 +74,7 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                 conn = DbPool.getConnection();
                 if (dirPath != null) {
                     File exportDir = new File(dirPath);
+                    validateExportDirPath(exportDir);
                     if (!exportDir.isDirectory()) {
                         DbPool.quietClose(conn);
                         throw ServiceException.INVALID_REQUEST(dirPath + " is not a directory", null);
@@ -151,6 +154,28 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
             prefix = "";
         }
         return dirPath + "/" + prefix + tableName + ".txt";
+    }
+
+    private void validateExportDirPath(File exportDir) throws ServiceException {
+        try {
+            String canonicalPath = exportDir.getCanonicalPath();
+            final List<String> restrictedPaths = Arrays.asList(
+                    "/opt/zimbra/jetty/webapps",
+                    "/opt/zimbra/jetty_base/webapps"
+            );
+            for (String directory : restrictedPaths) {
+                if (canonicalPath.equals(directory) || canonicalPath.startsWith(directory + File.separator)) {
+                    ZimbraLog.security.warn(
+                            "Export denied: attempted access to restricted directory. Export to the location %s is not allowed", canonicalPath);
+                    throw ServiceException.PERM_DENIED(
+                            "Export request denied: directory not permitted", null);
+                }
+            }
+        } catch (ServiceException se) {
+            throw se;
+        } catch (Exception e) {
+            throw ServiceException.INVALID_REQUEST(e.getMessage(), e);
+        }
     }
 
     @Override
