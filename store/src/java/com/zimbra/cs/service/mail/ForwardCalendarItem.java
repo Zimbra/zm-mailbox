@@ -391,6 +391,13 @@ public class ForwardCalendarItem extends CalendarRequest {
         Address sender = null;
         sender = AccountUtil.getFriendlyEmailAddress(senderAcct);
         ZOrganizer org = inv.getOrganizer();
+
+        // we need to treat the incoming object as a new REQUEST instead of a REPLY for forwarded message,
+        // otherwise it won’t be processed correctly in our system.
+        ZProperty method = cal.getProperty(ICalTok.METHOD);
+        if (method != null && ICalTok.REPLY.toString().equals(method.getValue()))
+            method.setValue(ICalTok.REQUEST.toString());
+
         if (org != null) {
             if (org.hasCn())
                 from = new JavaMailInternetAddress(org.getAddress(), org.getCn(), MimeConstants.P_CHARSET_UTF8);
