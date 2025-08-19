@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpException;
@@ -232,6 +233,11 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
         } finally {
             delete.releaseConnection();
         }
+    }
+
+    @Override
+    public void deleteFromStoreInBulk(Collection<String> locators, Mailbox mbox) {
+
     }
 
     @Override
