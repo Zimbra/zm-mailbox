@@ -2798,4 +2798,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
     
     public abstract String sendMdmEmail(String status, String timeInterval) throws ServiceException;
+
+
+    public String expandWithDomain(String username, String virtualHostname) throws ServiceException {
+        if (username == null || virtualHostname == null) {
+            throw ServiceException.INVALID_REQUEST("must be valid email address: "+ username, null);
+        }
+        Domain domain = get(Key.DomainBy.virtualHostname, virtualHostname.toLowerCase());
+        if (domain == null)
+            throw ServiceException.INVALID_REQUEST("must be valid email address: "+ username, null);
+
+        return username + "@" + domain.getName();
+    }
 }
