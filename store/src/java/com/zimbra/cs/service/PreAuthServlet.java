@@ -116,7 +116,6 @@ public class PreAuthServlet extends ZimbraServlet {
             Provisioning prov = Provisioning.getInstance();
             Server server = prov.getLocalServer();
             String referMode = server.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
-
             boolean isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0").equals("1");
             String rawAuthToken = getOptionalParam(req, PARAM_AUTHTOKEN, null);
             AuthToken authToken = null;
@@ -201,6 +200,9 @@ public class PreAuthServlet extends ZimbraServlet {
                             EmailAddress email = new EmailAddress(account, false);
                             String domainName = email.getDomain();
                             Domain domain = domainName == null ? null : prov.get(Key.DomainBy.name, domainName);
+                            if (domain == null) {
+                                throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
+                            }
                             prov.preAuthAccount(domain, account, accountBy, timestamp, expires, preAuth, authCtxt);
                             acct = prov.autoProvAccountLazy(domain, account, null, AutoProvAuthMech.PREAUTH);
 
@@ -261,9 +263,11 @@ public class PreAuthServlet extends ZimbraServlet {
                     redirectToCorrectServer(req, resp, acct, null);
                 }
             }
-        } catch (ServiceException e) {
+        }catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST,"Invalid numeric parameter");
+        }catch (ServiceException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-        } catch (AuthTokenException e) {
+        }catch (AuthTokenException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
     }
