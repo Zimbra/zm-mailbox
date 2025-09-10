@@ -10607,6 +10607,9 @@ TODO: delete them permanently from here
 <attr id="4146" name="zimbraPURDomainDetailsCollectionEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="10.1.12">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Flag to enable or disable the collection of domain details</desc>
+
+<attr id="4145" name="zimbraPackageUsageReportingLastSuccessfulRunDetails" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.12">
+  <desc>Package Usage Reporting Scheduler last successful run date</desc>
 </attr>
 
 </attrs>
