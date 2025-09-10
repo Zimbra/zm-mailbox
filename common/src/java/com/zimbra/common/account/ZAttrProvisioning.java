@@ -9543,6 +9543,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLicensePreExpiryReminderSentDetails = "zimbraLicensePreExpiryReminderSentDetails";
 
     /**
+     * Package Usage Reporting Scheduler last successful run date
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public static final String A_zimbraPackageUsageReportingLastSuccessfulRunDetails = "zimbraPackageUsageReportingLastSuccessfulRunDetails";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)
