@@ -79,4 +79,79 @@ public class ExternalEmailWarningTest extends TestCase{
         Domain domain1 = prov.getDomain(account1);
         Assert.assertEquals("This message originated outside of your organization.", domain1.getExternalEmailWarningMessage());
     }
+
+    public void testGetUpdatedContentWithBase64PlainText() throws Exception {
+        Account account1 = prov.get(Key.AccountBy.name, rcptEmail1);
+
+        // base warning configured on the domain
+        Domain domain1 = prov.getDomain(account1);
+        domain1.setExternalEmailWarningMessage("This message originated outside of your organization.");
+
+        // original plain text body
+        String originalBody = "Hello, this is a test email.";
+        String base64Body = java.util.Base64.getMimeEncoder(76, "\r\n".getBytes())
+                .encodeToString(originalBody.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        // RFC822-compliant MIME message (simplified)
+        String content =
+                "Content-Type: text/plain; charset=\"UTF-8\"\r\n" +
+                        "Content-Transfer-Encoding: base64\r\n" +
+                        "\r\n" +
+                        base64Body + "\r\n";
+
+        // call the method under test
+        String updatedContent = externalEmailWarning.getUpdatedContent(content, account1);
+
+        // extract the re-encoded Base64 body
+        String encodedPart = updatedContent.substring(updatedContent.indexOf("\r\n\r\n") + 4).trim();
+        String decodedBody = new String(
+                java.util.Base64.getMimeDecoder().decode(encodedPart),
+                java.nio.charset.StandardCharsets.UTF_8
+        );
+
+        // assert the warning comes before the original message
+        Assert.assertTrue("Updated body should contain warning",
+                decodedBody.startsWith("This message originated outside of your organization."));
+
+        Assert.assertTrue("Updated body should still contain original text",
+                decodedBody.contains(originalBody));
+    }
+
+    public void testGetUpdatedContentWithBase64Html() throws Exception {
+        Account account1 = prov.get(Key.AccountBy.name, rcptEmail1);
+
+        // base warning configured on the domain
+        Domain domain1 = prov.getDomain(account1);
+        domain1.setExternalEmailWarningMessage("This message originated outside of your organization.");
+
+        // original HTML body
+        String originalHtml = "<html><body><p>Hello HTML world</p></body></html>";
+        String base64Body = java.util.Base64.getMimeEncoder(76, "\r\n".getBytes())
+                .encodeToString(originalHtml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        // RFC822-compliant MIME message
+        String content =
+                "Content-Type: text/html; charset=\"UTF-8\"\r\n" +
+                        "Content-Transfer-Encoding: base64\r\n" +
+                        "\r\n" +
+                        base64Body + "\r\n";
+
+        // call the method under test
+        String updatedContent = externalEmailWarning.getUpdatedContent(content, account1);
+
+        // extract the re-encoded Base64 body
+        String encodedPart = updatedContent.substring(updatedContent.indexOf("\r\n\r\n") + 4).trim();
+        String decodedBody = new String(
+                java.util.Base64.getMimeDecoder().decode(encodedPart),
+                java.nio.charset.StandardCharsets.UTF_8
+        );
+
+        // assert warning was inserted into HTML
+        Assert.assertTrue("Updated HTML should contain warning div",
+                decodedBody.contains("<div") && decodedBody.contains("This message originated outside of your organization."));
+
+        Assert.assertTrue("Updated HTML should still contain original HTML text",
+                decodedBody.contains("Hello HTML world"));
+    }
+
 }
