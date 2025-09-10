@@ -10604,4 +10604,8 @@ TODO: delete them permanently from here
   <desc>Email address for receiving Zimbra license notifications for License Pre Expiry</desc>
 </attr>
 
+<attr id="4145" name="zimbraPackageUsageReportingLastSuccessfulRunDetails" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.12">
+  <desc>Package Usage Reporting Scheduler last successful run date</desc>
+</attr>
+
 </attrs>
