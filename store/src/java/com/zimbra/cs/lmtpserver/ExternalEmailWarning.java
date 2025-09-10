@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.lmtpserver;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashSet;
@@ -35,7 +36,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 /**
  * ExternalEmailWarning is a singleton class that provides assorted utilities
  * for the External Email Warning functionality.
- * 
+ *
  * @author telus
  *
  */
@@ -65,7 +66,7 @@ public class ExternalEmailWarning {
 
     /**
      * Get whether External Email Warning feature is enabled.
-     * 
+     *
      * @return true if EEW feature is enabled.
      */
     public boolean isEnabled(Account account) throws ServiceException {
@@ -75,7 +76,7 @@ public class ExternalEmailWarning {
     /**
      * Checks if each recipient in the list has External Email Warning (EEW) enabled.
      * If a recipient has EEW enabled, their account is added to the {@code eewEnabledAccountsSet}.
-     * 
+     *
      * @param recipients a list of recipients to check
      */
     public void findRecipientsWithEEWEnabled(List<LmtpAddress> recipients) {
@@ -105,7 +106,7 @@ public class ExternalEmailWarning {
 
     /**
      * Get configured warning to be used on text/html mime message parts.
-     * 
+     *
      * @return string with warning note.
      */
     public String getTextHtmlWarning() {
@@ -114,7 +115,7 @@ public class ExternalEmailWarning {
 
     /**
      * Get configured warning to be used on text/plain mime message parts.
-     * 
+     *
      * @return string with warning note.
      */
     public String getTextPlainWarning() {
@@ -132,25 +133,25 @@ public class ExternalEmailWarning {
     /**
      * Finds whether a originator is external to a receiver's organization based on
      * the string representation of their addresses.
-     * 
+     *
      * If their domains are equal or at least one is sub-domain to the other, then
      * the addresses are considered as intra-organization; otherwise, the addresses
      * are considered as extra-organization.
-     * 
+     *
      * This method works under an optimistic behavior: shall any of the arguments
      * represent an invalid email address, or shall anything goes wrong in any other
      * aspect with the analysis, it will assume that the originator is not external
      * and thus return false.
-     * 
+     *
      * Please note that no actual directory (LDAP) validations are done here, just
      * analysis of two independent as-is strings.
-     * 
+     *
      * @param receiverAddress
      *            receiver's email address in RFC5322 format: name@domain.tld
-     * 
+     *
      * @param originatorAddress
      *            originator's email address in RFC5322 format: name@domain.tld
-     * 
+     *
      * @return true if originatorAddress is external to receiverAddress domain
      */
     public boolean isExternal(String receiverAddress, String originatorAddress) {
@@ -207,66 +208,125 @@ public class ExternalEmailWarning {
     private static final String CONTENT_TYPE_TEXT_HTML_WITHOUT_BODY_TAG_REGEX = "Content-Type: text/html.*?\\r\\n\\r\\n";
     private static final Pattern CONTENT_TYPE_TEXT_HTML_WIHOUT_BODY_TAG_PATTERN = Pattern.compile(CONTENT_TYPE_TEXT_HTML_WITHOUT_BODY_TAG_REGEX,
             Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
+    private static final Pattern CONTENT_TYPE_TEXT_HTML_WITHOUT_BODY_TAG_PATTERN = Pattern.compile(
+            "Content-Type: text/html.*?\\r\\n\\r\\n",
+            Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
     /**
      * Updates the string representation of a mime message in RFC822 format with the
      * warning note for text/plain and text/html parts.
-     * 
+     *
      * This method requires the content to be RFC822 compliant, including that CRLF
      * characters are used as line separators as established in the standard.
      * Similarly, each part header should start with Content-Type and end with
      * CRLFCRLF as established in the standard, in order for this method to properly
      * parse and update the content.
-     * 
+     *
      * @param content
      *            string representation of mime message in RFC822 format
      * @return updated string with warning note
      */
     public String getUpdatedContent(String content, Account account) {
-        if (content != null) {
-            try {
-                baseWarningMessage = Provisioning.getInstance().getDomain(account).getExternalEmailWarningMessage();
-            } catch (ServiceException e) {
-                ZimbraLog.lmtp.warn("Error while retrieving external email warning message", e);
+        if (content == null) {
+            return null;
+        }
+
+        try {
+            baseWarningMessage = Provisioning.getInstance().getDomain(account).getExternalEmailWarningMessage();
+        } catch (ServiceException e) {
+            ZimbraLog.lmtp.warn("Error while retrieving external email warning message", e);
+        }
+
+        textPlainWarning = StringEscapeUtils.escapeHtml(baseWarningMessage) + "\r\n";
+        textHtmlWarning = "<div>"
+                + "<p>" + baseWarningMessage + "</p><hr/></div>";
+
+        // handle text/plain
+        Matcher ctTextPlainMatcher = CONTENT_TYPE_TEXT_PLAIN_PATTERN.matcher(content);
+        Matcher ctBase64TextPlainMatcher = CONTENT_TRANSFER_BASE64_TEXT_PLAIN_PATTERN.matcher(content);
+
+        if (ctTextPlainMatcher.find()) {
+            int headerEnd = ctTextPlainMatcher.end();
+            if (ctTextPlainMatcher.group().contains(CONTENT_TRANSFER_BASE64_ENCODING)) {
+                content = decodeModifyEncodeContent(content, headerEnd, textPlainWarning, "text/plain");
+            } else if (ctBase64TextPlainMatcher.find()) {
+                content = decodeModifyEncodeContent(content, ctBase64TextPlainMatcher.end(), textPlainWarning, "text/plain");
+            } else {
+                content = appendWarning(content, headerEnd, textPlainWarning);
             }
-            textPlainWarning = StringEscapeUtils.escapeHtml(baseWarningMessage) + "\r\n";
-            textHtmlWarning = "<div><p>" + baseWarningMessage + "</p><hr/></div>";
-            encodedTextPlainWarning = Base64.getEncoder().encodeToString(textPlainWarning.getBytes());
-            encodedTextHtmlWarning = Base64.getEncoder().encodeToString(textHtmlWarning.getBytes());
-            final Matcher ctTextPlainMatcher = CONTENT_TYPE_TEXT_PLAIN_PATTERN.matcher(content);
-            final Matcher ctBase64TextPlainMatcher = CONTENT_TRANSFER_BASE64_TEXT_PLAIN_PATTERN.matcher(content);
-            if (ctTextPlainMatcher.find()) {
-                String textPlainHeader = ctTextPlainMatcher.group();
-                final int end = ctTextPlainMatcher.end();
-                if (textPlainHeader != null && textPlainHeader.contains(CONTENT_TRANSFER_BASE64_ENCODING)) {
-                    content = appendWarning(content, end, getEncodedTextPlainWarning());
-                } else if (ctBase64TextPlainMatcher.find()) {
-                    final int endBase64TextPlain = ctBase64TextPlainMatcher.end();
-                    content = appendWarning(content, endBase64TextPlain, getEncodedTextPlainWarning());
-                } else {
-                    content = appendWarning(content, end, getTextPlainWarning());
-                }
-            }
-            final Matcher ctTextHtmlMatcher = CONTENT_TYPE_TEXT_HTML_PATTERN.matcher(content);
-            final Matcher ctTextHtmlWithoutBodyTagMatcher = CONTENT_TYPE_TEXT_HTML_WIHOUT_BODY_TAG_PATTERN.matcher(content);
-            final Matcher ctBase64TextHtmlMatcher = CONTENT_TRANSFER_BASE64_TEXT_HTML_PATTERN.matcher(content);
-            if (ctTextHtmlMatcher.find()) {
-                final int end = ctTextHtmlMatcher.end();
-                content = appendWarning(content, end, getTextHtmlWarning());
-            } else if (ctTextHtmlWithoutBodyTagMatcher.find()) {
-                String textHtmlHeader = ctTextHtmlWithoutBodyTagMatcher.group();
-                final int end = ctTextHtmlWithoutBodyTagMatcher.end();
-                if (textHtmlHeader != null && textHtmlHeader.contains(CONTENT_TRANSFER_BASE64_ENCODING)) {
-                    content = appendWarning(content, end, getEncodedTextHtmlWarning());
-                } else if (ctBase64TextHtmlMatcher.find()) {
-                    final int endBase64TextHtml = ctBase64TextHtmlMatcher.end();
-                    content = appendWarning(content, endBase64TextHtml, getEncodedTextHtmlWarning());
-                } else {
-                    content = appendWarning(content, end, getTextHtmlWarning());
-                }
+        }
+
+        // handle text/html
+        final Matcher ctTextHtmlMatcher = CONTENT_TYPE_TEXT_HTML_PATTERN.matcher(content);
+        final Matcher ctTextHtmlWithoutBodyTagMatcher = CONTENT_TYPE_TEXT_HTML_WITHOUT_BODY_TAG_PATTERN.matcher(content);
+        final Matcher ctBase64TextHtmlMatcher = CONTENT_TRANSFER_BASE64_TEXT_HTML_PATTERN.matcher(content);
+
+        if (ctTextHtmlMatcher.find()) {
+            content = insertHtmlWarning(content, ctTextHtmlMatcher.end(), textHtmlWarning);
+        } else if (ctTextHtmlWithoutBodyTagMatcher.find()) {
+            int headerEnd = ctTextHtmlWithoutBodyTagMatcher.end();
+            if (ctTextHtmlWithoutBodyTagMatcher.group().contains(CONTENT_TRANSFER_BASE64_ENCODING)) {
+                content = decodeModifyEncodeContent(content, headerEnd, textHtmlWarning, "text/html");
+            } else if (ctBase64TextHtmlMatcher.find()) {
+                content = decodeModifyEncodeContent(content, ctBase64TextHtmlMatcher.end(), textHtmlWarning, "text/html");
+            } else {
+                content = insertHtmlWarning(content, headerEnd, textHtmlWarning);
             }
         }
         return content;
     }
+
+    /**
+     * Decode base64, insert warning, re-encode.
+     */
+    private String decodeModifyEncodeContent(String content, int bodyStart, String warning, String contentType) {
+        try {
+            String headers = content.substring(0, bodyStart);
+
+            // original body until boundary
+            int boundaryIndex = content.indexOf("--", bodyStart);
+            String body;
+            String remainder = "";
+            if (boundaryIndex > 0) {
+                body = content.substring(bodyStart, boundaryIndex);
+                remainder = content.substring(boundaryIndex);
+            } else {
+                body = content.substring(bodyStart);
+            }
+
+            boolean isBase64 = headers.toLowerCase().contains("content-transfer-encoding: base64");
+
+            String decoded = isBase64 ? new String(Base64.getMimeDecoder().decode(body), StandardCharsets.UTF_8) : body;
+
+            String modified = warning + "\r\n" + decoded;
+
+            String reEncoded = isBase64
+                    ? Base64.getMimeEncoder(76, "\r\n".getBytes()).encodeToString(modified.getBytes(StandardCharsets.UTF_8)) + "\r\n"
+                    : modified;
+
+            return headers + reEncoded + remainder;
+
+        } catch (Exception e) {
+            ZimbraLog.lmtp.warn("Base64 decode/encode failed, falling back", e);
+            return appendWarning(content, bodyStart, warning);
+        }
+    }
+
+    /**
+     * Insert warning for non-base64 HTML.
+     */
+    private String insertHtmlWarning(String content, int insertPosition, String htmlWarning) {
+        String beforeInsert = content.substring(0, insertPosition);
+        String afterInsert = content.substring(insertPosition);
+        Matcher bodyMatcher = Pattern.compile("(<body[^>]*>)", Pattern.CASE_INSENSITIVE).matcher(afterInsert);
+
+        if (bodyMatcher.find()) {
+            String beforeBody = afterInsert.substring(0, bodyMatcher.end());
+            String afterBody = afterInsert.substring(bodyMatcher.end());
+            return beforeInsert + beforeBody + htmlWarning + afterBody;
+        }
+        return beforeInsert + htmlWarning + afterInsert;
+    }
+
     public String appendWarning(String content, int index, String warning) {
         final StringBuilder sb = new StringBuilder();
         sb.append(content.substring(0, index));
