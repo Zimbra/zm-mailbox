@@ -29357,6 +29357,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Package Usage Reporting Scheduler last successful run date
+     *
+     * @return zimbraPackageUsageReportingLastSuccessfulRunDetails, or null if unset
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public String getPackageUsageReportingLastSuccessfulRunDetails() {
+        return getAttr(Provisioning.A_zimbraPackageUsageReportingLastSuccessfulRunDetails, null, true);
+    }
+
+    /**
+     * Package Usage Reporting Scheduler last successful run date
+     *
+     * @param zimbraPackageUsageReportingLastSuccessfulRunDetails new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public void setPackageUsageReportingLastSuccessfulRunDetails(String zimbraPackageUsageReportingLastSuccessfulRunDetails) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPackageUsageReportingLastSuccessfulRunDetails, zimbraPackageUsageReportingLastSuccessfulRunDetails);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Package Usage Reporting Scheduler last successful run date
+     *
+     * @param zimbraPackageUsageReportingLastSuccessfulRunDetails new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public Map<String,Object> setPackageUsageReportingLastSuccessfulRunDetails(String zimbraPackageUsageReportingLastSuccessfulRunDetails, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPackageUsageReportingLastSuccessfulRunDetails, zimbraPackageUsageReportingLastSuccessfulRunDetails);
+        return attrs;
+    }
+
+    /**
+     * Package Usage Reporting Scheduler last successful run date
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public void unsetPackageUsageReportingLastSuccessfulRunDetails() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPackageUsageReportingLastSuccessfulRunDetails, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Package Usage Reporting Scheduler last successful run date
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public Map<String,Object> unsetPackageUsageReportingLastSuccessfulRunDetails(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPackageUsageReportingLastSuccessfulRunDetails, "");
+        return attrs;
+    }
+
+    /**
      * Whether to bind to port on startup irrespective of whether the server
      * is enabled. Useful when port to bind is privileged and must be bound
      * early.
