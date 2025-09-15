@@ -6122,6 +6122,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainDefaultExternalUserCOSId = "zimbraDomainDefaultExternalUserCOSId";
 
     /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public static final String A_zimbraDomainDetailsCollectionEnabled = "zimbraDomainDetailsCollectionEnabled";
+
+    /**
      * Object classes to add when creating a zimbra domain object.
      *
      * @since ZCS 6.0.0_BETA1
@@ -9517,15 +9525,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLicenseNotificationEmail = "zimbraLicenseNotificationEmail";
 
     /**
-     * License Pre expiry notification mail enabled info. The default value
-     * is TRUE
-     *
-     * @since ZCS 10.1.11
-     */
-    @ZAttr(id=4143)
-    public static final String A_zimbraLicensePreExpiryMailAlertEnabled = "zimbraLicensePreExpiryMailAlertEnabled";
-
-    /**
      * Email address for receiving Zimbra license notifications for License
      * Pre Expiry
      *
@@ -9533,6 +9532,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4144)
     public static final String A_zimbraLicenseNotificationEmailForLicensePreExpiry = "zimbraLicenseNotificationEmailForLicensePreExpiry";
+
+    /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public static final String A_zimbraLicensePreExpiryMailAlertEnabled = "zimbraLicensePreExpiryMailAlertEnabled";
 
     /**
      * License Pre expiry notification sent details

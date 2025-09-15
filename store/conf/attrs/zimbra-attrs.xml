@@ -10604,4 +10604,9 @@ TODO: delete them permanently from here
   <desc>Email address for receiving Zimbra license notifications for License Pre Expiry</desc>
 </attr>
 
+<attr id="4145" name="zimbraDomainDetailsCollectionEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" immutable="1" requiresRestart="mailbox" since="10.1.12">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Flag to enable or disable the collection of domain details</desc>
+</attr>
+
 </attrs>
