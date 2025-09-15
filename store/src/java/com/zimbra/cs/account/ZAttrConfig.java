@@ -29065,83 +29065,6 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * License Pre expiry notification mail enabled info. The default value
-     * is TRUE
-     *
-     * @return zimbraLicensePreExpiryMailAlertEnabled, or true if unset
-     *
-     * @since ZCS 10.1.11
-     */
-    @ZAttr(id=4143)
-    public boolean isLicensePreExpiryMailAlertEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, true, true);
-    }
-
-    /**
-     * License Pre expiry notification mail enabled info. The default value
-     * is TRUE
-     *
-     * @param zimbraLicensePreExpiryMailAlertEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.11
-     */
-    @ZAttr(id=4143)
-    public void setLicensePreExpiryMailAlertEnabled(boolean zimbraLicensePreExpiryMailAlertEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, zimbraLicensePreExpiryMailAlertEnabled ? TRUE : FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * License Pre expiry notification mail enabled info. The default value
-     * is TRUE
-     *
-     * @param zimbraLicensePreExpiryMailAlertEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.11
-     */
-    @ZAttr(id=4143)
-    public Map<String,Object> setLicensePreExpiryMailAlertEnabled(boolean zimbraLicensePreExpiryMailAlertEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, zimbraLicensePreExpiryMailAlertEnabled ? TRUE : FALSE);
-        return attrs;
-    }
-
-    /**
-     * License Pre expiry notification mail enabled info. The default value
-     * is TRUE
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.11
-     */
-    @ZAttr(id=4143)
-    public void unsetLicensePreExpiryMailAlertEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * License Pre expiry notification mail enabled info. The default value
-     * is TRUE
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.11
-     */
-    @ZAttr(id=4143)
-    public Map<String,Object> unsetLicensePreExpiryMailAlertEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, "");
-        return attrs;
-    }
-
-    /**
      * Email address for receiving Zimbra license notifications for License
      * Pre Expiry
      *
@@ -29281,6 +29204,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetLicenseNotificationEmailForLicensePreExpiry(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLicenseNotificationEmailForLicensePreExpiry, "");
+        return attrs;
+    }
+
+    /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @return zimbraLicensePreExpiryMailAlertEnabled, or true if unset
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public boolean isLicensePreExpiryMailAlertEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, true, true);
+    }
+
+    /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @param zimbraLicensePreExpiryMailAlertEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public void setLicensePreExpiryMailAlertEnabled(boolean zimbraLicensePreExpiryMailAlertEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, zimbraLicensePreExpiryMailAlertEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @param zimbraLicensePreExpiryMailAlertEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public Map<String,Object> setLicensePreExpiryMailAlertEnabled(boolean zimbraLicensePreExpiryMailAlertEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, zimbraLicensePreExpiryMailAlertEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public void unsetLicensePreExpiryMailAlertEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public Map<String,Object> unsetLicensePreExpiryMailAlertEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLicensePreExpiryMailAlertEnabled, "");
         return attrs;
     }
 
@@ -56003,6 +56003,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetOpenidConsumerStatelessModeEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenidConsumerStatelessModeEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @return zimbraPURDomainDetailsCollectionEnabled, or false if unset
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public boolean isPURDomainDetailsCollectionEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, false, true);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param zimbraPURDomainDetailsCollectionEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public void setPURDomainDetailsCollectionEnabled(boolean zimbraPURDomainDetailsCollectionEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, zimbraPURDomainDetailsCollectionEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param zimbraPURDomainDetailsCollectionEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public Map<String,Object> setPURDomainDetailsCollectionEnabled(boolean zimbraPURDomainDetailsCollectionEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, zimbraPURDomainDetailsCollectionEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public void unsetPURDomainDetailsCollectionEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public Map<String,Object> unsetPURDomainDetailsCollectionEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, "");
         return attrs;
     }
 
