@@ -94,6 +94,7 @@
       </exec>
    </target>
 
+   <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
    <target name="test" depends="test-all-plough-through"/>
 
    <target name="clean" depends="clean-ant,clean-pkg">
