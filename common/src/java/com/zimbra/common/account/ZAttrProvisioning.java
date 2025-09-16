@@ -6523,7 +6523,7 @@ public class ZAttrProvisioning {
     /**
      * Sets the base warning text for External Email Warning (EEW)
      *
-     * @since ZCS 10.1.9
+     * @since ZCS 10.1.12
      */
     @ZAttr(id=4139)
     public static final String A_zimbraExternalEmailWarningMessage = "zimbraExternalEmailWarningMessage";
@@ -7074,7 +7074,7 @@ public class ZAttrProvisioning {
     /**
      * Feature to enable/disable External Email Warning (EEW)
      *
-     * @since ZCS 10.1.9
+     * @since ZCS 10.1.12
      */
     @ZAttr(id=4138)
     public static final String A_zimbraFeatureExternalEmailWarningEnabled = "zimbraFeatureExternalEmailWarningEnabled";
