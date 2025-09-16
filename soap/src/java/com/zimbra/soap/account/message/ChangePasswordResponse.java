@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 import io.leangen.graphql.annotations.GraphQLQuery;
@@ -46,6 +47,7 @@ public class ChangePasswordResponse {
      */
     @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
     private String authToken;
+
     /**
      * @zm-api-field-description Life time associated with <b>{new-auth-token}</b>
      */
@@ -53,13 +55,24 @@ public class ChangePasswordResponse {
     @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
 
+    /**
+     * @zm-api-field-description New csrfToken associated with <b>{new-auth-token}</b>
+     */
+    @ZimbraJsonAttribute
+    @XmlElement(name=HeaderConstants.E_CSRFTOKEN /* csrfToken */, required=true)
+    private String csrfToken;
+
     public ChangePasswordResponse() {
     }
 
     @GraphQLQuery(name=GqlConstants.AUTH_TOKEN, description="Auth token based on the new password")
     public String getAuthToken() { return authToken; }
+
     @GraphQLQuery(name=GqlConstants.LIFETIME, description="Life time of the auth token")
     public long getLifetime() { return lifetime; }
+
+    @GraphQLQuery(name=GqlConstants.CSRF_TOKEN, description="CSRF token associated with new auth token")
+    public String getCsrfToken() { return csrfToken; }
 
     public ChangePasswordResponse setAuthToken(String authToken) {
         this.authToken = authToken;
@@ -68,6 +81,11 @@ public class ChangePasswordResponse {
 
     public ChangePasswordResponse setLifetime(long lifetime) {
         this.lifetime = lifetime;
+        return this;
+    }
+
+    public ChangePasswordResponse setCsrfToken(String csrfToken) {
+        this.csrfToken = csrfToken;
         return this;
     }
 }

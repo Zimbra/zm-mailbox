@@ -21,12 +21,14 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.account.message.ChangePasswordResponse;
 
 public class ZChangePasswordResult {
     private ZAuthToken mAuthToken;
     private long mExpires;
     private long mLifetime;
+    private String mCsrfToken;
 
     public ZChangePasswordResult(Element e) throws ServiceException {
         String authToken = e.getAttribute(AccountConstants.E_AUTH_TOKEN);
@@ -34,12 +36,14 @@ public class ZChangePasswordResult {
 
         mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
         mExpires = System.currentTimeMillis() + mLifetime;
+        mCsrfToken = e.getAttribute(HeaderConstants.E_CSRFTOKEN);
     }
     
     public ZChangePasswordResult(ChangePasswordResponse res) {
         mAuthToken = new ZAuthToken(null, res.getAuthToken());
         mLifetime = res.getLifetime();
         mExpires = System.currentTimeMillis() + mLifetime;
+        mCsrfToken = res.getCsrfToken();
     }
 
     public ZAuthToken getAuthToken() {
@@ -52,5 +56,9 @@ public class ZChangePasswordResult {
 
     public long getLifetime() {
         return mLifetime;
+    }
+
+    public String getCsrfToken() {
+        return mCsrfToken;
     }
 }
