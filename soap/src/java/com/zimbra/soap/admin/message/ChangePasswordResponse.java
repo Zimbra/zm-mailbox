@@ -19,6 +19,7 @@ package com.zimbra.soap.admin.message;
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
@@ -38,12 +39,20 @@ public class ChangePasswordResponse {
      */
     @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
     private String authToken;
+
     /**
      * @zm-api-field-description Life time associated with <b>{new-auth-token}</b>
      */
     @ZimbraJsonAttribute
     @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
+
+    /**
+     * @zm-api-field-description New csrfToken associated with <b>{new-auth-token}</b>
+     */
+    @ZimbraJsonAttribute
+    @XmlElement(name=HeaderConstants.E_CSRFTOKEN /* csrfToken */, required=true)
+    private String csrfToken;
 
     public ChangePasswordResponse() {
     }
@@ -60,6 +69,11 @@ public class ChangePasswordResponse {
 
     public ChangePasswordResponse setLifetime(long lifetime) {
         this.lifetime = lifetime;
+        return this;
+    }
+
+    public ChangePasswordResponse setCsrfToken(String csrfToken) {
+        this.csrfToken = csrfToken;
         return this;
     }
 }
