@@ -15782,78 +15782,6 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Flag to enable or disable the collection of domain details
-     *
-     * @return zimbraDomainDetailsCollectionEnabled, or false if unset
-     *
-     * @since ZCS 10.1.12
-     */
-    @ZAttr(id=4145)
-    public boolean isDomainDetailsCollectionEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraDomainDetailsCollectionEnabled, false, true);
-    }
-
-    /**
-     * Flag to enable or disable the collection of domain details
-     *
-     * @param zimbraDomainDetailsCollectionEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.12
-     */
-    @ZAttr(id=4145)
-    public void setDomainDetailsCollectionEnabled(boolean zimbraDomainDetailsCollectionEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainDetailsCollectionEnabled, zimbraDomainDetailsCollectionEnabled ? TRUE : FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Flag to enable or disable the collection of domain details
-     *
-     * @param zimbraDomainDetailsCollectionEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.12
-     */
-    @ZAttr(id=4145)
-    public Map<String,Object> setDomainDetailsCollectionEnabled(boolean zimbraDomainDetailsCollectionEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainDetailsCollectionEnabled, zimbraDomainDetailsCollectionEnabled ? TRUE : FALSE);
-        return attrs;
-    }
-
-    /**
-     * Flag to enable or disable the collection of domain details
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.12
-     */
-    @ZAttr(id=4145)
-    public void unsetDomainDetailsCollectionEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainDetailsCollectionEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Flag to enable or disable the collection of domain details
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.12
-     */
-    @ZAttr(id=4145)
-    public Map<String,Object> unsetDomainDetailsCollectionEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainDetailsCollectionEnabled, "");
-        return attrs;
-    }
-
-    /**
      * Object classes to add when creating a zimbra domain object.
      *
      * @return zimbraDomainExtraObjectClass, or empty array if unset
@@ -56003,6 +55931,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetOpenidConsumerStatelessModeEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenidConsumerStatelessModeEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @return zimbraPURDomainDetailsCollectionEnabled, or false if unset
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public boolean isPURDomainDetailsCollectionEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, false, true);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param zimbraPURDomainDetailsCollectionEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public void setPURDomainDetailsCollectionEnabled(boolean zimbraPURDomainDetailsCollectionEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, zimbraPURDomainDetailsCollectionEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param zimbraPURDomainDetailsCollectionEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public Map<String,Object> setPURDomainDetailsCollectionEnabled(boolean zimbraPURDomainDetailsCollectionEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, zimbraPURDomainDetailsCollectionEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public void unsetPURDomainDetailsCollectionEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public Map<String,Object> unsetPURDomainDetailsCollectionEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPURDomainDetailsCollectionEnabled, "");
         return attrs;
     }
 

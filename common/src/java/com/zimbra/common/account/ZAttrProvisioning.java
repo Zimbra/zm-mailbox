@@ -6122,14 +6122,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainDefaultExternalUserCOSId = "zimbraDomainDefaultExternalUserCOSId";
 
     /**
-     * Flag to enable or disable the collection of domain details
-     *
-     * @since ZCS 10.1.12
-     */
-    @ZAttr(id=4145)
-    public static final String A_zimbraDomainDetailsCollectionEnabled = "zimbraDomainDetailsCollectionEnabled";
-
-    /**
      * Object classes to add when creating a zimbra domain object.
      *
      * @since ZCS 6.0.0_BETA1
@@ -15562,6 +15554,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1351)
     public static final String A_zimbraPublicSharingEnabled = "zimbraPublicSharingEnabled";
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public static final String A_zimbraPURDomainDetailsCollectionEnabled = "zimbraPURDomainDetailsCollectionEnabled";
 
     /**
      * The total size (in bytes) of the in-memory queue of conversations to
