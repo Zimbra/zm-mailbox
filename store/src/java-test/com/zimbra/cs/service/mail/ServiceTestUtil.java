@@ -19,6 +19,7 @@ package com.zimbra.cs.service.mail;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
@@ -26,6 +27,7 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.MockHttpServletRequest;
 import com.zimbra.cs.service.MockHttpServletResponse;
+import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.soap.MockSoapEngine;
 import com.zimbra.soap.SoapEngine;
@@ -33,6 +35,8 @@ import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ServiceTestUtil {
+
+    private static Random nonceGen;
 
     public static Map<String, Object> getRequestContext(Account acct) throws Exception {
         return getRequestContext(acct, acct);
@@ -47,9 +51,14 @@ public class ServiceTestUtil {
     }
 
     public static Map<String, Object> getRequestContext(Account authAcct, Account targetAcct, DocumentService service) throws Exception {
+        nonceGen = new Random();
+        MockHttpServletRequest mockHttpServletRequest =
+            new MockHttpServletRequest("test".getBytes("UTF-8"), new URL("http://localhost:7070/service/FooRequest"), "");
+        mockHttpServletRequest.setAttribute(CsrfFilter.CSRF_SALT, nonceGen.nextInt() + 1);
+
         Map<String, Object> context = new HashMap<String, Object>();
         context.put(SoapEngine.ZIMBRA_CONTEXT, new ZimbraSoapContext(AuthProvider.getAuthToken(authAcct), targetAcct.getId(), SoapProtocol.Soap12, SoapProtocol.Soap12));
-        context.put(SoapServlet.SERVLET_REQUEST, new MockHttpServletRequest("test".getBytes("UTF-8"), new URL("http://localhost:7070/service/FooRequest"), ""));
+        context.put(SoapServlet.SERVLET_REQUEST, mockHttpServletRequest);
         context.put(SoapEngine.ZIMBRA_ENGINE, new MockSoapEngine(service));
         context.put(SoapServlet.SERVLET_RESPONSE, new MockHttpServletResponse());
         return context;
