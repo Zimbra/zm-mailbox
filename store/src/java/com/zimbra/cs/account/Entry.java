@@ -353,26 +353,36 @@ public abstract class Entry implements ToZJSONObject {
     }
 
     public Map<String, Object> getAttrs(boolean applyDefaults, boolean includeEphemeral) {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        if (applyDefaults) {
+        if (applyDefaults && (mDefaults != null || mSecondaryDefaults != null)) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
             // put the second defaults
             if (mSecondaryDefaults != null)
                 attrs.putAll(mSecondaryDefaults);
+
             // put the defaults
             if (mDefaults != null)
                 attrs.putAll(mDefaults);
-        }
-        // override with currently set
-        attrs.putAll(mAttrs);
-        // override with overrides if set
-        if (applyDefaults && overrideDefaults != null) {
-            attrs.putAll(overrideDefaults);
-        }
-        // include ephemeral attributes if requested
-        if (includeEphemeral) {
+
+            // override with currently set
+            attrs.putAll(mAttrs);
+
+            // override with overrides if set
+            if (overrideDefaults != null) {
+                attrs.putAll(overrideDefaults);
+            }
+            attrs.putAll(mAttrs);
+            if (includeEphemeral) {
+                attrs.putAll(getEphemeralAttrs());
+            }
+            return attrs;
+        } else if (includeEphemeral) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.putAll(mAttrs);
             attrs.putAll(getEphemeralAttrs());
+            return attrs;
+        } else {
+            return mAttrs;
         }
-        return attrs;
     }
 
     /**

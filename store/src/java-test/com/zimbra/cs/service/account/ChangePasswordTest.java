@@ -75,11 +75,11 @@ public class ChangePasswordTest {
         account3 = prov.createAccount(USERNAME_3, PASSWORD_3, attrs3);
 
         final Map<String,Object> attrs4 = new HashMap<>(1);
-        attrs4.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, true);
+        attrs4.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, "TRUE");
         account4 = prov.createAccount(USERNAME_4, PASSWORD_4, attrs4);
 
         final Map<String,Object> attrs5 = new HashMap<>(1);
-        attrs5.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, false);
+        attrs5.put(Provisioning.A_zimbraFeatureChangePasswordEnabled, "FALSE");
         account5 = prov.createAccount(USERNAME_5, PASSWORD_5, attrs5);
     }
 
