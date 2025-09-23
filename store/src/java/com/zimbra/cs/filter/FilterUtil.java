@@ -248,6 +248,7 @@ public final class FilterUtil {
         // Get auth token
         AuthToken authToken = null;
         OperationContext opCtxt = localMbox.getOperationContext();
+        // TODO: auth - already covered, example
         if (opCtxt != null) {
             authToken = AuthToken.getCsrfUnsecuredAuthToken(opCtxt.getAuthToken());
         }

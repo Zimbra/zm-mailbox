@@ -6188,6 +6188,8 @@ public class Mailbox implements MailboxStore {
             boolean includeInvites, boolean includeContent)
     throws ServiceException {
         Options options = new Options();
+        // TODO: auth - example of getting auth token from context
+        // also missing the auth token generation when context auth token is missing
         AuthToken authToken = AuthToken.getCsrfUnsecuredAuthToken(getAuthToken(getOperationContext()));
         options.setAuthToken(authToken.toZAuthToken());
         options.setTargetAccount(getAccount().getName());
@@ -10946,6 +10948,7 @@ public class Mailbox implements MailboxStore {
             transport.setOriginalUserAgent("createDocumentRevision");
             if (authRequired) {
                 try {
+                    // TODO: auth - need to make sure there;s no issues with context admin token support
                     transport.setAuthToken(AuthProvider.getAuthToken(acct).getEncoded());
                 } catch (AuthTokenException e) {
                     throw ServiceException.FAILURE("Failed to generate auth token for " + acct.getName(), e);

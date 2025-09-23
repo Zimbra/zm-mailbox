@@ -108,6 +108,7 @@ public class RemoteCollection extends Collection {
         return zmbx;
     }
     protected void getMountpointTarget(DavContext ctxt) throws ServiceException {
+        // TODO: auth
         ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
         ZMailbox zmbx = getRemoteMailbox(zat, mRemoteOwnerId);
         if (zmbx == null)

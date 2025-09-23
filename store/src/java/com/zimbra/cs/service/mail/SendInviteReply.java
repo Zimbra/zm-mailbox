@@ -467,6 +467,7 @@ public class SendInviteReply extends CalendarRequest {
     private static ZMailbox getRemoteZMailbox(OperationContext octxt, Account authAcct, Account targetAcct)
     throws ServiceException {
         AuthToken authToken = null;
+        // TODO: auth - already checked, example
         if (octxt != null)
             authToken = AuthToken.getCsrfUnsecuredAuthToken(octxt.getAuthToken());
         if (authToken == null)

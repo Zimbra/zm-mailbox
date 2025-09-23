@@ -55,6 +55,7 @@ public class SetRecoveryAccount extends DocumentHandler {
         Account account = getRequestedAccount(zsc);
         if (!Provisioning.onLocalServer(account)) {
             ZimbraLog.account.debug("account= %s doesn't exist so proxying request to account's server", account.getName());
+            // TODO: auth
             return proxyRequest(request, context, AuthProvider.getAuthToken(account), account.getId());
         }
         Mailbox mbox = getRequestedMailbox(zsc);

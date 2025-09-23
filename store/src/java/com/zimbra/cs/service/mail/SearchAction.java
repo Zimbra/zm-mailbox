@@ -125,6 +125,7 @@ public class SearchAction extends MailDocumentHandler {
         Server server = Provisioning.getInstance().getServer(acct);
         String url = URLUtil.getSoapURL(server, false);
         SoapHttpTransport transport = new SoapHttpTransport(url);
+        // TODO: auth - try to see if we can use operationContext, low priority
         transport.setAuthToken(AuthProvider.getAuthToken(acct).getEncoded());
         transport.setTargetAcctId(acct.getId());
         if ("message".equalsIgnoreCase(searchRequest.getSearchTypes())) {

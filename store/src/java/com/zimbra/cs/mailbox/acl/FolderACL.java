@@ -277,6 +277,7 @@ public class FolderACL {
         SoapHttpTransport transport = new SoapHttpTransport(url);
 
         AuthToken authToken = null;
+        // TODO : auth - already handled, example
         if (mOctxt != null)
             authToken = AuthToken.getCsrfUnsecuredAuthToken(mOctxt.getAuthToken());
         if (authToken == null)

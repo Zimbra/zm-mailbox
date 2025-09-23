@@ -359,6 +359,8 @@ public class DavServlet extends ZimbraServlet {
                 return;
             }
             ZimbraLog.addToContext(ZimbraLog.C_ANAME, authUser.getName());
+            // TODO: auth - if `at` is not null we technically want to preserve it, so we don't create a new one down the order
+            // if it is null, then we do not yet want one because we may not need one
             ctxt = new DavContext(req, resp, authUser);
         } catch (AuthTokenException e) {
             sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error getting authenticated user", e);
@@ -722,6 +724,7 @@ public class DavServlet extends ZimbraServlet {
         }
 
         // get the path to the target mail item
+        // TODO : auth - see if we can reuse the existing auth account's for target acc instead of making a new one here
         AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
         ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(acct));
         zoptions.setNoSession(true);

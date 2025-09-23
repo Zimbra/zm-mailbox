@@ -248,6 +248,7 @@ public abstract class MailItemResource extends DavResource {
     }
 
     private static ZMailbox getZMailbox(DavContext ctxt, Collection col) throws ServiceException {
+        // TODO: auth - check to see if we can operationContext from DavContext
         AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
         Account acct = Provisioning.getInstance().getAccountById(col.getItemId().getAccountId());
         ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(acct));

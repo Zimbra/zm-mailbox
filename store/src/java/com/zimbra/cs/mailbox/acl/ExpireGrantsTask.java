@@ -145,6 +145,7 @@ public class ExpireGrantsTask extends ScheduledTask {
         Account account = mbox.getAccount();
         ZMailbox.Options options = new ZMailbox.Options();
         options.setNoSession(true);
+        // TODO : auth - ignore for now, since it's a background task
         options.setAuthToken(AuthProvider.getAuthToken(account).toZAuthToken());
         options.setUri(AccountUtil.getSoapUri(account));
         return new ZMailbox(options);

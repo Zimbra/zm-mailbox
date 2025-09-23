@@ -398,6 +398,7 @@ public abstract class GalGroup {
                 try {
                     Account admin = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
                     ZimbraLog.addAccountNameToContext(admin.getName());
+                    // TODO : auth - see we can reuse the same token without having to create for each thread
                     adminAuthToken =  AuthProvider.getAuthToken(admin, true);
 
                     long startTime = System.currentTimeMillis();

@@ -140,6 +140,7 @@ public class ImapCredentials implements java.io.Serializable {
         }
         try {
             Account acct = getAccount();
+            // TODO: auth - verify if we end up creating mstore multiple times during early account initialization
             ZMailbox.Options options =
                     new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(acct));
             /* getting by ID avoids failed GetInfo SOAP requests trying to determine ID before auth setup. */

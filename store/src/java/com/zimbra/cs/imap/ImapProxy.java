@@ -97,6 +97,8 @@ public final class ImapProxy {
         try {
             connection.connect();
             connection.id(createIDInfo(handler));
+            // TODO : auth - try and see if we can get authenticated user's auth token to access the target without any ACL issues
+            // across all IMAP connections
             connection.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
         } catch (Exception e) {
             ZimbraLog.imap.warn("Problem opening proxy connection %s - %s", connection, e.getMessage());

@@ -176,6 +176,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
 
                     ZMailbox.Options options = new ZMailbox.Options();
                     options.setNoSession(true);
+                    // TODO : auth - ignore for now, not relevant
                     options.setAuthToken(AuthProvider.getAuthToken(grantee).toZAuthToken());
                     options.setUri(AccountUtil.getSoapUri(grantee));
                     ZMailbox zMailbox = new ZMailbox(options);
