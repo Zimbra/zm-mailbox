@@ -2485,6 +2485,15 @@ public class Mailbox implements MailboxStore {
             // first, throw the mailbox into maintenance mode
             // (so anyone else with a cached reference to the Mailbox can't use it)
             maint = MailboxManager.getInstance().beginMaintenance(mData.accountId, mId);
+        } catch (MailServiceException e) {
+            // ignore wrong mailbox exception.  It may be thrown if we're redoing a DeleteMailbox that was interrupted
+            // when server crashed in the middle of the operation.  Database says the mailbox has been deleted, but
+            // there may be other files that still need to be cleaned up.
+            if (!MailServiceException.WRONG_MAILBOX.equals(e.getCode())) {
+                throw e;
+            }
+        }
+        try {
             DeleteMailbox redoRecorder = new DeleteMailbox(mId);
             beginTransaction("deleteMailbox", null, redoRecorder);
             boolean needRedo = needRedo(null, redoRecorder);
@@ -2565,13 +2574,6 @@ public class Mailbox implements MailboxStore {
                         MailboxManager.getInstance().endMaintenance(maint, success, true);
                     }
                 }
-            }
-        } catch (MailServiceException e) {
-            // Ignore wrong mailbox exception.  It may be thrown if we're redoing a DeleteMailbox that was interrupted
-            // when server crashed in the middle of the operation.  Database says the mailbox has been deleted, but
-            // there may be other files that still need to be cleaned up.
-            if (!MailServiceException.WRONG_MAILBOX.equals(e.getCode())) {
-                throw e;
             }
         } finally {
             lock.release();
