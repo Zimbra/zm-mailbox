@@ -6523,7 +6523,7 @@ public class ZAttrProvisioning {
     /**
      * Sets the base warning text for External Email Warning (EEW)
      *
-     * @since ZCS 10.1.9
+     * @since ZCS 10.1.12
      */
     @ZAttr(id=4139)
     public static final String A_zimbraExternalEmailWarningMessage = "zimbraExternalEmailWarningMessage";
@@ -7074,7 +7074,7 @@ public class ZAttrProvisioning {
     /**
      * Feature to enable/disable External Email Warning (EEW)
      *
-     * @since ZCS 10.1.9
+     * @since ZCS 10.1.12
      */
     @ZAttr(id=4138)
     public static final String A_zimbraFeatureExternalEmailWarningEnabled = "zimbraFeatureExternalEmailWarningEnabled";
@@ -9517,15 +9517,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLicenseNotificationEmail = "zimbraLicenseNotificationEmail";
 
     /**
-     * License Pre expiry notification mail enabled info. The default value
-     * is TRUE
-     *
-     * @since ZCS 10.1.11
-     */
-    @ZAttr(id=4143)
-    public static final String A_zimbraLicensePreExpiryMailAlertEnabled = "zimbraLicensePreExpiryMailAlertEnabled";
-
-    /**
      * Email address for receiving Zimbra license notifications for License
      * Pre Expiry
      *
@@ -9535,12 +9526,29 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLicenseNotificationEmailForLicensePreExpiry = "zimbraLicenseNotificationEmailForLicensePreExpiry";
 
     /**
+     * License Pre expiry notification mail enabled info. The default value
+     * is TRUE
+     *
+     * @since ZCS 10.1.11
+     */
+    @ZAttr(id=4143)
+    public static final String A_zimbraLicensePreExpiryMailAlertEnabled = "zimbraLicensePreExpiryMailAlertEnabled";
+
+    /**
      * License Pre expiry notification sent details
      *
      * @since ZCS 10.1.10
      */
     @ZAttr(id=4142)
     public static final String A_zimbraLicensePreExpiryReminderSentDetails = "zimbraLicensePreExpiryReminderSentDetails";
+
+    /**
+     * Package Usage Reporting Scheduler last successful run date
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public static final String A_zimbraPackageUsageReportingLastSuccessfulRunDetails = "zimbraPackageUsageReportingLastSuccessfulRunDetails";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname
@@ -15554,6 +15562,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1351)
     public static final String A_zimbraPublicSharingEnabled = "zimbraPublicSharingEnabled";
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4146)
+    public static final String A_zimbraPURDomainDetailsCollectionEnabled = "zimbraPURDomainDetailsCollectionEnabled";
 
     /**
      * The total size (in bytes) of the in-memory queue of conversations to
