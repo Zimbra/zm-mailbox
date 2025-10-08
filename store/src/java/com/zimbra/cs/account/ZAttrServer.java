@@ -3330,6 +3330,153 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Blob Deduplication enabled during Backup dedup - blobs deduplication
+     * is enabled during the backup. noDedup - blobs deduplication is
+     * disabled during the backup.
+     *
+     * <p>Valid values: [dedup, noDedup]
+     *
+     * @return zimbraBackupDeduplication, or ZAttrProvisioning.BackupDeduplication.dedup if unset and/or has invalid value
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4147)
+    public ZAttrProvisioning.BackupDeduplication getBackupDeduplication() {
+        try { String v = getAttr(Provisioning.A_zimbraBackupDeduplication, true, true); return v == null ? ZAttrProvisioning.BackupDeduplication.dedup : ZAttrProvisioning.BackupDeduplication.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.BackupDeduplication.dedup; }
+    }
+
+    /**
+     * Blob Deduplication enabled during Backup dedup - blobs deduplication
+     * is enabled during the backup. noDedup - blobs deduplication is
+     * disabled during the backup.
+     *
+     * <p>Valid values: [dedup, noDedup]
+     *
+     * @return zimbraBackupDeduplication, or "dedup" if unset
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4147)
+    public String getBackupDeduplicationAsString() {
+        return getAttr(Provisioning.A_zimbraBackupDeduplication, "dedup", true);
+    }
+
+    /**
+     * Blob Deduplication enabled during Backup dedup - blobs deduplication
+     * is enabled during the backup. noDedup - blobs deduplication is
+     * disabled during the backup.
+     *
+     * <p>Valid values: [dedup, noDedup]
+     *
+     * @param zimbraBackupDeduplication new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4147)
+    public void setBackupDeduplication(ZAttrProvisioning.BackupDeduplication zimbraBackupDeduplication) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupDeduplication, zimbraBackupDeduplication.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blob Deduplication enabled during Backup dedup - blobs deduplication
+     * is enabled during the backup. noDedup - blobs deduplication is
+     * disabled during the backup.
+     *
+     * <p>Valid values: [dedup, noDedup]
+     *
+     * @param zimbraBackupDeduplication new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4147)
+    public Map<String,Object> setBackupDeduplication(ZAttrProvisioning.BackupDeduplication zimbraBackupDeduplication, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupDeduplication, zimbraBackupDeduplication.toString());
+        return attrs;
+    }
+
+    /**
+     * Blob Deduplication enabled during Backup dedup - blobs deduplication
+     * is enabled during the backup. noDedup - blobs deduplication is
+     * disabled during the backup.
+     *
+     * <p>Valid values: [dedup, noDedup]
+     *
+     * @param zimbraBackupDeduplication new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4147)
+    public void setBackupDeduplicationAsString(String zimbraBackupDeduplication) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupDeduplication, zimbraBackupDeduplication);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blob Deduplication enabled during Backup dedup - blobs deduplication
+     * is enabled during the backup. noDedup - blobs deduplication is
+     * disabled during the backup.
+     *
+     * <p>Valid values: [dedup, noDedup]
+     *
+     * @param zimbraBackupDeduplication new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4147)
+    public Map<String,Object> setBackupDeduplicationAsString(String zimbraBackupDeduplication, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupDeduplication, zimbraBackupDeduplication);
+        return attrs;
+    }
+
+    /**
+     * Blob Deduplication enabled during Backup dedup - blobs deduplication
+     * is enabled during the backup. noDedup - blobs deduplication is
+     * disabled during the backup.
+     *
+     * <p>Valid values: [dedup, noDedup]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4147)
+    public void unsetBackupDeduplication() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupDeduplication, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blob Deduplication enabled during Backup dedup - blobs deduplication
+     * is enabled during the backup. noDedup - blobs deduplication is
+     * disabled during the backup.
+     *
+     * <p>Valid values: [dedup, noDedup]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4147)
+    public Map<String,Object> unsetBackupDeduplication(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupDeduplication, "");
+        return attrs;
+    }
+
+    /**
      * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
      * to allow a full or auto-grouped backup to start; 0 = no minimum is
      * enforced. Examples: 25%, 10GB
@@ -9136,6 +9283,153 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetDatabaseSlowSqlThreshold(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDatabaseSlowSqlThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in ZSTD format. noZip
+     * - blobs are backed up as individual files without compression. ZSTD -
+     * blobs are backed up with Zstandard compression.
+     *
+     * <p>Valid values: [noZip, ZSTD]
+     *
+     * @return zimbraDedupeBackupBlobsCompressType, or ZAttrProvisioning.DedupeBackupBlobsCompressType.ZSTD if unset and/or has invalid value
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4148)
+    public ZAttrProvisioning.DedupeBackupBlobsCompressType getDedupeBackupBlobsCompressType() {
+        try { String v = getAttr(Provisioning.A_zimbraDedupeBackupBlobsCompressType, true, true); return v == null ? ZAttrProvisioning.DedupeBackupBlobsCompressType.ZSTD : ZAttrProvisioning.DedupeBackupBlobsCompressType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DedupeBackupBlobsCompressType.ZSTD; }
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in ZSTD format. noZip
+     * - blobs are backed up as individual files without compression. ZSTD -
+     * blobs are backed up with Zstandard compression.
+     *
+     * <p>Valid values: [noZip, ZSTD]
+     *
+     * @return zimbraDedupeBackupBlobsCompressType, or "ZSTD" if unset
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4148)
+    public String getDedupeBackupBlobsCompressTypeAsString() {
+        return getAttr(Provisioning.A_zimbraDedupeBackupBlobsCompressType, "ZSTD", true);
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in ZSTD format. noZip
+     * - blobs are backed up as individual files without compression. ZSTD -
+     * blobs are backed up with Zstandard compression.
+     *
+     * <p>Valid values: [noZip, ZSTD]
+     *
+     * @param zimbraDedupeBackupBlobsCompressType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4148)
+    public void setDedupeBackupBlobsCompressType(ZAttrProvisioning.DedupeBackupBlobsCompressType zimbraDedupeBackupBlobsCompressType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDedupeBackupBlobsCompressType, zimbraDedupeBackupBlobsCompressType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in ZSTD format. noZip
+     * - blobs are backed up as individual files without compression. ZSTD -
+     * blobs are backed up with Zstandard compression.
+     *
+     * <p>Valid values: [noZip, ZSTD]
+     *
+     * @param zimbraDedupeBackupBlobsCompressType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4148)
+    public Map<String,Object> setDedupeBackupBlobsCompressType(ZAttrProvisioning.DedupeBackupBlobsCompressType zimbraDedupeBackupBlobsCompressType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDedupeBackupBlobsCompressType, zimbraDedupeBackupBlobsCompressType.toString());
+        return attrs;
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in ZSTD format. noZip
+     * - blobs are backed up as individual files without compression. ZSTD -
+     * blobs are backed up with Zstandard compression.
+     *
+     * <p>Valid values: [noZip, ZSTD]
+     *
+     * @param zimbraDedupeBackupBlobsCompressType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4148)
+    public void setDedupeBackupBlobsCompressTypeAsString(String zimbraDedupeBackupBlobsCompressType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDedupeBackupBlobsCompressType, zimbraDedupeBackupBlobsCompressType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in ZSTD format. noZip
+     * - blobs are backed up as individual files without compression. ZSTD -
+     * blobs are backed up with Zstandard compression.
+     *
+     * <p>Valid values: [noZip, ZSTD]
+     *
+     * @param zimbraDedupeBackupBlobsCompressType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4148)
+    public Map<String,Object> setDedupeBackupBlobsCompressTypeAsString(String zimbraDedupeBackupBlobsCompressType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDedupeBackupBlobsCompressType, zimbraDedupeBackupBlobsCompressType);
+        return attrs;
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in ZSTD format. noZip
+     * - blobs are backed up as individual files without compression. ZSTD -
+     * blobs are backed up with Zstandard compression.
+     *
+     * <p>Valid values: [noZip, ZSTD]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4148)
+    public void unsetDedupeBackupBlobsCompressType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDedupeBackupBlobsCompressType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blobs inside a backup are compressed by default in ZSTD format. noZip
+     * - blobs are backed up as individual files without compression. ZSTD -
+     * blobs are backed up with Zstandard compression.
+     *
+     * <p>Valid values: [noZip, ZSTD]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4148)
+    public Map<String,Object> unsetDedupeBackupBlobsCompressType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDedupeBackupBlobsCompressType, "");
         return attrs;
     }
 

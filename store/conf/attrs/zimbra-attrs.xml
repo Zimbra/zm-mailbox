@@ -10613,4 +10613,20 @@ TODO: delete them permanently from here
   <desc>Flag to enable or disable the collection of domain details</desc>
 </attr>
 
+<attr id="4147" name="zimbraBackupDeduplication" type="enum" value="dedup,noDedup" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.13">
+  <globalConfigValue>dedup</globalConfigValue>
+  <desc>Blob Deduplication enabled during Backup
+    dedup - blobs deduplication is enabled during the backup.
+    noDedup - blobs deduplication is disabled during the backup.
+  </desc>
+</attr>
+
+<attr id="4148" name="zimbraDedupeBackupBlobsCompressType" type="enum" value="noZip,ZSTD" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.13" callback="DedupeBackupBlobsCompressTypeCallback">
+  <globalConfigValue>ZSTD</globalConfigValue>
+  <desc>Blobs inside a backup are compressed by default in ZSTD format.
+    noZip - blobs are backed up as individual files without compression.
+    ZSTD - blobs are backed up with Zstandard compression.
+  </desc>
+</attr>
+
 </attrs>

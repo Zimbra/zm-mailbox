@@ -162,6 +162,22 @@ public class ZAttrProvisioning {
         public boolean isNoZip() { return this == noZip;}
     }
 
+    public static enum BackupDeduplication {
+        dedup("dedup"),
+        noDedup("noDedup");
+        private String mValue;
+        private BackupDeduplication(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static BackupDeduplication fromString(String s) throws ServiceException {
+            for (BackupDeduplication value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDedup() { return this == dedup;}
+        public boolean isNoDedup() { return this == noDedup;}
+    }
+
     public static enum BackupMode {
         Standard("Standard"),
         Auto_Grouped("Auto-Grouped");
@@ -314,6 +330,22 @@ public class ZAttrProvisioning {
         }
         public boolean isCleartext() { return this == cleartext;}
         public boolean isSsl() { return this == ssl;}
+    }
+
+    public static enum DedupeBackupBlobsCompressType {
+        noZip("noZip"),
+        ZSTD("ZSTD");
+        private String mValue;
+        private DedupeBackupBlobsCompressType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DedupeBackupBlobsCompressType fromString(String s) throws ServiceException {
+            for (DedupeBackupBlobsCompressType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNoZip() { return this == noZip;}
+        public boolean isZSTD() { return this == ZSTD;}
     }
 
     public static enum DelayedIndexStatus {
@@ -4070,6 +4102,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupCrontabConfig = "zimbraBackupCrontabConfig";
 
     /**
+     * Blob Deduplication enabled during Backup dedup - blobs deduplication
+     * is enabled during the backup. noDedup - blobs deduplication is
+     * disabled during the backup.
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4147)
+    public static final String A_zimbraBackupDeduplication = "zimbraBackupDeduplication";
+
+    /**
      * Whether or not account is eligible for backup If true on cos level
      * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
      * If unset on cos level but true on domain level then backup domains
@@ -5753,6 +5795,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=365)
     public static final String A_zimbraDebugInfo = "zimbraDebugInfo";
+
+    /**
+     * Blobs inside a backup are compressed by default in ZSTD format. noZip
+     * - blobs are backed up as individual files without compression. ZSTD -
+     * blobs are backed up with Zstandard compression.
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4148)
+    public static final String A_zimbraDedupeBackupBlobsCompressType = "zimbraDedupeBackupBlobsCompressType";
 
     /**
      * stop words for lucene text analyzer. This setting takes effect only
@@ -9543,14 +9595,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLicensePreExpiryReminderSentDetails = "zimbraLicensePreExpiryReminderSentDetails";
 
     /**
-     * Package Usage Reporting Scheduler last successful run date
-     *
-     * @since ZCS 10.1.12
-     */
-    @ZAttr(id=4145)
-    public static final String A_zimbraPackageUsageReportingLastSuccessfulRunDetails = "zimbraPackageUsageReportingLastSuccessfulRunDetails";
-
-    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)
@@ -13215,6 +13259,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3012)
     public static final String A_zimbraOpenImapFolderRequestChunkSize = "zimbraOpenImapFolderRequestChunkSize";
+
+    /**
+     * Package Usage Reporting Scheduler last successful run date
+     *
+     * @since ZCS 10.1.12
+     */
+    @ZAttr(id=4145)
+    public static final String A_zimbraPackageUsageReportingLastSuccessfulRunDetails = "zimbraPackageUsageReportingLastSuccessfulRunDetails";
 
     /**
      * regex of allowed characters in password
