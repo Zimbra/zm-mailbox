@@ -1086,6 +1086,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return get(acctSel.getBy().toKeyAccountBy(), acctSel.getKey());
     }
 
+    public Account get(AccountSelector acctSel, String serverName)
+            throws ServiceException {
+        String key = acctSel.getKey();
+        key = resolveDomainForUsername(key, serverName);
+        return get(acctSel.getBy().toKeyAccountBy(), key);
+    }
+
     public static interface EagerAutoProvisionScheduler {
         // returns whether a shutdown has been request to the scheduler
         public boolean isShutDownRequested();
@@ -2798,4 +2805,21 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
     
     public abstract String sendMdmEmail(String status, String timeInterval) throws ServiceException;
+
+    public String resolveDomainForUsername(String username, String virtualHostname) throws ServiceException {
+        if (username == null) {
+            throw ServiceException.INVALID_REQUEST("Username cannot be null", null);
+        }
+        if (username.contains("@")) {
+            return username;
+        }
+        if (virtualHostname == null) {
+            throw ServiceException.INVALID_REQUEST("Server name cannot be null for domain resolution", null);
+        }
+        Domain domain = get(Key.DomainBy.virtualHostname, virtualHostname.toLowerCase());
+        if (domain != null) {
+            return username + "@" + domain.getName();
+        }
+        return username;
+    }
 }
