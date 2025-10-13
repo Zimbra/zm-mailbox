@@ -10571,12 +10571,12 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="4138" name="zimbraFeatureExternalEmailWarningEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.12">
+<attr id="4138" name="zimbraFeatureExternalEmailWarningEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.13">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Feature to enable/disable External Email Warning (EEW)</desc>
 </attr>
 
-<attr id="4139" name="zimbraExternalEmailWarningMessage" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" callback="ExternalEmailWarningCallBack" since="10.1.12">
+<attr id="4139" name="zimbraExternalEmailWarningMessage" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" callback="ExternalEmailWarningCallBack" since="10.1.13">
   <desc>Sets the base warning text for External Email Warning (EEW)</desc>
   <globalConfigValue>This message originated outside of your organization.</globalConfigValue>
 </attr>
@@ -10604,11 +10604,11 @@ TODO: delete them permanently from here
   <desc>Email address for receiving Zimbra license notifications for License Pre Expiry</desc>
 </attr>
 
-<attr id="4145" name="zimbraPackageUsageReportingLastSuccessfulRunDetails" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.12">
+<attr id="4145" name="zimbraPackageUsageReportingLastSuccessfulRunDetails" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.13">
   <desc>Package Usage Reporting Scheduler last successful run date</desc>
 </attr>
 
-<attr id="4146" name="zimbraPURDomainDetailsCollectionEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="10.1.12">
+<attr id="4146" name="zimbraPURDomainDetailsCollectionEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="10.1.13">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Flag to enable or disable the collection of domain details</desc>
 </attr>
