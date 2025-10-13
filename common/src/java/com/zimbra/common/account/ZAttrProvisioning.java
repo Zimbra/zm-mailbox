@@ -6523,7 +6523,7 @@ public class ZAttrProvisioning {
     /**
      * Sets the base warning text for External Email Warning (EEW)
      *
-     * @since ZCS 10.1.12
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4139)
     public static final String A_zimbraExternalEmailWarningMessage = "zimbraExternalEmailWarningMessage";
@@ -7074,7 +7074,7 @@ public class ZAttrProvisioning {
     /**
      * Feature to enable/disable External Email Warning (EEW)
      *
-     * @since ZCS 10.1.12
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4138)
     public static final String A_zimbraFeatureExternalEmailWarningEnabled = "zimbraFeatureExternalEmailWarningEnabled";
@@ -9541,14 +9541,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4142)
     public static final String A_zimbraLicensePreExpiryReminderSentDetails = "zimbraLicensePreExpiryReminderSentDetails";
-
-    /**
-     * Package Usage Reporting Scheduler last successful run date
-     *
-     * @since ZCS 10.1.12
-     */
-    @ZAttr(id=4145)
-    public static final String A_zimbraPackageUsageReportingLastSuccessfulRunDetails = "zimbraPackageUsageReportingLastSuccessfulRunDetails";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname
@@ -13217,6 +13209,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOpenImapFolderRequestChunkSize = "zimbraOpenImapFolderRequestChunkSize";
 
     /**
+     * Package Usage Reporting Scheduler last successful run date
+     *
+     * @since ZCS 10.1.13
+     */
+    @ZAttr(id=4145)
+    public static final String A_zimbraPackageUsageReportingLastSuccessfulRunDetails = "zimbraPackageUsageReportingLastSuccessfulRunDetails";
+
+    /**
      * regex of allowed characters in password
      *
      * @since ZCS 7.1.0
@@ -15566,7 +15566,7 @@ public class ZAttrProvisioning {
     /**
      * Flag to enable or disable the collection of domain details
      *
-     * @since ZCS 10.1.12
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4146)
     public static final String A_zimbraPURDomainDetailsCollectionEnabled = "zimbraPURDomainDetailsCollectionEnabled";
