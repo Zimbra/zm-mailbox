@@ -162,6 +162,42 @@ public class ZAttrProvisioning {
         public boolean isNoZip() { return this == noZip;}
     }
 
+    public static enum BackupDedupeCompressionType {
+        zstd("zstd"),
+        nocompression("nocompression"),
+        Zip("Zip"),
+        ZipStore("ZipStore");
+        private String mValue;
+        private BackupDedupeCompressionType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static BackupDedupeCompressionType fromString(String s) throws ServiceException {
+            for (BackupDedupeCompressionType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isZstd() { return this == zstd;}
+        public boolean isNocompression() { return this == nocompression;}
+        public boolean isZip() { return this == Zip;}
+        public boolean isZipStore() { return this == ZipStore;}
+    }
+
+    public static enum BackupDeduplication {
+        dedupe("dedupe"),
+        nodedupe("nodedupe");
+        private String mValue;
+        private BackupDeduplication(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static BackupDeduplication fromString(String s) throws ServiceException {
+            for (BackupDeduplication value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDedupe() { return this == dedupe;}
+        public boolean isNodedupe() { return this == nodedupe;}
+    }
+
     public static enum BackupMode {
         Standard("Standard"),
         Auto_Grouped("Auto-Grouped");
@@ -4068,6 +4104,29 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4018)
     public static final String A_zimbraBackupCrontabConfig = "zimbraBackupCrontabConfig";
+
+    /**
+     * Blobs inside a backup are compressed by default in zstd format. zstd -
+     * blobs are backed up with Zstandard compression (default).
+     * nocompression - blobs are backed up as individual files without
+     * compression. Zip - blobs are backed up into zip files with
+     * compression. ZipStore - blobs are backed up into zip files without
+     * compression.
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4148)
+    public static final String A_zimbraBackupDedupeCompressionType = "zimbraBackupDedupeCompressionType";
+
+    /**
+     * Blob Deduplication enabled during Backup dedupe - blobs deduplication
+     * is enabled during the backup (default). nodedupe - blobs deduplication
+     * is disabled during the backup.
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4147)
+    public static final String A_zimbraBackupDeduplication = "zimbraBackupDeduplication";
 
     /**
      * Whether or not account is eligible for backup If true on cos level
