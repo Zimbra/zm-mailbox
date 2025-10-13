@@ -145,7 +145,14 @@ public final class BackupConstants {
     public static final String A_SYNC = "sync";
     public static final String A_NG_MIGRATION = "ngMigration";
     public static final String A_ZIP = "zip";
+    public static final String A_NO_ZIP = "noZip";
     public static final String A_ZIP_STORE = "zipStore";
+    public static final String A_ZSTD = "zstd";
+    public static final String A_DEDUPE = "dedupe";
+    public static final String A_NO_DEDUPE = "nodedupe";
+    public static final String A_CSD = "csd";
+    public static final String A_NO_CSD = "noCsd";
+    public static final String A_CSD_COMMON = "csdc";
     public static final String A_SERVER = "server";
     public static final String A_STATUS = "status";
     public static final String A_REPLAY_CURRENT_REDOLOGS = "replayRedo";
