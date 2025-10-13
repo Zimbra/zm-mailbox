@@ -10613,4 +10613,30 @@ TODO: delete them permanently from here
   <desc>Flag to enable or disable the collection of domain details</desc>
 </attr>
 
+<attr id="4147" name="zimbraBackupDeduplication" type="enum" value="dedupe,nodedupe" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.16" callback="BackupDeduplication">
+  <globalConfigValue>dedupe</globalConfigValue>
+  <desc>Blob Deduplication enabled during Backup
+    dedupe - blobs deduplication is enabled during the backup (default).
+    nodedupe - blobs deduplication is disabled during the backup.
+  </desc>
+</attr>
+
+<attr id="4148" name="zimbraBackupDedupeCompressionType" type="enum" value="zstd,nocompression" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.16" callback="BackupCSDReset">
+  <globalConfigValue>zstd</globalConfigValue>
+  <desc>Blobs inside a dedupe backup are compressed by default in zstd format.
+    zstd - blobs are backed up with Zstandard compression (default).
+    nocompression - blobs are backed up as individual files without compression.
+  </desc>
+</attr>
+
+<attr id="4149" name="zimbraBackupCrossSessionDedupeEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.16" callback="BackupCSDDedupe">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Flag to enable or disable the cross session deduplication</desc>
+</attr>
+
+<attr id="4150" name="zimbraBackupCSDReset" immutable="1" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.16">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Attribute to check whether we need to reset the CSD backup if there  </desc>
+</attr>
+
 </attrs>
