@@ -29070,7 +29070,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraLicenseNotificationEmailForLicensePreExpiry, or empty array if unset
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4144)
     public String[] getLicenseNotificationEmailForLicensePreExpiry() {
@@ -29084,7 +29084,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraLicenseNotificationEmailForLicensePreExpiry new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4144)
     public void setLicenseNotificationEmailForLicensePreExpiry(String[] zimbraLicenseNotificationEmailForLicensePreExpiry) throws com.zimbra.common.service.ServiceException {
@@ -29101,7 +29101,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4144)
     public Map<String,Object> setLicenseNotificationEmailForLicensePreExpiry(String[] zimbraLicenseNotificationEmailForLicensePreExpiry, Map<String,Object> attrs) {
@@ -29117,7 +29117,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraLicenseNotificationEmailForLicensePreExpiry new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4144)
     public void addLicenseNotificationEmailForLicensePreExpiry(String zimbraLicenseNotificationEmailForLicensePreExpiry) throws com.zimbra.common.service.ServiceException {
@@ -29134,7 +29134,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4144)
     public Map<String,Object> addLicenseNotificationEmailForLicensePreExpiry(String zimbraLicenseNotificationEmailForLicensePreExpiry, Map<String,Object> attrs) {
@@ -29150,7 +29150,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraLicenseNotificationEmailForLicensePreExpiry existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4144)
     public void removeLicenseNotificationEmailForLicensePreExpiry(String zimbraLicenseNotificationEmailForLicensePreExpiry) throws com.zimbra.common.service.ServiceException {
@@ -29167,7 +29167,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4144)
     public Map<String,Object> removeLicenseNotificationEmailForLicensePreExpiry(String zimbraLicenseNotificationEmailForLicensePreExpiry, Map<String,Object> attrs) {
@@ -29182,7 +29182,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4144)
     public void unsetLicenseNotificationEmailForLicensePreExpiry() throws com.zimbra.common.service.ServiceException {
@@ -29198,7 +29198,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4144)
     public Map<String,Object> unsetLicenseNotificationEmailForLicensePreExpiry(Map<String,Object> attrs) {
@@ -29213,7 +29213,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraLicensePreExpiryMailAlertEnabled, or true if unset
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4143)
     public boolean isLicensePreExpiryMailAlertEnabled() {
@@ -29227,7 +29227,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraLicensePreExpiryMailAlertEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4143)
     public void setLicensePreExpiryMailAlertEnabled(boolean zimbraLicensePreExpiryMailAlertEnabled) throws com.zimbra.common.service.ServiceException {
@@ -29244,7 +29244,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4143)
     public Map<String,Object> setLicensePreExpiryMailAlertEnabled(boolean zimbraLicensePreExpiryMailAlertEnabled, Map<String,Object> attrs) {
@@ -29259,7 +29259,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4143)
     public void unsetLicensePreExpiryMailAlertEnabled() throws com.zimbra.common.service.ServiceException {
@@ -29275,7 +29275,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.11
+     * @since ZCS 10.1.13
      */
     @ZAttr(id=4143)
     public Map<String,Object> unsetLicensePreExpiryMailAlertEnabled(Map<String,Object> attrs) {
