@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+
+    <!-- =====================
+          General File Settings
+          ===================== -->
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+        <property name="fileExtensions" value="java"/>
+    </module>
+    <module name="FileLength">
+        <property name="max" value="2000"/>
+        <property name="fileExtensions" value="java"/>
+    </module>
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^package.*|^import.*"/>
+        <property name="fileExtensions" value="java"/>
+    </module>
+    <module name="NewlineAtEndOfFile">
+        <property name="fileExtensions" value="java"/>
+    </module>
+
+    <!-- =====================
+          Indentation & Whitespace
+          ===================== -->
+    <module name="TreeWalker">
+        <property name="fileExtensions" value="java"/>
+        <module name="Indentation">
+            <property name="basicOffset" value="4"/>
+            <property name="braceAdjustment" value="0"/>
+            <property name="caseIndent" value="4"/>
+            <property name="lineWrappingIndentation" value="8"/>
+            <property name="tabWidth" value="4"/>
+        </module>
+
+        <!-- spaces around operators, commas, parens -->
+        <module name="WhitespaceAfter"/>
+        <module name="WhitespaceAround"/>
+        <module name="NoWhitespaceBefore"/>
+        <module name="NoWhitespaceAfter"/>
+        <module name="ParenPad">
+            <property name="option" value="nospace"/>
+        </module>
+        <!-- =====================
+            Braces
+            ===================== -->
+        <module name="LeftCurly">
+            <property name="option" value="eol"/>
+        </module>
+        <module name="RightCurly">
+            <property name="option" value="same"/>
+        </module>
+
+        <!-- =====================
+              Empty blocks / structures
+              ===================== -->
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT"/>
+        </module>
+
+
+        <!-- =====================
+              Imports
+              ===================== -->
+        <module name="ImportOrder">
+            <property name="ordered" value="true"/>
+            <property name="separated" value="true"/>
+        </module>
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
+
+        <!-- =====================
+              Blank lines
+              ===================== -->
+        <module name="EmptyLineSeparator">
+            <property name="allowNoEmptyLineBetweenFields" value="false"/>
+            <property name="allowMultipleEmptyLines" value="false"/>
+        </module>
+
+
+        <!-- =====================
+              Comments & Javadoc
+              ===================== -->
+        <module name="JavadocStyle">
+            <property name="checkFirstSentence" value="true"/>
+        </module>
+        <module name="JavadocMethod"/>
+        <module name="JavadocType"/>
+        <module name="JavadocVariable">
+            <property name="scope" value="protected"/>
+            <property name="excludeScope" value="private"/>
+        </module>
+        
+        <module name="JavadocParagraph"/>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value=".{121,}"/>
+            <property name="message" value="Line exceeds 120 characters in comments"/>
+            <property name="ignoreComments" value="false"/>
+        </module>
+
+        <!-- =====================
+              Naming Conventions
+              ===================== -->
+        <module name="MethodName"/>
+        <module name="PackageName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="StaticVariableName"/>
+        <module name="TypeName"/>
+        <module name="ConstantName"/>
+
+        <!-- =====================
+              Coding Style Rules
+              ===================== -->
+        <module name="NeedBraces"/>
+        <module name="AvoidNestedBlocks"/>
+        <module name="FinalClass"/>
+        <module name="VisibilityModifier"/>
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+        <module name="EqualsHashCode"/>
+        <module name="OneTopLevelClass"/>
+
+    </module>
+
+    <module name="JavadocPackage">
+        <property name="fileExtensions" value="java"/>
+    </module>
+</module>
