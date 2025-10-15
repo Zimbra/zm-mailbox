@@ -10,14 +10,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Checkout Checkstyle Config
-        uses: actions/checkout@v4
-        with:
-          repository: Zimbra/zimbra-dev-env
-          ref: develop
-          path: checkstyle-config
-          token: ${{ secrets.CHECKSTYLE }}
-
       - name: run-checkstyle
         uses: dbelyaev/action-checkstyle@b660daa6be4120416b16213522e673c5b1fd772c # v2.1.0
         with:
