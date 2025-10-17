@@ -82,6 +82,7 @@ public class MimeConstants {
     public static final String CT_SMIME_TYPE_ENVELOPED_DATA = "enveloped-data";
     public static final String CT_SMIME_TYPE_SIGNED_DATA = "signed-data";
     public static final String CT_IMAGE = "image/";
+
     public static final String CT_APPLICATION_MATHML = "application/mathml+xml";
 
     // encodings
