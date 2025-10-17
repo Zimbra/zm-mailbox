@@ -71,10 +71,11 @@ public class DefangFactory {
             return htmlDefang;
         }
 
-        if(contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML) ||
-           contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_XHTML) ||
-           contentTypeLowerCase.startsWith(MimeConstants.CT_IMAGE_SVG) ||
-           contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML_LEGACY)) {
+        if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML) ||
+                contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_XHTML) ||
+                contentTypeLowerCase.startsWith(MimeConstants.CT_IMAGE_SVG) ||
+                contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML_LEGACY) ||
+                contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_MATHML)) {
             return xhtmlDefang;
         }
         return noopDefang;
