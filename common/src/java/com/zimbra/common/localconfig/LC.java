@@ -1544,6 +1544,11 @@ public final class LC {
 
     public static final KnownKey zimbra_two_factor_auth_resend_email_wait_seconds = KnownKey.newKey(1); // 1 sec
     public static final KnownKey proxy_web_map_hash_bucket_size = KnownKey.newKey(64);
+
+    public static final KnownKey DEFANG_XML_CONTENT_TYPES = KnownKey.newKey("application/rss+xml," +
+            "application/atom+xml,application/svg+xml,application/mathml+xml,application/xhtml+xml," +
+            "application/xslt+xml,application/xsd+xml,application/gml+xml,application/rdf+xml");
+            
     @Supported
     public static final KnownKey proxy_chat_config_enabled = KnownKey.newKey(true);
 
