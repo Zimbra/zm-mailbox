@@ -16,9 +16,15 @@
  */
 package com.zimbra.cs.html;
 
+import com.google.common.base.Splitter;
+import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.html.owasp.OwaspDefang;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This factory is used to determine the proper defanger based on content type for
@@ -49,6 +55,13 @@ public class DefangFactory {
      */
     private static OwaspDefang owaspDefang = new OwaspDefang();
     
+    private static Set<String> defangXmlContentTypes;
+
+    static {
+        List<String> extensions = Splitter.on(",").omitEmptyStrings().splitToList(LC.DEFANG_XML_CONTENT_TYPES.value());
+        defangXmlContentTypes = new HashSet<>(extensions);
+    }
+
     /**
      * if content type is null, returns noopDefang which does nothing
      * 
@@ -74,9 +87,14 @@ public class DefangFactory {
         if(contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML) ||
            contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_XHTML) ||
            contentTypeLowerCase.startsWith(MimeConstants.CT_IMAGE_SVG) ||
-           contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML_LEGACY)) {
+           contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML_LEGACY) ||
+                isDefangXmlContentType(contentType)) {
             return xhtmlDefang;
         }
         return noopDefang;
+    }
+
+    public static boolean isDefangXmlContentType(String contentType) {
+        return  defangXmlContentTypes.contains(contentType);
     }
 }
