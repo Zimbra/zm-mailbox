@@ -230,6 +230,39 @@ public class CalendarItemInfo {
         }
         return null;
     }
+
+    /**
+     * Returns the Invitation with matching RECURRENCE-ID date/time, expressed as
+     * "YYYYMMDD[ThhmmssZ]" string.  If time comonent is specified, it must be
+     * in UTC timezone ("Z").
+     * If no matching one is found, the default/series Invite is returned.
+     * @param recurIdZ
+     * @return Invitation
+     */
+
+    public Invitation getInviteForRecurIdZ(String recurIdZ) {
+        Invitation defInv = null;
+        for (Invitation inv : invites) {
+            String rid = inv.getRecurrenceId();
+            if (recurIdZ != null) {
+                if (rid == null) {
+                    if (defInv == null) {
+                        defInv = inv;
+                    }
+                } else {
+                    if (recurIdZ.equals(rid)) {
+                        return inv;
+                    }
+                }
+            } else {  // recurIdZ == null
+                if (rid == null) {
+                    return inv;
+                }
+            }
+        }
+        return defInv;
+    }
+
     public List<CalendarReply> getCalendarReplies() {
         return Collections.unmodifiableList(calendarReplies);
     }
