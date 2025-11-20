@@ -10621,14 +10621,17 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="4148" name="zimbraBackupDedupeCompressionType" type="enum" value="zstd,nocompression,Zip,ZipStore" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.14" callback="BackupDedupeCompressionTypeCallback">
+<attr id="4148" name="zimbraBackupDedupeCompressionType" type="enum" value="zstd,nocompression" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.14" callback="BackupDedupeCompressionTypeCallback">
   <globalConfigValue>zstd</globalConfigValue>
-  <desc>Blobs inside a backup are compressed by default in zstd format.
+  <desc>Blobs inside a dedupe backup are compressed by default in zstd format.
     zstd - blobs are backed up with Zstandard compression (default).
     nocompression - blobs are backed up as individual files without compression.
-    Zip - blobs are backed up into zip files with compression.
-    ZipStore - blobs are backed up into zip files without compression.
   </desc>
+</attr>
+
+<attr id="4149" name="ZimbraBackupCrossSessionDedupeEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.14">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Flag to enable or disable the cross session deduplication</desc>
 </attr>
 
 </attrs>

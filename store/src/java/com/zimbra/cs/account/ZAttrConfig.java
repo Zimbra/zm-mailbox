@@ -49,6 +49,78 @@ public abstract class ZAttrConfig extends Entry {
     ///// BEGIN-AUTO-GEN-REPLACE
 
     /**
+     * Flag to enable or disable the cross session deduplication
+     *
+     * @return ZimbraBackupCrossSessionDedupeEnabled, or true if unset
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4149)
+    public boolean isZimbraBackupCrossSessionDedupeEnabled() {
+        return getBooleanAttr(Provisioning.A_ZimbraBackupCrossSessionDedupeEnabled, true, true);
+    }
+
+    /**
+     * Flag to enable or disable the cross session deduplication
+     *
+     * @param ZimbraBackupCrossSessionDedupeEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4149)
+    public void setZimbraBackupCrossSessionDedupeEnabled(boolean ZimbraBackupCrossSessionDedupeEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_ZimbraBackupCrossSessionDedupeEnabled, ZimbraBackupCrossSessionDedupeEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the cross session deduplication
+     *
+     * @param ZimbraBackupCrossSessionDedupeEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4149)
+    public Map<String,Object> setZimbraBackupCrossSessionDedupeEnabled(boolean ZimbraBackupCrossSessionDedupeEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_ZimbraBackupCrossSessionDedupeEnabled, ZimbraBackupCrossSessionDedupeEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to enable or disable the cross session deduplication
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4149)
+    public void unsetZimbraBackupCrossSessionDedupeEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_ZimbraBackupCrossSessionDedupeEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the cross session deduplication
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4149)
+    public Map<String,Object> unsetZimbraBackupCrossSessionDedupeEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_ZimbraBackupCrossSessionDedupeEnabled, "");
+        return attrs;
+    }
+
+    /**
      * RFC2256: descriptive information
      *
      * @return description, or empty array if unset
@@ -5365,14 +5437,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Blobs inside a backup are compressed by default in zstd format. zstd -
-     * blobs are backed up with Zstandard compression (default).
+     * Blobs inside a dedupe backup are compressed by default in zstd format.
+     * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
-     * compression. Zip - blobs are backed up into zip files with
-     * compression. ZipStore - blobs are backed up into zip files without
      * compression.
      *
-     * <p>Valid values: [zstd, nocompression, Zip, ZipStore]
+     * <p>Valid values: [zstd, nocompression]
      *
      * @return zimbraBackupDedupeCompressionType, or ZAttrProvisioning.BackupDedupeCompressionType.zstd if unset and/or has invalid value
      *
@@ -5384,14 +5454,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Blobs inside a backup are compressed by default in zstd format. zstd -
-     * blobs are backed up with Zstandard compression (default).
+     * Blobs inside a dedupe backup are compressed by default in zstd format.
+     * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
-     * compression. Zip - blobs are backed up into zip files with
-     * compression. ZipStore - blobs are backed up into zip files without
      * compression.
      *
-     * <p>Valid values: [zstd, nocompression, Zip, ZipStore]
+     * <p>Valid values: [zstd, nocompression]
      *
      * @return zimbraBackupDedupeCompressionType, or "zstd" if unset
      *
@@ -5403,14 +5471,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Blobs inside a backup are compressed by default in zstd format. zstd -
-     * blobs are backed up with Zstandard compression (default).
+     * Blobs inside a dedupe backup are compressed by default in zstd format.
+     * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
-     * compression. Zip - blobs are backed up into zip files with
-     * compression. ZipStore - blobs are backed up into zip files without
      * compression.
      *
-     * <p>Valid values: [zstd, nocompression, Zip, ZipStore]
+     * <p>Valid values: [zstd, nocompression]
      *
      * @param zimbraBackupDedupeCompressionType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5425,14 +5491,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Blobs inside a backup are compressed by default in zstd format. zstd -
-     * blobs are backed up with Zstandard compression (default).
+     * Blobs inside a dedupe backup are compressed by default in zstd format.
+     * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
-     * compression. Zip - blobs are backed up into zip files with
-     * compression. ZipStore - blobs are backed up into zip files without
      * compression.
      *
-     * <p>Valid values: [zstd, nocompression, Zip, ZipStore]
+     * <p>Valid values: [zstd, nocompression]
      *
      * @param zimbraBackupDedupeCompressionType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5448,14 +5512,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Blobs inside a backup are compressed by default in zstd format. zstd -
-     * blobs are backed up with Zstandard compression (default).
+     * Blobs inside a dedupe backup are compressed by default in zstd format.
+     * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
-     * compression. Zip - blobs are backed up into zip files with
-     * compression. ZipStore - blobs are backed up into zip files without
      * compression.
      *
-     * <p>Valid values: [zstd, nocompression, Zip, ZipStore]
+     * <p>Valid values: [zstd, nocompression]
      *
      * @param zimbraBackupDedupeCompressionType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5470,14 +5532,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Blobs inside a backup are compressed by default in zstd format. zstd -
-     * blobs are backed up with Zstandard compression (default).
+     * Blobs inside a dedupe backup are compressed by default in zstd format.
+     * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
-     * compression. Zip - blobs are backed up into zip files with
-     * compression. ZipStore - blobs are backed up into zip files without
      * compression.
      *
-     * <p>Valid values: [zstd, nocompression, Zip, ZipStore]
+     * <p>Valid values: [zstd, nocompression]
      *
      * @param zimbraBackupDedupeCompressionType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5493,14 +5553,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Blobs inside a backup are compressed by default in zstd format. zstd -
-     * blobs are backed up with Zstandard compression (default).
+     * Blobs inside a dedupe backup are compressed by default in zstd format.
+     * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
-     * compression. Zip - blobs are backed up into zip files with
-     * compression. ZipStore - blobs are backed up into zip files without
      * compression.
      *
-     * <p>Valid values: [zstd, nocompression, Zip, ZipStore]
+     * <p>Valid values: [zstd, nocompression]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5514,14 +5572,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Blobs inside a backup are compressed by default in zstd format. zstd -
-     * blobs are backed up with Zstandard compression (default).
+     * Blobs inside a dedupe backup are compressed by default in zstd format.
+     * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
-     * compression. Zip - blobs are backed up into zip files with
-     * compression. ZipStore - blobs are backed up into zip files without
      * compression.
      *
-     * <p>Valid values: [zstd, nocompression, Zip, ZipStore]
+     * <p>Valid values: [zstd, nocompression]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

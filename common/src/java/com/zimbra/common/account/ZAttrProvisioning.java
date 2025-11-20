@@ -164,9 +164,7 @@ public class ZAttrProvisioning {
 
     public static enum BackupDedupeCompressionType {
         zstd("zstd"),
-        nocompression("nocompression"),
-        Zip("Zip"),
-        ZipStore("ZipStore");
+        nocompression("nocompression");
         private String mValue;
         private BackupDedupeCompressionType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -178,8 +176,6 @@ public class ZAttrProvisioning {
         }
         public boolean isZstd() { return this == zstd;}
         public boolean isNocompression() { return this == nocompression;}
-        public boolean isZip() { return this == Zip;}
-        public boolean isZipStore() { return this == ZipStore;}
     }
 
     public static enum BackupDeduplication {
@@ -4106,11 +4102,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupCrontabConfig = "zimbraBackupCrontabConfig";
 
     /**
-     * Blobs inside a backup are compressed by default in zstd format. zstd -
-     * blobs are backed up with Zstandard compression (default).
+     * Flag to enable or disable the cross session deduplication
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4149)
+    public static final String A_ZimbraBackupCrossSessionDedupeEnabled = "ZimbraBackupCrossSessionDedupeEnabled";
+
+    /**
+     * Blobs inside a dedupe backup are compressed by default in zstd format.
+     * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
-     * compression. Zip - blobs are backed up into zip files with
-     * compression. ZipStore - blobs are backed up into zip files without
      * compression.
      *
      * @since ZCS 10.1.14
