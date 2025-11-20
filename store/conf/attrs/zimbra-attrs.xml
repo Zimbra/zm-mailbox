@@ -10629,4 +10629,9 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="4149" name="ZimbraBackupCrossSessionDedupeEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.14">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Flag to enable or disable the cross session deduplication</desc>
+</attr>
+
 </attrs>

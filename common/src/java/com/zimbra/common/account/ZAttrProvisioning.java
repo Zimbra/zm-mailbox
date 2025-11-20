@@ -4102,6 +4102,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupCrontabConfig = "zimbraBackupCrontabConfig";
 
     /**
+     * Flag to enable or disable the cross session deduplication
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4149)
+    public static final String A_ZimbraBackupCrossSessionDedupeEnabled = "ZimbraBackupCrossSessionDedupeEnabled";
+
+    /**
      * Blobs inside a dedupe backup are compressed by default in zstd format.
      * zstd - blobs are backed up with Zstandard compression (default).
      * nocompression - blobs are backed up as individual files without
