@@ -36,9 +36,7 @@
         <path id="ivy.lib.path">
             <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
         </path>
-        <taskdef resource="org/apache/ivy/ant/antlib.xml"
-                 uri="antlib:org.apache.ivy.ant"
-                 classpathref="ivy.lib.path"/>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
         <!-- Global Ivy settings once per Ant run -->
         <ivy:settings id="dev.settings" file="../build-ivysettings.xml"/>
     </target>
@@ -461,7 +459,7 @@
         </else>
       </antcontrib:if>
     </target>
-          
+    
     <target name="test-hudson" depends="test-compile" description="Run hudson unit tests">
         <property name="test.path" refid="test.class.path"/>
         <delete dir="${test.dir}" quiet="true"/>
