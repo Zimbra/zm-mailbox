@@ -456,7 +456,7 @@
         </taskdef>
     </target>
 
-    <target name="coverage" depends="test-compile, define-jacoco-tasks, 3rd-party-defines" description="Run unit tests with JaCoCo coverage">
+    <target name="coverage" depends="test-compile, define-jacoco-tasks, 3rd-party-defines" description="Run unit tests with JaCoCo coverage" unless="skipCoverage">
         <delete dir="${build.coverage.dir}" quiet="true"/>
         <mkdir dir="${build.coverage.dir}"/>
         <mkdir dir="${build.coverage.dir}/html"/>      
