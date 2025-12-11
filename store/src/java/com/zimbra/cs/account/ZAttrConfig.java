@@ -25022,6 +25022,150 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @return zimbraIURMAccountsCsvGenerationEnabled, or false if unset
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4147)
+    public boolean isIURMAccountsCsvGenerationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraIURMAccountsCsvGenerationEnabled, false, true);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param zimbraIURMAccountsCsvGenerationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4147)
+    public void setIURMAccountsCsvGenerationEnabled(boolean zimbraIURMAccountsCsvGenerationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIURMAccountsCsvGenerationEnabled, zimbraIURMAccountsCsvGenerationEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param zimbraIURMAccountsCsvGenerationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4147)
+    public Map<String,Object> setIURMAccountsCsvGenerationEnabled(boolean zimbraIURMAccountsCsvGenerationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIURMAccountsCsvGenerationEnabled, zimbraIURMAccountsCsvGenerationEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4147)
+    public void unsetIURMAccountsCsvGenerationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIURMAccountsCsvGenerationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4147)
+    public Map<String,Object> unsetIURMAccountsCsvGenerationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIURMAccountsCsvGenerationEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @return zimbraIURMClearOlderRecordsDuration, or FALSE if unset
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4148)
+    public int getIURMClearOlderRecordsDuration() {
+        return getIntAttr(Provisioning.A_zimbraIURMClearOlderRecordsDuration, 1, true);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param zimbraIURMClearOlderRecordsDuration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4148)
+    public void setIURMClearOlderRecordsDuration(int zimbraIURMClearOlderRecordsDuration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIURMClearOlderRecordsDuration, Integer.toString(zimbraIURMClearOlderRecordsDuration));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param zimbraIURMClearOlderRecordsDuration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4148)
+    public Map<String,Object> setIURMClearOlderRecordsDuration(int zimbraIURMClearOlderRecordsDuration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIURMClearOlderRecordsDuration, Integer.toString(zimbraIURMClearOlderRecordsDuration));
+        return attrs;
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4148)
+    public void unsetIURMClearOlderRecordsDuration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIURMClearOlderRecordsDuration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4148)
+    public Map<String,Object> unsetIURMClearOlderRecordsDuration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIURMClearOlderRecordsDuration, "");
+        return attrs;
+    }
+
+    /**
      * Ehcache: the maximum amount of disk space the imap active session
      * cache will consume in Bytes before eviction. By default this value is
      * 100 gigabytes. This is a rough limit,Due to internals of ehcache

@@ -10613,4 +10613,14 @@ TODO: delete them permanently from here
   <desc>Flag to enable or disable the collection of domain details</desc>
 </attr>
 
+<attr id="4147" name="zimbraIURMAccountsCsvGenerationEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="10.1.16">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Flag to enable or disable the collection of domain details</desc>
+</attr>
+
+<attr id="4148" name="zimbraIURMClearOlderRecordsDuration" type="integer" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="10.1.16">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Flag to enable or disable the collection of domain details</desc>
+</attr>
+
 </attrs>

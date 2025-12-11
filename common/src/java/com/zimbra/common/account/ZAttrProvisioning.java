@@ -9433,6 +9433,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraItemActionBatchSize = "zimbraItemActionBatchSize";
 
     /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4147)
+    public static final String A_zimbraIURMAccountsCsvGenerationEnabled = "zimbraIURMAccountsCsvGenerationEnabled";
+
+    /**
+     * Flag to enable or disable the collection of domain details
+     *
+     * @since ZCS 10.1.14
+     */
+    @ZAttr(id=4148)
+    public static final String A_zimbraIURMClearOlderRecordsDuration = "zimbraIURMClearOlderRecordsDuration";
+
+    /**
      * Whether to index junk messages
      *
      * @since ZCS 5.0.0
