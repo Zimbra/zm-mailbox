@@ -1,4 +1,4 @@
-<project name="build-common" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:antcontrib="antlib:net.sf.antcontrib">
+<project name="build-common" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:antcontrib="antlib:net.sf.antcontrib" xmlns:jacoco="antlib:org.jacoco.ant">
     <!-- Set properties that can be used in all projects. -->
     <dirname property="zimbra.root.dir" file="${ant.file.build-common}/../"/>
     <dirname property="zm-mailbox.basedir" file="${ant.file.build-common}"/>
@@ -121,18 +121,6 @@
     <property name="client.jarfile" location="${client.dir}/build/zimbraclient.jar"/>
 
     <property name="msgs.dir" location="${zm-mailbox.basedir}/store-conf/conf/msgs"/>
-
-    <!-- Emma -->
-    <property name="emma.dir" value="/usr/share/java" />
-
-    <path id="emma.lib" >
-      <pathelement location="${emma.dir}/emma.jar" />
-      <pathelement location="${emma.dir}/emma_ant.jar" />
-    </path>
-
-    <path id="emma.run.classpath" >
-      <pathelement location="${build.classes.dir}" />
-    </path>
 
     <!-- Classpath for running unit test, it needs classes from build dir -->
     <path id="test.class.path">
@@ -401,62 +389,212 @@
         <fail if="junit.failure" message="Single Unit test failed"/>
     </target>
 
-    <target name="emma" description="Emma Instrumentation">
+    <!-- Detect if JaCoCo + ASM jars already exist -->
+    <condition property="jacoco.skip">
+        <and>
+            <available file="${zimbra.root.dir}/zm-mailbox/lib/jacocoant.jar"/>
+            <available file="${zimbra.root.dir}/zm-mailbox/lib/jacocoagent.jar"/>
+            <available file="${zimbra.root.dir}/zm-mailbox/lib/jacococore.jar"/>
+            <available file="${zimbra.root.dir}/zm-mailbox/lib/jacocoreport.jar"/>
 
-      <taskdef resource="emma_ant.properties" classpathref="emma.lib"/>
-      <delete dir="${build.instrumented.dir}" quiet="true" />
-      <mkdir dir="${build.instrumented.dir}" />
-      <delete dir="${build.coverage.dir}" quiet="true"/>
-      <mkdir dir="${build.coverage.dir}" />
-      <emma>
-        <instr instrpathref="emma.run.classpath"
-               destdir="${build.instrumented.dir}"
-               metadatafile="${build.coverage.dir}/metadata.emma"
-               merge="true"
-               />
-      </emma>
+            <available file="${zimbra.root.dir}/zm-mailbox/lib/asm-9.5.jar"/>
+            <available file="${zimbra.root.dir}/zm-mailbox/lib/asm-commons-9.5.jar"/>
+            <available file="${zimbra.root.dir}/zm-mailbox/lib/asm-tree-9.5.jar"/>
+            <available file="${zimbra.root.dir}/zm-mailbox/lib/asm-util-9.5.jar"/>
+        </and>
+    </condition>
+
+    <target name="download-jacoco" depends="init-ivy" unless="jacoco.skip">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${zimbra.root.dir}/zm-mailbox/lib"/>
+        <!-- Temporary Ivy file -->
+        <echo file="${build.dir}/ivy-jacoco.xml"><![CDATA[
+        <ivy-module version="2.0">
+            <info organisation="zimbra" module="jacoco-temp"/>
+            <dependencies>
+                <dependency org="org.jacoco" name="org.jacoco.ant"   rev="0.8.14"/>
+                <dependency org="org.jacoco" name="org.jacoco.agent" rev="0.8.14"/>
+                <dependency org="org.jacoco" name="org.jacoco.core"  rev="0.8.14"/>
+                <dependency org="org.jacoco" name="org.jacoco.report" rev="0.8.14"/>
+
+                <dependency org="org.ow2.asm" name="asm"         rev="9.5"/>
+                <dependency org="org.ow2.asm" name="asm-commons" rev="9.5"/>
+                <dependency org="org.ow2.asm" name="asm-tree"    rev="9.5"/>
+                <dependency org="org.ow2.asm" name="asm-util"    rev="9.5"/>
+            </dependencies>
+        </ivy-module>
+        ]]></echo>
+        <!-- Resolve -->
+        <ivy:resolve file="${build.dir}/ivy-jacoco.xml" settingsRef="dev.settings"/>
+
+        <ivy:retrieve file="${build.dir}/ivy-jacoco.xml"
+                      pattern="${zimbra.root.dir}/zm-mailbox/lib/[artifact]-[revision].[ext]"
+                      settingsRef="dev.settings"/>
+        <!-- Rename JaCoCo jars -->
+        <move todir="${zimbra.root.dir}/zm-mailbox/lib">
+            <fileset dir="${zimbra.root.dir}/zm-mailbox/lib">
+                <include name="org.jacoco.*-0.8.14.jar"/>
+            </fileset>
+            <mapper type="regexp"
+                    from="org\.jacoco\.(ant|agent|core|report)-0\.8\.14\.jar"
+                    to="jacoco\1.jar"/>
+        </move>
+        <delete file="${build.dir}/ivy-jacoco.xml" quiet="true"/>
+    </target>
+    <target name="define-jacoco-tasks" depends="download-jacoco">
+        <taskdef uri="antlib:org.jacoco.ant"
+                 resource="org/jacoco/ant/antlib.xml">
+            <classpath>
+                <fileset dir="${zimbra.root.dir}/zm-mailbox/lib">
+                    <include name="jacoco*.jar"/>
+                    <include name="asm-9.5.jar"/>
+                    <include name="asm-commons-9.5.jar"/>
+                    <include name="asm-tree-9.5.jar"/>
+                    <include name="asm-util-9.5.jar"/>
+                </fileset>
+            </classpath>
+        </taskdef>
     </target>
 
-    <target name="test-coverage" depends="test-compile,emma" description="Run unit tests">
-      <property name="test.path" refid="class.path"/>
-      <delete dir="${test.dir}" quiet="true"/>
-      <mkdir dir="${test.dir}/output"/>
-      <mkdir dir="${test.dir}/report"/>
-      <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
-      <taskdef resource="emma_ant.properties" classpathref="emma.lib"/>
-      <junit fork="yes" printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
-        <classpath refid="emma.lib" />
-        <classpath location="${build.instrumented.dir}" />
-        <classpath refid="class.path"/>
-        <classpath path="${test.classes.dir}"/>
-        <jvmarg value="-Demma.coverage.out.file=${build.coverage.dir}/coverage.emma" />
-        <jvmarg value="-Demma.coverage.out.merge=true" />
-        <formatter type="xml"/>
-        <batchtest todir="${test.dir}/output">
-          <fileset dir="${test.src.dir}">
-            <include name="**/*Test.java"/>
-            <exclude name="**/*ITest.java"/>
-            <exclude name="**/Abstract*Test.java"/>
-            <exclude name="**/RemoteMailboxContactOpsTest.java"/>
-            <exclude name="**/yc/**/*.java"/>
-          </fileset>
-        </batchtest>
-      </junit>
-      <junitreport todir="${test.dir}/report">
-        <fileset dir="${test.dir}/output"/>
-        <report todir="${test.dir}/report"/>
-      </junitreport>
-      <emma>
-        <report sourcepath="${src.java.dir}">
-          <fileset dir="${build.coverage.dir}">
-            <include name="*.emma" />
-          </fileset>
-          <xml outfile="${build.coverage.dir}/coverage.xml" />
-        </report>
-      </emma>
-      <echo>Test Report: ${test.dir}/report/index.html</echo>
-      <fail if="junit.failure" message="Unit test failed"/>
+    <target name="coverage" depends="test-compile, define-jacoco-tasks, 3rd-party-defines" description="Run unit tests with JaCoCo coverage" unless="skipCoverage">
+        <delete dir="${build.coverage.dir}" quiet="true"/>
+        <mkdir dir="${build.coverage.dir}"/>
+        <mkdir dir="${build.coverage.dir}/html"/>      
+        <!-- Create a separate test directory for coverage to avoid conflicts -->
+        <property name="coverage.test.dir" value="${build.dir}/coverage-test"/>
+        <delete dir="${coverage.test.dir}" quiet="true"/>
+        <mkdir dir="${coverage.test.dir}/output"/>
+        <mkdir dir="${coverage.test.dir}/extensions"/>
+
+        <jacoco:coverage destfile="${build.coverage.dir}/jacoco.exec">
+            <junit fork="true" printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${coverage.test.dir}">
+                <classpath refid="test.class.path"/>
+                <assertions><enable/></assertions>
+                <formatter type="plain"/>
+                <!-- Include tests from all components -->
+                <batchtest todir="${coverage.test.dir}/output">
+                    <!-- Store component tests -->
+                    <fileset dir="${server.dir}/src/java-test">
+                        <include name="**/*Test.java"/>
+                        <exclude name="**/*ITest.java"/>
+                        <exclude name="**/Abstract*Test.java"/>
+                    </fileset>
+                    <!-- Soap component tests -->
+                    <fileset dir="${soap.dir}/src/java-test">
+                        <include name="**/*Test.java"/>
+                        <exclude name="**/*ITest.java"/>
+                        <exclude name="**/Abstract*Test.java"/>
+                    </fileset>
+                    <!-- Common component tests -->
+                    <fileset dir="${common.dir}/src/java-test">
+                        <include name="**/*Test.java"/>
+                        <exclude name="**/*ITest.java"/>
+                        <exclude name="**/Abstract*Test.java"/>
+                    </fileset>
+                    <!-- Client component tests -->
+                    <fileset dir="${client.dir}/src/java-test">
+                        <include name="**/*Test.java"/>
+                        <exclude name="**/*ITest.java"/>
+                        <exclude name="**/Abstract*Test.java"/>
+                    </fileset>
+                </batchtest>
+            </junit>
+        </jacoco:coverage>
+
+        <!-- Use the already defined antcontrib namespace -->
+        <antcontrib:trycatch>
+            <antcontrib:try>
+                <antcall target="generate-coverage-report" inheritAll="true"/>
+            </antcontrib:try>
+            <antcontrib:catch>
+                <echo message="Coverage report generation failed (ignored)."/>
+            </antcontrib:catch>
+            <antcontrib:finally>
+                <echo message="Coverage report generation completed."/>
+            </antcontrib:finally>
+        </antcontrib:trycatch>
+        <fail if="junit.failure" message="Unit test failed" unless="ignore.junit.failure"/>
     </target>
+
+    <target name="generate-coverage-report" depends="define-jacoco-tasks">
+        <!-- ============================= -->
+        <!-- STORE COVERAGE REPORT         -->
+        <!-- ============================= -->
+        <jacoco:report>
+            <executiondata>
+                <file file="${build.coverage.dir}/jacoco.exec"/>
+            </executiondata>
+            <structure name="zm-mailbox/store">
+                <classfiles>
+                    <fileset dir="${server.classes.dir}"/>
+                </classfiles>
+                <sourcefiles encoding="UTF-8">
+                    <fileset dir="${server.dir}/src/java"/>
+                </sourcefiles>
+            </structure>
+            <html destdir="${server.dir}/build/coverage/html"/>
+            <xml destfile="${server.dir}/build/coverage/report.xml"/>
+            <csv destfile="${server.dir}/build/coverage/report.csv"/>
+        </jacoco:report>
+        <!-- ============================= -->
+        <!-- SOAP COVERAGE REPORT          -->
+        <!-- ============================= -->
+        <jacoco:report>
+            <executiondata>
+                <file file="${build.coverage.dir}/jacoco.exec"/>
+            </executiondata>
+            <structure name="zm-mailbox/soap">
+                <classfiles>
+                    <fileset dir="${soap.classes.dir}"/>
+                </classfiles>
+                <sourcefiles encoding="UTF-8">
+                    <fileset dir="${soap.dir}/src/java"/>
+                </sourcefiles>
+            </structure>
+            <html destdir="${soap.dir}/build/coverage/html"/>
+            <xml destfile="${soap.dir}/build/coverage/report.xml"/>
+            <csv destfile="${soap.dir}/build/coverage/report.csv"/>
+        </jacoco:report>
+        <!-- ============================= -->
+        <!-- COMMON COVERAGE REPORT        -->
+        <!-- ============================= -->
+        <jacoco:report>
+            <executiondata>
+                <file file="${build.coverage.dir}/jacoco.exec"/>
+            </executiondata>
+            <structure name="zm-mailbox/common">
+                <classfiles>
+                    <fileset dir="${common.classes.dir}"/>
+                </classfiles>
+                <sourcefiles encoding="UTF-8">
+                    <fileset dir="${common.dir}/src/java"/>
+                </sourcefiles>
+            </structure>
+            <html destdir="${common.dir}/build/coverage/html"/>
+            <xml destfile="${common.dir}/build/coverage/report.xml"/>
+            <csv destfile="${common.dir}/build/coverage/report.csv"/>
+        </jacoco:report>
+        <!-- ============================= -->
+        <!-- CLIENT COVERAGE REPORT        -->
+        <!-- ============================= -->
+        <jacoco:report>
+            <executiondata>
+                <file file="${build.coverage.dir}/jacoco.exec"/>
+            </executiondata>
+            <structure name="zm-mailbox/client">
+                <classfiles>
+                    <fileset dir="${client.classes.dir}"/>
+                </classfiles>
+                <sourcefiles encoding="UTF-8">
+                    <fileset dir="${client.dir}/src/java"/>
+                </sourcefiles>
+            </structure>
+            <html destdir="${client.dir}/build/coverage/html"/>
+            <xml destfile="${client.dir}/build/coverage/report.xml"/>
+            <csv destfile="${client.dir}/build/coverage/report.csv"/>
+        </jacoco:report>
+        <echo message="Module-wise coverage reports generated successfully."/>
+    </target>                    
 
     <target name="integration-test" depends="test-compile" description="Run integration tests">
         <property name="test.path" refid="class.path"/>
