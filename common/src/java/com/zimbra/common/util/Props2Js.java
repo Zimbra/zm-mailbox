@@ -178,8 +178,7 @@ public class Props2Js {
     } // printEscaped(PrintStream,String)
 
     public static String getCommentSafeString(String st) {
-        return st.replaceAll("<", "") //make sure you can't start a "script" tag within the comment cuz genius IE supposedly exectutes it
-        .replaceAll("\n", ""); //make sure no newline can be injected to start a malicious script too
+        return st.replaceAll("[^A-Za-z0-9_\\-./]", "");
     }
 
     public static void main(String[] argv) throws Exception {
