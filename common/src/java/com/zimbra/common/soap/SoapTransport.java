@@ -307,7 +307,7 @@ public abstract class SoapTransport {
 
         Element context = null;
         if (generateContextHeader()) {
-            context = SoapUtil.toCtxt(proto, mAuthToken, this.csrfToken);
+            context = SoapUtil.toCtxt(proto, mAuthToken);
             if (noSession) {
                 SoapUtil.disableNotificationOnCtxt(context);
             } else {
