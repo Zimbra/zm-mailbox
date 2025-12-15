@@ -254,6 +254,9 @@ public class SoapHttpTransport extends SoapTransport {
                     ZimbraLog.misc.debug("set remote IP header [%s] to [%s]", RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
                 }
             }
+            if (getCsrfToken() != null) {
+                method.addHeader(Constants.CSRF_TOKEN, getCsrfToken());
+            }
             Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType, nFormat, curWaitSetID);
             String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
 
