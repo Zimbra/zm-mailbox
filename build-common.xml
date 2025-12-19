@@ -755,4 +755,173 @@
       <ant  dir="${server.dir}" target="start-webserver" inheritAll="false"/>
     </target>
 
+    <target name="sonar-scan" depends="compile" unless="skipSonarScan" description="Run SonarQube analysis">
+
+        <property environment="env"/>
+        <pathconvert property="sonar.java.libraries" refid="class.path" pathsep=","/>
+        <pathconvert property="sonar.java.test.libraries" refid="test.class.path" pathsep=","/>
+
+        <fail message="SONAR_HOST_URL environment variable not set" unless="env.SONAR_HOST_URL"/>
+        <fail message="SONAR_TOKEN environment variable not set" unless="env.SONAR_TOKEN"/>
+
+        <echo message="Running SonarQube scan for zm-mailox"/>
+
+        <path id="sonar.sources">
+            <pathelement location="${server.dir}/src/java"/>
+            <pathelement location="${common.dir}/src/java"/>
+            <pathelement location="${soap.dir}/src/java"/>
+            <pathelement location="${client.dir}/src/java"/>
+            <pathelement location="${native.dir}/src/java"/>
+        </path>
+
+        <pathconvert property="sonar.sources.paths" refid="sonar.sources" pathsep=","/>
+
+        <condition property="sonar.sources.arg" value="-Dsonar.sources=${sonar.sources.paths}" else="">
+            <isset property="sonar.sources.paths"/>
+        </condition>
+
+        <echo message="Resolved sonar.sources : ${sonar.sources.arg}"/>
+
+        <path id="sonar.java.binaries">
+            <dirset dir="${server.dir}">
+                <include name="build/classes"/>
+            </dirset>
+            <dirset dir="${common.dir}">
+                <include name="build/classes"/>
+            </dirset>
+            <dirset dir="${soap.dir}">
+                <include name="build/classes"/>
+            </dirset>
+            <dirset dir="${client.dir}">
+                <include name="build/classes"/>
+            </dirset>
+            <dirset dir="${native.dir}">
+                <include name="build/classes"/>
+            </dirset>
+        </path>
+
+        <pathconvert property="sonar.java.binaries.paths" refid="sonar.java.binaries" pathsep=","/>
+
+        <condition property="sonar.java.binaries.arg" value="-Dsonar.java.binaries=${sonar.java.binaries.paths}" else="">
+            <isset property="sonar.java.binaries.paths"/>
+        </condition>
+
+        <echo message="Resolved sonar.java.binaries : ${sonar.java.binaries.arg}"/>
+
+        <path id="sonar.test.sources">
+            <dirset dir="${server.dir}">
+                <include name="src/java-test"/>
+            </dirset>
+            <dirset dir="${common.dir}">
+                <include name="src/java-test"/>
+            </dirset>
+            <dirset dir="${soap.dir}">
+                <include name="src/java-test"/>
+            </dirset>
+            <dirset dir="${client.dir}">
+                <include name="src/java-test"/>
+            </dirset>
+        </path>
+
+        <pathconvert property="sonar.tests.paths" refid="sonar.test.sources" pathsep=","/>
+
+        <condition property="sonar.tests.arg" value="-Dsonar.tests=${sonar.tests.paths}" else="">
+            <isset property="sonar.tests.paths"/>
+        </condition>
+
+        <echo message="Resolved sonar.tests : ${sonar.tests.arg}"/>
+
+        <path id="sonar.junit.reports">
+            <dirset dir="${server.dir}">
+                <include name="build/test/report"/>
+            </dirset>
+            <dirset dir="${common.dir}">
+                <include name="build/test/report"/>
+            </dirset>
+            <dirset dir="${soap.dir}">
+                <include name="build/test/report"/>
+            </dirset>
+            <dirset dir="${client.dir}">
+                <include name="build/test/report"/>
+            </dirset>
+        </path>
+
+        <pathconvert property="sonar.junit.reports.paths" refid="sonar.junit.reports" pathsep=","/>
+
+        <condition property="sonar.junit.arg" value="-Dsonar.junit.reportPaths=${sonar.junit.reports.paths}" else="">
+            <isset property="sonar.junit.reports.paths"/>
+        </condition>
+
+        <echo message="Resolved sonar.junit.reportPaths : ${sonar.junit.arg}"/>
+
+        <path id="sonar.coverage.reports">
+            <fileset dir="${server.dir}">
+                <include name="build/coverage/report.xml"/>
+            </fileset>
+            <fileset dir="${common.dir}">
+                <include name="build/coverage/report.xml"/>
+            </fileset>
+            <fileset dir="${soap.dir}">
+                <include name="build/coverage/report.xml"/>
+            </fileset>
+            <fileset dir="${client.dir}">
+                <include name="build/coverage/report.xml"/>
+            </fileset>
+        </path>
+
+        <pathconvert property="sonar.coverage.paths" refid="sonar.coverage.reports" pathsep=","/>
+
+        <condition property="sonar.coverage.arg" value="-Dsonar.coverage.jacoco.xmlReportPaths=${sonar.coverage.paths}" else="">
+            <isset property="sonar.coverage.paths"/>
+        </condition>
+
+        <echo message="Resolved sonar.coverage.jacoco.xmlReportPaths : ${sonar.coverage.arg}"/>
+
+        <path id="sonar.test.binaries">
+            <dirset dir="${server.dir}">
+                <include name="build/test-classes"/>
+            </dirset>
+            <dirset dir="${common.dir}">
+                <include name="build/test-classes"/>
+            </dirset>
+            <dirset dir="${soap.dir}">
+                <include name="build/test-classes"/>
+            </dirset>
+            <dirset dir="${client.dir}">
+                <include name="build/test-classes"/>
+            </dirset>
+        </path>
+
+        <pathconvert property="sonar.test.binaries.paths" refid="sonar.test.binaries" pathsep=","/>
+
+        <condition property="sonar.test.binaries.arg" value="-Dsonar.java.test.binaries=${sonar.test.binaries.paths}" else="">
+            <isset property="sonar.test.binaries.paths"/>
+        </condition>
+
+
+        <condition property="sonar.test.libs.arg" value="-Dsonar.java.test.libraries=${sonar.test.binaries.paths}" else="">
+            <isset property="sonar.test.binaries.paths"/>
+        </condition>
+
+        <echo message="Resolved sonar.java.test.binaries : ${sonar.test.binaries.arg}"/>
+        <echo message="Resolved sonar.java.test.libraries : ${sonar.test.libs.arg}"/>
+
+
+        <exec executable="sonar-scanner" failonerror="true">
+            <arg value="-Dsonar.projectKey=zm-mailbox"/>
+            <arg value="-Dsonar.projectName=zm-mailbox"/>
+            <arg value="-Dsonar.projectBaseDir=${zimbra.root.dir}/zm-mailbox"/>
+            <arg value="-Dsonar.java.source=${javac.target}"/>
+            <arg line="${sonar.sources.arg}"/>
+            <arg line="${sonar.java.binaries.arg}"/>
+            <arg value="-Dsonar.java.libraries=${sonar.java.libraries}"/>
+            <arg value="-Dsonar.host.url=${env.SONAR_HOST_URL}"/>
+            <arg value="-Dsonar.token=${env.SONAR_TOKEN}"/>
+            <arg line="${sonar.tests.arg}"/>
+            <arg line="${sonar.test.binaries.arg}"/>
+            <arg line="${sonar.test.libs.arg}"/>
+            <arg line="${sonar.junit.arg}"/>
+            <arg line="${sonar.coverage.arg}"/>
+        </exec>
+    </target>
 </project>
