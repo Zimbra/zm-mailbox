@@ -136,4 +136,22 @@ public class WindowsTimeZoneInformation {
                 standardDate, 0, icalTz.getStandardTzname(),
                 daylightDate, daylightBias / 60 / 1000, icalTz.getDaylightTzname());
     }
+
+    public static WindowsTimeZoneInformation fromICal(ICalTimeZone icalTz,
+                                                      String standardName,
+                                                      String daylightName) {
+        WindowsSystemTime standardDate =
+                WindowsSystemTime.fromSimpleOnset(icalTz.getStandardOnset());
+        WindowsSystemTime daylightDate =
+                WindowsSystemTime.fromSimpleOnset(icalTz.getDaylightOnset());
+
+        int bias = -1 * icalTz.getStandardOffset();
+        int daylightBias = -1 * icalTz.getDaylightOffset() - bias;
+
+        return new WindowsTimeZoneInformation(
+                icalTz.getID(), bias / 60 / 1000,
+                standardDate, 0, standardName,      // ← Use passed name
+                daylightDate, daylightBias / 60 / 1000, daylightName);  // ← Use passed name
+    }
+
 }
