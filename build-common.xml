@@ -764,7 +764,7 @@
         <fail message="SONAR_HOST_URL environment variable not set" unless="env.SONAR_HOST_URL"/>
         <fail message="SONAR_TOKEN environment variable not set" unless="env.SONAR_TOKEN"/>
 
-        <echo message="Running SonarQube scan for zm-mailox"/>
+        <echo message="Running SonarQube scan for zm-mailbox"/>
 
         <path id="sonar.sources">
             <pathelement location="${server.dir}/src/java"/>
