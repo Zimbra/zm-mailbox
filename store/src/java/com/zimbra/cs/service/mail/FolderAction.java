@@ -39,6 +39,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.fb.FreeBusyProvider;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
@@ -421,7 +422,7 @@ public class FolderAction extends ItemAction {
             throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
         }
 
-        String query = "(" + Provisioning.A_zimbraId + "=" + granteeId + ")";
+        String query = "(" + Provisioning.A_zimbraId + "=" + LdapUtil.escapeSearchFilterArg(granteeId) + ")";
         opts.setFilterString(FilterId.SEARCH_GRANTEE, query);
         opts.setOnMaster(true);  // search the grantee on LDAP master
         List<NamedEntry> entries = Provisioning.getInstance().searchDirectory(opts);
