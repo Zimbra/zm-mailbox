@@ -377,17 +377,15 @@ public class SoapEngine {
                 // Bug: 96167 SoapEngine should be able to read CSRF token from HTTP headers
                 String csrfToken = httpReq.getHeader(Constants.CSRF_TOKEN);
                 if (StringUtil.isNullOrEmpty(csrfToken)) {
-                    Element contextElmt = getSoapContextElement(soapProto, envelope);
-                    if (contextElmt != null) {
-                        csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
-                    }
+                    LOG.info("Missing CSRF token in header");
+                    return soapFaultEnv(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
                 }
                 AuthToken authToken = zsc.getAuthToken();
                 if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
                     LOG.info("CSRF token validation failed for account");
                     return soapFaultEnv(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
                 }
-            } catch (ServiceException e) {
+            } catch (Exception e) {
                 // we came here which implies clients supports CSRF authorization
                 // and CSRF token is generated
                 LOG.info("Error during CSRF validation.", e);

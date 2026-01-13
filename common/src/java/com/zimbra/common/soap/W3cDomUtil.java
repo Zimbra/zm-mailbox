@@ -99,6 +99,17 @@ public class W3cDomUtil {
         dbf.setFeature(Constants.EXTERNAL_GENERAL_ENTITIES, false);
         return dbf;
     }
+    public static DocumentBuilder getSecureDocumentBuilder() throws ParserConfigurationException {
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        dbf.setXIncludeAware(false);
+        dbf.setExpandEntityReferences(false);
+        return dbf.newDocumentBuilder();
+    }
 
     public static DocumentBuilder getBuilder() {
         return w3DomBuilderTL.get();
