@@ -191,6 +191,23 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
 
         TODO("TODO"),
 
+        /**
+         * ZURM related.
+         */
+        ZIMBRA_GLOBAL_CONFIG(SINGLETON.zimbraGlobalConfig()),
+        ACCOUNT_EXCEPTION_FILTER(SINGLETON.accountExceptionsFilter()),
+        ALL_INTERNAL_ACCOUNTS_FILTER(SINGLETON.allInternalAccountsFilter()),
+        DEFAULT_COS_DOMAIN_FILTER(SINGLETON.defaultCOSDomainFilter()),
+        COS_ACCOUNT_FILTER(SINGLETON.cosAccountsFilter("{COS-ID}")),
+        ATTRIBUTE_UNSET_FILTER(
+                SINGLETON.attributesUnsetFilter(Lists.newArrayList("{ATTR-NAME-1}", "{ATTR-NAME-2}", "..."))),
+        ATTRIBUTE_SET_FILTER(
+                SINGLETON.attributesSetFilter(Lists.newArrayList("{ATTR-NAME-1}", "{ATTR-NAME-2}", "..."))),
+        FEATURE_COS_FILTER(SINGLETON.featureCOSFilter("{FEATURE}")),
+        FEATURE_ACCOUNT_FILTER(SINGLETON.featureAccountFilter("{FEATURE}")),
+        COS_ATTRIBUTE_FILTER(
+                SINGLETON.cosAttributeFilter("COS_ID", Lists.newArrayList("{ATTR-NAME-1}", "{ATTR-NAME-2}", "..."))),
+
         /*
          * Licensing
          */
@@ -571,4 +588,25 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * HAB
      */
     public abstract ZLdapFilter habOrgUnitByName(String name);
+
+    public abstract ZLdapFilter zimbraGlobalConfig();
+
+    public abstract ZLdapFilter accountExceptionsFilter();
+
+    public abstract ZLdapFilter allInternalAccountsFilter();
+
+    public abstract ZLdapFilter defaultCOSDomainFilter();
+
+    public abstract ZLdapFilter cosAccountsFilter(String cosId);
+
+    public abstract ZLdapFilter attributesUnsetFilter(List<String> attrNameList);
+
+    public abstract ZLdapFilter attributesSetFilter(List<String> attrNameList);
+
+    public abstract ZLdapFilter featureCOSFilter(String feature);
+
+    public abstract ZLdapFilter featureAccountFilter(String feature);
+
+    public abstract ZLdapFilter cosAttributeFilter(String cosId, List<String> attrNameList);
+
 }
