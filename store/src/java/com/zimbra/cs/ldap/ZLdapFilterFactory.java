@@ -190,6 +190,10 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ZMCONFIGD("ZMCONFIGD"),
 
         TODO("TODO"),
+        ALL_COS_FILTER(SINGLETON.allCOSFilter()),
+        ALL_DOMAIN_FILTER(SINGLETON.allDomainFilter()),
+        GLOBAL_CONFIG_FILTER(SINGLETON.globalConfigFilter()),
+        ALL_ACCOUNTS_FILTER(SINGLETON.allAccountsFilter()),
 
         /*
          * Licensing
@@ -571,4 +575,12 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * HAB
      */
     public abstract ZLdapFilter habOrgUnitByName(String name);
+
+    public abstract ZLdapFilter allCOSFilter();
+
+    public abstract ZLdapFilter allDomainFilter();
+
+    public abstract ZLdapFilter globalConfigFilter();
+
+    public abstract ZLdapFilter allAccountsFilter();
 }

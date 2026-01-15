@@ -9715,7 +9715,55 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
     }
+////New changes
 
+    public List<Account> searchLdapAccountsOnReplica(String base, ZLdapFilter filter, String[] returnAttrs)
+            throws ServiceException {
+        List<ZSearchResultEntry> result = searchZimbraLdapReplica(base, filter, returnAttrs, false);
+        List <Account> accounts = new ArrayList<>();
+        for (ZSearchResultEntry e : result) {
+            accounts.add(makeAccount(e.getDN(), e.getAttributes()));
+        }
+        return accounts;
+    }
+
+    private List<ZSearchResultEntry> searchZimbraLdapReplica(String base, ZLdapFilter filter,
+            String[] returnAttrs, boolean useMaster)
+            throws ServiceException {
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.get(useMaster), LdapUsage.SEARCH);
+            return searchRawWithContextOnReplica(zlc, base, filter, returnAttrs);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    private List<ZSearchResultEntry> searchRawWithContextOnReplica(ZLdapContext zlc, String base,
+            ZLdapFilter filter, String[] attrs)
+            throws ServiceException {
+        List<ZSearchResultEntry> results = new ArrayList<>();
+        List<Account> accounts = new ArrayList<>();
+        try {
+            ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE,
+                    ZSearchControls.SIZE_UNLIMITED,
+                    attrs
+            );
+
+            ZSearchResultEnumeration enumeration = zlc.searchDir(base, zFilter, searchControls);
+
+            while (enumeration.hasMore()) {
+                results.add(enumeration.next());
+            }
+
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Raw LDAP search failed for filter: " + filter, e);
+        }
+        return results;
+    }
+//// New changes end
     @Override
     public void waitForLdapServer() {
         LdapClient.waitForLdapServer();
