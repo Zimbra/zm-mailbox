@@ -67,8 +67,13 @@ public class EnableTwoFactorAuthRequest {
     private String twoFactorCode;
 
     /**
-     * @zm-api-field-description Whether the client supports the CSRF token
+     * @deprecated No longer in use. Ignored by server. CSRF is always enforced.
+     * csrfTokenSecured is always TRUE regardless of client input.
+     * @zm-api-field-description Deprecated no longer in use. Server always issues CSRF protected
+     * auth tokens. csrfTokenSecured is always TRUE.
      */
+
+    @Deprecated
     @XmlAttribute(name=AccountConstants.A_CSRF_SUPPORT, required=false)
     private ZmBoolean csrfSupported;
 
@@ -83,9 +88,17 @@ public class EnableTwoFactorAuthRequest {
 
     public AuthToken getAuthToken() { return authToken; }
     public EnableTwoFactorAuthRequest setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
-
+    /**
+     * @deprecated No longer in use. Ignored by server.
+     * csrfTokenSecured is always TRUE regardless of client input.
+     */
+    @Deprecated
     public ZmBoolean getCsrfSupported() { return csrfSupported; }
-
+    /**
+     * @deprecated No longer in use. Ignored by server.
+     * csrfTokenSecured is always TRUE regardless of client input.
+     */
+    @Deprecated
     public EnableTwoFactorAuthRequest setCsrfSupported(Boolean csrfSupported) {
         this.csrfSupported = ZmBoolean.fromBool(csrfSupported);
         return this;

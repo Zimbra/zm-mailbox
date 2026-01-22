@@ -18,11 +18,14 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -32,6 +35,9 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.servlet.CsrfFilter;
+import com.zimbra.cs.servlet.util.CsrfUtil;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ChangePassword extends AdminDocumentHandler {
@@ -116,8 +122,17 @@ public class ChangePassword extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.CHANGE_PASSWORD_RESPONSE);
         if (!dryRun && Usage.AUTH == at.getUsage()) {
             at = AuthProvider.getAuthToken(acct);
+            at.setCsrfTokenEnabled(true);
             at.encodeAuthResp(response, true);
+
             response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+
+            long authTokenExpiration = at.getExpires();
+            HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
+            int csrfTokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
+            String csrfToken = CsrfUtil.generateCsrfToken(acct.getId(),
+                    authTokenExpiration, csrfTokenSalt, at);
+            response.addAttribute(HeaderConstants.E_CSRFTOKEN, csrfToken, Element.Disposition.CONTENT);
         }
 
         return response;
