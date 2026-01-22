@@ -23380,6 +23380,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Soft quota limit percentage applied over zimbraMailQuota
+     *
+     * @return zimbraMailQuotaSoftLimitPercent, or 100 if unset
+     *
+     * @since ZCS 10.1.17
+     */
+    @ZAttr(id=4151)
+    public int getMailQuotaSoftLimitPercent() {
+        return getIntAttr(Provisioning.A_zimbraMailQuotaSoftLimitPercent, 100, true);
+    }
+
+    /**
+     * Soft quota limit percentage applied over zimbraMailQuota
+     *
+     * @param zimbraMailQuotaSoftLimitPercent new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.17
+     */
+    @ZAttr(id=4151)
+    public void setMailQuotaSoftLimitPercent(int zimbraMailQuotaSoftLimitPercent) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailQuotaSoftLimitPercent, Integer.toString(zimbraMailQuotaSoftLimitPercent));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Soft quota limit percentage applied over zimbraMailQuota
+     *
+     * @param zimbraMailQuotaSoftLimitPercent new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.17
+     */
+    @ZAttr(id=4151)
+    public Map<String,Object> setMailQuotaSoftLimitPercent(int zimbraMailQuotaSoftLimitPercent, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailQuotaSoftLimitPercent, Integer.toString(zimbraMailQuotaSoftLimitPercent));
+        return attrs;
+    }
+
+    /**
+     * Soft quota limit percentage applied over zimbraMailQuota
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.17
+     */
+    @ZAttr(id=4151)
+    public void unsetMailQuotaSoftLimitPercent() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailQuotaSoftLimitPercent, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Soft quota limit percentage applied over zimbraMailQuota
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.17
+     */
+    @ZAttr(id=4151)
+    public Map<String,Object> unsetMailQuotaSoftLimitPercent(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailQuotaSoftLimitPercent, "");
+        return attrs;
+    }
+
+    /**
      * Maximum size in bytes for sieve script attributes. When it is set to
      * 0, the size is not limited.
      *
