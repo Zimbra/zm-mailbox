@@ -257,6 +257,8 @@ class ImapPartSpecifier {
                 }
                 is = ByteUtil.SegmentInputStream.create(is, start, start + realLength);
             } catch (StartOutOfBoundsException e) {
+                // closing the original stream before reassigning the reference
+                ByteUtil.closeStream(is);
                 //return empty string {0} when start is out of range
                 ZimbraLog.imap.warn("IMAP part requested start out of range", e);
                 is = new ByteArrayInputStream(new byte[0]);
