@@ -1554,6 +1554,8 @@ public final class LC {
     // Comma-delimited list of CIDR subnets or IP to which we always allow redirects.
     public static final KnownKey zimbra_proxy_servlet_whitelist = KnownKey.newKey("");
 
+    public static final KnownKey ZIMBRA_AJAX_ALLOWED_FORWARD_PATHS = KnownKey.newKey("/public");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
