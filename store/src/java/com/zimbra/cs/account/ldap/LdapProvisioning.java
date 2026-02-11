@@ -11742,6 +11742,51 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
     }
 
+    /**
+     * Method used to fetch account based on filter.
+     * @param base
+     * @param zFilter
+     * @param attrs
+     * @param visitor
+     * @throws ServiceException
+     */
+    public void searchLdapAccountsOnReplica(
+            String base,
+            ZLdapFilter zFilter,
+            String[] attrs,
+            NamedEntry.Visitor visitor) throws ServiceException {
+
+        ZLdapContext zlc = null;
+
+        try {
+            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.SEARCH);
+
+            ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE,
+                    ZSearchControls.SIZE_UNLIMITED,
+                    attrs
+            );
+
+            ZSearchResultEnumeration en = zlc.searchDir(base, zFilter, searchControls);
+
+            while (en.hasMore()) {
+                ZSearchResultEntry entry = en.next();
+
+                Account account = makeAccount(
+                        entry.getDN(),
+                        entry.getAttributes());
+
+                visitor.visit(account);
+            }
+
+        } catch (Exception e) {
+            throw ServiceException.FAILURE(
+                    "LDAP search failed for filter: " + zFilter.toFilterString(), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
     @Override
     public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
         return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailFailure);
