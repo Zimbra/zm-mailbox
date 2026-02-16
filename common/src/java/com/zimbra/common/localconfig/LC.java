@@ -1572,6 +1572,16 @@ public final class LC {
     // Comma-delimited list of CIDR subnets or IP to which we always allow redirects.
     public static final KnownKey zimbra_proxy_servlet_whitelist = KnownKey.newKey("");
 
+    // Enables security validation for the 'fu' parameter to block unauthorized forward URLs
+    @Reloadable
+    public static final KnownKey zimbra_forward_servlet_url_validation_enabled = KnownKey.newKey(true);
+
+    // Comma-delimited list of absolute internal paths allowed for Forward servlet.
+    // Only exact matches are permitted.
+    // If empty, forwarding to internal paths is disabled and will throw forbidden (403) error
+    @Reloadable
+    public static final KnownKey zimbra_forward_servlet_allowed_paths = KnownKey.newKey("");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
