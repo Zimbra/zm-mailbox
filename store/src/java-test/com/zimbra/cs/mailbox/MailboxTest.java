@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,6 +41,7 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.BrowseTerm;
@@ -710,6 +710,80 @@ public final class MailboxTest {
 
         Assert.assertEquals(10L, mbox.getSize());
     }
+
+    @Test
+    public void testTrashAllowsSoftQuotaBuffer() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(Provisioning.A_zimbraMailQuota, "100");
+        attrs.put(Provisioning.A_zimbraMailQuotaSoftLimitPercent, "110");
+        Account acct = prov.createAccount("trashbuffer@zimbra.com", "secret", attrs);
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // Simulate mailbox already near quota
+        mbox.updateSize(95, false);  // force size without quota check
+        Assert.assertEquals(95, mbox.getSize());
+
+        // Trash path: allow up to 110
+        mbox.checkSizeChangeForTrash(105);
+
+        // No exception = PASS
+    }
+
+    @Test(expected = MailServiceException.class)
+    public void testTrashBlocksBeyondSoftQuota() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(Provisioning.A_zimbraMailQuota, "100");
+        attrs.put(Provisioning.A_zimbraMailQuotaSoftLimitPercent, "110");
+        Account acct = prov.createAccount("trashoverflow@zimbra.com", "secret", attrs);
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        mbox.updateSize(100, false);
+        mbox.checkSizeChangeForTrash(111);
+    }
+
+    @Test(expected = MailServiceException.class)
+    public void testNonTrashStillEnforcesHardQuota() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(Provisioning.A_zimbraMailQuota, "100");
+        attrs.put(Provisioning.A_zimbraMailQuotaSoftLimitPercent, "110");
+        Account acct = prov.createAccount("nontrash@zimbra.com", "secret", attrs);
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        mbox.updateSize(100, false);
+        mbox.checkSizeChange(101);
+    }
+
+    @Test(expected = MailServiceException.class)
+    public void testDomainQuotaBlocksTrash() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+
+        // Create domain with aggregate quota
+        Map<String, Object> domainAttrs = new HashMap<>();
+        domainAttrs.put(Provisioning.A_zimbraDomainAggregateQuota, "100");
+        domainAttrs.put(Provisioning.A_zimbraDomainAggregateQuotaPolicy, "reject");
+        domainAttrs.put(Provisioning.A_zimbraAggregateQuotaLastUsage, "200");
+        domainAttrs.put(Provisioning.A_zimbraDomainAggregateQuotaPolicy, "BLOCKSENDRECEIVE");
+        Domain domain = prov.createDomain("trashdomain.com", domainAttrs);
+
+
+        // Unlimited account
+        Map<String, Object> acctAttrs = new HashMap<>();
+        acctAttrs.put(Provisioning.A_zimbraMailQuota, "0");
+        acctAttrs.put(Provisioning.A_zimbraMailQuotaSoftLimitPercent, "110");
+        Account acct = prov.createAccount("user@trashdomain.com", "secret", acctAttrs);
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // This must now fail due to domain quota
+        mbox.checkSizeChangeForTrash(1);
+    }
+
 
     /**
      * @throws java.lang.Exception

@@ -1500,6 +1500,36 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    /**
+     * Validates whether moving data to Trash would exceed account or domain quota limits.
+     *
+     * <p>The method checks the effective account quota and applies the configured
+     * soft limit percentage. If the resulting allowed quota is exceeded by the
+     * provided size, a {@link MailServiceException#QUOTA_EXCEEDED(long)} is thrown.</p>
+     *
+     * <p>It also verifies the domain aggregate quota. If the domain is already
+     * over its aggregate limit and receiving data over the limit is not allowed,
+     * a {@link MailServiceException#DOMAIN_QUOTA_EXCEEDED(long)} is thrown.</p>
+     *
+     * @param newSize the expected mailbox size after the Trash size change
+     * @throws ServiceException if the account or domain quota restrictions are violated
+     */
+    public void checkSizeChangeForTrash(long newSize) throws ServiceException {
+        Account acct = getAccount();
+        long acctQuota = AccountUtil.getEffectiveQuota(acct);
+
+        long allowedQuota = acctQuota * acct.getMailQuotaSoftLimitPercent() / 100;
+        if (allowedQuota != 0 && newSize > allowedQuota) {
+            throw MailServiceException.QUOTA_EXCEEDED(allowedQuota);
+        }
+
+        Domain domain = Provisioning.getInstance().getDomain(acct);
+        if (domain != null && AccountUtil.isOverAggregateQuota(domain)
+                && !AccountUtil.isReceiveAllowedOverAggregateQuota(domain)) {
+            throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
+        }
+    }
+
     long getEffectiveSize(long delta) {
         // if we go negative, that's OK! just pretend we're at 0.
         return Math.max(0, (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size)
@@ -7378,10 +7408,15 @@ public class Mailbox implements MailboxStore {
             }
 
             // check if mailbox has enough quota available to copy all the item.
-            // ZBUG-1375 : exclude check for Trash Folder , so that messages can be deleted even when quota is full
-            if (requiredQuota > 0 && folderId != FolderConstants.ID_FOLDER_TRASH) {
+            if (requiredQuota > 0) {
                 ZimbraLog.mailbox.info("total space required to copy items = %d", requiredQuota);
-                checkSizeChange(getEffectiveSize(requiredQuota));
+                if (folderId != FolderConstants.ID_FOLDER_TRASH) {
+                    checkSizeChange(getEffectiveSize(requiredQuota));
+                } else {
+                    // ZBUG-4613 : Allow soft quota buffer when copying into Trash.
+                    // this enables cleanup workflows near quota.
+                    checkSizeChangeForTrash(getEffectiveSize(requiredQuota));
+                }
             }
 
             List<MailItem> result = new ArrayList<MailItem>();

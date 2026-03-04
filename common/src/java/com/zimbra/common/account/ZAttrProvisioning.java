@@ -10315,6 +10315,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailQuota = "zimbraMailQuota";
 
     /**
+     * Soft quota limit percentage applied over zimbraMailQuota
+     *
+     * @since ZCS 10.1.17
+     */
+    @ZAttr(id=4151)
+    public static final String A_zimbraMailQuotaSoftLimitPercent = "zimbraMailQuotaSoftLimitPercent";
+
+    /**
      * If TRUE, the envelope sender of a message redirected by mail filters
      * will be set to the users address. If FALSE, the envelope sender will
      * be set to the From address of the redirected message.

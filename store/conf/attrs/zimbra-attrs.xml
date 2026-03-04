@@ -10639,4 +10639,8 @@ TODO: delete them permanently from here
   <desc>Attribute to check whether we need to reset the CSD backup if there  </desc>
 </attr>
 
+<attr id="4151" name="zimbraMailQuotaSoftLimitPercent" type="integer" min="100" cardinality="single" optionalIn="account,cos" flags="accountInherited,accountInfo" since="10.1.17" callback="MailQuotaSoftLimitCallback">
+  <defaultCOSValue>100</defaultCOSValue>
+  <desc>Soft quota limit percentage applied over zimbraMailQuota</desc>
+</attr>
 </attrs>
