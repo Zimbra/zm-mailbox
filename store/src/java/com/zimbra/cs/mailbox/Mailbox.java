@@ -45,7 +45,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -271,13 +270,12 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.StoreManager.StoreFeature;
 import com.zimbra.cs.store.external.ExternalBlob;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.SpoolingCache;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.volume.Volume;
-import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.message.FileSharedWithMeRequest;
@@ -2474,55 +2472,41 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    public Set<Short> getVolumeIds() {
-        return VolumeManager.getInstance().getAllVolumes().stream().map(Volume::getId).collect(Collectors.toSet());
-    }
-
     public void deleteMailbox(DeleteBlobs deleteBlobs) throws ServiceException {
+        StoreManager sm = StoreManager.getInstance();
+        boolean deleteStore = deleteBlobs == DeleteBlobs.ALWAYS
+                        || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && !sm.supports(StoreFeature.CENTRALIZED));
+        SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = null;
+
         lock.lock();
-        MailboxMaintenance maint = null;
         try {
             // first, throw the mailbox into maintenance mode
-            // (so anyone else with a cached reference to the Mailbox can't use it)
-            maint = MailboxManager.getInstance().beginMaintenance(mData.accountId, mId);
-        } catch (MailServiceException e) {
-            // ignore wrong mailbox exception.  It may be thrown if we're redoing a DeleteMailbox that was interrupted
-            // when server crashed in the middle of the operation.  Database says the mailbox has been deleted, but
-            // there may be other files that still need to be cleaned up.
-            if (!MailServiceException.WRONG_MAILBOX.equals(e.getCode())) {
-                throw e;
-            }
-        }
-        try {
-            DeleteMailbox redoRecorder = new DeleteMailbox(mId);
-            beginTransaction("deleteMailbox", null, redoRecorder);
-            boolean needRedo = needRedo(null, redoRecorder);
-            boolean success = false, deleteStore = false;
-            Set<Short> volumeIds = getVolumeIds();
-            for (short id : volumeIds) {
-                StoreManager sm = StoreManager.getReaderSMInstance(id);
-                // if sm is of ExternalStoreManager deleteStore will always be true
-                deleteStore = (deleteBlobs == DeleteBlobs.ALWAYS
-                        || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && sm.checkIfStoreManagerIsExternal()));
-                SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = null;
-                if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
-                    blobs = DbMailItem.getAllBlobs(this);
-                }
-                if (deleteStore) {
-                    try {
-                        sm.deleteStore(this, blobs);
-                    } catch (IOException iox) {
-                        ZimbraLog.store.warn("Unable to delete message data", iox);
-                    }
-                }
-                if (blobs != null) {
-                    blobs.cleanup();
-                }
-            }
+            //   (so anyone else with a cached reference to the Mailbox can't use it)
+            MailboxMaintenance maint = null;
             try {
+                maint = MailboxManager.getInstance().beginMaintenance(mData.accountId, mId);
+            } catch (MailServiceException e) {
+                // Ignore wrong mailbox exception.  It may be thrown if we're redoing a DeleteMailbox that was interrupted
+                // when server crashed in the middle of the operation.  Database says the mailbox has been deleted, but
+                // there may be other files that still need to be cleaned up.
+                if (!MailServiceException.WRONG_MAILBOX.equals(e.getCode())) {
+                    throw e;
+                }
+            }
+
+            DeleteMailbox redoRecorder = new DeleteMailbox(mId);
+            boolean needRedo = needRedo(null, redoRecorder);
+            boolean success = false;
+            try {
+                beginTransaction("deleteMailbox", null, redoRecorder);
                 if (needRedo) {
                     redoRecorder.log();
                 }
+
+                if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
+                    blobs = DbMailItem.getAllBlobs(this);
+                }
+
                 try {
                     // Remove the mime messages from MessageCache
                     if (deleteStore) {
@@ -2554,6 +2538,14 @@ public class Mailbox implements MailboxStore {
                     } catch (IOException iox) {
                         ZimbraLog.store.warn("Unable to delete index data", iox);
                     }
+
+                    if (deleteStore) {
+                        try {
+                            sm.deleteStore(this, blobs);
+                        } catch (IOException iox) {
+                            ZimbraLog.store.warn("Unable to delete message data", iox);
+                        }
+                    }
                 }
             } finally {
                 if (needRedo) {
@@ -2573,6 +2565,10 @@ public class Mailbox implements MailboxStore {
                         // end the maintenance if the delete is not successful.
                         MailboxManager.getInstance().endMaintenance(maint, success, true);
                     }
+                }
+
+                if (blobs != null) {
+                    blobs.cleanup();
                 }
             }
         } finally {
