@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(# Extract mockito-core jar to see if bytebuddy is bundled jar tf ~/.ivy2/cache/org.mockito/mockito-core/jars/mockito-core-2.8.47.jar)",
+      "Bash(xargs -I{} basename {})"
+    ]
+  }
+}

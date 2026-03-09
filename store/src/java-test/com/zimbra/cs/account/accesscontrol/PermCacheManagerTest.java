@@ -367,4 +367,234 @@ public class PermCacheManagerTest {
     @Test
     public void noOp() throws Exception {
     }
+
+    // ---------------------------------------------------------------
+    // PermCacheManager.getInstance
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testGetInstance_returnsNonNull() {
+        Assert.assertNotNull(PermCacheManager.getInstance());
+    }
+
+    @Test
+    public void testGetInstance_returnsSameInstance() {
+        Assert.assertSame(PermCacheManager.getInstance(), PermCacheManager.getInstance());
+    }
+
+    // ---------------------------------------------------------------
+    // CachedPerms.getMaxPermArraySize
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testCachedPerms_getMaxPermArraySize_positiveAfterSetCacheable() {
+        UserRight r = new UserRight("sizeTestRight_A");
+        r.setCacheable();
+        Assert.assertTrue(PermCacheManager.CachedPerms.getMaxPermArraySize() >= 1);
+    }
+
+    // ---------------------------------------------------------------
+    // CachedPerms.get on zero-filled array -> NOT_CACHED
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testCachedPerms_getOnZeroArray_returnsNotCached() {
+        UserRight r = new UserRight("zeroCachedPermsRight");
+        r.setCacheable();
+        byte[] arr = new byte[PermCacheManager.CachedPerms.getMaxPermArraySize()];
+        Assert.assertEquals(CachedPermission.NOT_CACHED,
+                PermCacheManager.CachedPerms.get(arr, r));
+    }
+
+    // ---------------------------------------------------------------
+    // CachedPerms.put + get: ALLOWED
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testCachedPerms_putAllowed_getReturnsAllowed() {
+        UserRight r = new UserRight("cachedPermsAllowedRight");
+        r.setCacheable();
+        byte[] arr = new byte[PermCacheManager.CachedPerms.getMaxPermArraySize()];
+        PermCacheManager.CachedPerms.put(arr, r, CachedPermission.ALLOWED);
+        Assert.assertEquals(CachedPermission.ALLOWED,
+                PermCacheManager.CachedPerms.get(arr, r));
+    }
+
+    // ---------------------------------------------------------------
+    // CachedPerms.put + get: DENIED
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testCachedPerms_putDenied_getReturnsDenied() {
+        UserRight r = new UserRight("cachedPermsDeniedRight");
+        r.setCacheable();
+        byte[] arr = new byte[PermCacheManager.CachedPerms.getMaxPermArraySize()];
+        PermCacheManager.CachedPerms.put(arr, r, CachedPermission.DENIED);
+        Assert.assertEquals(CachedPermission.DENIED,
+                PermCacheManager.CachedPerms.get(arr, r));
+    }
+
+    // ---------------------------------------------------------------
+    // CachedPerms.put + get: NO_MATCHING_ACL
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testCachedPerms_putNoMatchingAcl_getReturnsNoMatchingAcl() {
+        UserRight r = new UserRight("cachedPermsNoAclRight");
+        r.setCacheable();
+        byte[] arr = new byte[PermCacheManager.CachedPerms.getMaxPermArraySize()];
+        PermCacheManager.CachedPerms.put(arr, r, CachedPermission.NO_MATCHING_ACL);
+        Assert.assertEquals(CachedPermission.NO_MATCHING_ACL,
+                PermCacheManager.CachedPerms.get(arr, r));
+    }
+
+    // ---------------------------------------------------------------
+    // CachedPerms.put: overwrite ALLOWED with DENIED
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testCachedPerms_overwriteAllowedWithDenied() {
+        UserRight r = new UserRight("cachedPermsOverwriteRight");
+        r.setCacheable();
+        byte[] arr = new byte[PermCacheManager.CachedPerms.getMaxPermArraySize()];
+        PermCacheManager.CachedPerms.put(arr, r, CachedPermission.ALLOWED);
+        PermCacheManager.CachedPerms.put(arr, r, CachedPermission.DENIED);
+        Assert.assertEquals(CachedPermission.DENIED,
+                PermCacheManager.CachedPerms.get(arr, r));
+    }
+
+    // ---------------------------------------------------------------
+    // CachedPerms: two consecutive cacheable rights stored independently
+    // RIGHTS_PER_BYTE=2 means consecutive even-odd index pairs share one byte
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testCachedPerms_twoConsecutiveRights_independentStorage() {
+        UserRight r1 = new UserRight("twoRightFirst");
+        r1.setCacheable();
+        UserRight r2 = new UserRight("twoRightSecond");
+        r2.setCacheable();
+
+        byte[] arr = new byte[PermCacheManager.CachedPerms.getMaxPermArraySize()];
+        PermCacheManager.CachedPerms.put(arr, r1, CachedPermission.ALLOWED);
+        PermCacheManager.CachedPerms.put(arr, r2, CachedPermission.DENIED);
+        Assert.assertEquals(CachedPermission.ALLOWED,
+                PermCacheManager.CachedPerms.get(arr, r1));
+        Assert.assertEquals(CachedPermission.DENIED,
+                PermCacheManager.CachedPerms.get(arr, r2));
+    }
+
+    // ---------------------------------------------------------------
+    // PermCacheManager.get on empty cache -> NOT_CACHED
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testGet_emptyCache_returnsNotCached() {
+        UserRight r = new UserRight("pcmGetEmptyRight");
+        r.setCacheable();
+        MockAccount target = new MockAccount("pcm-empty-target");
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        pcm.invalidateCache();
+        Assert.assertEquals(CachedPermission.NOT_CACHED,
+                pcm.get(target, "any-key", r));
+    }
+
+    // ---------------------------------------------------------------
+    // PermCacheManager.put + get: ALLOWED
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testPutAndGet_allowed() {
+        UserRight r = new UserRight("pcmPutAllowedRight");
+        r.setCacheable();
+        MockAccount target = new MockAccount("pcm-allowed-target");
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        pcm.invalidateCache();
+        pcm.put(target, "cred-allowed", r, CachedPermission.ALLOWED);
+        Assert.assertEquals(CachedPermission.ALLOWED,
+                pcm.get(target, "cred-allowed", r));
+    }
+
+    // ---------------------------------------------------------------
+    // PermCacheManager.put + get: DENIED
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testPutAndGet_denied() {
+        UserRight r = new UserRight("pcmPutDeniedRight");
+        r.setCacheable();
+        MockAccount target = new MockAccount("pcm-denied-target");
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        pcm.invalidateCache();
+        pcm.put(target, "cred-denied", r, CachedPermission.DENIED);
+        Assert.assertEquals(CachedPermission.DENIED,
+                pcm.get(target, "cred-denied", r));
+    }
+
+    // ---------------------------------------------------------------
+    // PermCacheManager.put + get: NO_MATCHING_ACL
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testPutAndGet_noMatchingAcl() {
+        UserRight r = new UserRight("pcmPutNoAclRight");
+        r.setCacheable();
+        MockAccount target = new MockAccount("pcm-noacl-target");
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        pcm.invalidateCache();
+        pcm.put(target, "cred-noacl", r, CachedPermission.NO_MATCHING_ACL);
+        Assert.assertEquals(CachedPermission.NO_MATCHING_ACL,
+                pcm.get(target, "cred-noacl", r));
+    }
+
+    // ---------------------------------------------------------------
+    // PermCacheManager.invalidateCache (no-arg) clears all entries
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testInvalidateCache_noArg_clearsAllEntries() {
+        UserRight r = new UserRight("pcmInvalidateAllRight");
+        r.setCacheable();
+        MockAccount target = new MockAccount("pcm-invalidate-all-target");
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        pcm.invalidateCache();
+        pcm.put(target, "cred-inv", r, CachedPermission.ALLOWED);
+        Assert.assertEquals(CachedPermission.ALLOWED,
+                pcm.get(target, "cred-inv", r));
+
+        pcm.invalidateCache();
+        Assert.assertEquals(CachedPermission.NOT_CACHED,
+                pcm.get(target, "cred-inv", r));
+    }
+
+    // ---------------------------------------------------------------
+    // PermCacheManager: different targets have separate cache buckets
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testPutAndGet_differentTargets_separateCaches() {
+        UserRight r = new UserRight("pcmSeparateCacheRight");
+        r.setCacheable();
+        MockAccount t1 = new MockAccount("sep-target-1");
+        MockAccount t2 = new MockAccount("sep-target-2");
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        pcm.invalidateCache();
+
+        pcm.put(t1, "cred-sep", r, CachedPermission.ALLOWED);
+        pcm.put(t2, "cred-sep", r, CachedPermission.DENIED);
+
+        Assert.assertEquals(CachedPermission.ALLOWED, pcm.get(t1, "cred-sep", r));
+        Assert.assertEquals(CachedPermission.DENIED,  pcm.get(t2, "cred-sep", r));
+    }
+
+    // ---------------------------------------------------------------
+    // PermCacheManager.getHitRate stays in valid [0, 100] range
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testGetHitRate_inValidRange() {
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        Assert.assertTrue(pcm.getHitRate() >= 0.0);
+        Assert.assertTrue(pcm.getHitRate() <= 100.0);
+    }
 }
