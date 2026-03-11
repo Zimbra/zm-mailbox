@@ -121,6 +121,7 @@ public final class BackupConstants {
     public static final String A_SYSDATA = "sysData";
     public static final String A_BACKUP_TARGET = "target";
     public static final String A_LABEL = "label";
+    public static final String A_WARNING = "warning";
     public static final String A_TYPE = "type";  // "full" or "incremental"
     public static final String A_FROM = "from";
     public static final String A_TO = "to";
