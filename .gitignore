@@ -5,6 +5,7 @@
 *.iml
 .java-version
 build/
+lib/
 bin/
 .DS_Store
 outgoing

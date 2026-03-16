@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(# Extract mockito-core jar to see if bytebuddy is bundled jar tf ~/.ivy2/cache/org.mockito/mockito-core/jars/mockito-core-2.8.47.jar)",
-      "Bash(xargs -I{} basename {})"
+      "Bash(xargs -I{} basename {})",
+      "Bash(find /Users/rakeshkumar.more/Documents/repos/zimbra/zm-mailbox -name jacoco*.jar)",
+      "Read(//Users/rakeshkumar.more/**)",
+      "Bash(JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home ant test-compile -Dzimbra.buildinfo.version=10.1.6 -lib ~/.ivy2/cache/ant-contrib/ant-contrib/jars/ant-contrib-1.0b3.jar)"
     ]
   }
 }
