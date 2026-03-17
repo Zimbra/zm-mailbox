@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.Map;
 import javax.mail.internet.InternetAddress;
-
-import com.zimbra.common.account.ProvisioningConstants;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,6 +32,7 @@ import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -60,21 +59,21 @@ public final class ContactAutoCompleteTest {
 
     @Before
     public void setUp() throws Exception {
-       System.out.println(testName.getMethodName());
-       Provisioning prov = Provisioning.getInstance();
-       prov.createAccount("testContAC@zimbra.com", "secret", new HashMap<String, Object>());
-       prov.createAccount("test2@zimbra.com", "secret", new HashMap<String, Object>());
-       prov.createAccount("test3@zimbra.com", "secret", new HashMap<String, Object>());
+        System.out.println(testName.getMethodName());
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("testContAC@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("test2@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("test3@zimbra.com", "secret", new HashMap<String, Object>());
 
-       Map<String, Object> attrs = new HashMap<>();
-       attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
-       prov.createAccount("testAccountWithGalHideTrue@zimbra.com", "secret", attrs);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
+        prov.createAccount("testAccountWithGalHideTrue@zimbra.com", "secret", attrs);
 
-       Map<String, Object> attrs1 = new HashMap<>();
-       attrs1.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.FALSE);
-       prov.createAccount("testAccountWithGalHideFalse@zimbra.com", "secret", attrs1);
+        Map<String, Object> attrs1 = new HashMap<>();
+        attrs1.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.FALSE);
+        prov.createAccount("testAccountWithGalHideFalse@zimbra.com", "secret", attrs1);
 
-       Provisioning.setInstance(prov);
+        Provisioning.setInstance(prov);
     }
 
     @Test
@@ -446,8 +445,9 @@ public final class ContactAutoCompleteTest {
         ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
         result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
-        // Account without zimbraHideInGal attribute
-        Provisioning.getInstance().createAccount("testAccountWithGalHideNotSet@zimbra.com", "secret", new HashMap<String, Object>());
+        // account without zimbraHideInGal attribute
+        Provisioning.getInstance().createAccount("testAccountWithGalHideNotSet@zimbra.com",
+                "secret", new HashMap<String, Object>());
 
         Map<String, Object> attrs = ImmutableMap.<String, Object>of(
                 ContactConstants.A_firstName, "First",
