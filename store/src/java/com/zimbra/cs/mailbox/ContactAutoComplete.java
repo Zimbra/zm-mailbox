@@ -754,7 +754,7 @@ public class ContactAutoComplete {
      * @param attrs
      * @param isFromContactFolder true if the entry originates from a local/shared contact folder,
      *                            false if the entry originates from GAL
-     * @return
+     * @return a set of email addresses that are eligible for autocomplete suggestions
      * @throws ServiceException
      */
     protected Set<String> extractEligibleEmailsListForAccount(Map<String, ?> attrs,
@@ -782,7 +782,8 @@ public class ContactAutoComplete {
             if (null != account) {
                 // apply zimbraHideInGal restriction only to GAL results.
                 // local contacts should still be suggested regardless of the zimbraHideInGal setting.
-                if (!isFromContactFolder && ContactConstants.A_email.equalsIgnoreCase(emailKey) && account.isHideInGal()) {
+                if (!isFromContactFolder
+                        && ContactConstants.A_email.equalsIgnoreCase(emailKey) && account.isHideInGal()) {
                     ZimbraLog.gal.debug("Skipping account %s from autocomplete", getFieldAsString(attrs, emailKey));
                     continue;
                 }

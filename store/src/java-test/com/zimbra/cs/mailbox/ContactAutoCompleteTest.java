@@ -381,7 +381,7 @@ public final class ContactAutoCompleteTest {
     }
 
     @Test
-    public void testAutoComplete_localContactReturned_whenHideInGalTrue() throws Exception {
+    public void testAutoCompleteLocalContactReturnedWhenHideInGalTrue() throws Exception {
         Account account = Provisioning.getInstance().getAccountByName("test3@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Map<String, Object> fields = new HashMap<>();
@@ -396,7 +396,7 @@ public final class ContactAutoCompleteTest {
     }
 
     @Test
-    public void testAutoComplete_localContactReturned_whenHideInGalFalse() throws Exception {
+    public void testAutoCompleteLocalContactReturnedWhenHideInGalFalse() throws Exception {
         Account account = Provisioning.getInstance().getAccountByName("test3@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Map<String, Object> fields = new HashMap<>();
