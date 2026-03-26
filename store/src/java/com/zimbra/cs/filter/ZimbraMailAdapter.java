@@ -103,6 +103,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private List<String> matchedValues = new ArrayList<String>();
     private boolean parsedMessageCloned = false;
 
+    private final Set<Action> userScriptActions = new HashSet<>();
+
     public enum VARIABLEFEATURETYPE { UNKNOWN, OFF, AVAILABLE};
     private VARIABLEFEATURETYPE variablesExtAvailable = VARIABLEFEATURETYPE.UNKNOWN;
 
@@ -262,6 +264,9 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 }
             }
         }
+        if (isUserScriptExecuting) {
+            userScriptActions.add(action);
+        }
     }
 
     @Override
@@ -397,7 +402,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         } else {
             ZimbraLog.filter.info("Redirecting message to %s.", addr);
         }
-        if (!account.isFeatureMailForwardingInFiltersEnabled()) {
+        if (userScriptActions.contains(redirect) &&
+                !account.isFeatureMailForwardingInFiltersEnabled()) {
             ZimbraLog.filter.warn("Redirection to %s is rejected as attribute mailForwarding is disabled.  Filing message to %s.",
                     addr, handler.getDefaultFolderPath());
             keep(KeepType.EXPLICIT_KEEP);
