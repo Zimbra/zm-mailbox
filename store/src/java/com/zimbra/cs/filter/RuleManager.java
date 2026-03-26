@@ -495,8 +495,8 @@ public final class RuleManager {
         };
 
         try {
-            boolean applyRules = true;
             Account account = mailbox.getAccount();
+            boolean applyRules = account.isFeatureMailForwardingInFiltersEnabled();
             for (String filter : filters) {
                 // Determine whether to apply rules
                 Node node = getRulesNode(account, filter);
