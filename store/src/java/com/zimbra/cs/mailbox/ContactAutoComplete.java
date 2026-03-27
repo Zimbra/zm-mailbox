@@ -505,7 +505,7 @@ public class ContactAutoComplete {
         }
 
         public void handleContactAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
-            addMatchedContacts(str, attrs, FOLDER_ID_GAL, null, result);
+            addMatchedContacts(str, attrs, FOLDER_ID_GAL, null, result, false);
         }
 
         @Override
@@ -668,7 +668,7 @@ public class ContactAutoComplete {
     }
 
     public void addMatchedContacts(String query, Map<String, ? extends Object> attrs, int folderId, ItemId id,
-            AutoCompleteResult result) throws ServiceException {
+            AutoCompleteResult result, boolean isFromContactFolder) throws ServiceException {
         if (!result.canBeCached) {
             return;
         }
@@ -701,7 +701,7 @@ public class ContactAutoComplete {
             if (Strings.isNullOrEmpty(displayName)) {
                 displayName = Joiner.on(' ').skipNulls().join(first, middle, last);
             }
-            Set<String> eligibleEmailsForAccount = extractEligibleEmailsListForAccount(attrs);
+            Set<String> eligibleEmailsForAccount = extractEligibleEmailsListForAccount(attrs, isFromContactFolder);
             for (String email : eligibleEmailsForAccount) {
                 if (email != null && (nameMatches || matchesEmail(tokens, email))) {
                     ContactEntry entry = new ContactEntry();
@@ -752,14 +752,17 @@ public class ContactAutoComplete {
     /**
      * Identifies the eligible results for GAL Autocomplete for an account
      * @param attrs
-     * @return
+     * @param isFromContactFolder true if the entry originates from a local/shared contact folder,
+     *                            false if the entry originates from GAL
+     * @return a set of email addresses that are eligible for autocomplete suggestions
      * @throws ServiceException
      */
-    protected Set<String> extractEligibleEmailsListForAccount(Map<String, ?> attrs) throws ServiceException {
+    protected Set<String> extractEligibleEmailsListForAccount(Map<String, ?> attrs,
+                                                              boolean isFromContactFolder) throws ServiceException {
         Set<String> eligibleEmailsForAccount = new HashSet<>();
         String primaryEmail = getFieldAsString(attrs, ContactConstants.A_email);
         Account account = Provisioning.getInstance().get(Key.AccountBy.name, primaryEmail);
-        populateEligibleEmails(attrs, eligibleEmailsForAccount, account);
+        populateEligibleEmails(attrs, eligibleEmailsForAccount, account, isFromContactFolder);
         return eligibleEmailsForAccount;
     }
 
@@ -768,15 +771,19 @@ public class ContactAutoComplete {
      * @param attrs
      * @param eligibleEmailsForAccount
      * @param account
+     * @param isFromContactFolder true if the entry originates from a local/shared contact folder,
+     *                            false if the entry originates from GAL
      * @throws ServiceException
      */
-    private void populateEligibleEmails(Map<String, ?> attrs, Set<String> eligibleEmailsForAccount, Account account)
-            throws ServiceException {
+    private void populateEligibleEmails(Map<String, ?> attrs, Set<String> eligibleEmailsForAccount, Account account,
+                                        boolean isFromContactFolder) throws ServiceException {
         for (String emailKey : mEmailKeys) {
             // when account is null, its external contact.Below alias logic is not applicable.
             if (null != account) {
-                // check if account needs to be hidden in autocomplete
-                if (ContactConstants.A_email.equalsIgnoreCase(emailKey) && account.isHideInGal()) {
+                // apply zimbraHideInGal restriction only to GAL results.
+                // local contacts should still be suggested regardless of the zimbraHideInGal setting.
+                if (!isFromContactFolder
+                        && ContactConstants.A_email.equalsIgnoreCase(emailKey) && account.isHideInGal()) {
                     ZimbraLog.gal.debug("Skipping account %s from autocomplete", getFieldAsString(attrs, emailKey));
                     continue;
                 }
@@ -886,7 +893,7 @@ public class ContactAutoComplete {
                     continue;
                 }
 
-                addMatchedContacts(str, fields, fid, id, result);
+                addMatchedContacts(str, fields, fid, id, result, true);
                 if (!result.canBeCached) {
                     return;
                 }

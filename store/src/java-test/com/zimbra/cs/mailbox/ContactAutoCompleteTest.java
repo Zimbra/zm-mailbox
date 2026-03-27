@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -58,11 +59,21 @@ public final class ContactAutoCompleteTest {
 
     @Before
     public void setUp() throws Exception {
-       System.out.println(testName.getMethodName());
-       Provisioning prov = Provisioning.getInstance();
-       prov.createAccount("testContAC@zimbra.com", "secret", new HashMap<String, Object>());
-       prov.createAccount("test2@zimbra.com", "secret", new HashMap<String, Object>());
-       Provisioning.setInstance(prov);
+        System.out.println(testName.getMethodName());
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("testContAC@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("test2@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("test3@zimbra.com", "secret", new HashMap<String, Object>());
+
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
+        prov.createAccount("testAccountWithGalHideTrue@zimbra.com", "secret", attrs);
+
+        Map<String, Object> attrs1 = new HashMap<>();
+        attrs1.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.FALSE);
+        prov.createAccount("testAccountWithGalHideFalse@zimbra.com", "secret", attrs1);
+
+        Provisioning.setInstance(prov);
     }
 
     @Test
@@ -187,31 +198,31 @@ public final class ContactAutoCompleteTest {
                 ContactConstants.A_middleName, "Middle",
                 ContactConstants.A_lastName, "Last",
                 ContactConstants.A_email, "first.last@zimbra.com");
-        comp.addMatchedContacts("first f", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("first f", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(0, result.entries.size());
         result.clear();
 
-        comp.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
 
-        comp.addMatchedContacts("first la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("first la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
 
-        comp.addMatchedContacts("middle last", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("middle last", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
 
-        comp.addMatchedContacts("middle la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("middle la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
 
-        comp.addMatchedContacts("ddle last", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("ddle last", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(0, result.entries.size());
         result.clear();
 
-        comp.addMatchedContacts("first mid la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("first mid la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
 
@@ -220,15 +231,15 @@ public final class ContactAutoCompleteTest {
                 ContactConstants.A_lastName, "test.server-vmware - dash",
                 ContactConstants.A_email, "conf-hillview@zimbra.com");
 
-        comp.addMatchedContacts("test.server-vmware -", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("test.server-vmware -", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
 
-        comp.addMatchedContacts("test.server-vmware - d", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("test.server-vmware - d", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
 
-        comp.addMatchedContacts("conf - h", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        comp.addMatchedContacts("conf - h", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
     }
@@ -245,7 +256,7 @@ public final class ContactAutoCompleteTest {
                 ContactConstants.A_lastName, "\u0441\u043a\u0438 \u0411\u043e\u0441\u043d\u0430 \u0438 \u0425\u0435\u0440\u0446\u0435\u0433\u043e\u0432\u0438\u043d\u0430",
                 ContactConstants.A_email, "sr_BA@i18n.com");
         comp.addMatchedContacts("\u0421\u0440\u043f\u0441\u043a\u0438 \u0411\u043e\u0441\u043d\u0430 \u0438 \u0425\u0435\u0440\u0446\u0435\u0433\u043e\u0432\u0438\u043d\u0430",
-                attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+                attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
     }
@@ -307,7 +318,7 @@ public final class ContactAutoCompleteTest {
         attrs.put(ContactConstants.A_email, "first.last@zimbra.com");
         attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
         Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
-        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(2, result.entries.size());
         result.clear();
     }
@@ -327,7 +338,7 @@ public final class ContactAutoCompleteTest {
         attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
         attrs.put(ContactConstants.A_email3, "alias2@zimbra.com");
         Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
-        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(3, result.entries.size());
         result.clear();
     }
@@ -347,7 +358,7 @@ public final class ContactAutoCompleteTest {
         attrs.put(ContactConstants.A_email2, "alias1@zimbra.com");
         attrs.put(ContactConstants.A_email3, "alias2@zimbra.com");
         Provisioning.getInstance().createAccount("first.last@zimbra.com", "secret", new HashMap<String, Object>());
-        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        contactAutoComplete.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result, true);
         Assert.assertEquals(3, result.entries.size());
         result.clear();
     }
@@ -365,7 +376,86 @@ public final class ContactAutoCompleteTest {
         Account account = Provisioning.getInstance().getAccountByName("testContAC@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         ContactAutoComplete contactAutoComplete = new ContactAutoComplete(account, new OperationContext(mbox));
-        Set<String> eligibleEmails = contactAutoComplete.extractEligibleEmailsListForAccount(attrs);
+        Set<String> eligibleEmails = contactAutoComplete.extractEligibleEmailsListForAccount(attrs, true);
         Assert.assertEquals(3, eligibleEmails.size());
+    }
+
+    @Test
+    public void testAutoCompleteLocalContactReturnedWhenHideInGalTrue() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test3@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Map<String, Object> fields = new HashMap<>();
+        fields.put(ContactConstants.A_firstName, "First");
+        fields.put(ContactConstants.A_lastName, "Last");
+        fields.put(ContactConstants.A_email, "testAccountWithGalHideTrue@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        Thread.sleep(500);
+        ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
+        Assert.assertEquals(1, autocomplete.query("first last", null, 100).entries.size());
+    }
+
+    @Test
+    public void testAutoCompleteLocalContactReturnedWhenHideInGalFalse() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test3@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Map<String, Object> fields = new HashMap<>();
+        fields.put(ContactConstants.A_firstName, "First");
+        fields.put(ContactConstants.A_lastName, "Last");
+        fields.put(ContactConstants.A_email, "testAccountWithGalHideFalse@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        Thread.sleep(500);
+        ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
+        Assert.assertEquals(1, autocomplete.query("first last", null, 100).entries.size());
+    }
+
+    @Test
+    public void testGalEntryReturnedWhenHideInGalFalse() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test3@zimbra.com");
+        ContactAutoComplete comp = new ContactAutoComplete(account, null);
+        ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = ImmutableMap.<String, Object>of(
+                ContactConstants.A_firstName, "First",
+                ContactConstants.A_lastName, "Last",
+                ContactConstants.A_email, "testAccountWithGalHideFalse@zimbra.com");
+        comp.addMatchedContacts("first last", attrs, ContactAutoComplete.FOLDER_ID_GAL, null, result, false);
+        Assert.assertEquals(1, result.entries.size());
+    }
+
+    @Test
+    public void testGalEntryNotReturnedWhenHideInGalTrue() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test3@zimbra.com");
+        ContactAutoComplete comp = new ContactAutoComplete(account, null);
+        ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = ImmutableMap.<String, Object>of(
+                ContactConstants.A_firstName, "First",
+                ContactConstants.A_lastName, "Last",
+                ContactConstants.A_email, "testAccountWithGalHideTrue@zimbra.com");
+        comp.addMatchedContacts("first last", attrs, ContactAutoComplete.FOLDER_ID_GAL, null, result, false);
+        Assert.assertEquals(0, result.entries.size());
+    }
+
+    @Test
+    public void testGalEntryReturnedWhenHideInGalNotSet() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test3@zimbra.com");
+        ContactAutoComplete comp = new ContactAutoComplete(account, null);
+        ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        // account without zimbraHideInGal attribute
+        Provisioning.getInstance().createAccount("testAccountWithGalHideNotSet@zimbra.com",
+                "secret", new HashMap<String, Object>());
+
+        Map<String, Object> attrs = ImmutableMap.<String, Object>of(
+                ContactConstants.A_firstName, "First",
+                ContactConstants.A_lastName, "Last",
+                ContactConstants.A_email, "testAccountWithGalHideNotSet@zimbra.com"
+        );
+
+        comp.addMatchedContacts("first last", attrs, ContactAutoComplete.FOLDER_ID_GAL, null, result, false);
+        Assert.assertEquals(1, result.entries.size());
     }
 }
