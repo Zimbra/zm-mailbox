@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivysettings>
+  
   <property name="httpclient.version" value="4.5.14"/>
   <property name="httpclient.httpcore.version" value="4.4.16"/>
   <property name="httpclient.async.version" value="4.1.5"/>
@@ -39,8 +40,10 @@
     <filesystem name="build-dist">
       <artifact pattern="${dist.dir}/[module]-[revision].[ext]" />
     </filesystem>
+    <ibiblio name="nexus-zimbra" m2compatible="true" root="${nexus.base.url}/repository/${nexus.repo}"/>
   </resolvers>
-     <modules>
-      <module organisation="xerces" name="xercesImpl" revision="2.9.1-patch-01" resolver="maven-redhat"/>
-    </modules>
+  <credentials host="${nexus.host}" realm="Sonatype Nexus Repository Manager" username="${nexus.user}" passwd="${nexus.password}"/>
+  <modules>
+    <module organisation="xerces" name="xercesImpl" revision="2.9.1-patch-01" resolver="maven-redhat"/>
+  </modules>
 </ivysettings>
