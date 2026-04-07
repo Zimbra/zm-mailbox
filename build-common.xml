@@ -276,7 +276,7 @@
       </antcontrib:if>
     </target>
 
-    <target name="test" depends="test-compile" description="Run unit tests">
+    <target name="test" unless="skipTests" depends="test-compile" description="Run unit tests">
       <property name="test-results-file" value="${zm-mailbox.basedir}/build/test-results.txt"/>
       <antcontrib:if>
         <available file="${test.src.dir}" type="dir"/>
