@@ -718,6 +718,9 @@ public final class LC {
     public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
+    @Reloadable
+    public static final KnownKey imap_ehcache_heap_size = KnownKey.newKey(1);
+
     @Supported
     public static final KnownKey imapd_keystore = KnownKey.newKey("/opt/zimbra/conf/imapd.keystore");
     @Supported
