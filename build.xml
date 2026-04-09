@@ -80,7 +80,7 @@
 
 <!-- Property defined to accept the version -->
 
-  <property name="store.ext.patch.revision" value="1" />
+  <property name="store.ext.patch.revision" value="${zimbra.buildinfo.revision}" />
   <property name="store.ext.patch.version"
       value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
 
