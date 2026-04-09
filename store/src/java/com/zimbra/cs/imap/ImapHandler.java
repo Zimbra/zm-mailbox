@@ -4598,7 +4598,7 @@ public abstract class ImapHandler {
                     copyStatus.setCompletedCount(copyStatus.getCompletedCount() + batch.size());
                 }
             } finally {
-                // stop sendLine from the notifier thread after this point for safety
+                // stop sending from the notifier thread after this point for safety
                 copyStatus.setIsRunning(false);
                 if (notifier != null) {
                     notifier.cancel(true);
@@ -4643,24 +4643,27 @@ public abstract class ImapHandler {
 
     private ScheduledFuture<?> sendInProgressResponses(OperationProgress copyStatus) {
         return INPROGRESS_SCHEDULER.scheduleAtFixedRate(() -> {
-            if (!copyStatus.getIsRunning()) {
-                // stop sendLine after this point for safety
-                ZimbraLog.imap.trace("Scheduled notifier is about to shutdown");
-                return;
-            }
+            setLoggingContext();
             try {
+                if (!copyStatus.getIsRunning()) {
+                    // stop sending after this point for safety
+                    ZimbraLog.imap.trace("Scheduled notifier is about to shutdown");
+                    return;
+                }
                 if (copyStatus.getCompletedCount() != null
                         && copyStatus.getCompletedCount() > 0
                         && copyStatus.getCompletedCount() < copyStatus.getTotalCount()) {
-                    this.sendLine("* OK [INPROGRESS (\"" + copyStatus.getTag() + "\" "
+                    sendLine("* OK [INPROGRESS (\"" + copyStatus.getTag() + "\" "
                             + copyStatus.getCompletedCount() + " " + copyStatus.getTotalCount()
                             + ")] Processed " + copyStatus.getPercentageComplete() + "% of the items", true);
                 } else {
-                    this.sendLine("*" + INPROGRESS_RESPONSE, true);
+                    sendLine("* " + INPROGRESS_RESPONSE, true);
                 }
 
             } catch (Exception e) {
                 ZimbraLog.imap.warn("Error while sending INPROGRESS, IMAP COPY commands may timeout", e);
+            } finally {
+                ZimbraLog.clearContext();
             }
         }, MAXIMUM_IDLE_PROCESSING_MILLIS, MAXIMUM_IDLE_PROCESSING_MILLIS, TimeUnit.MILLISECONDS);
     }

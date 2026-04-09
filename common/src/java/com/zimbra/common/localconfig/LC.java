@@ -1500,6 +1500,7 @@ public final class LC {
     public static final KnownKey zimbra_imap_folder_pagination_enabled =  KnownKey.newKey(false);
 
     @Supported
+    @Reloadable
     public static final KnownKey imap_suggested_batch_copy_size =  KnownKey.newKey(5);
 
     @Supported
