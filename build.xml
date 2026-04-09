@@ -1,4 +1,5 @@
 <project name="zm-mailbox" default="all">
+    <property environment="env"/>
 
     <target name="all" depends="publish-local-all">
       <ant dir="./native" target="generate-native-headers" inheritAll="true"/>
@@ -95,6 +96,16 @@
    </target>
 
    <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
+
+   <target name="publish-remote-package" description="Publish package artifacts to Nexus package-repo" unless="skipPublishRemote">
+      <fail message="NEXUS_BASE_URL environment variable not set" unless="env.NEXUS_BASE_URL"/>
+      <fail message="NEXUS_USER environment variable not set" unless="env.NEXUS_USER"/>
+      <fail message="NEXUS_PASSWORD environment variable not set" unless="env.NEXUS_PASSWORD"/>
+      <exec executable="bash" failonerror="true">
+         <arg value="-c"/>
+         <arg value="set -e; ROOT='build/dist'; BASE_URL=$(echo &quot;$NEXUS_BASE_URL&quot; | sed 's:/*$::')/artifactory/package-repo/zimbra/zm-mailbox/${store.ext.patch.version}; PACKAGE_FILES=$(find &quot;$ROOT&quot; -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.tgz' -o -name '*.tar.gz' \)); if [ -z &quot;$PACKAGE_FILES&quot; ]; then echo 'No package artifacts found in build/dist'; exit 1; fi; echo &quot;$PACKAGE_FILES&quot; | while IFS= read -r f; do rel=$(echo &quot;$f&quot; | sed &quot;s|^$ROOT/||&quot;); url=&quot;$BASE_URL/$rel&quot;; echo &quot;Uploading $f -&gt; $url&quot;; curl --fail --show-error --silent --user &quot;$NEXUS_USER:$NEXUS_PASSWORD&quot; --upload-file &quot;$f&quot; &quot;$url&quot;; done"/>
+      </exec>
+   </target>
 
    <target name="clean" depends="clean-ant,clean-pkg">
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>
