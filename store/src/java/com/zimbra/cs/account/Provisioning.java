@@ -1468,6 +1468,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void deleteDomain(String zimbraId) throws ServiceException;
 
+    public void getAllCoses(NamedEntry.Visitor visitor, String[] retAttrs)
+            throws ServiceException {
+    }
+
     public abstract void deleteDomainAfterRename(String zimbraId) throws ServiceException;
 
     public abstract Cos createCos(String name, Map<String, Object> attrs) throws ServiceException;
