@@ -71,7 +71,7 @@ jobs:
       - run:
           name: Prepare ant-contrib jar for root build.xml
           command: |
-            sudo apt-get update; sudo apt-get install ant-contrib rpm dpkg-dev fakeroot lsb-release -y
+            sudo apt-get update; sudo apt-get install ant-contrib rpm dpkg-dev fakeroot lsb-release debhelper build-essential -y
             mkdir -p ~/.ivy2/cache
             mkdir -p ~/.zcs-deps
             if [ -f /usr/share/java/ant-contrib.jar ]; then
