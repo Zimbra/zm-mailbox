@@ -53,6 +53,9 @@ jobs:
           name: Running ant compile in store directory
           command: ant clean compile publish-local
           working_directory: store
+      - run:
+          name: Compile validation completed
+          command: echo "Compile stage completed for develop branch."
       - persist_to_workspace:
           root: /home/circleci/
           paths:
@@ -60,6 +63,26 @@ jobs:
             - zm-mailbox
             - .ssh
             - .zcs-deps
+  package_build:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Build mailbox OS packages
+          command: ant pkg
+  publish_packages:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Validate Nexus env variables
+          command: |
+            [ -n "$NEXUS_BASE_URL" ] || (echo "NEXUS_BASE_URL is required" && exit 1)
+            [ -n "$NEXUS_USER" ] || (echo "NEXUS_USER is required" && exit 1)
+            [ -n "$NEXUS_PASSWORD" ] || (echo "NEXUS_PASSWORD is required" && exit 1)
+      - run:
+          name: Publish built packages to Nexus APT/Yum
+          command: ant publish-remote-package
   test:
     <<: *default_environment_settings
     steps:
@@ -107,8 +130,26 @@ workflows:
     jobs:
       - build:
           <<: *filter_branches
-      - test:
+      - approve_package_build:
+          type: approval
           requires:
             - build
+          <<: *filter_branches
+      - package_build:
+          requires:
+            - approve_package_build
+          <<: *filter_branches
+      - test:
+          requires:
+            - package_build
+          <<: *filter_branches
+      - approve_package_publish:
+          type: approval
+          requires:
+            - test
+          <<: *filter_branches
+      - publish_packages:
+          requires:
+            - approve_package_publish
           <<: *filter_branches
 ############################################################################
