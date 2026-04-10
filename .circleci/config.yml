@@ -71,7 +71,7 @@ jobs:
       - run:
           name: Prepare ant-contrib jar for root build.xml
           command: |
-            sudo apt-get update; sudo apt-get install ant-contrib -y
+            sudo apt-get update; sudo apt-get install ant-contrib rpm dpkg-dev fakeroot -y
             mkdir -p ~/.ivy2/cache
             mkdir -p ~/.zcs-deps
             if [ -f /usr/share/java/ant-contrib.jar ]; then
@@ -82,12 +82,19 @@ jobs:
               echo "ant-contrib.jar not found on runner" && exit 1
             fi
       - run:
+          name: Validate package tooling
+          command: |
+            for b in perl rpmbuild rpm dpkg-deb fakeroot tar gzip; do
+              command -v "$b" >/dev/null 2>&1 || (echo "Missing required binary: $b" && exit 1)
+            done
+      - run:
           name: Build mailbox OS packages
           command: |
             cd /home/circleci
             if [ ! -d "zm-pkg-tool" ]; then
               git clone -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
             fi
+            [ -x /home/circleci/zm-pkg-tool/pkg-build.pl ] || chmod +x /home/circleci/zm-pkg-tool/pkg-build.pl
             cd /home/circleci/zm-mailbox
             ant pkg
   publish_packages:
