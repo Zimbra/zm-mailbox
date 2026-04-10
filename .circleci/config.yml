@@ -28,7 +28,7 @@ jobs:
       - checkout
       - run:
           name: Install ant-contrib
-          command: sudo apt-get update; sudo apt-get install ant-contrib
+          command: sudo apt-get update; sudo apt-get install ant-contrib && mkdir -p ~/.ivy2/cache
       - run:
           name: Clone zm-timezones
           command: |
@@ -72,6 +72,7 @@ jobs:
           name: Prepare ant-contrib jar for root build.xml
           command: |
             sudo apt-get update; sudo apt-get install ant-contrib -y
+            mkdir -p ~/.ivy2/cache
             mkdir -p ~/.zcs-deps
             if [ -f /usr/share/java/ant-contrib.jar ]; then
               cp -f /usr/share/java/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
@@ -91,6 +92,7 @@ jobs:
           name: Prepare ant-contrib jar for root build.xml
           command: |
             sudo apt-get update; sudo apt-get install ant-contrib -y
+            mkdir -p ~/.ivy2/cache
             mkdir -p ~/.zcs-deps
             if [ -f /usr/share/java/ant-contrib.jar ]; then
               cp -f /usr/share/java/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
