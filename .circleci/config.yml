@@ -69,12 +69,36 @@ jobs:
     steps:
       - *default_attach_workspace
       - run:
+          name: Prepare ant-contrib jar for root build.xml
+          command: |
+            sudo apt-get update; sudo apt-get install ant-contrib -y
+            mkdir -p ~/.zcs-deps
+            if [ -f /usr/share/java/ant-contrib.jar ]; then
+              cp -f /usr/share/java/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+            elif [ -f /usr/share/ant/lib/ant-contrib.jar ]; then
+              cp -f /usr/share/ant/lib/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+            else
+              echo "ant-contrib.jar not found on runner" && exit 1
+            fi
+      - run:
           name: Build mailbox OS packages
           command: ant pkg
   publish_packages:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
+      - run:
+          name: Prepare ant-contrib jar for root build.xml
+          command: |
+            sudo apt-get update; sudo apt-get install ant-contrib -y
+            mkdir -p ~/.zcs-deps
+            if [ -f /usr/share/java/ant-contrib.jar ]; then
+              cp -f /usr/share/java/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+            elif [ -f /usr/share/ant/lib/ant-contrib.jar ]; then
+              cp -f /usr/share/ant/lib/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+            else
+              echo "ant-contrib.jar not found on runner" && exit 1
+            fi
       - run:
           name: Validate Nexus env variables
           command: |
