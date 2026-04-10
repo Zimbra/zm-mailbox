@@ -104,12 +104,11 @@
 
    <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
 
-   <target name="publish-remote-package" description="Publish package artifacts using shared ant-global target" unless="skipPublishRemote">
-      <ant antfile="./build-common.xml" target="publish-remote-package" inheritAll="true">
-         <property name="package.module" value="zimbra/zm-mailbox"/>
-         <property name="package.upload.root" value="build/dist"/>
-         <property name="package.publish.version" value="${package.snapshot.version}"/>
-      </ant>
+   <target name="publish-remote-package" description="Publish package artifacts to Nexus APT/Yum repos" unless="skipPublishRemote">
+      <exec executable="bash" failonerror="true">
+         <arg value="-c"/>
+         <arg value="set -e; ROOT='build/dist'; NEXUS_BASE_URL='${env.NEXUS_BASE_URL}'; NEXUS_USER='${env.NEXUS_USER}'; NEXUS_PASSWORD='${env.NEXUS_PASSWORD}'; APT_REPO='package-repo-apt'; YUM_REPO='package-repo-yum'; MODULE_PATH='zimbra/zm-mailbox/${package.snapshot.version}'; if [ -z &quot;$NEXUS_BASE_URL&quot; ] || [ -z &quot;$NEXUS_USER&quot; ] || [ -z &quot;$NEXUS_PASSWORD&quot; ]; then echo 'Missing Nexus configuration. Required: NEXUS_BASE_URL, NEXUS_USER, NEXUS_PASSWORD'; exit 1; fi; RAW_BASE=$(printf '%s' &quot;$NEXUS_BASE_URL&quot; | sed 's/#.*$//' | sed 's:/*$::'); PACKAGE_FILES=$(find &quot;$ROOT&quot; -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.tgz' -o -name '*.tar.gz' \)); if [ -z &quot;$PACKAGE_FILES&quot; ]; then echo 'No package artifacts found in build/dist'; exit 1; fi; upload_failed=0; while IFS= read -r f; do rel=$(echo &quot;$f&quot; | sed &quot;s|^$ROOT/||&quot;); case &quot;$f&quot; in *.deb) repo=&quot;$APT_REPO&quot;;; *.rpm) repo=&quot;$YUM_REPO&quot;;; *.tgz|*.tar.gz) echo &quot;Skipping non-apt/yum artifact: $f&quot;; continue;; *) echo &quot;Skipping unknown artifact type: $f&quot;; continue;; esac; url=&quot;$RAW_BASE/repository/$repo/$MODULE_PATH/$rel&quot;; body_file=$(mktemp); header_file=$(mktemp); echo &quot;Uploading $f -&gt; $url&quot;; http_code=$(curl --silent --show-error --user &quot;$NEXUS_USER:$NEXUS_PASSWORD&quot; --header 'Expect:' --upload-file &quot;$f&quot; --dump-header &quot;$header_file&quot; --output &quot;$body_file&quot; --write-out '%{http_code}' &quot;$url&quot; || true); case &quot;$http_code&quot; in 2??) echo &quot;Upload successful: $url (HTTP $http_code)&quot;; rm -f &quot;$body_file&quot; &quot;$header_file&quot;;; *) echo &quot;Upload failed for $f (HTTP $http_code)&quot;; if [ -s &quot;$header_file&quot; ]; then echo 'Response headers:'; sed -n '1,40p' &quot;$header_file&quot;; fi; if [ -s &quot;$body_file&quot; ]; then echo 'Server response:'; sed -n '1,80p' &quot;$body_file&quot;; fi; rm -f &quot;$body_file&quot; &quot;$header_file&quot;; upload_failed=1; exit 1;; esac; done &lt;&lt;&lt; &quot;$PACKAGE_FILES&quot;; if [ &quot;$upload_failed&quot; -ne 0 ]; then exit 1; fi"/>
+      </exec>
    </target>
 
    <target name="clean" depends="clean-ant,clean-pkg">
