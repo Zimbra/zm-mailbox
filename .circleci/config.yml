@@ -83,7 +83,13 @@ jobs:
             fi
       - run:
           name: Build mailbox OS packages
-          command: ant pkg
+          command: |
+            cd /home/circleci
+            if [ ! -d "zm-pkg-tool" ]; then
+              git clone -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
+            fi
+            cd /home/circleci/zm-mailbox
+            ant pkg
   publish_packages:
     <<: *default_environment_settings
     steps:
