@@ -144,7 +144,7 @@ jobs:
       - *default_attach_workspace
       - run:
           name: Ensure xml tooling for junit merge
-          command: sudo apt-get update && sudo apt-get install -y libxml2-utils
+          command: sudo apt-get update && sudo apt-get install -y xmlstarlet
       - run:
           name: Create test report directory to hold junit tests
           command: mkdir -p /tmp/junit/
