@@ -110,6 +110,7 @@ jobs:
             - .zcs-deps
   publish_packages:
     <<: *default_environment_settings
+    circleci_ip_ranges: true
     steps:
       - *default_attach_workspace
       - run:
