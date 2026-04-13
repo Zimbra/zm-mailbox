@@ -3143,12 +3143,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         searchDirectoryInternal(opts, visitor);
     }
 
+    @Override
     public void getAllCoses(NamedEntry.Visitor visitor, String[] retAttrs) throws ServiceException {
         SearchDirectoryOptions opts = new SearchDirectoryOptions(retAttrs);
-        opts.setFilter(this.filterFactory.allCoses());
+        opts.setFilter(filterFactory.allCoses());
         opts.setTypes(SearchDirectoryOptions.ObjectType.coses);
         opts.setUseControl(true);
         opts.setResultPageSize(1000);
+        searchDirectoryInternal(opts, visitor);
     }
     private boolean domainDnExists(ZLdapContext zlc, String dn) throws ServiceException {
         try {
