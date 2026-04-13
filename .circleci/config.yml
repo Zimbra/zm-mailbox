@@ -143,8 +143,8 @@ jobs:
     steps:
       - *default_attach_workspace
       - run:
-          name: Install junit-merge
-          command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
+          name: Ensure xml tooling for junit merge
+          command: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - run:
           name: Create test report directory to hold junit tests
           command: mkdir -p /tmp/junit/
@@ -171,7 +171,11 @@ jobs:
           working_directory: store
       - run:
           name: Finding test results
-          command: find . -type f -regex ".*/build/test/report/.*xml" | xargs junit-merge
+          command: |
+            TEST_XMLS="$(find . -type f -regex '.*/build/test/report/.*xml' | tr '\n' ' ')"
+            [ -n "$TEST_XMLS" ] || (echo "No junit xml files found" && exit 1)
+            xmlstarlet ed -P -S -s / -t elem -n testsuites -v '' $TEST_XMLS | \
+              xmlstarlet sel -t -c /testsuites > merged-test-results.xml
       - run:
           name: Copy test results to proper directory
           command: cp merged-test-results.xml /tmp/junit/
