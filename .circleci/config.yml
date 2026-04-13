@@ -39,23 +39,23 @@ jobs:
             git clone https://github.com/Zimbra/zm-timezones.git -b develop --single-branch || exit 1
       - run:
           name: Running ant compile in native directory
-          command: ant clean compile publish-local
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant clean compile publish-local
           working_directory: native
       - run:
           name: Running ant compile in common directory
-          command: ant clean compile publish-local
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant clean compile publish-local
           working_directory: common
       - run:
           name: Running ant compile in soap directory
-          command: ant clean compile publish-local
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant clean compile publish-local
           working_directory: soap
       - run:
           name: Running ant compile in client directory
-          command: ant clean compile publish-local
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant clean compile publish-local
           working_directory: client
       - run:
           name: Running ant compile in store directory
-          command: ant clean compile publish-local
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant clean compile publish-local
           working_directory: store
       - run:
           name: Compile validation completed
@@ -104,7 +104,7 @@ jobs:
             fi
             [ -x /home/build/zm-pkg-tool/pkg-build.pl ] || chmod +x /home/build/zm-pkg-tool/pkg-build.pl
             cd /home/build/zm-mailbox
-            ant pkg
+            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant pkg
       - persist_to_workspace:
           root: /home/build/
           paths:
@@ -137,7 +137,7 @@ jobs:
             [ -n "$NEXUS_PASSWORD" ] || (echo "NEXUS_PASSWORD is required" && exit 1)
       - run:
           name: Publish built packages to Nexus APT/Yum
-          command: ant publish-remote-package
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant publish-remote-package
   test:
     <<: *default_environment_settings
     steps:
@@ -150,23 +150,23 @@ jobs:
           command: mkdir -p /tmp/junit/
       - run:
           name: Running ant test native
-          command: ant test
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant test
           working_directory: native
       - run:
           name: Running ant test common
-          command: ant test
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant test
           working_directory: common
       - run:
           name: Running ant test soap
-          command: ant test
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant test
           working_directory: soap
       - run:
           name: Running ant test client
-          command: ant test
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant test
           working_directory: client
       - run:
           name: Running ant test store
-          command: ant test
+          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant test
           no_output_timeout: 1200s
           working_directory: store
       - run:
