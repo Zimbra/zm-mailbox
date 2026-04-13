@@ -108,6 +108,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
     private static Filter FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS;
 
+    private static Filter FILTER_tmp;
+
 
     private static boolean initialized = false;
 
@@ -1762,9 +1764,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter cosAccountsFilter(String cosId) {
         return new UBIDLdapFilter(
                 FilterId.COS_ACCOUNT_FILTER,
-                Filter.createANDFilter(
-                        Filter.createEqualityFilter(ZAttrProvisioning.A_zimbraCOSId, cosId),
-                        FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS));
+                cosAccountFilter(cosId));
 
     }
 
@@ -1923,6 +1923,36 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 FilterId.ALL_INTERNAL_ACCOUNTS_FILTER,
                 FILTER_ALL_INTERNAL_ACCOUNTS);
+    }
+
+    @Override
+    public ZLdapFilter internalAccountsWithoutCosAttrAbsenceFilter(List<String> attrNameList) {
+        Filter attrAbsenceFilter = attributeAbsenceFilter(attrNameList);
+        Filter filter = Filter.createANDFilter(FILTER_ALL_INTERNAL_ACCOUNTS,
+                Filter.createNOTFilter(
+                        Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
+        if (attrAbsenceFilter != null) {
+            return new UBIDLdapFilter(
+                    FilterId.INTERNAL_ACCOUNTS_WITHOUT_COS_ATTR_ABSENCE_FILTER,
+                    Filter.createANDFilter(filter, attrAbsenceFilter));
+        }
+        return new UBIDLdapFilter(
+                FilterId.INTERNAL_ACCOUNTS_WITHOUT_COS_ATTR_ABSENCE_FILTER,
+                filter);
+    }
+
+    @Override
+    public ZLdapFilter cosAccountAttrPresenceFilter(String cosId, List<String> attrNameList) {
+        Filter attrPresenceFilter = attributePresenceFilter(attrNameList);
+        Filter filter = cosAccountFilter(cosId);
+        if (attrPresenceFilter != null) {
+            return new UBIDLdapFilter(
+                    FilterId.COS_ACCOUNT_ATTR_PRESENCE_FILTER,
+                    Filter.createANDFilter(filter, attrPresenceFilter));
+        }
+        return new UBIDLdapFilter(
+                FilterId.COS_ACCOUNT_ATTR_PRESENCE_FILTER,
+                filter);
     }
 }
 

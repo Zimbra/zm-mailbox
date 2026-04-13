@@ -208,6 +208,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         FEATURE_ACCOUNT_FILTER(SINGLETON.featureAccountFilter("{FEATURE}")),
         COS_ATTRIBUTE_FILTER(
                 SINGLETON.cosAttributeFilter("COS_ID", Lists.newArrayList("{ATTR-NAME-1}", "{ATTR-NAME-2}", "..."))),
+        INTERNAL_ACCOUNTS_WITHOUT_COS_ATTR_ABSENCE_FILTER(SINGLETON.internalAccountsWithoutCosAttrAbsenceFilter(Lists.newArrayList("{ATTR-NAME-1}", "{ATTR-NAME-2}", "..."))),
+        COS_ACCOUNT_ATTR_PRESENCE_FILTER(SINGLETON.cosAccountAttrPresenceFilter(
+                "COS_ID", Lists.newArrayList("{ATTR-NAME-1}", "{ATTR-NAME-2}", "..."))),
 
         /*
          * Licensing
@@ -611,5 +614,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter featureAccountFilter(String feature);
 
     public abstract ZLdapFilter cosAttributeFilter(String cosId, List<String> attrNameList);
+
+    public abstract ZLdapFilter internalAccountsWithoutCosAttrAbsenceFilter(List<String> attrNameList);
+
+    public abstract ZLdapFilter cosAccountAttrPresenceFilter(String cosId, List<String> attrNameList);
 
 }
