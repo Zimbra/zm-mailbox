@@ -5,7 +5,10 @@ version: 2
 references:
    default_environment_settings: &default_environment_settings
       docker:
-        - image: circleci/openjdk:8-node
+        - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+          auth:
+            username: $DOCKER_USER
+            password: $DOCKER_PASS
       environment:
         - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
         - BUILD: "/home/circleci"
