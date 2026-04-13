@@ -172,10 +172,31 @@ jobs:
       - run:
           name: Finding test results
           command: |
-            TEST_XMLS="$(find . -type f -regex '.*/build/test/report/.*xml' | tr '\n' ' ')"
+            TEST_XMLS="$(find . -type f -regex '.*/build/test/report/.*xml')"
             [ -n "$TEST_XMLS" ] || (echo "No junit xml files found" && exit 1)
-            xmlstarlet ed -P -S -s / -t elem -n testsuites -v '' $TEST_XMLS | \
-              xmlstarlet sel -t -c /testsuites > merged-test-results.xml
+            python3 - <<'PY'
+            import glob
+            import xml.etree.ElementTree as ET
+
+            files = glob.glob("**/build/test/report/*.xml", recursive=True)
+            if not files:
+                raise SystemExit("No junit xml files found")
+
+            root = ET.Element("testsuites")
+            for f in files:
+                try:
+                    doc = ET.parse(f).getroot()
+                except Exception:
+                    continue
+                if doc.tag == "testsuite":
+                    root.append(doc)
+                elif doc.tag == "testsuites":
+                    for ts in list(doc):
+                        if ts.tag == "testsuite":
+                            root.append(ts)
+
+            ET.ElementTree(root).write("merged-test-results.xml", encoding="utf-8", xml_declaration=True)
+            PY
       - run:
           name: Copy test results to proper directory
           command: cp merged-test-results.xml /tmp/junit/
