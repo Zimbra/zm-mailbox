@@ -196,6 +196,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
          */
         ZIMBRA_GLOBAL_CONFIG(SINGLETON.zimbraGlobalConfig()),
         ACCOUNT_EXCEPTION_FILTER(SINGLETON.accountExceptionsFilter()),
+        ALL_INTERNAL_ACCOUNTS_EXCEPTION_FILTER(SINGLETON.allInternalAccountsExceptionFilter()),
         ALL_INTERNAL_ACCOUNTS_FILTER(SINGLETON.allInternalAccountsFilter()),
         DEFAULT_COS_DOMAIN_FILTER(SINGLETON.defaultCOSDomainFilter()),
         COS_ACCOUNT_FILTER(SINGLETON.cosAccountsFilter("{COS-ID}")),
@@ -594,6 +595,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter accountExceptionsFilter();
 
     public abstract ZLdapFilter allInternalAccountsFilter();
+
+    public abstract ZLdapFilter allInternalAccountsExceptionFilter();
 
     public abstract ZLdapFilter defaultCOSDomainFilter();
 

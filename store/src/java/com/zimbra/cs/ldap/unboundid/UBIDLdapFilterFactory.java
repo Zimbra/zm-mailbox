@@ -1723,9 +1723,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
      * AND(FILTER_ALL_ACCOUNTS, FILTER_ACCOUNT_EXCEPTIONS)
      * @return ZLdapFilter for all internal non-exception accounts
      */
-    public ZLdapFilter allInternalAccountsFilter() {
+    public ZLdapFilter allInternalAccountsExceptionFilter() {
         return new UBIDLdapFilter(
-                FilterId.ALL_INTERNAL_ACCOUNTS_FILTER,
+                FilterId.ALL_INTERNAL_ACCOUNTS_EXCEPTION_FILTER,
                 Filter.createANDFilter(FILTER_ALL_ACCOUNTS, FILTER_ACCOUNT_EXCEPTIONS));
     }
 
@@ -1914,4 +1914,17 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createEqualityFilter(ZAttrProvisioning.A_zimbraCOSId, cosId),
                 FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS);
     }
+
+    /*
+     * all internal accounts
+     */
+    @Override
+    public ZLdapFilter allInternalAccountsFilter() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_INTERNAL_ACCOUNTS_FILTER,
+                FILTER_ALL_INTERNAL_ACCOUNTS);
+    }
 }
+
+
+
