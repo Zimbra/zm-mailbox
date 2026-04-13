@@ -10,7 +10,7 @@ references:
             username: $DOCKER_USER
             password: $DOCKER_PASS
       environment:
-        - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
+        - ANT_OPTS: -Dzimbra.buildinfo.version=10.1.0_GA_1001
         - BUILD: "/home/build"
       working_directory: /home/build/zm-mailbox
    default_attach_workspace: &default_attach_workspace

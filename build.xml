@@ -81,10 +81,12 @@
 
 <!-- Property defined to accept the version -->
 
-  <condition property="zimbra.buildinfo.revision" value="1">
-      <not><isset property="zimbra.buildinfo.revision"/></not>
+  <condition property="store.ext.patch.revision" value="${zimbra.buildinfo.revision}">
+      <isset property="zimbra.buildinfo.revision"/>
   </condition>
-  <property name="store.ext.patch.revision" value="${zimbra.buildinfo.revision}" />
+  <condition property="store.ext.patch.revision" value="develop.snapshot.${git.timestamp}">
+      <not><isset property="store.ext.patch.revision"/></not>
+  </condition>
   <property name="store.ext.patch.version"
       value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
   <exec executable="git" outputproperty="git.timestamp">
