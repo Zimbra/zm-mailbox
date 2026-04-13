@@ -81,6 +81,11 @@
 
 <!-- Property defined to accept the version -->
 
+  <exec executable="git" outputproperty="git.timestamp">
+     <arg value="log"/>
+     <arg value="-1"/>
+     <arg value="--pretty=format:%at"/>
+  </exec>
   <condition property="store.ext.patch.revision"
              value="${zimbra.buildinfo.revision}"
              else="develop.snapshot.${git.timestamp}">
@@ -88,11 +93,6 @@
   </condition>
   <property name="store.ext.patch.version"
       value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
-  <exec executable="git" outputproperty="git.timestamp">
-     <arg value="log"/>
-     <arg value="-1"/>
-     <arg value="--pretty=format:%at"/>
-  </exec>
   <property name="package.snapshot.version"
       value="${store.ext.patch.version}.${git.timestamp}-develop-snapshot"/>
 
