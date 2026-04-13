@@ -185,6 +185,8 @@ workflows:
     jobs:
       - build:
           <<: *filter_branches
+          context:
+            - docker-dev-registry
       - approve_package_build:
           type: approval
           requires:
@@ -194,10 +196,14 @@ workflows:
           requires:
             - approve_package_build
           <<: *filter_branches
+          context:
+            - docker-dev-registry
       - test:
           requires:
             - package_build
           <<: *filter_branches
+          context:
+            - docker-dev-registry
       - approve_package_publish:
           type: approval
           requires:
@@ -207,4 +213,6 @@ workflows:
           requires:
             - approve_package_publish
           <<: *filter_branches
+          context:
+            - docker-dev-registry
 ############################################################################
