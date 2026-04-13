@@ -1723,15 +1723,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
      * AND(FILTER_ALL_ACCOUNTS, FILTER_ACCOUNT_EXCEPTIONS)
      * @return ZLdapFilter for all internal non-exception accounts
      */
-<<<<<<< HEAD
     public ZLdapFilter allInternalAccountsExceptionFilter() {
         return new UBIDLdapFilter(
                 FilterId.ALL_INTERNAL_ACCOUNTS_EXCEPTION_FILTER,
-=======
-    public ZLdapFilter allInternalAccountsFilter() {
-        return new UBIDLdapFilter(
-                FilterId.ALL_INTERNAL_ACCOUNTS_FILTER,
->>>>>>> 68b9fbe676 (ZCS-18550: Create ZLdapFilter for raw PUR ldap queries)
                 Filter.createANDFilter(FILTER_ALL_ACCOUNTS, FILTER_ACCOUNT_EXCEPTIONS));
     }
 
