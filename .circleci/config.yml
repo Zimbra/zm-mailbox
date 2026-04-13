@@ -11,11 +11,11 @@ references:
             password: $DOCKER_PASS
       environment:
         - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
-        - BUILD: "/home/circleci"
-      working_directory: /home/circleci/zm-mailbox
+        - BUILD: "/home/build"
+      working_directory: /home/build/zm-mailbox
    default_attach_workspace: &default_attach_workspace
          attach_workspace:
-            at: /home/circleci
+            at: /home/build
    filter_branches: &filter_branches
      filters:
        branches:
@@ -61,7 +61,7 @@ jobs:
           name: Compile validation completed
           command: echo "Compile stage completed for develop branch."
       - persist_to_workspace:
-          root: /home/circleci/
+          root: /home/build/
           paths:
             - zm-timezones
             - zm-mailbox
@@ -98,15 +98,15 @@ jobs:
       - run:
           name: Build mailbox OS packages
           command: |
-            cd /home/circleci
+            cd /home/build
             if [ ! -d "zm-pkg-tool" ]; then
               git clone -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
             fi
-            [ -x /home/circleci/zm-pkg-tool/pkg-build.pl ] || chmod +x /home/circleci/zm-pkg-tool/pkg-build.pl
-            cd /home/circleci/zm-mailbox
+            [ -x /home/build/zm-pkg-tool/pkg-build.pl ] || chmod +x /home/build/zm-pkg-tool/pkg-build.pl
+            cd /home/build/zm-mailbox
             ant pkg
       - persist_to_workspace:
-          root: /home/circleci/
+          root: /home/build/
           paths:
             - zm-mailbox
             - zm-pkg-tool
