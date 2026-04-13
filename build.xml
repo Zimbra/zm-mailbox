@@ -19,6 +19,16 @@
       <echo>Starting package creation from war </echo>
    </target>
 
+   <target name="publish-remote-all" depends="publish-local-all">
+	  <ant dir="./native" target="publish-remote" inheritAll="true"/>
+      <ant dir="./common" target="publish-remote" inheritAll="true"/>
+      <ant dir="./soap"   target="publish-remote" inheritAll="true"/>
+      <ant dir="./client" target="publish-remote" inheritAll="true"/>
+	  <ant dir="./store"  target="publish-remote" inheritAll="true"/>
+      <echo>Uploading mailbox components artifacts to Nexus-artifactory</echo>
+   </target>
+
+
    <target name="set-no-halt-on-failure">
       <echo message="WARNING: IGNORING UNIT TEST FAILURES"/>
       <property name="halt-on-failure" value="no"/>
