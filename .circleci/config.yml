@@ -102,6 +102,12 @@ jobs:
             [ -x /home/circleci/zm-pkg-tool/pkg-build.pl ] || chmod +x /home/circleci/zm-pkg-tool/pkg-build.pl
             cd /home/circleci/zm-mailbox
             ant pkg
+      - persist_to_workspace:
+          root: /home/circleci/
+          paths:
+            - zm-mailbox
+            - zm-pkg-tool
+            - .zcs-deps
   publish_packages:
     <<: *default_environment_settings
     steps:
