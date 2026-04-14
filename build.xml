@@ -88,7 +88,7 @@
   </exec>
   <condition property="store.ext.patch.revision"
              value="${zimbra.buildinfo.revision}"
-             else="develop.snapshot.${git.timestamp}">
+             else="develop-snapshot">
       <isset property="zimbra.buildinfo.revision"/>
   </condition>
   <property name="store.ext.patch.version"
