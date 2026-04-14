@@ -50,7 +50,7 @@ references:
             command: |
               sudo apt-get update; sudo apt-get install ant-contrib -y
               cd ../zm-mailbox
-              ant -Dzimbra.buildinfo.version=10.0.0_GA_1001 publish-remote-all
+              JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 && export JAVA_HOME && ant -Dzimbra.buildinfo.version=10.0.0_GA_1001 publish-remote-all
 
 ############################################################################
 
