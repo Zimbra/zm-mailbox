@@ -50,7 +50,7 @@ references:
             command: |
               sudo apt-get update; sudo apt-get install ant-contrib -y
               cd ../zm-mailbox
-              ant publish-remote-all
+              ant -Dzimbra.buildinfo.version=10.0.0_GA_1001 publish-remote-all
 
 ############################################################################
 
