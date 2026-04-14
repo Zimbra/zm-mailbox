@@ -86,7 +86,7 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
-      resource_class: small
+      resource_class: medium
       <<: *publish_job_steps
 
 ############################################################################
