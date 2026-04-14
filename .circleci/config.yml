@@ -1,114 +1,119 @@
-version: 2
+version: 2.1
 
 ############################################################################
 
 references:
-   default_environment_settings: &default_environment_settings
-      docker:
-        - image: circleci/openjdk:8-node
-      environment:
-        - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
-        - BUILD: "/home/circleci"
-      working_directory: /home/circleci/zm-mailbox
-   default_attach_workspace: &default_attach_workspace
-         attach_workspace:
-            at: /home/circleci
-   filter_branches: &filter_branches
-     filters:
-       branches:
-         only:
-           - develop
+   checkout_job_steps: &checkout_job_steps
+      steps:
+         - checkout:
+             method: full
+         - run:
+            name: Checking out dependencies.
+            command: |
+               git clone -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git ~/zm-pkg-tool
+               git clone -b publish-nexus-jar-poc --single-branch https://github.com/Zimbra/zm-zcs.git ~/zm-zcs
+               git clone -b master --single-branch https://github.com/Zimbra/zimbra-package-stub.git ~/zimbra-package-stub
+               echo "BUILD_NO=$CIRCLE_BUILD_NUM" > config.build
+               mkdir -p ~/.zcs-deps
+         - persist_to_workspace:
+            root: ..
+            paths:
+               - zm-pkg-tool
+               - zm-zcs
+               - zimbra-package-stub
+               - zm-mailbox
+               - .zcs-deps
+
+   build_job_steps: &build_job_steps
+      steps:
+         - attach_workspace:
+            at: ..
+         - run:
+            name: Creating build
+            command: |
+              mkdir -p /home/build/.ivy2/cache
+              sudo apt-get update; sudo apt-get install ant-contrib -y
+              cd ../zm-mailbox/
+              JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 && export JAVA_HOME && ant -Dzimbra.buildinfo.version=10.0.0_GA_1001 clean publish-local-all                     
+         - persist_to_workspace:
+            root: ..
+            paths:
+               - .ivy2
+               - .zcs-deps
+
+   publish_job_steps: &publish_job_steps
+      steps:
+         - attach_workspace:
+            at: ..
+         - run:
+            name: Publish to Nexus
+            command: |
+              sudo apt-get update; sudo apt-get install ant-contrib -y
+              cd ../zm-mailbox
+              ant publish-remote-all
+
 ############################################################################
 
 jobs:
-  build:
-    <<: *default_environment_settings
-    steps:
-      - checkout
-      - run:
-          name: Install ant-contrib
-          command: sudo apt-get update; sudo apt-get install ant-contrib
-      - run:
-          name: Clone zm-timezones
-          command: |
-            cd "$BUILD"
-            git clone https://github.com/Zimbra/zm-timezones.git -b develop --single-branch || exit 1
-      - run:
-          name: Running ant compile in native directory
-          command: ant clean compile publish-local
-          working_directory: native
-      - run:
-          name: Running ant compile in common directory
-          command: ant clean compile publish-local
-          working_directory: common
-      - run:
-          name: Running ant compile in soap directory
-          command: ant clean compile publish-local
-          working_directory: soap
-      - run:
-          name: Running ant compile in client directory
-          command: ant clean compile publish-local
-          working_directory: client
-      - run:
-          name: Running ant compile in store directory
-          command: ant clean compile publish-local
-          working_directory: store
-      - persist_to_workspace:
-          root: /home/circleci/
-          paths:
-            - zm-timezones
-            - zm-mailbox
-            - .ssh
-            - .zcs-deps
-  test:
-    <<: *default_environment_settings
-    steps:
-      - *default_attach_workspace
-      - run:
-          name: Install junit-merge
-          command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
-      - run:
-          name: Create test report directory to hold junit tests
-          command: mkdir -p /tmp/junit/
-      - run:
-          name: Running ant test native
-          command: ant test
-          working_directory: native
-      - run:
-          name: Running ant test common
-          command: ant test
-          working_directory: common
-      - run:
-          name: Running ant test soap
-          command: ant test
-          working_directory: soap
-      - run:
-          name: Running ant test client
-          command: ant test
-          working_directory: client
-      - run:
-          name: Running ant test store
-          command: ant test
-          no_output_timeout: 1200s
-          working_directory: store
-      - run:
-          name: Finding test results
-          command: find . -type f -regex ".*/build/test/report/.*xml" | xargs junit-merge
-      - run:
-          name: Copy test results to proper directory
-          command: cp merged-test-results.xml /tmp/junit/
-      - store_test_results:
-          path: /tmp/junit/
+   checkout:
+      working_directory: ~/zm-mailbox
+      shell: /bin/bash -eo pipefail
+      docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-18.04
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+      resource_class: small
+      <<: *checkout_job_steps
+
+   build:
+      working_directory: ~/zm-mailbox
+      shell: /bin/bash -eo pipefail
+      docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+      resource_class: medium
+      <<: *build_job_steps
+
+   publish:
+      working_directory: ~/zm-mailbox
+      shell: /bin/bash -eo pipefail
+      circleci_ip_ranges: true
+      docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+      resource_class: small
+      <<: *publish_job_steps
+
 ############################################################################
 
 workflows:
-  version: 2
-  build_deploy:
-    jobs:
-      - build:
-          <<: *filter_branches
-      - test:
-          requires:
-            - build
-          <<: *filter_branches
-############################################################################
+   version: 2
+   main:
+      jobs:
+         - checkout:
+            context:
+               - docker-dev-registry
+         - build:
+            context:
+               - docker-dev-registry
+            requires:
+               - checkout
+         - publish_hold:
+            type: approval
+            requires:
+               - build
+         - publish:
+            context:
+               - docker-dev-registry
+               - nexus-artifactory
+            requires:
+               - publish_hold
+            filters:
+               branches:
+                 only:
+                   - publish-nexus-jar-poc
