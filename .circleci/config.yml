@@ -147,7 +147,7 @@ jobs:
       - run:
           name: Publish built jars to Nexus
           command: |
-            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant publish-remote-all
+            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant publish-local-all
   publish_packages:
     <<: *default_environment_settings
     circleci_ip_ranges: true
