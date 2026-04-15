@@ -252,24 +252,28 @@ workflows:
           <<: *filter_branches
           context:
             - docker-dev-registry
+            - build-version
       - package_build:
           requires:
             - build
           <<: *filter_branches
           context:
             - docker-dev-registry
+            - build-version
       - test:
           requires:
             - package_build
           <<: *filter_branches
           context:
             - docker-dev-registry
+            - build-version
       - publish_jars:
           requires:
             - test
           <<: *filter_branches
           context:
             - docker-dev-registry
+            - build-version
             - nexus-artifactory
       - publish_packages:
           requires:
@@ -277,5 +281,6 @@ workflows:
           <<: *filter_branches
           context:
             - docker-dev-registry
+            - build-version
             - nexus-artifactory
 ############################################################################
