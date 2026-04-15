@@ -150,14 +150,100 @@ jobs:
           name: Publish built jars to Nexus
           command: |
             cd /home/build
-            if [ ! -d "zm-zcs" ]; then
-              git clone -b publish-nexus-jar-poc --single-branch https://github.com/Zimbra/zm-zcs.git
+            if [ ! -d "zm-taglib" ]; then
+              git clone -b develop --single-branch https://github.com/Zimbra/zm-taglib.git
+            fi
+            cd /home/build/zm-taglib
+            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+            export JAVA_HOME
+            export PATH="$JAVA_HOME/bin:$PATH"
+            ant -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM} clean publish-local
+            TAGLIB_PUB="$(find "$HOME/.zcs-deps/zimbra/zm-taglib" -maxdepth 1 -type f -name '*.jar' ! -name 'zm-taglib-latest.integration.jar' ! -name 'zm-taglib-local.jar' -printf '%T@\t%p\n' 2>/dev/null | sort -t "$(printf '\t')" -k1,1rn | head -1 | cut -f2-)"
+            if [ -z "$TAGLIB_PUB" ] || [ ! -f "$TAGLIB_PUB" ]; then
+              TAGLIB_PUB="$(find build -maxdepth 1 -type f -name '*.jar' -printf '%T@\t%p\n' 2>/dev/null | sort -t "$(printf '\t')" -k1,1rn | head -1 | cut -f2-)"
+            fi
+            if [ -n "$TAGLIB_PUB" ] && [ -f "$TAGLIB_PUB" ]; then
+              mkdir -p "$HOME/.zcs-deps/zimbra/zm-taglib"
+              cp -f "$TAGLIB_PUB" "$HOME/.zcs-deps/zimbra/zm-taglib/zm-taglib-latest.integration.jar"
+              cp -f "$TAGLIB_PUB" "$HOME/.zcs-deps/zimbra/zm-taglib/zm-taglib-local.jar"
+              echo "Aliased taglib jar: $TAGLIB_PUB"
+            else
+              echo "ERROR: could not locate any zm-taglib jar after publish-local"
+              ls -la "$HOME/.zcs-deps/zimbra/zm-taglib" 2>/dev/null || true
+              ls -la build 2>/dev/null || true
+              exit 1
             fi
             cd /home/build/zm-mailbox
             JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
             export JAVA_HOME
             export PATH="$JAVA_HOME/bin:$PATH"
-            ant -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM} publish-remote
+            ant -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM} clean publish-local-all
+            for MODULE in zm-native zm-common zm-soap zm-client zm-store; do
+              PUB_DIR="$HOME/.zcs-deps/zimbra/$MODULE"
+              PUB_JAR="$(find "$PUB_DIR" -maxdepth 1 -type f -name '*.jar' ! -name "${MODULE}-latest.integration.jar" ! -name "${MODULE}-local.jar" -printf '%T@\t%p\n' 2>/dev/null | sort -t "$(printf '\t')" -k1,1rn | head -1 | cut -f2-)"
+              if [ -n "$PUB_JAR" ] && [ -f "$PUB_JAR" ]; then
+                cp -f "$PUB_JAR" "$PUB_DIR/${MODULE}-latest.integration.jar"
+                cp -f "$PUB_JAR" "$PUB_DIR/${MODULE}-local.jar"
+                echo "Aliased mailbox module $MODULE => $PUB_JAR"
+              else
+                echo "ERROR: could not locate published jar for $MODULE in $PUB_DIR"
+                ls -la "$PUB_DIR" 2>/dev/null || true
+                exit 1
+              fi
+            done
+            JAR_REPO="develop-snapshot"
+            VERSION="${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM}"
+            RAW_BASE="$(printf '%s' "$NEXUS_BASE_URL" | sed 's/#.*$//' | sed 's:/*$::')"
+            jar_list_file="$(mktemp)"
+            for MODULE in zm-native zm-common zm-soap zm-client zm-store zm-taglib; do
+              PUB_DIR="$HOME/.zcs-deps/zimbra/$MODULE"
+              [ -d "$PUB_DIR" ] || continue
+              JAR_PATH="$(find "$PUB_DIR" -maxdepth 1 -type f -name "${MODULE}-*.jar" ! -name "${MODULE}-latest.integration.jar" ! -name "${MODULE}-local.jar" -printf '%T@\t%p\n' 2>/dev/null | sort -t "$(printf '\t')" -k1,1rn | head -1 | cut -f2-)"
+              [ -n "$JAR_PATH" ] && [ -f "$JAR_PATH" ] && printf '%s\n' "$JAR_PATH" >> "$jar_list_file"
+            done
+            if [ ! -s "$jar_list_file" ]; then
+              echo "No jars found for Nexus upload under ~/.zcs-deps/zimbra"
+              exit 1
+            fi
+            while IFS= read -r jar_path; do
+              [ -n "$jar_path" ] || continue
+              jar_name="$(basename "$jar_path")"
+              module_name="$(echo "$jar_name" | sed -E 's/-[0-9].*\.jar$//')"
+              target_url="$RAW_BASE/repository/$JAR_REPO/zimbra/$module_name/$VERSION/$jar_name"
+              body_file="$(mktemp)"
+              header_file="$(mktemp)"
+              echo "Uploading $jar_name -> $target_url"
+              http_code="$(curl --silent --show-error --user "$NEXUS_USER:$NEXUS_PASSWORD" --header 'Expect:' --upload-file "$jar_path" --dump-header "$header_file" --output "$body_file" --write-out '%{http_code}' "$target_url" || true)"
+              case "$http_code" in
+                2??)
+                  echo "Upload successful: $jar_name (HTTP $http_code)"
+                  ;;
+                400|409)
+                  response_lc="$(tr '[:upper:]' '[:lower:]' < "$body_file" 2>/dev/null || true)"
+                  case "$response_lc" in
+                    *already*exist*|*cannot*be*updated*|*conflict*|*duplicate*)
+                      echo "Upload skipped (already exists): $jar_name (HTTP $http_code)"
+                      ;;
+                    *)
+                      echo "Upload failed for $jar_name (HTTP $http_code)"
+                      [ -s "$header_file" ] && sed -n '1,120p' "$header_file"
+                      [ -s "$body_file" ] && sed -n '1,200p' "$body_file"
+                      rm -f "$body_file" "$header_file" "$jar_list_file"
+                      exit 1
+                      ;;
+                  esac
+                  ;;
+                *)
+                  echo "Upload failed for $jar_name (HTTP $http_code)"
+                  [ -s "$header_file" ] && sed -n '1,120p' "$header_file"
+                  [ -s "$body_file" ] && sed -n '1,200p' "$body_file"
+                  rm -f "$body_file" "$header_file" "$jar_list_file"
+                  exit 1
+                  ;;
+              esac
+              rm -f "$body_file" "$header_file"
+            done < "$jar_list_file"
+            rm -f "$jar_list_file"
   publish_packages:
     <<: *default_environment_settings
     circleci_ip_ranges: true
