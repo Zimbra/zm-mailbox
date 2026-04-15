@@ -2,10 +2,6 @@ version: 2.1
 
 ############################################################################
 
-parameters:
-  ant-parameter:
-    type: string
-
 references:
    default_environment_settings: &default_environment_settings
       docker:
@@ -14,7 +10,7 @@ references:
             username: $DOCKER_USER
             password: $DOCKER_PASS
       environment:
-        - ANT_OPTS: -Dzimbra.buildinfo.version=<< pipeline.parameters.ant-parameter >><< pipeline.number >>
+        - ANT_OPTS: -Dzimbra.buildinfo.version=${ANT_PARAMETER}${CIRCLE_BUILD_NUM}
         - BUILD: "/home/build"
       working_directory: /home/build/zm-mailbox
    default_attach_workspace: &default_attach_workspace
