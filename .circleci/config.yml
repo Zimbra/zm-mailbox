@@ -178,7 +178,78 @@ jobs:
       - run:
           name: Publish built packages to Nexus APT/Yum
           command: |
-            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant publish-remote-package
+            : "${NEXUS_BASE_URL:?NEXUS_BASE_URL is required}"
+            : "${NEXUS_USER:?NEXUS_USER is required}"
+            : "${NEXUS_PASSWORD:?NEXUS_PASSWORD is required}"
+            ROOT="build/dist"
+            APT_REPO="package-repo-apt"
+            YUM_REPO="package-repo-yum"
+            MODULE_PATH="zimbra/zm-mailbox/${CIRCLE_SHA1:-develop}"
+            RAW_BASE="$(printf '%s' "$NEXUS_BASE_URL" | sed 's/#.*$//' | sed 's:/*$::')"
+            API_BASE="$RAW_BASE/service/rest/v1/components"
+            PACKAGE_FILES="$(find "$ROOT" -type f \( -name '*.deb' -o -name '*.rpm' \))"
+            if [ -z "$PACKAGE_FILES" ]; then
+              echo "No package artifacts found in $ROOT"
+              exit 1
+            fi
+            package_list_file="$(mktemp)"
+            printf '%s\n' "$PACKAGE_FILES" > "$package_list_file"
+            while IFS= read -r f; do
+              [ -n "$f" ] || continue
+              rel="$(echo "$f" | sed "s|^$ROOT/||")"
+              dir="$(dirname "$rel")"
+              file_name="$(basename "$f")"
+              body_file="$(mktemp)"
+              header_file="$(mktemp)"
+              case "$f" in
+                *.deb)
+                  repo="$APT_REPO"
+                  url="$API_BASE?repository=$repo"
+                  echo "Uploading $f -> $repo via Components API"
+                  http_code="$(curl --silent --show-error --user "$NEXUS_USER:$NEXUS_PASSWORD" --request POST "$url" -F "apt.asset=@$f" --dump-header "$header_file" --output "$body_file" --write-out '%{http_code}' || true)"
+                  ;;
+                *.rpm)
+                  repo="$YUM_REPO"
+                  yum_dir="$MODULE_PATH/$dir"
+                  url="$API_BASE?repository=$repo"
+                  echo "Uploading $f -> $repo via Components API (yum.directory=$yum_dir)"
+                  http_code="$(curl --silent --show-error --user "$NEXUS_USER:$NEXUS_PASSWORD" --request POST "$url" -F "yum.directory=$yum_dir" -F "yum.asset=@$f" -F "yum.asset.filename=$file_name" --dump-header "$header_file" --output "$body_file" --write-out '%{http_code}' || true)"
+                  ;;
+                *)
+                  rm -f "$body_file" "$header_file"
+                  continue
+                  ;;
+              esac
+              case "$http_code" in
+                2??)
+                  echo "Upload successful: $file_name (HTTP $http_code)"
+                  ;;
+                400)
+                  response_lc="$(tr '[:upper:]' '[:lower:]' < "$body_file" 2>/dev/null || true)"
+                  case "$response_lc" in
+                    *already*exist*|*cannot*be*updated*|*duplicate*)
+                      echo "Upload skipped (already exists): $file_name (HTTP 400)"
+                      ;;
+                    *)
+                      echo "Upload failed for $f (HTTP $http_code)"
+                      [ -s "$header_file" ] && sed -n '1,120p' "$header_file"
+                      [ -s "$body_file" ] && sed -n '1,200p' "$body_file"
+                      rm -f "$body_file" "$header_file" "$package_list_file"
+                      exit 1
+                      ;;
+                  esac
+                  ;;
+                *)
+                  echo "Upload failed for $f (HTTP $http_code)"
+                  [ -s "$header_file" ] && sed -n '1,120p' "$header_file"
+                  [ -s "$body_file" ] && sed -n '1,200p' "$body_file"
+                  rm -f "$body_file" "$header_file" "$package_list_file"
+                  exit 1
+                  ;;
+              esac
+              rm -f "$body_file" "$header_file"
+            done < "$package_list_file"
+            rm -f "$package_list_file"
   test:
     <<: *default_environment_settings
     steps:
