@@ -1,5 +1,4 @@
 version: 2.1
-
 ############################################################################
 
 references:
@@ -34,7 +33,7 @@ references:
               mkdir -p /home/build/.ivy2/cache
               sudo apt-get update; sudo apt-get install ant-contrib -y
               cd ../zm-mailbox/
-              JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 && export JAVA_HOME && ant -Dzimbra.buildinfo.version=10.0.0_GA_1001 clean publish-local-all                     
+              JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 && export JAVA_HOME && ant -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM} clean publish-local-all                    
          - persist_to_workspace:
             root: ..
             paths:
@@ -50,7 +49,7 @@ references:
             command: |
               sudo apt-get update; sudo apt-get install ant-contrib -y
               cd ../zm-mailbox
-              JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 && export JAVA_HOME && ant -Dzimbra.buildinfo.version=10.0.0_GA_1001 publish-remote-all
+              JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 && export JAVA_HOME && ant -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM} publish-remote-all
 
 ############################################################################
 
@@ -100,19 +99,17 @@ workflows:
                - docker-dev-registry
          - build:
             context:
+               - build-number
                - docker-dev-registry
             requires:
                - checkout
-         - publish_hold:
-            type: approval
-            requires:
-               - build
          - publish:
             context:
                - docker-dev-registry
+               - build-number
                - nexus-artifactory
             requires:
-               - publish_hold
+               - build
             filters:
                branches:
                  only:
