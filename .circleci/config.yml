@@ -10,7 +10,7 @@ references:
             username: $DOCKER_USER
             password: $DOCKER_PASS
       environment:
-        - ANT_OPTS: -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO:-${BASE_VERSION}}${CIRCLE_BUILD_NUM}
+        - ANT_OPTS: -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM}
         - BUILD: "/home/build"
       working_directory: /home/build/zm-mailbox
    default_attach_workspace: &default_attach_workspace
@@ -26,8 +26,8 @@ references:
       run:
         name: Validate release version prefix
         command: |
-          RELEASE_PREFIX="${BUILD_RELEASE_NO:-$BASE_VERSION}"
-          [ -n "$RELEASE_PREFIX" ] || (echo "BUILD_RELEASE_NO or BASE_VERSION is required (example: 10.1.0_GA_)" && exit 1)
+          RELEASE_PREFIX="${BUILD_RELEASE_NO}"
+          [ -n "$RELEASE_PREFIX" ] || (echo "BUILD_RELEASE_NO is required (example: 10.1.0_GA_)" && exit 1)
           echo "$RELEASE_PREFIX" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' || (echo "Release prefix must start with semantic version (example: 10.1.0_GA_)" && exit 1)
           echo "Using release prefix: $RELEASE_PREFIX"
 ############################################################################
@@ -254,28 +254,28 @@ workflows:
           <<: *filter_branches
           context:
             - docker-dev-registry
-            - build-version
+            - build-number
       - package_build:
           requires:
             - build
           <<: *filter_branches
           context:
             - docker-dev-registry
-            - build-version
+            - build-number
       - test:
           requires:
             - package_build
           <<: *filter_branches
           context:
             - docker-dev-registry
-            - build-version
+            - build-number
       - publish_jars:
           requires:
             - test
           <<: *filter_branches
           context:
             - docker-dev-registry
-            - build-version
+            - build-number
             - nexus-artifactory
       - publish_packages:
           requires:
@@ -283,6 +283,6 @@ workflows:
           <<: *filter_branches
           context:
             - docker-dev-registry
-            - build-version
+            - build-number
             - nexus-artifactory
 ############################################################################
