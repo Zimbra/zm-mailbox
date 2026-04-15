@@ -177,8 +177,18 @@ jobs:
             JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
             export JAVA_HOME
             export PATH="$JAVA_HOME/bin:$PATH"
-            ant -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM} clean publish-local-all
-            for MODULE in zm-native zm-common zm-soap zm-client zm-store; do
+            # Avoid dynamic Ivy lookups during CI local publish sequence.
+            perl -0777 -i -pe 's/rev="latest\.integration"/rev="local"/g' \
+              /home/build/zm-mailbox/common/ivy.xml \
+              /home/build/zm-mailbox/soap/ivy.xml \
+              /home/build/zm-mailbox/client/ivy.xml \
+              /home/build/zm-mailbox/store/ivy.xml
+            echo "Mailbox ivy revisions pinned to local:"
+            perl -ne 'print if /org="zimbra"/' /home/build/zm-mailbox/common/ivy.xml /home/build/zm-mailbox/soap/ivy.xml /home/build/zm-mailbox/client/ivy.xml /home/build/zm-mailbox/store/ivy.xml
+            publish_and_alias() {
+              MODULE="$1"
+              MODULE_DIR="$2"
+              (cd "$MODULE_DIR" && ant -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM} clean publish-local)
               PUB_DIR="$HOME/.zcs-deps/zimbra/$MODULE"
               PUB_JAR="$(find "$PUB_DIR" -maxdepth 1 -type f -name '*.jar' ! -name "${MODULE}-latest.integration.jar" ! -name "${MODULE}-local.jar" -printf '%T@\t%p\n' 2>/dev/null | sort -t "$(printf '\t')" -k1,1rn | head -1 | cut -f2-)"
               if [ -n "$PUB_JAR" ] && [ -f "$PUB_JAR" ]; then
@@ -190,7 +200,12 @@ jobs:
                 ls -la "$PUB_DIR" 2>/dev/null || true
                 exit 1
               fi
-            done
+            }
+            publish_and_alias zm-native /home/build/zm-mailbox/native
+            publish_and_alias zm-common /home/build/zm-mailbox/common
+            publish_and_alias zm-soap /home/build/zm-mailbox/soap
+            publish_and_alias zm-client /home/build/zm-mailbox/client
+            publish_and_alias zm-store /home/build/zm-mailbox/store
             JAR_REPO="develop-snapshot"
             VERSION="${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM}"
             RAW_BASE="$(printf '%s' "$NEXUS_BASE_URL" | sed 's/#.*$//' | sed 's:/*$::')"
