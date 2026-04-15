@@ -10,7 +10,7 @@ references:
             username: $DOCKER_USER
             password: $DOCKER_PASS
       environment:
-        - ANT_OPTS: -Dzimbra.buildinfo.version=${ANT_PARAMETER}${CIRCLE_BUILD_NUM}
+        - ANT_OPTS: -Dzimbra.buildinfo.version=${BASE_VERSION}${CIRCLE_BUILD_NUM}
         - BUILD: "/home/build"
       working_directory: /home/build/zm-mailbox
    default_attach_workspace: &default_attach_workspace
@@ -24,10 +24,10 @@ references:
            - ZCS-18921-poc
    validate_ant_parameter: &validate_ant_parameter
       run:
-        name: Validate ANT_PARAMETER version prefix
+        name: Validate BASE_VERSION version prefix
         command: |
-          [ -n "$ANT_PARAMETER" ] || (echo "ANT_PARAMETER is required (example: 10.1.0_GA_)" && exit 1)
-          echo "$ANT_PARAMETER" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' || (echo "ANT_PARAMETER must start with semantic version (example: 10.1.0_GA_)" && exit 1)
+          [ -n "$BASE_VERSION" ] || (echo "BASE_VERSION is required (example: 10.1.0_GA_)" && exit 1)
+          echo "$BASE_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' || (echo "BASE_VERSION must start with semantic version (example: 10.1.0_GA_)" && exit 1)
 ############################################################################
 
 jobs:
