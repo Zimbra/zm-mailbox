@@ -10,7 +10,7 @@ references:
             username: $DOCKER_USER
             password: $DOCKER_PASS
       environment:
-        - ANT_OPTS: -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO}${CIRCLE_BUILD_NUM}
+        - ANT_OPTS: -Dzimbra.buildinfo.version=${BUILD_RELEASE_NO:-${BASE_VERSION}}${CIRCLE_BUILD_NUM}
         - BUILD: "/home/build"
       working_directory: /home/build/zm-mailbox
    default_attach_workspace: &default_attach_workspace
@@ -24,10 +24,12 @@ references:
            - ZCS-18921-poc
    validate_ant_parameter: &validate_ant_parameter
       run:
-        name: Validate BUILD_RELEASE_NO version prefix
+        name: Validate release version prefix
         command: |
-          [ -n "$BUILD_RELEASE_NO" ] || (echo "BUILD_RELEASE_NO is required (example: 10.1.0_GA_)" && exit 1)
-          echo "$BUILD_RELEASE_NO" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' || (echo "BUILD_RELEASE_NO must start with semantic version (example: 10.1.0_GA_)" && exit 1)
+          RELEASE_PREFIX="${BUILD_RELEASE_NO:-$BASE_VERSION}"
+          [ -n "$RELEASE_PREFIX" ] || (echo "BUILD_RELEASE_NO or BASE_VERSION is required (example: 10.1.0_GA_)" && exit 1)
+          echo "$RELEASE_PREFIX" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' || (echo "Release prefix must start with semantic version (example: 10.1.0_GA_)" && exit 1)
+          echo "Using release prefix: $RELEASE_PREFIX"
 ############################################################################
 
 jobs:
