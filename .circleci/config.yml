@@ -176,7 +176,7 @@ jobs:
           command: |
             TEST_XMLS="$(find . -type f -regex '.*/build/test/report/.*xml')"
             [ -n "$TEST_XMLS" ] || (echo "No junit xml files found" && exit 1)
-            python3 - <<'PY'
+            python3 - \<<'PY'
             import glob
             import xml.etree.ElementTree as ET
 
