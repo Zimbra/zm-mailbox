@@ -1,6 +1,10 @@
-version: 2
+version: 2.1
 
 ############################################################################
+
+parameters:
+  ant-parameter:
+    type: string
 
 references:
    default_environment_settings: &default_environment_settings
@@ -10,7 +14,7 @@ references:
             username: $DOCKER_USER
             password: $DOCKER_PASS
       environment:
-        - ANT_OPTS: -Dzimbra.buildinfo.version=10.1.0_GA_1001
+        - ANT_OPTS: -Dzimbra.buildinfo.version=<< pipeline.parameters.ant-parameter >><< pipeline.number >>
         - BUILD: "/home/build"
       working_directory: /home/build/zm-mailbox
    default_attach_workspace: &default_attach_workspace
@@ -137,7 +141,9 @@ jobs:
             [ -n "$NEXUS_PASSWORD" ] || (echo "NEXUS_PASSWORD is required" && exit 1)
       - run:
           name: Publish built packages to Nexus APT/Yum
-          command: JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant publish-remote-package
+          command: |
+            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant publish-remote-all
+            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant publish-remote-package
   test:
     <<: *default_environment_settings
     steps:
@@ -212,14 +218,9 @@ workflows:
           <<: *filter_branches
           context:
             - docker-dev-registry
-      - approve_package_build:
-          type: approval
-          requires:
-            - build
-          <<: *filter_branches
       - package_build:
           requires:
-            - approve_package_build
+            - build
           <<: *filter_branches
           context:
             - docker-dev-registry
@@ -229,15 +230,11 @@ workflows:
           <<: *filter_branches
           context:
             - docker-dev-registry
-      - approve_package_publish:
-          type: approval
+      - publish_packages:
           requires:
             - test
           <<: *filter_branches
-      - publish_packages:
-          requires:
-            - approve_package_publish
-          <<: *filter_branches
           context:
             - docker-dev-registry
+            - nexus-artifactory
 ############################################################################
