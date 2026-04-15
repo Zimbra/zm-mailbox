@@ -22,6 +22,12 @@ references:
          only:
            - develop
            - ZCS-18921-poc
+   validate_ant_parameter: &validate_ant_parameter
+      run:
+        name: Validate ANT_PARAMETER version prefix
+        command: |
+          [ -n "$ANT_PARAMETER" ] || (echo "ANT_PARAMETER is required (example: 10.1.0_GA_)" && exit 1)
+          echo "$ANT_PARAMETER" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' || (echo "ANT_PARAMETER must start with semantic version (example: 10.1.0_GA_)" && exit 1)
 ############################################################################
 
 jobs:
@@ -29,6 +35,7 @@ jobs:
     <<: *default_environment_settings
     steps:
       - checkout
+      - *validate_ant_parameter
       - run:
           name: Install ant-contrib
           command: sudo apt-get update; sudo apt-get install ant-contrib && mkdir -p ~/.ivy2/cache
@@ -71,6 +78,7 @@ jobs:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
+      - *validate_ant_parameter
       - run:
           name: Prepare ant-contrib jar for root build.xml
           command: |
@@ -116,6 +124,7 @@ jobs:
     circleci_ip_ranges: true
     steps:
       - *default_attach_workspace
+      - *validate_ant_parameter
       - run:
           name: Prepare ant-contrib jar for root build.xml
           command: |
@@ -144,6 +153,7 @@ jobs:
     circleci_ip_ranges: true
     steps:
       - *default_attach_workspace
+      - *validate_ant_parameter
       - run:
           name: Prepare ant-contrib jar for root build.xml
           command: |
@@ -171,6 +181,7 @@ jobs:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
+      - *validate_ant_parameter
       - run:
           name: Ensure xml tooling for junit merge
           command: sudo apt-get update && sudo apt-get install -y xmlstarlet
