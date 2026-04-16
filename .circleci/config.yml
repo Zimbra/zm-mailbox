@@ -10,7 +10,7 @@ references:
             name: Checking out dependencies.
             command: |
                git clone -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git ~/zm-pkg-tool
-               git clone -b publish-nexus-jar-poc --single-branch https://github.com/Zimbra/zm-zcs.git ~/zm-zcs
+               git clone -b develop --single-branch https://github.com/Zimbra/zm-zcs.git ~/zm-zcs
                git clone -b master --single-branch https://github.com/Zimbra/zimbra-package-stub.git ~/zimbra-package-stub
                echo "BUILD_NO=$CIRCLE_BUILD_NUM" > config.build
                mkdir -p ~/.zcs-deps
@@ -113,4 +113,4 @@ workflows:
             filters:
                branches:
                  only:
-                   - publish-nexus-jar-poc
+                   - develop
