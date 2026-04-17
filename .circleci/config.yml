@@ -37,6 +37,7 @@ references:
             root: ..
             paths:
                - zm-mailbox/build
+               - .ivy2
                - .zcs-deps
 
    publish_job_steps: &publish_job_steps
