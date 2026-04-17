@@ -729,7 +729,8 @@
     </target>
 
     <!-- publish-remote target -->
-    <target name="publish-remote" depends="publish-local" description="Publish artifacts to Nexus Artifactory" unless="skipPublishRemote">
+    <target name="publish-remote" depends="init-ivy,set-dev-version" description="Publish artifacts to Nexus Artifactory" unless="skipPublishRemote">
+      <ivy:resolve settingsRef="dev.settings"/>
       <property name="remote.publish.revision" value="${dev.version}-develop-snapshot"/>
       <ivy:publish settingsRef="dev.settings" resolver="nexus-zimbra" pubrevision="${remote.publish.revision}" overwrite="true" publishivy="false" artifactspattern="${build.dir}/${ant.project.name}-${dev.version}.[ext]"/>
     </target>
