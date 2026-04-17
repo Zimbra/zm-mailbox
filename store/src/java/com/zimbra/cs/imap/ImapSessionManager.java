@@ -26,6 +26,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledExecutorService;
+
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -88,10 +92,32 @@ final class ImapSessionManager {
     private final Cache<String, ImapFolder> activeSessionCache; // not LRU'ed
     private final Cache<String, ImapFolder> inactiveSessionCache; // LRU'ed
 
+    private final Cache<String, ImapFolder> inactiveSessionLargeFolderCache;
+
+    private final int maxMsgCountThreshold = LC.imap_ehcache_folder_max_message_count.intValue();
+
+    private final boolean skipLargeFolderEnabled = LC.imap_ehcache_skip_large_folder.booleanValue();
+
+    private final boolean ehcacheInactiveSecondaryCacheEnabled = !skipLargeFolderEnabled && LC.imap_ehcache_enable_secondary_inactive_cache.booleanValue();
+
     private static final ImapSessionManager SINGLETON = new ImapSessionManager();
 
     private static final ExecutorService CLOSER = Executors.newSingleThreadExecutor(
                     new ThreadFactoryBuilder().setNameFormat("ImapInvalidSessionCloser").setDaemon(true).build());
+
+    private final ScheduledExecutorService statsLogger = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "CacheStatsLogger");
+        t.setDaemon(true);
+        return t;
+    });
+
+    private static final boolean CACHE_REPORT = DebugConfig.enableCacheReport;
+
+    private static final int CACHE_REPORT_INTERVAL = DebugConfig.cacheReportInterval;
+
+    private final LongAdder windowSkipped = new LongAdder();
+
+    private final LongAdder windowUnloaded = new LongAdder();
 
     private ImapSessionManager() {
         if (SERIALIZER_INTERVAL_MSEC > 0) {
@@ -110,6 +136,15 @@ final class ImapSessionManager {
                 new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE, false) :
                 activeSessionCache);
         Preconditions.checkState(inactiveSessionCache != null);
+
+        inactiveSessionLargeFolderCache = (LC.imap_use_ehcache.booleanValue() ?
+                new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_LARGE_FOLDER_SESSION_CACHE, false) :
+                activeSessionCache);
+        Preconditions.checkState(inactiveSessionLargeFolderCache != null);
+        if (CACHE_REPORT) {
+            statsLogger.scheduleAtFixedRate(this::printStats, CACHE_REPORT_INTERVAL,
+                    CACHE_REPORT_INTERVAL, TimeUnit.SECONDS);
+        }
     }
 
     protected static ImapSessionManager getInstance() {
@@ -668,7 +703,17 @@ final class ImapSessionManager {
             try {
                 // could use session.serialize() if we want to leave it in memory...
                 ZimbraLog.imap.debug("Paging session during close: %s", session);
-                session.unload(false);
+                int actualMsgCount = session.mFolder.getSize();
+                if (skipLargeFolderEnabled &&
+                        actualMsgCount > maxMsgCountThreshold) {
+                    windowSkipped.increment();
+                    ZimbraLog.imap.debug("Skipping IMAP folder cache storage: message count (" + actualMsgCount +
+                            ") exceeds threshold (" + maxMsgCountThreshold + "). FolderId: " + session.mFolder.getId() +
+                            "). CacheKey: " + cacheKey(session, false));
+                } else {
+                    windowUnloaded.increment();
+                    session.unload(false);
+                }
             } catch (MailboxInMaintenanceException miMe) {
                 if (ZimbraLog.imap.isDebugEnabled()) {
                     ZimbraLog.imap.info("Mailbox in maintenance detected during close - will detach %s", session, miMe);
@@ -721,10 +766,18 @@ final class ImapSessionManager {
      * Try to retrieve from inactive session cache, then fall back to active session cache.
      */
     private ImapFolder getCache(FolderStore folder) {
-        ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, false));
-        if (i4folder != null) {
+        String inactiveKey = cacheKey(folder, false);
+        ImapFolder i4folder;
+
+        if ((i4folder = inactiveSessionCache.get(inactiveKey)) != null) {
             return i4folder;
         }
+
+        if (ehcacheInactiveSecondaryCacheEnabled &&
+                (i4folder = inactiveSessionLargeFolderCache.get(inactiveKey)) != null) {
+            return i4folder;
+        }
+
         return activeSessionCache.get(cacheKey(folder, true));
     }
 
@@ -734,6 +787,9 @@ final class ImapSessionManager {
     private void clearCache(FolderStore folder) {
         activeSessionCache.remove(cacheKey(folder, true));
         inactiveSessionCache.remove(cacheKey(folder, false));
+        if (ehcacheInactiveSecondaryCacheEnabled) {
+            inactiveSessionLargeFolderCache.remove(cacheKey(folder, false));
+        }
     }
 
     /**
@@ -788,24 +844,40 @@ final class ImapSessionManager {
 
     protected void serialize(String key, ImapFolder folder) {
         if (!isActiveKey(key)) {
-            inactiveSessionCache.put(key, folder);
+            int actualMsgCount = folder.getSize();
+            if (ehcacheInactiveSecondaryCacheEnabled &&
+                    actualMsgCount > maxMsgCountThreshold) {
+                ZimbraLog.imap.warn("Moving Large IMAP folder to secondary ehcache storage: message count (" 
+                        + actualMsgCount +
+                        ") exceeds threshold (" + maxMsgCountThreshold + "). FolderId: " + folder.getId());
+                inactiveSessionLargeFolderCache.put(key, folder);
+            } else {
+                inactiveSessionCache.put(key, folder);
+            }
         } else {
             activeSessionCache.put(key, folder);
         }
     }
 
     protected ImapFolder deserialize(String key) {
+        ImapFolder folder = null;
         if (!isActiveKey(key)) {
-            return inactiveSessionCache.get(key);
+            folder = inactiveSessionCache.get(key);
+            if (folder == null && ehcacheInactiveSecondaryCacheEnabled) {
+                folder = inactiveSessionLargeFolderCache.get(key);
+            }
         } else {
-            ImapFolder folder = activeSessionCache.get(key);
-            return folder;
+            folder = activeSessionCache.get(key);
         }
+        return folder;
     }
 
     protected void updateAccessTime(String key) {
         if (!isActiveKey(key)) {
             inactiveSessionCache.updateAccessTime(key);
+            if (ehcacheInactiveSecondaryCacheEnabled) {
+                inactiveSessionLargeFolderCache.updateAccessTime(key); //Need to check what happens if key is not available
+            }
         } else {
             activeSessionCache.updateAccessTime(key);
         }
@@ -815,6 +887,9 @@ final class ImapSessionManager {
         //remove only from inactive
         if (!isActiveKey(key)) {
             inactiveSessionCache.remove(key);
+            if (ehcacheInactiveSecondaryCacheEnabled) {
+                inactiveSessionLargeFolderCache.remove(key);
+            }
         } else {
             //removal from active is unsafe; not great to have inconsistent state but it is nicer than bombing totally
             ZimbraLog.imap.warn("Inconsistent active cache entry %s cannot be removed. Client state may not be accurate", key);
@@ -823,6 +898,17 @@ final class ImapSessionManager {
 
     public static boolean isActiveKey(String key) {
         return key.contains("_");
+    }
+
+    private void printStats() {
+        long winSkipped = windowSkipped.sumThenReset();
+        long winUnloaded = windowUnloaded.sumThenReset();
+
+        if (winSkipped > 0 || winUnloaded > 0) {
+            ZimbraLog.imap.debug(
+                    "[CACHE REPORT] Large folder handling: {Unloaded: " + winUnloaded + ", Skipped: " + winSkipped + "}"
+            );
+        }
     }
 
     static interface Cache<String, ImapFolder> {

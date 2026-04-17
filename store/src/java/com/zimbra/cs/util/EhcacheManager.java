@@ -24,6 +24,8 @@ import org.ehcache.CacheManager;
 import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
 import org.ehcache.config.builders.CacheManagerBuilder;
+import org.ehcache.config.builders.PooledExecutionServiceConfigurationBuilder;
+import org.ehcache.config.builders.WriteBehindConfigurationBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.config.units.EntryUnit;
 import org.ehcache.config.units.MemoryUnit;
@@ -53,10 +55,15 @@ public final class EhcacheManager {
     public static final String IMAP_ACTIVE_SESSION_CACHE = "imap-active-session-cache";
     public static final String IMAP_INACTIVE_SESSION_CACHE = "imap-inactive-session-cache";
     public static final String SYNC_STATE_ITEM_CACHE = "sync-state-item-cache";
+    public static final String IMAP_INACTIVE_LARGE_FOLDER_SESSION_CACHE  = "imap-inactive-large-folder-session-cache";
 
     private EhcacheManager(Service service) {
         cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
                 .with(CacheManagerBuilder.persistence(LC.zimbra_home.value() + File.separator + "data" + File.separator + service.val))
+                .using(PooledExecutionServiceConfigurationBuilder.newPooledExecutionServiceConfigurationBuilder()
+                        .defaultPool("dflt", 1, 5)
+                        .pool("heavyWritePool", 1, 64)
+                        .build())
                 .withCache(IMAP_ACTIVE_SESSION_CACHE, createImapActiveSessionCache())
                 .build(true);
 
@@ -65,6 +72,12 @@ public final class EhcacheManager {
         } else {
             cacheManager.createCache(IMAP_INACTIVE_SESSION_CACHE, createImapInactiveSessionCache());
             cacheManager.createCache(SYNC_STATE_ITEM_CACHE, createActiveSyncStateItemCache());
+            if (!LC.imap_ehcache_skip_large_folder.booleanValue() &&
+                    LC.imap_ehcache_enable_secondary_inactive_cache.booleanValue()) {
+                cacheManager.createCache(IMAP_INACTIVE_LARGE_FOLDER_SESSION_CACHE,
+                        createImapInactiveLageFolderSessionCache());
+            }
+
         }
     }
 
@@ -113,14 +126,65 @@ public final class EhcacheManager {
             ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraImapInactiveSessionEhcacheSize, e);
             inactiveSessionCache = new MemoryUnitUtil().convertToBytes("10MB");
         }
+        int expiryMinutes = Math.max(LC.imap_folder_ehcache_expiry_mins.intValue(), 0);
 
-        return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
+        CacheConfigurationBuilder<String, ImapFolder> builder = CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                String.class,
                 ImapFolder.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
-                .heap(LC.imap_ehcache_heap_size.intValue(), EntryUnit.ENTRIES)
-                .offheap(inactiveSessionCache, MemoryUnit.B)
-                .disk(maxBytesOnLocalDisk, MemoryUnit.B, true)) // disk backed persistent store
-                .build();
+                        .heap(LC.imap_ehcache_heap_size.intValue(), EntryUnit.ENTRIES)
+                        .offheap(inactiveSessionCache, MemoryUnit.B)
+                        .disk(maxBytesOnLocalDisk, MemoryUnit.B, true));
+
+        if (expiryMinutes > 0) {
+            builder = builder.withExpiry(Expirations.timeToLiveExpiration(
+                    new Duration(expiryMinutes, TimeUnit.MINUTES)));
+        }
+
+        return builder.build();
+    }
+
+    private CacheConfiguration<String, ImapFolder> createImapInactiveLageFolderSessionCache() {
+        long maxBytesOnLocalDisk;
+        long inactiveSessionCache;
+        try {
+            maxBytesOnLocalDisk = Provisioning.getInstance().getLocalServer().getImapInactiveSessionCacheMaxDiskSize();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraImapInactiveSessionCacheMaxDiskSize, e);
+            maxBytesOnLocalDisk = new MemoryUnitUtil().convertToBytes("100GB");;
+        }
+        try {
+            inactiveSessionCache = Provisioning.getInstance().getLocalServer().getImapInactiveSessionEhcacheSize();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraImapInactiveSessionEhcacheSize, e);
+            inactiveSessionCache = new MemoryUnitUtil().convertToBytes("10MB");
+        }
+
+        int expiryMinutes = Math.max(LC.imap_folder_ehcache_expiry_mins.intValue(), 0);
+
+        CacheConfigurationBuilder<String, ImapFolder> builder = CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                String.class,
+                ImapFolder.class,
+                ResourcePoolsBuilder.newResourcePoolsBuilder()
+                        .heap(LC.imap_ehcache_heap_size.intValue(), EntryUnit.ENTRIES)
+                        .offheap(inactiveSessionCache, MemoryUnit.B)
+                        .disk(maxBytesOnLocalDisk, MemoryUnit.B, true))
+                .withLoaderWriter(new NoOpWriter())
+                .add(WriteBehindConfigurationBuilder
+                        .newBatchedWriteBehindConfiguration(1, TimeUnit.SECONDS,
+                                LC.imap_ehcache_write_behind_batch_size.intValue())
+                        .useThreadPool("heavyWritePool")
+                        .queueSize(LC.imap_ehcache_write_behind_queue_size.intValue())
+                        .concurrencyLevel(LC.imap_ehcache_write_behind_concurrency_level.intValue())
+                        .build());
+
+
+        if (expiryMinutes > 0) {
+            builder = builder.withExpiry(Expirations.timeToLiveExpiration(
+                    new Duration(expiryMinutes, TimeUnit.MINUTES)));
+        }
+
+        return builder.build();
     }
 
     private CacheConfiguration<String, String> createActiveSyncStateItemCache() {
