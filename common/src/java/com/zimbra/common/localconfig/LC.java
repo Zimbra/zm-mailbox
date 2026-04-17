@@ -721,6 +721,12 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_ehcache_heap_size = KnownKey.newKey(1);
 
+    public static final KnownKey imap_ehcache_skip_large_folder = KnownKey.newKey(false);
+
+    public static final KnownKey imap_ehcache_folder_max_message_count = KnownKey.newKey(80000);
+
+    public static final KnownKey imap_folder_ehcache_expiry_mins = KnownKey.newKey(0);
+
     @Supported
     public static final KnownKey imapd_keystore = KnownKey.newKey("/opt/zimbra/conf/imapd.keystore");
     @Supported

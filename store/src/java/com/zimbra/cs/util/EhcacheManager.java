@@ -113,14 +113,22 @@ public final class EhcacheManager {
             ZimbraLog.imap.error("Exception while fetching attribute %s", Provisioning.A_zimbraImapInactiveSessionEhcacheSize, e);
             inactiveSessionCache = new MemoryUnitUtil().convertToBytes("10MB");
         }
+        int expiryMinutes = Math.max(LC.imap_folder_ehcache_expiry_mins.intValue(), 0);
 
-        return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
+        CacheConfigurationBuilder<String, ImapFolder> builder = CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                String.class,
                 ImapFolder.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
-                .heap(LC.imap_ehcache_heap_size.intValue(), EntryUnit.ENTRIES)
-                .offheap(inactiveSessionCache, MemoryUnit.B)
-                .disk(maxBytesOnLocalDisk, MemoryUnit.B, true)) // disk backed persistent store
-                .build();
+                        .heap(LC.imap_ehcache_heap_size.intValue(), EntryUnit.ENTRIES)
+                        .offheap(inactiveSessionCache, MemoryUnit.B)
+                        .disk(maxBytesOnLocalDisk, MemoryUnit.B, true));
+
+        if (expiryMinutes > 0) {
+            builder = builder.withExpiry(Expirations.timeToLiveExpiration(
+                    new Duration(expiryMinutes, TimeUnit.MINUTES)));
+        }
+
+        return builder.build();
     }
 
     private CacheConfiguration<String, String> createActiveSyncStateItemCache() {

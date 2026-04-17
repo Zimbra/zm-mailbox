@@ -26,6 +26,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledExecutorService;
+
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -88,6 +92,24 @@ final class ImapSessionManager {
     private final Cache<String, ImapFolder> activeSessionCache; // not LRU'ed
     private final Cache<String, ImapFolder> inactiveSessionCache; // LRU'ed
 
+    private final int maxMsgCountThreshold = LC.imap_ehcache_folder_max_message_count.intValue();
+
+    private final boolean skipLargeFolderEnabled = LC.imap_ehcache_skip_large_folder.booleanValue();
+
+    private final ScheduledExecutorService statsLogger = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "CacheStatsLogger");
+        t.setDaemon(true);
+        return t;
+    });
+
+    private static final boolean CACHE_REPORT = DebugConfig.enableCacheReport;
+
+    private static final int CACHE_REPORT_INTERVAL = DebugConfig.cacheReportInterval;
+
+    private final LongAdder windowSkipped = new LongAdder();
+
+    private final LongAdder windowUnloaded = new LongAdder();
+
     private static final ImapSessionManager SINGLETON = new ImapSessionManager();
 
     private static final ExecutorService CLOSER = Executors.newSingleThreadExecutor(
@@ -110,6 +132,11 @@ final class ImapSessionManager {
                 new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE, false) :
                 activeSessionCache);
         Preconditions.checkState(inactiveSessionCache != null);
+
+        if (CACHE_REPORT) {
+            statsLogger.scheduleAtFixedRate(this::printStats, CACHE_REPORT_INTERVAL,
+                    CACHE_REPORT_INTERVAL, TimeUnit.SECONDS);
+        }
     }
 
     protected static ImapSessionManager getInstance() {
@@ -668,7 +695,17 @@ final class ImapSessionManager {
             try {
                 // could use session.serialize() if we want to leave it in memory...
                 ZimbraLog.imap.debug("Paging session during close: %s", session);
-                session.unload(false);
+                int actualMsgCount = session.mFolder.getSize();
+                if (skipLargeFolderEnabled &&
+                        actualMsgCount > maxMsgCountThreshold) {
+                    windowSkipped.increment();
+                    ZimbraLog.imap.debug("Skipping IMAP folder cache storage: message count (" + actualMsgCount +
+                            ") exceeds threshold (" + maxMsgCountThreshold + "). FolderId: " + session.mFolder.getId() +
+                            "). CacheKey: " + cacheKey(session, false));
+                } else {
+                    windowUnloaded.increment();
+                    session.unload(false);
+                }
             } catch (MailboxInMaintenanceException miMe) {
                 if (ZimbraLog.imap.isDebugEnabled()) {
                     ZimbraLog.imap.info("Mailbox in maintenance detected during close - will detach %s", session, miMe);
@@ -823,6 +860,17 @@ final class ImapSessionManager {
 
     public static boolean isActiveKey(String key) {
         return key.contains("_");
+    }
+
+    private void printStats() {
+        long winSkipped = windowSkipped.sumThenReset();
+        long winUnloaded = windowUnloaded.sumThenReset();
+
+        if (winSkipped > 0 || winUnloaded > 0) {
+            ZimbraLog.imap.info(
+                    "[CACHE REPORT] Large folder handling: {Unloaded: " + winUnloaded + ", Skipped: " + winSkipped + "}"
+            );
+        }
     }
 
     static interface Cache<String, ImapFolder> {
