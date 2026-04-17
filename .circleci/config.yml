@@ -4,10 +4,9 @@ version: 2.1
 references:
    checkout_job_steps: &checkout_job_steps
       steps:
-         - checkout:
-             method: full
+         - checkout
          - run:
-            name: Checking out dependencies.
+            name: Cloning dependency repositories..
             command: |
                git clone -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git ~/zm-pkg-tool
                git clone -b develop --single-branch https://github.com/Zimbra/zm-zcs.git ~/zm-zcs
@@ -28,7 +27,7 @@ references:
          - attach_workspace:
             at: ..
          - run:
-            name: Creating build
+            name: Compiling required dependencies and creating artifacts
             command: |
               mkdir -p /home/build/.ivy2/cache
               sudo apt-get update; sudo apt-get install ant-contrib -y
@@ -37,7 +36,7 @@ references:
          - persist_to_workspace:
             root: ..
             paths:
-               - .ivy2
+               - zm-mailbox/build
                - .zcs-deps
 
    publish_job_steps: &publish_job_steps
@@ -45,7 +44,7 @@ references:
          - attach_workspace:
             at: ..
          - run:
-            name: Publish to Nexus
+            name: Publishing artifacts to Nexus Artifactory
             command: |
               sudo apt-get update; sudo apt-get install ant-contrib -y
               cd ../zm-mailbox
@@ -58,7 +57,7 @@ jobs:
       working_directory: ~/zm-mailbox
       shell: /bin/bash -eo pipefail
       docker:
-      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-18.04
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -99,18 +98,18 @@ workflows:
                - docker-dev-registry
          - build:
             context:
-               - build-number
+               - build-info
                - docker-dev-registry
             requires:
                - checkout
          - publish:
             context:
                - docker-dev-registry
-               - build-number
-               - nexus-artifactory
+               - build-info
+               - nexus-dev-artifactory
             requires:
                - build
             filters:
                branches:
                  only:
-                   - develop
+                   - publish-nexus-jar-poc
