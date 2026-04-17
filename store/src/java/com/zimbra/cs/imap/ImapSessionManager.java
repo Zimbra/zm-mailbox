@@ -87,6 +87,9 @@ final class ImapSessionManager {
             .build();
     private final Cache<String, ImapFolder> activeSessionCache; // not LRU'ed
     private final Cache<String, ImapFolder> inactiveSessionCache; // LRU'ed
+    private final Cache<String, ImapFolder> inactiveSessionLargeFolderCache;
+
+    private final int maxMsgCountThreshold = LC.imap_ehcache_max_message_count_threshold.intValue();
 
     private static final ImapSessionManager SINGLETON = new ImapSessionManager();
 
@@ -110,6 +113,11 @@ final class ImapSessionManager {
                 new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE, false) :
                 activeSessionCache);
         Preconditions.checkState(inactiveSessionCache != null);
+
+        inactiveSessionLargeFolderCache = (LC.imap_use_ehcache.booleanValue() ?
+                new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_LARGE_FOLDER_SESSION_CACHE, false) :
+                activeSessionCache);
+        Preconditions.checkState(inactiveSessionLargeFolderCache != null);
     }
 
     protected static ImapSessionManager getInstance() {
@@ -721,10 +729,17 @@ final class ImapSessionManager {
      * Try to retrieve from inactive session cache, then fall back to active session cache.
      */
     private ImapFolder getCache(FolderStore folder) {
-        ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, false));
-        if (i4folder != null) {
+        String inactiveKey = cacheKey(folder, false);
+        ImapFolder i4folder;
+
+        if ((i4folder = inactiveSessionCache.get(inactiveKey)) != null) {
             return i4folder;
         }
+
+        if ((i4folder = inactiveSessionLargeFolderCache.get(inactiveKey)) != null) {
+            return i4folder;
+        }
+
         return activeSessionCache.get(cacheKey(folder, true));
     }
 
@@ -734,6 +749,7 @@ final class ImapSessionManager {
     private void clearCache(FolderStore folder) {
         activeSessionCache.remove(cacheKey(folder, true));
         inactiveSessionCache.remove(cacheKey(folder, false));
+        inactiveSessionLargeFolderCache.remove(cacheKey(folder, false));
     }
 
     /**
@@ -788,24 +804,38 @@ final class ImapSessionManager {
 
     protected void serialize(String key, ImapFolder folder) {
         if (!isActiveKey(key)) {
-            inactiveSessionCache.put(key, folder);
+            int actualMsgCount = folder.getSize();
+            if (maxMsgCountThreshold > 0 &&
+                    actualMsgCount > maxMsgCountThreshold) {
+                ZimbraLog.imap.warn("Moving Large IMAP folder to secondary ehcache storage: message count (" 
+                        + actualMsgCount +
+                        ") exceeds threshold (" + maxMsgCountThreshold + "). FolderId: " + folder.getId());
+                inactiveSessionLargeFolderCache.put(key, folder);
+            } else {
+                inactiveSessionCache.put(key, folder);
+            }
         } else {
             activeSessionCache.put(key, folder);
         }
     }
 
     protected ImapFolder deserialize(String key) {
+        ImapFolder folder = null;
         if (!isActiveKey(key)) {
-            return inactiveSessionCache.get(key);
+            folder = inactiveSessionCache.get(key);
+            if (folder == null) {
+                folder = inactiveSessionLargeFolderCache.get(key);
+            }
         } else {
-            ImapFolder folder = activeSessionCache.get(key);
-            return folder;
+            folder = activeSessionCache.get(key);
         }
+        return folder;
     }
 
     protected void updateAccessTime(String key) {
         if (!isActiveKey(key)) {
             inactiveSessionCache.updateAccessTime(key);
+            inactiveSessionLargeFolderCache.updateAccessTime(key); //Need to check what happens if key is not available
         } else {
             activeSessionCache.updateAccessTime(key);
         }
@@ -815,6 +845,7 @@ final class ImapSessionManager {
         //remove only from inactive
         if (!isActiveKey(key)) {
             inactiveSessionCache.remove(key);
+            inactiveSessionLargeFolderCache.remove(key);
         } else {
             //removal from active is unsafe; not great to have inconsistent state but it is nicer than bombing totally
             ZimbraLog.imap.warn("Inconsistent active cache entry %s cannot be removed. Client state may not be accurate", key);
