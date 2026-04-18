@@ -7,6 +7,14 @@
     <!-- base path for ivy cache, local repository, ant libraries, etc -->
 
     <property name="dev.home"  value="${user.home}"/>
+    <property environment="env"/>
+
+    <!-- Nexus Credentials Configuration -->
+    <property name="nexus.base.url" value="${env.NEXUS_BASE_URL}"/>
+    <property name="nexus.repo" value="${env.NEXUS_REPO}"/>
+    <property name="nexus.user" value="${env.NEXUS_USER}"/>
+    <property name="nexus.password" value="${env.NEXUS_PASSWORD}"/>
+    <property name="nexus.host" value="${env.NEXUS_HOST}"/>
 
     <!-- Add "init-ivy" depends to your "resolve" target and the following will
          automatically download and install ivy if necessary. -->
@@ -718,6 +726,13 @@
 
     <target name="publish-local" depends="clean-cache,jar,set-dev-version,init-ivy">
       <ivy:publish settingsRef="dev.settings" pubrevision="${dev.version}" resolver="local" overwrite="true" />
+    </target>
+
+    <!-- publish-remote target -->
+    <target name="publish-remote" depends="init-ivy,set-dev-version" description="Publish artifacts to Nexus Artifactory" unless="skipPublishRemote">
+      <ivy:resolve settingsRef="dev.settings"/>
+      <property name="remote.publish.revision" value="${dev.version}-develop-snapshot"/>
+      <ivy:publish settingsRef="dev.settings" resolver="nexus-zimbra" pubrevision="${remote.publish.revision}" overwrite="true" publishivy="false" artifactspattern="${build.dir}/${ant.project.name}-${dev.version}.[ext]"/>
     </target>
 
     <target name="zmlocalconfig">
