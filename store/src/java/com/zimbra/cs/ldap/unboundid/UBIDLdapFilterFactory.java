@@ -1669,4 +1669,47 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         Filter.createEqualityFilter(Provisioning.A_uid, name),
                         FILTER_ALL_ADDRESS_LISTS));
     }
+
+    public ZLdapFilter allCOSFilter() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_COS_FILTER,
+                Filter.createEqualityFilter(
+                        LdapConstants.ATTR_objectClass, "zimbraCOS"));
+    }
+
+    public ZLdapFilter allDomainFilter () {
+        return new UBIDLdapFilter(
+                FilterId.ALL_DOMAIN_FILTER,
+                Filter.createEqualityFilter(
+                        LdapConstants.ATTR_objectClass, "zimbraDomain"));
+    }
+
+    public ZLdapFilter globalConfigFilter() {
+        return new UBIDLdapFilter(
+                FilterId.GLOBAL_CONFIG_FILTER,
+                Filter.createEqualityFilter(
+                        LdapConstants.ATTR_objectClass, "zimbraGlobalConfig"));
+    }
+
+    public ZLdapFilter allAccountsFilter() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_ACCOUNTS_FILTER,
+                Filter.createEqualityFilter(
+                        LdapConstants.ATTR_objectClass, "zimbraAccount"));
+    }
+
+//    accountExceptionsFilter = Filter.createANDFilter(
+//            Filter.createNOTFilter(Filter.createEqualityFilter(ACCOUNT_TYPE_ATTRS.SYSTEM_ACCOUNT.getValue(),
+//    UsageCollectorConstants.TRUE_STR)),
+//            Filter.createNOTFilter(Filter.createEqualityFilter(ACCOUNT_TYPE_ATTRS.SYSTEM_RES.getValue(),
+//    UsageCollectorConstants.TRUE_STR)),
+//            Filter.createNOTFilter(Filter.createEqualityFilter(UsageCollectorConstants.OBJECT_CLASS,
+//            OBJECT_CLASSES.CAL_RESOURCE.getValue())),
+//            Filter.createNOTFilter(Filter.createEqualityFilter(ACCOUNT_TYPE_ATTRS.EXT_VIRTUAL_ACCOUNT.getValue(),
+//    UsageCollectorConstants.TRUE_STR)));
+//
+//    allInternalAccountsFilter = Filter.createANDFilter(allAccountsFilter, accountExceptionsFilter);
+//
+//    defaultCOSDomainFilter = Filter.createANDFilter(
+//            Filter.createNOTFilter(Filter.createPresenceFilter(UsageCollectorConstants.ZIMBRA_DOMAIN_DEFUALT_COS_ID)), allDomainFilter);
 }
