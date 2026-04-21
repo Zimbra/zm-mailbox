@@ -1,5 +1,4 @@
 <project name="zm-mailbox" default="all">
-    <property environment="env"/>
 
     <target name="all" depends="publish-local-all">
       <ant dir="./native" target="generate-native-headers" inheritAll="true"/>
@@ -18,13 +17,6 @@
       <ant dir="./store"  target="publish-local" inheritAll="true"/>
       <ant dir="./store"  target="set-dev-version" inheritAll="true"/>
       <echo>Starting package creation from war </echo>
-   </target>
-
-   <target name="publish-remote-all" description="Publish mailbox jars to Nexus develop-snapshot">
-      <exec executable="bash" failonerror="true">
-         <arg value="-c"/>
-         <arg value="set -e; NEXUS_BASE_URL='${env.NEXUS_BASE_URL}'; NEXUS_USER='${env.NEXUS_USER}'; NEXUS_PASSWORD='${env.NEXUS_PASSWORD}'; JAR_REPO='develop-snapshot'; if [ -z &quot;$NEXUS_BASE_URL&quot; ] || [ -z &quot;$NEXUS_USER&quot; ] || [ -z &quot;$NEXUS_PASSWORD&quot; ]; then echo 'Missing Nexus configuration. Required: NEXUS_BASE_URL, NEXUS_USER, NEXUS_PASSWORD'; exit 1; fi; RAW_BASE=$(printf '%s' &quot;$NEXUS_BASE_URL&quot; | sed 's/#.*$//' | sed 's:/*$::'); module_list='zm-native zm-common zm-soap zm-client zm-store'; for module in $module_list; do pub_dir=&quot;$HOME/.zcs-deps/zimbra/$module&quot;; [ -d &quot;$pub_dir&quot; ] || continue; jar_path=$(find &quot;$pub_dir&quot; -maxdepth 1 -type f -name &quot;$module-*.jar&quot; ! -name &quot;$module-latest.integration.jar&quot; ! -name &quot;$module-local.jar&quot; -printf '%T@\t%p\n' 2>/dev/null | sort -t &quot;$(printf '\t')&quot; -k1,1rn | head -1 | cut -f2-); [ -n &quot;$jar_path&quot; ] || continue; jar_name=$(basename &quot;$jar_path&quot;); jar_version=$(echo &quot;$jar_name&quot; | sed -E &quot;s/^$module-([0-9][A-Za-z0-9._-]*)\.jar$/\1/&quot;); if [ -z &quot;$jar_version&quot; ] || [ &quot;$jar_version&quot; = &quot;$jar_name&quot; ]; then echo &quot;Could not parse version from jar name: $jar_name&quot;; exit 1; fi; case &quot;$jar_version&quot; in *-develop-snapshot|*-snapshot) ;; *) jar_version=&quot;$jar_version-develop-snapshot&quot; ;; esac; upload_name=&quot;$module-$jar_version.jar&quot;; url=&quot;$RAW_BASE/repository/$JAR_REPO/zimbra/$module/$jar_version/$upload_name&quot;; body_file=$(mktemp); header_file=$(mktemp); echo &quot;Uploading $upload_name -&gt; $url&quot;; http_code=$(curl --silent --show-error --user &quot;$NEXUS_USER:$NEXUS_PASSWORD&quot; --header 'Expect:' --upload-file &quot;$jar_path&quot; --dump-header &quot;$header_file&quot; --output &quot;$body_file&quot; --write-out '%{http_code}' &quot;$url&quot; || true); case &quot;$http_code&quot; in 2??) echo &quot;Upload successful: $upload_name (HTTP $http_code)&quot;; ;; 400|409) resp=$(tr '[:upper:]' '[:lower:]' &lt; &quot;$body_file&quot; 2>/dev/null || true); case &quot;$resp&quot; in *already*exist*|*cannot*be*updated*|*conflict*|*duplicate*) echo &quot;Upload skipped (already exists): $upload_name (HTTP $http_code)&quot;; ;; *) echo &quot;Upload failed for $upload_name (HTTP $http_code)&quot;; [ -s &quot;$header_file&quot; ] &amp;&amp; sed -n '1,120p' &quot;$header_file&quot;; [ -s &quot;$body_file&quot; ] &amp;&amp; sed -n '1,200p' &quot;$body_file&quot;; rm -f &quot;$body_file&quot; &quot;$header_file&quot;; exit 1;; esac ;; *) echo &quot;Upload failed for $upload_name (HTTP $http_code)&quot;; [ -s &quot;$header_file&quot; ] &amp;&amp; sed -n '1,120p' &quot;$header_file&quot;; [ -s &quot;$body_file&quot; ] &amp;&amp; sed -n '1,200p' &quot;$body_file&quot;; rm -f &quot;$body_file&quot; &quot;$header_file&quot;; exit 1 ;; esac; rm -f &quot;$body_file&quot; &quot;$header_file&quot;; done"/>
-      </exec>
    </target>
 
    <target name="set-no-halt-on-failure">
@@ -88,20 +80,9 @@
 
 <!-- Property defined to accept the version -->
 
-  <exec executable="git" outputproperty="git.timestamp">
-     <arg value="log"/>
-     <arg value="-1"/>
-     <arg value="--pretty=format:%at"/>
-  </exec>
-  <condition property="store.ext.patch.revision"
-             value="${zimbra.buildinfo.revision}"
-             else="develop-snapshot">
-      <isset property="zimbra.buildinfo.revision"/>
-  </condition>
+  <property name="store.ext.patch.revision" value="${zimbra.buildinfo.revision}" />
   <property name="store.ext.patch.version"
       value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
-  <property name="package.snapshot.version"
-      value="${store.ext.patch.version}.${git.timestamp}-develop-snapshot"/>
 
 <!--Package building starts here from the war files -->
    <target name="pkg" depends="clean-pkg,all,dist">
@@ -114,15 +95,6 @@
    </target>
 
    <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
-
-   <target name="publish-remote-pkgs-all" depends="publish-remote-package" description="Alias target for publishing package artifacts"/>
-
-   <target name="publish-remote-package" description="Publish package artifacts to Nexus APT/Yum repos" unless="skipPublishRemote">
-      <exec executable="bash" failonerror="true">
-         <arg value="-c"/>
-         <arg value="set -e; ROOT='build/dist'; NEXUS_BASE_URL='${env.NEXUS_BASE_URL}'; NEXUS_USER='${env.NEXUS_USER}'; NEXUS_PASSWORD='${env.NEXUS_PASSWORD}'; APT_REPO='package-repo-apt'; YUM_REPO='package-repo-yum'; MODULE_PATH='zimbra/zm-mailbox/${package.snapshot.version}'; if [ -z &quot;$NEXUS_BASE_URL&quot; ] || [ -z &quot;$NEXUS_USER&quot; ] || [ -z &quot;$NEXUS_PASSWORD&quot; ]; then echo 'Missing Nexus configuration. Required: NEXUS_BASE_URL, NEXUS_USER, NEXUS_PASSWORD'; exit 1; fi; RAW_BASE=$(printf '%s' &quot;$NEXUS_BASE_URL&quot; | sed 's/#.*$//' | sed 's:/*$::'); API_BASE=&quot;$RAW_BASE/service/rest/v1/components&quot;; PACKAGE_FILES=$(find &quot;$ROOT&quot; -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.tgz' -o -name '*.tar.gz' \)); if [ -z &quot;$PACKAGE_FILES&quot; ]; then echo 'No package artifacts found in build/dist'; exit 1; fi; while IFS= read -r f; do rel=$(echo &quot;$f&quot; | sed &quot;s|^$ROOT/||&quot;); dir=$(dirname &quot;$rel&quot;); file_name=$(basename &quot;$f&quot;); body_file=$(mktemp); header_file=$(mktemp); case &quot;$f&quot; in *.deb) repo=&quot;$APT_REPO&quot;; url=&quot;$API_BASE?repository=$repo&quot;; echo &quot;Uploading $f -&gt; $repo via Components API&quot;; http_code=$(curl --silent --show-error --user &quot;$NEXUS_USER:$NEXUS_PASSWORD&quot; --request POST &quot;$url&quot; -F &quot;apt.asset=@$f&quot; --dump-header &quot;$header_file&quot; --output &quot;$body_file&quot; --write-out '%{http_code}' || true) ;; *.rpm) repo=&quot;$YUM_REPO&quot;; yum_dir=&quot;$MODULE_PATH/$dir&quot;; url=&quot;$API_BASE?repository=$repo&quot;; echo &quot;Uploading $f -&gt; $repo via Components API (yum.directory=$yum_dir)&quot;; http_code=$(curl --silent --show-error --user &quot;$NEXUS_USER:$NEXUS_PASSWORD&quot; --request POST &quot;$url&quot; -F &quot;yum.directory=$yum_dir&quot; -F &quot;yum.asset=@$f&quot; -F &quot;yum.asset.filename=$file_name&quot; --dump-header &quot;$header_file&quot; --output &quot;$body_file&quot; --write-out '%{http_code}' || true) ;; *.tgz|*.tar.gz) echo &quot;Skipping non-apt/yum artifact: $f&quot;; rm -f &quot;$body_file&quot; &quot;$header_file&quot;; continue ;; *) echo &quot;Skipping unknown artifact type: $f&quot;; rm -f &quot;$body_file&quot; &quot;$header_file&quot;; continue ;; esac; case &quot;$http_code&quot; in 2??) echo &quot;Upload successful: $file_name (HTTP $http_code)&quot; ;; 400|409) resp=$(tr '[:upper:]' '[:lower:]' &lt; &quot;$body_file&quot; 2>/dev/null || true); case &quot;$resp&quot; in *already*exist*|*cannot*be*updated*|*duplicate*|*conflict*) echo &quot;Upload skipped (already exists): $file_name (HTTP $http_code)&quot; ;; *) echo &quot;Upload failed for $f (HTTP $http_code)&quot;; [ -s &quot;$header_file&quot; ] &amp;&amp; echo 'Response headers:' &amp;&amp; sed -n '1,80p' &quot;$header_file&quot;; [ -s &quot;$body_file&quot; ] &amp;&amp; echo 'Server response:' &amp;&amp; sed -n '1,160p' &quot;$body_file&quot;; rm -f &quot;$body_file&quot; &quot;$header_file&quot;; exit 1 ;; esac ;; *) echo &quot;Upload failed for $f (HTTP $http_code)&quot;; [ -s &quot;$header_file&quot; ] &amp;&amp; echo 'Response headers:' &amp;&amp; sed -n '1,80p' &quot;$header_file&quot;; [ -s &quot;$body_file&quot; ] &amp;&amp; echo 'Server response:' &amp;&amp; sed -n '1,160p' &quot;$body_file&quot;; rm -f &quot;$body_file&quot; &quot;$header_file&quot;; exit 1 ;; esac; rm -f &quot;$body_file&quot; &quot;$header_file&quot;; done &lt;&lt;&lt; &quot;$PACKAGE_FILES&quot;"/>
-      </exec>
-   </target>
 
    <target name="clean" depends="clean-ant,clean-pkg">
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>

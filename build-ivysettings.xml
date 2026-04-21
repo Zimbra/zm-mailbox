@@ -39,10 +39,8 @@
     <filesystem name="build-dist">
       <artifact pattern="${dist.dir}/[module]-[revision].[ext]" />
     </filesystem>
-    <ibiblio name="nexus-zimbra" m2compatible="true" root="${nexus.base.url}/repository/${nexus.repo}"/>
   </resolvers>
-  <credentials host="${nexus.host}" realm="Sonatype Nexus Repository Manager" username="${nexus.user}" passwd="${nexus.password}"/>
-  <modules>
+     <modules>
       <module organisation="xerces" name="xercesImpl" revision="2.9.1-patch-01" resolver="maven-redhat"/>
-  </modules>
+    </modules>
 </ivysettings>

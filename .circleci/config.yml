@@ -9,7 +9,6 @@ references:
           password: $DOCKER_PASS
     environment:
       - BUILD: "/home/build"
-      - ANT_OPTS: "-Xms512m -Xmx3072m -XX:+UseG1GC -Djava.awt.headless=true"
     working_directory: /home/build/zm-mailbox
 
   default_attach_workspace: &default_attach_workspace
@@ -41,7 +40,7 @@ references:
       name: Install package toolchain (Ubuntu)
       command: |
         sudo apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ant-contrib rpm dpkg-dev fakeroot lsb-release debhelper build-essential
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ant-contrib
         mkdir -p ~/.ivy2/cache ~/.zcs-deps
         if [ -f /usr/share/java/ant-contrib.jar ]; then
           cp -f /usr/share/java/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
