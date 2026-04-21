@@ -272,7 +272,7 @@ jobs:
 
   package_build_u22:
     <<: *default_environment_settings
-    resource_class: large
+    resource_class: medium
     <<: *package_build_steps_ubuntu
 
   package_build_u24:
@@ -282,7 +282,7 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
-    resource_class: large
+    resource_class: medium
     <<: *package_build_steps_ubuntu
 
   package_build_u20:
@@ -292,7 +292,7 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
-    resource_class: large
+    resource_class: medium
     <<: *package_build_steps_ubuntu
 
   package_build_u18:
@@ -302,7 +302,7 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
-    resource_class: large
+    resource_class: medium
     <<: *package_build_steps_ubuntu
 
   package_build_c9:
@@ -312,7 +312,7 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
-    resource_class: large
+    resource_class: medium
     <<: *package_build_steps_centos
 
   package_build_c8:
@@ -322,7 +322,7 @@ jobs:
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
-    resource_class: large
+    resource_class: medium
     <<: *package_build_steps_centos
 
   publish_jars:
