@@ -24,11 +24,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
@@ -189,5 +191,124 @@ public class SaveDraftTest {
         }.handle(request, ServiceTestUtil.getRequestContext(acct));
 
         Assert.assertFalse(response.getElement(MailConstants.E_MSG).getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false));
+    }
+
+    @Test
+    public void testValidDelegateeWithoutRights() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+
+        // auth account
+        Account authAcct = prov.getAccountByName("test@zimbra.com");
+
+        // create a valid delegatee account
+        Account delegatee = prov.createAccount(
+                "delegatee@zimbra.com", "secret", Maps.<String, Object>newHashMap());
+
+        Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element m = request.addNonUniqueElement(MailConstants.E_MSG)
+                .addAttribute(MailConstants.E_SUBJECT, "Test Delegatee No Rights");
+
+        m.addUniqueElement(MailConstants.E_MIMEPART)
+                .addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain")
+                .addAttribute(MailConstants.E_CONTENT, ORIGINAL_CONTENT);
+
+        Element email = m.addElement(MailConstants.E_EMAIL);
+        email.addAttribute(MailConstants.A_ADDRESS, authAcct.getName());
+        email.addAttribute(MailConstants.A_ITEM_TYPE, MailConstants.A_FLAGS);
+
+        request.addAttribute(SaveDraft.IS_DELEGATED_REQUEST, true);
+        request.addAttribute(SaveDraft.DELEGATEE_ACCOUNT_ID, delegatee.getId());
+
+        try {
+            new SaveDraft().handle(request, ServiceTestUtil.getRequestContext(authAcct));
+            Assert.fail("Expected SEND_FAILURE due to fallback when no rights");
+        } catch (ServiceException e) {
+            Assert.assertEquals(MailServiceException.SEND_FAILURE, e.getCode());
+        }
+    }
+
+    @Test
+    public void testWithEmptyDelegatee() throws Exception {
+        Account acct = Provisioning.getInstance()
+                .getAccountByName("test@zimbra.com");
+
+        Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element m = request.addNonUniqueElement(MailConstants.E_MSG)
+                .addAttribute(MailConstants.E_SUBJECT, "Test Empty Delegatee");
+
+        m.addUniqueElement(MailConstants.E_MIMEPART)
+                .addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain")
+                .addAttribute(MailConstants.E_CONTENT, ORIGINAL_CONTENT);
+
+        Element email = m.addElement(MailConstants.E_EMAIL);
+        email.addAttribute(MailConstants.A_ADDRESS, acct.getName());
+        email.addAttribute(MailConstants.A_ITEM_TYPE, MailConstants.A_FLAGS);
+
+        request.addAttribute(SaveDraft.IS_DELEGATED_REQUEST, true);
+        request.addAttribute(SaveDraft.DELEGATEE_ACCOUNT_ID, ""); // empty
+
+        try {
+            new SaveDraft().handle(request, ServiceTestUtil.getRequestContext(acct));
+            Assert.fail("Expected SEND_FAILURE due to fallback");
+        } catch (ServiceException e) {
+            Assert.assertEquals(MailServiceException.SEND_FAILURE, e.getCode());
+        }
+    }
+
+    @Test
+    public void testWithNullDelegatee() throws Exception {
+        Account acct = Provisioning.getInstance()
+                .getAccountByName("test@zimbra.com");
+
+        Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element m = request.addNonUniqueElement(MailConstants.E_MSG)
+                .addAttribute(MailConstants.E_SUBJECT, "Test Null Delegatee");
+
+        m.addUniqueElement(MailConstants.E_MIMEPART)
+                .addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain")
+                .addAttribute(MailConstants.E_CONTENT, ORIGINAL_CONTENT);
+
+        Element email = m.addElement(MailConstants.E_EMAIL);
+        email.addAttribute(MailConstants.A_ADDRESS, acct.getName());
+        email.addAttribute(MailConstants.A_ITEM_TYPE, MailConstants.A_FLAGS);
+
+        request.addAttribute(SaveDraft.IS_DELEGATED_REQUEST, true);
+
+        try {
+            new SaveDraft().handle(request, ServiceTestUtil.getRequestContext(acct));
+            Assert.fail("Expected SEND_FAILURE due to fallback");
+        } catch (ServiceException e) {
+            Assert.assertEquals(MailServiceException.SEND_FAILURE, e.getCode());
+        }
+    }
+
+    @Test
+    public void testWithInvalidDelegatee() throws Exception {
+        Account acct = Provisioning.getInstance()
+                .getAccountByName("test@zimbra.com");
+
+        String invalidDelegateeId = "non-existing-id";
+
+        Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element m = request.addNonUniqueElement(MailConstants.E_MSG)
+                .addAttribute(MailConstants.E_SUBJECT, "Test Invalid Delegatee");
+
+        m.addUniqueElement(MailConstants.E_MIMEPART)
+                .addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain")
+                .addAttribute(MailConstants.E_CONTENT, ORIGINAL_CONTENT);
+
+        Element email = m.addElement(MailConstants.E_EMAIL);
+        email.addAttribute(MailConstants.A_ADDRESS, acct.getName());
+        email.addAttribute(MailConstants.A_ITEM_TYPE, MailConstants.A_FLAGS);
+
+        request.addAttribute(SaveDraft.IS_DELEGATED_REQUEST, true);
+        request.addAttribute(SaveDraft.DELEGATEE_ACCOUNT_ID, invalidDelegateeId);
+
+        try {
+            new SaveDraft().handle(request, ServiceTestUtil.getRequestContext(acct));
+            Assert.fail("Expected INVALID_REQUEST for invalid delegatee");
+        } catch (ServiceException e) {
+            Assert.assertEquals(MailServiceException.SEND_FAILURE, e.getCode());
+        }
     }
 }
