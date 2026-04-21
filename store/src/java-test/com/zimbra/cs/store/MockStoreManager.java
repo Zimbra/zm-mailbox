@@ -148,10 +148,7 @@ public final class MockStoreManager extends StoreManager {
             File file = blob.getFile();
             if (file != null) {
                 ZimbraLog.store.debug("Deleting %s.", file.getPath());
-                FileDescriptorCache cache = BlobInputStream.getFileDescriptorCache();
-                if (null != cache) {
-                    cache.remove(file.getPath());
-                }
+                BlobInputStream.getFileDescriptorCache().remove(file.getPath()); // Prevent stale cache read.
                 boolean deleted = file.delete();
                 if (deleted) {
                     return true;
@@ -173,16 +170,8 @@ public final class MockStoreManager extends StoreManager {
 
     @Override
     public boolean delete(MailboxBlob mblob) throws IOException {
-        if (null == mblob) {
-            return false;
-        }
         blobs.remove(blobKey(mblob.getMailbox(), mblob.getItemId(), mblob.getRevision()));
-        if (mblob instanceof MockMailboxBlob) {
-            Blob localBlob = mblob.getLocalBlob();
-            if (null != localBlob) {
-                delete(localBlob);
-            }
-        }
+        delete(((MockMailboxBlob) mblob).blob);
         return true;
     }
 

@@ -2531,10 +2531,9 @@ public class Mailbox implements MailboxStore {
             Set<Short> volumeIds = getVolumeIds();
             for (short id : volumeIds) {
                 StoreManager sm = StoreManager.getReaderSMInstance(id);
-                // delete the store under these conditions:
-                // 1. internal stores: always delete
-                // 2. external stores: only delete when deleteBlobs is explicitly set to ALWAYS
-                deleteStore = (!sm.checkIfStoreManagerIsExternal() || deleteBlobs == DeleteBlobs.ALWAYS);
+                // if sm is of ExternalStoreManager deleteStore will always be true
+                deleteStore = (deleteBlobs == DeleteBlobs.ALWAYS
+                        || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && sm.checkIfStoreManagerIsExternal()));
                 SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = null;
                 if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
                     blobs = DbMailItem.getAllBlobs(this);

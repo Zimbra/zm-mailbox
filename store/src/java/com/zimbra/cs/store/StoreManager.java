@@ -161,7 +161,7 @@ public abstract class StoreManager {
     following api checks if storeManager instance is External
      */
     public boolean checkIfStoreManagerIsExternal() {
-        return (this instanceof ExternalStoreManager);
+        return (this instanceof ExternalStoreManager) ? supports(StoreFeature.CENTRALIZED) : !supports(StoreFeature.CENTRALIZED);
     }
 
 
