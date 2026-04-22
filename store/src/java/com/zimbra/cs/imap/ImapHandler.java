@@ -40,6 +40,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,6 +60,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
@@ -141,10 +147,10 @@ public abstract class ImapHandler {
         "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT",
         "I18NLEVEL=1", "ID", "IDLE", "LIST-EXTENDED", "LIST-STATUS", "LITERAL+", "LOGIN-REFERRALS",
         "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES",
-        "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST"
+            "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST", "INPROGRESS"
     ));
 
-    private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
+    private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 10 * Constants.MILLIS_PER_SECOND;
 
     // ID response parameters
     private static final String ID_PARAMS = "\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION +
@@ -197,9 +203,21 @@ public abstract class ImapHandler {
     private static final byte RETURN_CHILDREN   = 0x02;
     private static final byte RETURN_XLIST      = 0x04;
 
+    protected static final ScheduledExecutorService INPROGRESS_SCHEDULER = Executors.newScheduledThreadPool(1,
+            new ThreadFactoryBuilder().setNameFormat("imap-inprogress-notifier-%d").build()
+    );
+
+    static {
+        ScheduledThreadPoolExecutor executor = (ScheduledThreadPoolExecutor) INPROGRESS_SCHEDULER;
+        executor.setMaximumPoolSize(LC.imap_in_progress_response_thread_pool_size.intValue());
+        executor.setKeepAliveTime(LC.imap_in_progress_response_thread_keep_alive.intValue(), TimeUnit.SECONDS);
+    }
+
     private final int SUGGESTED_BATCH_SIZE = 100;
-    private final int SUGGESTED_COPY_BATCH_SIZE = 50;
+
     private final int SUGGESTED_DELETE_BATCH_SIZE = 30;
+
+    private static final String INPROGRESS_RESPONSE = "OK [INPROGRESS] Hang in there...";
 
     protected enum StoreAction { REPLACE, ADD, REMOVE }
 
@@ -3611,7 +3629,7 @@ public abstract class ImapHandler {
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
                 if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
-                    sendIdleUntagged();
+                    sendOkInProgress();
                     checkpoint = now;
                 }
             }
@@ -4449,7 +4467,8 @@ public abstract class ImapHandler {
                     // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                     long now = System.currentTimeMillis();
                     if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
-                        sendIdleUntagged();  checkpoint = now;
+                        sendOkInProgress();
+                        checkpoint = now;
                     }
                 }
 
@@ -4549,7 +4568,7 @@ public abstract class ImapHandler {
             ItemIdentifier fromFolderId;
             if (selectedFolder instanceof MountpointStore) {
                 selectedFolderInOtherMailbox = true;
-                fromFolderId = ((MountpointStore)selectedFolder).getTargetItemIdentifier();
+                fromFolderId = ((MountpointStore) selectedFolder).getTargetItemIdentifier();
             } else if (selectedFolder instanceof ZSharedFolder) {
                 selectedFolderInOtherMailbox = true;
                 fromFolderId = selectedFolder.getFolderItemIdentifier();
@@ -4561,21 +4580,28 @@ public abstract class ImapHandler {
             ItemId iidTarget = new ItemId(targetFolder, path.getOwnerAccount().getId());
             ItemIdentifier targetIdentifier = iidTarget.toItemIdentifier();
 
-            long checkpoint = System.currentTimeMillis();
             List<Integer> copyUIDs = extensionEnabled("UIDPLUS") ? Lists.newArrayListWithCapacity(i4set.size()) : null;
             final List<ImapMessage> i4list = Lists.newArrayList(i4set);
-            final List<List<ImapMessage>> batches = Lists.partition(i4list, SUGGESTED_COPY_BATCH_SIZE);
-            for (List<ImapMessage> batch : batches) {
-                if (sameMailbox && !selectedFolderInOtherMailbox) {
-                    copyOwnItems(selectedImapMboxStore, batch, iidTarget, copyUIDs);
-                } else {
-                    copyItemsBetweenMailboxes(selectedImapMboxStore, batch, fromFolderId, targetIdentifier, copyUIDs);
-                }
+            final List<List<ImapMessage>> batches =
+                    Lists.partition(i4list, LC.imap_suggested_batch_copy_size.intValue());
 
-                // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
-                long now = System.currentTimeMillis();
-                if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
-                    sendIdleUntagged();  checkpoint = now;
+            OperationProgress copyStatus = new OperationProgress(0, i4set.size(), tag, true);
+            ScheduledFuture<?> notifier = sendInProgressResponses(copyStatus);
+            try {
+                for (List<ImapMessage> batch : batches) {
+                    if (sameMailbox && !selectedFolderInOtherMailbox) {
+                        copyOwnItems(selectedImapMboxStore, batch, iidTarget, copyUIDs);
+                    } else {
+                        copyItemsBetweenMailboxes(selectedImapMboxStore, batch, fromFolderId, targetIdentifier,
+                                copyUIDs);
+                    }
+                    copyStatus.setCompletedCount(copyStatus.getCompletedCount() + batch.size());
+                }
+            } finally {
+                // stop sending from the notifier thread after this point for safety
+                copyStatus.setIsRunning(false);
+                if (notifier != null) {
+                    notifier.cancel(true);
                 }
             }
 
@@ -4587,12 +4613,6 @@ public abstract class ImapHandler {
                 copyuid = "[COPYUID " + uvv + ' ' + ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
                         ImapFolder.encodeSubsequence(copyUIDs) + "] ";
             }
-        } catch (IOException e) {
-            // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
-            //         MUST restore the destination mailbox to its state before the COPY attempt."
-            ZimbraLog.imap.warn("%s failed", command, e);
-            sendNO(tag, command + " failed");
-            return true;
         } catch (ServiceException e) {
             // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
             //         MUST restore the destination mailbox to its state before the COPY attempt."
@@ -4619,6 +4639,33 @@ public abstract class ImapHandler {
         sendNotifications(true, false);
         sendOK(tag, copyuid + command + " completed");
         return true;
+    }
+
+    private ScheduledFuture<?> sendInProgressResponses(OperationProgress copyStatus) {
+        return INPROGRESS_SCHEDULER.scheduleAtFixedRate(() -> {
+            setLoggingContext();
+            try {
+                if (!copyStatus.getIsRunning()) {
+                    // stop sending after this point for safety
+                    ZimbraLog.imap.trace("Scheduled notifier is about to shutdown");
+                    return;
+                }
+                if (copyStatus.getCompletedCount() != null
+                        && copyStatus.getCompletedCount() > 0
+                        && copyStatus.getCompletedCount() < copyStatus.getTotalCount()) {
+                    sendLine("* OK [INPROGRESS (\"" + copyStatus.getTag() + "\" "
+                            + copyStatus.getCompletedCount() + " " + copyStatus.getTotalCount()
+                            + ")] Processed " + copyStatus.getPercentageComplete() + "% of the items", true);
+                } else {
+                    sendLine("* " + INPROGRESS_RESPONSE, true);
+                }
+
+            } catch (Exception e) {
+                ZimbraLog.imap.warn("Error while sending INPROGRESS, IMAP COPY commands may timeout", e);
+            } finally {
+                ZimbraLog.clearContext();
+            }
+        }, MAXIMUM_IDLE_PROCESSING_MILLIS, MAXIMUM_IDLE_PROCESSING_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     private void copyOwnItems(ImapMailboxStore selectedImapMboxStore, List<ImapMessage> batch, ItemId iidTarget,
@@ -4775,6 +4822,10 @@ public abstract class ImapHandler {
         sendUntagged("NOOP", true);
     }
 
+    protected void sendOkInProgress() throws IOException {
+        sendUntagged(INPROGRESS_RESPONSE, true);
+    }
+
     protected void sendOK(String tag, String response) throws IOException {
         consecutiveError = 0;
         sendResponse(tag, "OK " + (Strings.isNullOrEmpty(response) ? " " : response), true);
@@ -4876,3 +4927,4 @@ public abstract class ImapHandler {
         return credentials.getMailbox().getFolderByPath(null, "/Trash").getImapMessageCount();
     }
 }
+

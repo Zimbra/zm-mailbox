@@ -718,6 +718,9 @@ public final class LC {
     public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
+    @Reloadable
+    public static final KnownKey imap_ehcache_heap_size = KnownKey.newKey(1);
+
     @Supported
     public static final KnownKey imapd_keystore = KnownKey.newKey("/opt/zimbra/conf/imapd.keystore");
     @Supported
@@ -1498,6 +1501,16 @@ public final class LC {
 
     // imap folder pagination enabled
     public static final KnownKey zimbra_imap_folder_pagination_enabled =  KnownKey.newKey(false);
+
+    @Supported
+    @Reloadable
+    public static final KnownKey imap_suggested_batch_copy_size =  KnownKey.newKey(5);
+
+    @Supported
+    public static final KnownKey imap_in_progress_response_thread_pool_size =  KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey imap_in_progress_response_thread_keep_alive = KnownKey.newKey(15);
 
     // wsdl use public service hostname
     public static final KnownKey wsdl_use_public_service_hostname =  KnownKey.newKey(true);
