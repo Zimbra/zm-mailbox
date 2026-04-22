@@ -67,8 +67,10 @@ references:
           cp -f /usr/share/ant/lib/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
         else
           curl --fail --location --silent --show-error \
-            "https://files.zimbra.com/repository/ant-contrib/ant-contrib-1.0b1.jar" \
-            --output ~/.zcs-deps/ant-contrib-1.0b1.jar
+            --connect-timeout 120 --max-time 600 --retry 5 --retry-delay 20 --retry-connrefused \
+            --output ~/.zcs-deps/ant-contrib-1.0b1.jar \
+            --write-out "ant-contrib curl: http=%{http_code} connect_s=%{time_connect} total_s=%{time_total}\n" \
+            "https://files.zimbra.com/repository/ant-contrib/ant-contrib-1.0b1.jar"
         fi
 
   package_build_steps_ubuntu: &package_build_steps_ubuntu
