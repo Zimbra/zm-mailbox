@@ -393,6 +393,9 @@ workflows:
           requires:
             - build
           <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
       - publish_jars:
           requires:
             - build
