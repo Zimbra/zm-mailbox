@@ -237,7 +237,11 @@ jobs:
       - *default_attach_workspace
       - run:
           name: Install junit-merge
-          command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
+          command: |
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y npm
+            sudo npm config set strict-ssl false
+            sudo npm install -g junit-merge
       - run:
           name: Create test report directory to hold junit tests
           command: mkdir -p /tmp/junit/
