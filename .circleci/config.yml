@@ -20,7 +20,6 @@ references:
       branches:
         only:
           - develop
-          - ZCS-18921-poc
 
   install_ant_contrib_step: &install_ant_contrib_step
     run:
@@ -389,10 +388,10 @@ workflows:
           context:
             - docker-dev-registry
             - build-info
-      # - test:
-      #     requires:
-      #       - build
-      #     <<: *filter_branches
+      - test:
+          requires:
+            - build
+          <<: *filter_branches
       - publish_jars:
           requires:
             - build
