@@ -20,6 +20,7 @@ references:
       branches:
         only:
           - develop
+          - feature/ZCS-18921
 
   install_ant_contrib_step: &install_ant_contrib_step
     run:
