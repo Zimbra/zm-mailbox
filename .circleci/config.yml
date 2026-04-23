@@ -435,30 +435,30 @@ workflows:
           context:
             - docker-dev-registry
             - build-info
-      # - publish_jars:
-      #     requires:
-      #       - build
-      #       - package_build_u24
-      #       - package_build_u22
-      #       - package_build_u20
-      #       - package_build_u18
-      #       - package_build_c9
-      #       - package_build_c8
-      #     <<: *filter_branches
-      #     context:
-      #       - docker-dev-registry
-      #       - build-info
-      #       - nexus-dev-artifactory
-      # - publish_packages:
-      #     requires:
-      #       - package_build_u24
-      #       - package_build_u22
-      #       - package_build_u20
-      #       - package_build_u18
-      #       - package_build_c9
-      #       - package_build_c8
-      #     <<: *filter_branches
-      #     context:
-      #       - docker-dev-registry
-      #       - build-info
-      #       - nexus-dev-artifactory
+      - publish_jars:
+          requires:
+            - build
+            - package_build_u24
+            - package_build_u22
+            - package_build_u20
+            - package_build_u18
+            - package_build_c9
+            - package_build_c8
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+            - nexus-dev-artifactory
+      - publish_packages:
+          requires:
+            - package_build_u24
+            - package_build_u22
+            - package_build_u20
+            - package_build_u18
+            - package_build_c9
+            - package_build_c8
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+            - nexus-dev-artifactory
