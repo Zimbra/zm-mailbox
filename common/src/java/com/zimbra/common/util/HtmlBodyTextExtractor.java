@@ -26,7 +26,12 @@ public class HtmlBodyTextExtractor extends org.xml.sax.helpers.DefaultHandler {
     private StringBuilder sb = new StringBuilder(1024);
     private boolean inCharacters = false;
     private boolean inBody = false;
+
+    // if maxLength > 0 then limited extraction
+    // if maxLength <= 0 then full extraction
     private int maxLength;
+
+    public static final int NO_LIMIT = -1;
 
     public HtmlBodyTextExtractor(int maxLength) {
         this.maxLength = maxLength;
@@ -39,8 +44,9 @@ public class HtmlBodyTextExtractor extends org.xml.sax.helpers.DefaultHandler {
 
     @Override
     public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
-        if (sb.length() >= maxLength)
+        if (maxLength > 0 && sb.length() >= maxLength) {
             return;
+        }
 
         String element = localName.toLowerCase();
         if ("body".equals(element))
@@ -77,8 +83,9 @@ public class HtmlBodyTextExtractor extends org.xml.sax.helpers.DefaultHandler {
 
     @Override
     public void characters(char[] ch, int offset, int length) {
-        if (length == 0 || sb.length() >= maxLength)
+        if (length == 0 || (maxLength > 0 && sb.length() >= maxLength)) {
             return;
+        }
 
         if (inBody) {
             int original = offset;
@@ -94,7 +101,7 @@ public class HtmlBodyTextExtractor extends org.xml.sax.helpers.DefaultHandler {
             if (length > 0) {
                 if (sb.length() > 0 && (!inCharacters || original != offset))
                     sb.append(' ');
-                if (sb.length() + length > maxLength) {
+                if (maxLength > 0 && sb.length() + length > maxLength) {
                     sb.append(ch, offset, maxLength - sb.length());
                 } else {
                     sb.append(ch, offset, length);
@@ -112,8 +119,9 @@ public class HtmlBodyTextExtractor extends org.xml.sax.helpers.DefaultHandler {
 
     @Override
     public void endElement(String uri, String localName, String qName) {
-        if (sb.length() > maxLength)
+        if (maxLength > 0 && sb.length() > maxLength) {
             return;
+        }
 
         String element = localName.toLowerCase();
         if ("body".equals(element))
@@ -122,8 +130,9 @@ public class HtmlBodyTextExtractor extends org.xml.sax.helpers.DefaultHandler {
         inCharacters = false;
 
         if ("br".equals(element)) {
-            if (sb.length() < maxLength)
+            if (maxLength <= 0 || sb.length() < maxLength) {
                 sb.append("\r\n");
+            }
         }
     }
 
