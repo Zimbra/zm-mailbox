@@ -259,51 +259,52 @@ jobs:
             - .ivy2
 
   test:
-    <<: *test_environment_settings
+    <<: *default_environment_settings
     steps:
-      - *prepare_test_workspace_mount
       - *default_attach_workspace
       - run:
-          name: Configure Ant (build version, same as build job)
+          name: Configure Ant
           command: |
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
             echo "export ANT_OPTS=-Dzimbra.buildinfo.version=${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" >> "$BASH_ENV"
       - run:
           name: Install junit-merge
-          command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
+          command: |
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y npm
+            sudo npm config set strict-ssl false
+            sudo npm install -g junit-merge
       - run:
           name: Create test report directory to hold junit tests
           command: mkdir -p /tmp/junit/
       - run:
           name: Running ant test native
           command: ant test
-          working_directory: /home/build/zm-mailbox/native
+          working_directory: native
       - run:
           name: Running ant test common
           command: ant test
-          working_directory: /home/build/zm-mailbox/common
+          working_directory: common
       - run:
           name: Running ant test soap
           command: ant test
-          working_directory: /home/build/zm-mailbox/soap
+          working_directory: soap
       - run:
           name: Running ant test client
           command: ant test
-          working_directory: /home/build/zm-mailbox/client
+          working_directory: client
       - run:
           name: Running ant test store
           command: ant test
           no_output_timeout: 1200s
-          working_directory: /home/build/zm-mailbox/store
+          working_directory: store
       - run:
           name: Finding test results
           command: find . -type f -regex ".*/build/test/report/.*xml" | xargs junit-merge
-          working_directory: /home/build/zm-mailbox
       - run:
           name: Copy test results to proper directory
           command: cp merged-test-results.xml /tmp/junit/
-          working_directory: /home/build/zm-mailbox
       - store_test_results:
           path: /tmp/junit/
 
@@ -430,6 +431,7 @@ workflows:
             - build
           <<: *filter_branches
           context:
+            - docker-dev-registry
             - build-info
       # - publish_jars:
       #     requires:
