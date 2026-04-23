@@ -15,6 +15,16 @@ references:
     attach_workspace:
       at: /home/build
 
+  # Same idea as legacy develop CircleCI: openjdk:8-node so javac sees JAXB (javax.xml.bind)
+  # and npm is present for junit-merge. Workspace paths stay /home/build to match build job.
+  test_environment_settings: &test_environment_settings
+    docker:
+      - image: circleci/openjdk:8-node
+    resource_class: medium
+    working_directory: /home/build/zm-mailbox
+    environment:
+      BUILD: "/home/build"
+
   filter_branches: &filter_branches
     filters:
       branches:
@@ -231,54 +241,40 @@ jobs:
             - .ivy2
 
   test:
-    <<: *default_environment_settings
-    resource_class: medium
+    <<: *test_environment_settings
     steps:
       - *default_attach_workspace
       - run:
-          name: Install junit-merge
+          name: Configure Ant (build version, same as build job)
           command: |
-            sudo apt-get update
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y npm
-            sudo npm config set strict-ssl false
-            sudo npm install -g junit-merge
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            echo "export ANT_OPTS=-Dzimbra.buildinfo.version=${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" >> "$BASH_ENV"
+      - run:
+          name: Install junit-merge
+          command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
       - run:
           name: Create test report directory to hold junit tests
           command: mkdir -p /tmp/junit/
       - run:
           name: Running ant test native
-          command: |
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
-            ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" test
+          command: ant test
           working_directory: native
       - run:
           name: Running ant test common
-          command: |
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
-            ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" test
+          command: ant test
           working_directory: common
       - run:
           name: Running ant test soap
-          command: |
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
-            ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" test
+          command: ant test
           working_directory: soap
       - run:
           name: Running ant test client
-          command: |
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
-            ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" test
+          command: ant test
           working_directory: client
       - run:
           name: Running ant test store
-          command: |
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
-            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
-            ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" test
+          command: ant test
           no_output_timeout: 1200s
           working_directory: store
       - run:
@@ -413,32 +409,31 @@ workflows:
             - build
           <<: *filter_branches
           context:
-            - docker-dev-registry
             - build-info
-      - publish_jars:
-          requires:
-            - build
-            - package_build_u24
-            - package_build_u22
-            - package_build_u20
-            - package_build_u18
-            - package_build_c9
-            - package_build_c8
-          <<: *filter_branches
-          context:
-            - docker-dev-registry
-            - build-info
-            - nexus-dev-artifactory
-      - publish_packages:
-          requires:
-            - package_build_u24
-            - package_build_u22
-            - package_build_u20
-            - package_build_u18
-            - package_build_c9
-            - package_build_c8
-          <<: *filter_branches
-          context:
-            - docker-dev-registry
-            - build-info
-            - nexus-dev-artifactory
+      # - publish_jars:
+      #     requires:
+      #       - build
+      #       - package_build_u24
+      #       - package_build_u22
+      #       - package_build_u20
+      #       - package_build_u18
+      #       - package_build_c9
+      #       - package_build_c8
+      #     <<: *filter_branches
+      #     context:
+      #       - docker-dev-registry
+      #       - build-info
+      #       - nexus-dev-artifactory
+      # - publish_packages:
+      #     requires:
+      #       - package_build_u24
+      #       - package_build_u22
+      #       - package_build_u20
+      #       - package_build_u18
+      #       - package_build_c9
+      #       - package_build_c8
+      #     <<: *filter_branches
+      #     context:
+      #       - docker-dev-registry
+      #       - build-info
+      #       - nexus-dev-artifactory
