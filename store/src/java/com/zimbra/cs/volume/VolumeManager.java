@@ -37,6 +37,7 @@ import com.zimbra.cs.redolog.op.SetCurrentVolume;
 import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.external.ExternalStoreManager;
+import org.apache.commons.lang.StringUtils;
 
 public final class VolumeManager {
 
@@ -251,11 +252,65 @@ public final class VolumeManager {
         }
     }
 
+    /**
+     * Returns the {@link Volume} corresponding to the given identifier.
+     *
+     * <p>The input {@code id} can be either:
+     * <ul>
+     *   <li>A pure numeric volume ID (e.g., {@code "3"})</li>
+     *   <li>A locator string prefixed with the volume ID followed by a separator
+     *       (e.g., {@code "3@@fbvdfbdfb"})</li>
+     * </ul>
+     *
+     * <p>If the input contains the locator separator ({@code "@@"}),
+     * the method extracts and parses the numeric prefix as the volume ID.
+     *
+     * <p>Validation rules:
+     * <ul>
+     *   <li>{@code id} must not be {@code null} or empty</li>
+     *   <li>The extracted volume ID must be numeric</li>
+     *   <li>The numeric value must be within the valid {@code short} range</li>
+     * </ul>
+     *
+     * @param id the volume identifier or locator string containing the volume ID
+     * @return the corresponding {@link Volume} instance
+     * @throws ServiceException if:
+     *         <ul>
+     *           <li>The input is {@code null} or empty</li>
+     *           <li>The ID format is invalid</li>
+     *           <li>The numeric value is out of {@code short} range</li>
+     *           <li>An unexpected error occurs while retrieving the volume</li>
+     *         </ul>
+     */
     public Volume getVolume(String id) throws ServiceException {
+        if (id == null || id.isEmpty()) {
+            throw ServiceException.INVALID_REQUEST("volume ID cannot be null or empty", null);
+        }
+        String volIdLocatorSeparator = "@@";
         try {
-            return getVolume(Short.parseShort(id));
+            short volumeId;
+
+            if (StringUtils.isNumeric(id)) {
+                volumeId = Short.parseShort(id);
+            } else {
+                if (id.contains(volIdLocatorSeparator)) {
+                    String[] parts = id.split(volIdLocatorSeparator, 2);
+                    if (parts.length >= 1 && StringUtils.isNumeric(parts[0])) {
+                        volumeId = Short.parseShort(parts[0]);
+                    } else {
+                        throw ServiceException.INVALID_REQUEST("invalid volume ID: " + id, null);
+                    }
+                } else {
+                    throw ServiceException.INVALID_REQUEST("invalid locator ID: " + id, null);
+                }
+            }
+
+            return getVolume(volumeId);
+
         } catch (NumberFormatException e) {
-            throw ServiceException.INVALID_REQUEST("invalid volume ID: " + id, e);
+            throw ServiceException.INVALID_REQUEST("volume ID out of range: " + id, e);
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("unexpected error while retrieving volume for ID: " + id, e);
         }
     }
 

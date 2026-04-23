@@ -3143,6 +3143,15 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         searchDirectoryInternal(opts, visitor);
     }
 
+    @Override
+    public void getAllCoses(NamedEntry.Visitor visitor, String[] retAttrs) throws ServiceException {
+        SearchDirectoryOptions opts = new SearchDirectoryOptions(retAttrs);
+        opts.setFilter(filterFactory.allCoses());
+        opts.setTypes(SearchDirectoryOptions.ObjectType.coses);
+        opts.setUseControl(true);
+        opts.setResultPageSize(1000);
+        searchDirectoryInternal(opts, visitor);
+    }
     private boolean domainDnExists(ZLdapContext zlc, String dn) throws ServiceException {
         try {
             ZSearchResultEnumeration ne = helper.searchDir(dn, filterFactory.domainLabel(),
@@ -11737,6 +11746,51 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("error modifying address list: " + addressList.getId(), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    /**
+     * Method used to fetch account based on filter.
+     * @param base
+     * @param zFilter
+     * @param attrs
+     * @param visitor
+     * @throws ServiceException
+     */
+    public void searchLdapAccountsOnReplica(
+            String base,
+            ZLdapFilter zFilter,
+            String[] attrs,
+            NamedEntry.Visitor visitor) throws ServiceException {
+
+        ZLdapContext zlc = null;
+
+        try {
+            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.SEARCH);
+
+            ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE,
+                    ZSearchControls.SIZE_UNLIMITED,
+                    attrs
+            );
+
+            ZSearchResultEnumeration en = zlc.searchDir(base, zFilter, searchControls);
+
+            while (en.hasMore()) {
+                ZSearchResultEntry entry = en.next();
+
+                Account account = makeAccount(
+                        entry.getDN(),
+                        entry.getAttributes());
+
+                visitor.visit(account);
+            }
+
+        } catch (Exception e) {
+            throw ServiceException.FAILURE(
+                    "LDAP search failed for filter: " + zFilter.toFilterString(), e);
         } finally {
             LdapClient.closeContext(zlc);
         }

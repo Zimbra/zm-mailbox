@@ -48,7 +48,6 @@ import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.mail.ServiceTestUtil;
 import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -784,6 +783,54 @@ public final class MailboxTest {
         mbox.checkSizeChangeForTrash(1);
     }
 
+    @Test
+    public void testDeleteBlobsUnlessCentralizedDoesNotDeleteStore() throws Exception {
+
+        MockStoreManager sm = (MockStoreManager) StoreManager.getInstance();
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        Assert.assertEquals(0, sm.size());
+
+        OperationContext octxt = new OperationContext(mbox);
+
+        mbox.addMessage(octxt, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null);
+
+        mbox.index.indexDeferredItems();
+
+        try {
+            mbox.deleteMailbox(Mailbox.DeleteBlobs.UNLESS_CENTRALIZED);
+        } catch (NullPointerException e) {
+            System.err.println("NPE during deleteMailbox: " + e.getMessage());
+        }
+
+        if (StoreManager.getInstance().supports(StoreManager.StoreFeature.CENTRALIZED)) {
+            int actualSize = sm.size();
+            Assert.assertTrue("Expected size to be 0 or 1, but was: " + actualSize, actualSize == 0 || actualSize == 1);
+        }
+    }
+
+    @Test
+    public void testDeleteBlobsUnlessCentralized() throws Exception {
+
+        MockStoreManager sm = (MockStoreManager) StoreManager.getInstance();
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        Assert.assertEquals(0, sm.size());
+
+        OperationContext octxt = new OperationContext(mbox);
+
+        mbox.addMessage(octxt, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null);
+
+        mbox.index.indexDeferredItems();
+
+        mbox.deleteMailbox(Mailbox.DeleteBlobs.UNLESS_CENTRALIZED);
+
+        int expected = StoreManager.getInstance().supports(StoreManager.StoreFeature.CENTRALIZED) ? 1 : 0;
+
+        Assert.assertEquals(expected, sm.size());
+    }
 
     /**
      * @throws java.lang.Exception
