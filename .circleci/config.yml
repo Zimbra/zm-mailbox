@@ -35,6 +35,19 @@ references:
           - develop
           - feature/ZCS-18921
 
+  restore_deps_cache: &restore_deps_cache
+    restore_cache:
+      keys:
+        - v1-mailbox-ivy-{{ checksum "native/ivy.xml" }}-{{ checksum "common/ivy.xml" }}-{{ checksum "soap/ivy.xml" }}-{{ checksum "client/ivy.xml" }}-{{ checksum "store/ivy.xml" }}
+        - v1-mailbox-ivy-
+
+  save_deps_cache: &save_deps_cache
+    save_cache:
+      key: v1-mailbox-ivy-{{ checksum "native/ivy.xml" }}-{{ checksum "common/ivy.xml" }}-{{ checksum "soap/ivy.xml" }}-{{ checksum "client/ivy.xml" }}-{{ checksum "store/ivy.xml" }}
+      paths:
+        - ../.ivy2/cache
+        - ../.zcs-deps
+
   install_ant_contrib_step: &install_ant_contrib_step
     run:
       name: Install ant-contrib
@@ -100,7 +113,7 @@ references:
 
             cd /home/build
             if [ ! -d "zm-pkg-tool" ]; then
-              git clone -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
+              git clone --depth 1 -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
             fi
             cd /home/build/zm-mailbox
             mkdir -p build/dist
@@ -132,7 +145,7 @@ references:
 
             cd /home/build
             if [ ! -d "zm-pkg-tool" ]; then
-              git clone -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
+              git clone --depth 1 -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
             fi
             cd /home/build/zm-mailbox
             mkdir -p build/dist
@@ -213,20 +226,22 @@ jobs:
     resource_class: medium
     steps:
       - checkout
+      - *restore_deps_cache
       - *install_ant_contrib_step
       - run:
           name: Clone zm-timezones
           command: |
             cd /home/build
             if [ ! -d "zm-timezones" ]; then
-              git clone -b develop --single-branch https://github.com/Zimbra/zm-timezones.git
+              git clone --depth 1 -b develop --single-branch https://github.com/Zimbra/zm-timezones.git
             fi
       - run:
           name: Build local jars once
           command: |
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
-            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" clean publish-local-all
+            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" publish-local-all
+      - *save_deps_cache
       - run:
           name: Checkout Nexus publish scripts repo
           command: |
