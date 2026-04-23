@@ -15,8 +15,6 @@ references:
     attach_workspace:
       at: /home/build
 
-  # Same idea as legacy develop CircleCI: openjdk:8-node so javac sees JAXB (javax.xml.bind)
-  # and npm is present for junit-merge. Workspace paths stay /home/build to match build job.
   test_environment_settings: &test_environment_settings
     docker:
       - image: circleci/openjdk:8-node
