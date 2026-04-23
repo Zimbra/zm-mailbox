@@ -267,6 +267,8 @@ jobs:
           command: |
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64" >> "$BASH_ENV"
+            echo "export PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:\$PATH" >> "$BASH_ENV"
             echo "export ANT_OPTS=-Dzimbra.buildinfo.version=${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" >> "$BASH_ENV"
       - run:
           name: Install junit-merge
