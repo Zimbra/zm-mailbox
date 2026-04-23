@@ -19,9 +19,14 @@ references:
     docker:
       - image: circleci/openjdk:8-node
     resource_class: medium
-    working_directory: /home/build/zm-mailbox
+    working_directory: /home/circleci
     environment:
       BUILD: "/home/build"
+
+  prepare_test_workspace_mount: &prepare_test_workspace_mount
+    run:
+      name: Prepare /home/build for workspace attach
+      command: sudo mkdir -p /home/build && sudo chown -R "$(id -u):$(id -g)" /home/build
 
   filter_branches: &filter_branches
     filters:
@@ -241,6 +246,7 @@ jobs:
   test:
     <<: *test_environment_settings
     steps:
+      - *prepare_test_workspace_mount
       - *default_attach_workspace
       - run:
           name: Configure Ant (build version, same as build job)
@@ -257,30 +263,32 @@ jobs:
       - run:
           name: Running ant test native
           command: ant test
-          working_directory: native
+          working_directory: /home/build/zm-mailbox/native
       - run:
           name: Running ant test common
           command: ant test
-          working_directory: common
+          working_directory: /home/build/zm-mailbox/common
       - run:
           name: Running ant test soap
           command: ant test
-          working_directory: soap
+          working_directory: /home/build/zm-mailbox/soap
       - run:
           name: Running ant test client
           command: ant test
-          working_directory: client
+          working_directory: /home/build/zm-mailbox/client
       - run:
           name: Running ant test store
           command: ant test
           no_output_timeout: 1200s
-          working_directory: store
+          working_directory: /home/build/zm-mailbox/store
       - run:
           name: Finding test results
           command: find . -type f -regex ".*/build/test/report/.*xml" | xargs junit-merge
+          working_directory: /home/build/zm-mailbox
       - run:
           name: Copy test results to proper directory
           command: cp merged-test-results.xml /tmp/junit/
+          working_directory: /home/build/zm-mailbox
       - store_test_results:
           path: /tmp/junit/
 
