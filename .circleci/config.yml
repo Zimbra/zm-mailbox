@@ -1,72 +1,281 @@
-version: 2
-
-############################################################################
+version: 2.1
 
 references:
-   default_environment_settings: &default_environment_settings
-      docker:
-        - image: circleci/openjdk:8-node
-      environment:
-        - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
-        - BUILD: "/home/circleci"
-      working_directory: /home/circleci/zm-mailbox
-   default_attach_workspace: &default_attach_workspace
-         attach_workspace:
-            at: /home/circleci
-   filter_branches: &filter_branches
-     filters:
-       branches:
-         only:
-           - develop
-############################################################################
+  default_environment_settings: &default_environment_settings
+    docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    environment:
+      - BUILD: "/home/build"
+    working_directory: /home/build/zm-mailbox
+
+  default_attach_workspace: &default_attach_workspace
+    attach_workspace:
+      at: /home/build
+
+  test_environment_settings: &test_environment_settings
+    docker:
+      - image: circleci/openjdk:8-node
+    resource_class: medium
+    working_directory: /home/circleci
+    environment:
+      BUILD: "/home/build"
+
+  prepare_test_workspace_mount: &prepare_test_workspace_mount
+    run:
+      name: Prepare /home/build for workspace attach
+      command: sudo mkdir -p /home/build && sudo chown -R "$(id -u):$(id -g)" /home/build
+
+  filter_branches: &filter_branches
+    filters:
+      branches:
+        only:
+          - develop
+
+  restore_deps_cache: &restore_deps_cache
+    restore_cache:
+      keys:
+        - v1-mailbox-ivy-{{ checksum "native/ivy.xml" }}-{{ checksum "common/ivy.xml" }}-{{ checksum "soap/ivy.xml" }}-{{ checksum "client/ivy.xml" }}-{{ checksum "store/ivy.xml" }}
+        - v1-mailbox-ivy-
+
+  save_deps_cache: &save_deps_cache
+    save_cache:
+      key: v1-mailbox-ivy-{{ checksum "native/ivy.xml" }}-{{ checksum "common/ivy.xml" }}-{{ checksum "soap/ivy.xml" }}-{{ checksum "client/ivy.xml" }}-{{ checksum "store/ivy.xml" }}
+      paths:
+        - ../.ivy2/cache
+        - ../.zcs-deps
+
+  install_ant_contrib_step: &install_ant_contrib_step
+    run:
+      name: Install ant-contrib
+      command: |
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ant-contrib
+        mkdir -p ~/.ivy2/cache ~/.zcs-deps
+        if [ -f /usr/share/java/ant-contrib.jar ]; then
+          cp -f /usr/share/java/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+        elif [ -f /usr/share/ant/lib/ant-contrib.jar ]; then
+          cp -f /usr/share/ant/lib/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+        fi
+
+  install_package_toolchain_steps_ubuntu: &install_package_toolchain_steps_ubuntu
+    run:
+      name: Install package toolchain (Ubuntu)
+      command: |
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ant-contrib
+        mkdir -p ~/.ivy2/cache ~/.zcs-deps
+        if [ -f /usr/share/java/ant-contrib.jar ]; then
+          cp -f /usr/share/java/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+        elif [ -f /usr/share/ant/lib/ant-contrib.jar ]; then
+          cp -f /usr/share/ant/lib/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+        fi
+
+  install_package_toolchain_steps_centos: &install_package_toolchain_steps_centos
+    run:
+      name: Install package toolchain (CentOS)
+      command: |
+        if command -v yum >/dev/null 2>&1; then
+          command -v ant >/dev/null 2>&1 || sudo yum install -y ant
+        elif command -v dnf >/dev/null 2>&1; then
+          command -v ant >/dev/null 2>&1 || sudo dnf install -y ant
+        else
+          echo "No supported package manager found for CentOS toolchain install"
+          exit 1
+        fi
+        mkdir -p ~/.ivy2/cache ~/.zcs-deps
+        if [ -f /usr/share/java/ant-contrib.jar ]; then
+          cp -f /usr/share/java/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+        elif [ -f /usr/share/ant/lib/ant-contrib.jar ]; then
+          cp -f /usr/share/ant/lib/ant-contrib.jar ~/.zcs-deps/ant-contrib-1.0b1.jar
+        else
+          curl --fail --location --silent --show-error \
+            --connect-timeout 120 --max-time 600 --retry 5 --retry-delay 20 --retry-connrefused \
+            --output ~/.zcs-deps/ant-contrib-1.0b1.jar \
+            --write-out "ant-contrib curl: http=%{http_code} connect_s=%{time_connect} total_s=%{time_total}\n" \
+            "https://files.zimbra.com/repository/ant-contrib/ant-contrib-1.0b1.jar"
+        fi
+
+  package_build_steps_ubuntu: &package_build_steps_ubuntu
+    steps:
+      - *default_attach_workspace
+      - *install_package_toolchain_steps_ubuntu
+      - run:
+          name: Build mailbox OS packages
+          command: |
+            set -euo pipefail
+            mkdir -p /home/build/.circleci-pkg-status
+            status_file="/home/build/.circleci-pkg-status/${CIRCLE_JOB}.status"
+            printf '%s\n' "unknown" > "$status_file"
+
+            cd /home/build
+            if [ ! -d "zm-pkg-tool" ]; then
+              git clone --depth 1 -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
+            fi
+            cd /home/build/zm-mailbox
+            mkdir -p build/dist
+
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH \
+              ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" -Dzimbra.buildinfo.revision="1~develop-snapshot" pkg
+            printf '%s\n' "ok" > "$status_file"
+      - persist_to_workspace:
+          root: /home/build/
+          paths:
+            - zm-mailbox/build/dist
+            - .circleci-pkg-status
+      - store_artifacts:
+          path: /home/build/zm-mailbox/build/dist
+
+  package_build_steps_centos: &package_build_steps_centos
+    steps:
+      - *default_attach_workspace
+      - *install_package_toolchain_steps_centos
+      - run:
+          name: Build mailbox OS packages
+          command: |
+            set -euo pipefail
+            mkdir -p /home/build/.circleci-pkg-status
+            status_file="/home/build/.circleci-pkg-status/${CIRCLE_JOB}.status"
+            printf '%s\n' "unknown" > "$status_file"
+
+            cd /home/build
+            if [ ! -d "zm-pkg-tool" ]; then
+              git clone --depth 1 -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
+            fi
+            cd /home/build/zm-mailbox
+            mkdir -p build/dist
+
+            DETECTED_JAVAC="$(command -v javac)"
+            export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$DETECTED_JAVAC")")")"
+            export PATH="$JAVA_HOME/bin:$PATH"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" -Dzimbra.buildinfo.revision="1_develop_snapshot" pkg
+            printf '%s\n' "ok" > "$status_file"
+      - persist_to_workspace:
+          root: /home/build/
+          paths:
+            - zm-mailbox/build/dist
+            - .circleci-pkg-status
+      - store_artifacts:
+          path: /home/build/zm-mailbox/build/dist
+
+  publish_package_steps: &publish_package_steps
+    steps:
+      - *default_attach_workspace
+      - *install_ant_contrib_step
+      - run:
+          name: Publish packages to Nexus APT/Yum
+          command: |
+            dist_root="/home/build/zm-mailbox/build/dist"
+            publish_root="$dist_root"
+
+            for build_job in package_build_u24 package_build_u22 package_build_u20 package_build_u18 package_build_c9 package_build_c8; do
+              status_file="/home/build/.circleci-pkg-status/${build_job}.status"
+              if [ ! -f "$status_file" ]; then
+                echo "Missing package build status file: $status_file"
+                exit 1
+              fi
+              status="$(tr -d '[:space:]' < "$status_file" || true)"
+              if [ "$status" != "ok" ]; then
+                echo "Package build status is not ok for ${build_job}: $status"
+                exit 1
+              fi
+            done
+
+            pkg_count="$(find "$publish_root" -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.tgz' -o -name '*.tar.gz' \) 2>/dev/null | wc -l | tr -d ' ')"
+            if [ "${pkg_count:-0}" = "0" ]; then
+              echo "No package artifacts found under $publish_root"
+              exit 1
+            fi
+
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl
+            cd /home/build/zm-mailbox
+            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+            export PATH="$JAVA_HOME/bin:$PATH"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            bash /home/build/zm-nexus/scripts/publish-packages-to-nexus.sh "$publish_root"
+
+  publish_jar_steps: &publish_jar_steps
+    steps:
+      - *default_attach_workspace
+      - *install_ant_contrib_step
+      - run:
+          name: Install Java 8 JDK for jar publish
+          command: |
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-8-jdk
+      - run:
+          name: Publish jars to Nexus
+          command: |
+            cd /home/build/zm-mailbox
+            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+            export PATH="$JAVA_HOME/bin:$PATH"
+            bash /home/build/zm-nexus/scripts/publish-jars-to-nexus.sh
 
 jobs:
   build:
     <<: *default_environment_settings
+    resource_class: medium
     steps:
       - checkout
-      - run:
-          name: Install ant-contrib
-          command: sudo apt-get update; sudo apt-get install ant-contrib
+      - *restore_deps_cache
+      - *install_ant_contrib_step
       - run:
           name: Clone zm-timezones
           command: |
-            cd "$BUILD"
-            git clone https://github.com/Zimbra/zm-timezones.git -b develop --single-branch || exit 1
+            cd /home/build
+            if [ ! -d "zm-timezones" ]; then
+              git clone --depth 1 -b develop --single-branch https://github.com/Zimbra/zm-timezones.git
+            fi
       - run:
-          name: Running ant compile in native directory
-          command: ant clean compile publish-local
-          working_directory: native
+          name: Build local jars once
+          command: |
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" publish-local-all
+      - *save_deps_cache
       - run:
-          name: Running ant compile in common directory
-          command: ant clean compile publish-local
-          working_directory: common
-      - run:
-          name: Running ant compile in soap directory
-          command: ant clean compile publish-local
-          working_directory: soap
-      - run:
-          name: Running ant compile in client directory
-          command: ant clean compile publish-local
-          working_directory: client
-      - run:
-          name: Running ant compile in store directory
-          command: ant clean compile publish-local
-          working_directory: store
+          name: Checkout Nexus publish scripts repo
+          command: |
+            cd /home/build
+            if [ ! -d "zm-nexus" ]; then
+              git clone -b master --single-branch https://$GITHUB_ACCESS_TOKEN@github.com/Zimbra/zm-nexus.git
+            fi
       - persist_to_workspace:
-          root: /home/circleci/
+          root: /home/build/
           paths:
             - zm-timezones
             - zm-mailbox
-            - .ssh
+            - zm-nexus
             - .zcs-deps
+            - .ivy2
+
   test:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
       - run:
+          name: Configure Ant
+          command: |
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64" >> "$BASH_ENV"
+            echo "export PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:\$PATH" >> "$BASH_ENV"
+            echo "export ANT_OPTS=-Dzimbra.buildinfo.version=${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" >> "$BASH_ENV"
+      - run:
           name: Install junit-merge
-          command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
+          command: |
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y npm
+            sudo npm config set strict-ssl false
+            sudo npm install -g junit-merge
       - run:
           name: Create test report directory to hold junit tests
           command: mkdir -p /tmp/junit/
@@ -99,7 +308,73 @@ jobs:
           command: cp merged-test-results.xml /tmp/junit/
       - store_test_results:
           path: /tmp/junit/
-############################################################################
+
+  package_build_u22:
+    <<: *default_environment_settings
+    resource_class: medium
+    <<: *package_build_steps_ubuntu
+
+  package_build_u24:
+    <<: *default_environment_settings
+    docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-24.04
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    resource_class: medium
+    <<: *package_build_steps_ubuntu
+
+  package_build_u20:
+    <<: *default_environment_settings
+    docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-20.04
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    resource_class: medium
+    <<: *package_build_steps_ubuntu
+
+  package_build_u18:
+    <<: *default_environment_settings
+    docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-18.04
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    resource_class: medium
+    <<: *package_build_steps_ubuntu
+
+  package_build_c9:
+    <<: *default_environment_settings
+    docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-9
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    resource_class: medium
+    <<: *package_build_steps_centos
+
+  package_build_c8:
+    <<: *default_environment_settings
+    docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-8
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    resource_class: medium
+    <<: *package_build_steps_centos
+
+  publish_jars:
+    <<: *default_environment_settings
+    resource_class: small
+    circleci_ip_ranges: true
+    <<: *publish_jar_steps
+
+  publish_packages:
+    <<: *default_environment_settings
+    resource_class: small
+    circleci_ip_ranges: true
+    <<: *publish_package_steps
 
 workflows:
   version: 2
@@ -107,8 +382,82 @@ workflows:
     jobs:
       - build:
           <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+      - package_build_u24:
+          requires:
+            - build
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+      - package_build_u22:
+          requires:
+            - build
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+      - package_build_u20:
+          requires:
+            - build
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+      - package_build_u18:
+          requires:
+            - build
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+      - package_build_c9:
+          requires:
+            - build
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+      - package_build_c8:
+          requires:
+            - build
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
       - test:
           requires:
             - build
           <<: *filter_branches
-############################################################################
+          context:
+            - docker-dev-registry
+            - build-info
+      - publish_jars:
+          requires:
+            - build
+            - package_build_u24
+            - package_build_u22
+            - package_build_u20
+            - package_build_u18
+            - package_build_c9
+            - package_build_c8
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+            - nexus-dev-artifactory
+      - publish_packages:
+          requires:
+            - package_build_u24
+            - package_build_u22
+            - package_build_u20
+            - package_build_u18
+            - package_build_c9
+            - package_build_c8
+          <<: *filter_branches
+          context:
+            - docker-dev-registry
+            - build-info
+            - nexus-dev-artifactory
