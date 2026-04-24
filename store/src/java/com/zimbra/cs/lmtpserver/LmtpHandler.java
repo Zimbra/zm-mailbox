@@ -20,8 +20,6 @@ package com.zimbra.cs.lmtpserver;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeUtility;
@@ -487,17 +485,11 @@ public abstract class LmtpHandler extends ProtocolHandler {
         StringBuilder headers = new StringBuilder();
 
         // Assemble Return-Path header
-        if (null != mEnvelope.getRecipients()) {
-            List<String> recipients = mEnvelope.getRecipients().stream().map(LmtpAddress::getEmailAddress).collect(Collectors.toList());
-            String recipientsStr = String.join(",", recipients);
-            headers.append(String.format("Return-Path: <%s>\r\n", recipientsStr));
-        } else {
-            String sender = "";
-            if (mEnvelope.hasSender()) {
-                sender = mEnvelope.getSender().getEmailAddress();
-            }
-            headers.append(String.format("Return-Path: <%s>\r\n", sender));
+        String sender = "";
+        if (mEnvelope.hasSender()) {
+            sender = mEnvelope.getSender().getEmailAddress();
         }
+        headers.append(String.format("Return-Path: <%s>\r\n", sender));
 
         // Assemble Received header
         String localHostname = "unknown";
