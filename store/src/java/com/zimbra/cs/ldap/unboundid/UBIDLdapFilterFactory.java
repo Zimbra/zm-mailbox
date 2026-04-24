@@ -17,7 +17,8 @@
 package com.zimbra.cs.ldap.unboundid;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.cs.account.Cos;
 import java.util.Collection;
 import java.util.List;
@@ -103,6 +104,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ACCOUNTS_WITH_VIDEO_ALL;
     private static Filter FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING;
 
+    private static Filter FILTER_ACCOUNT_EXCEPTIONS;
+
+    private static Filter FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS;
 
     private static boolean initialized = false;
 
@@ -338,6 +342,22 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
         FILTER_ACCOUNTS_WITH_DOCUMENT_EDITING = Filter.createEqualityFilter(
                 Provisioning.A_zimbraFeatureDocumentEditingEnabled, LdapConstants.LDAP_TRUE);
+
+        FILTER_ACCOUNT_EXCEPTIONS = Filter.createANDFilter(
+                Filter.createNOTFilter(
+                        Filter.createEqualityFilter(ZAttrProvisioning.A_zimbraIsSystemAccount,
+                                ProvisioningConstants.TRUE)),
+                Filter.createNOTFilter(Filter.createEqualityFilter(ZAttrProvisioning.A_zimbraIsSystemResource,
+                        ProvisioningConstants.TRUE)),
+                Filter.createNOTFilter(
+                        Filter.createEqualityFilter(LdapConstants.ATTR_objectClass,
+                                AttributeClass.OC_zimbraCalendarResource)),
+                Filter.createNOTFilter(
+                        Filter.createEqualityFilter(ZAttrProvisioning.A_zimbraIsExternalVirtualAccount,
+                                ProvisioningConstants.TRUE)));
+
+        FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS = Filter.createANDFilter(FILTER_ALL_ACCOUNTS,
+                FILTER_ACCOUNT_EXCEPTIONS);
     }
 
     @Override
@@ -1669,4 +1689,283 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         Filter.createEqualityFilter(Provisioning.A_uid, name),
                         FILTER_ALL_ADDRESS_LISTS));
     }
+
+    /**
+     * Builds a filter to fetch the Zimbra global configuration entry.
+     * LDAP logic:
+     * (objectClass=zimbraGlobalConfig)
+     * @return ZLdapFilter representing the global config entry
+     */
+    public ZLdapFilter zimbraGlobalConfig() {
+        return new UBIDLdapFilter(
+                FilterId.ZIMBRA_GLOBAL_CONFIG,
+                Filter.createEqualityFilter(
+                        LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraGlobalConfig));
+    }
+
+    /**
+     * Returns a filter that represents account exception rules.
+     * This filter typically excludes system, service, or special-purpose
+     * accounts that should not be treated as regular user accounts.
+     * @return ZLdapFilter for account exceptions
+     */
+    public ZLdapFilter accountExceptionsFilter() {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNT_EXCEPTION_FILTER,
+                FILTER_ACCOUNT_EXCEPTIONS);
+    }
+
+    /**
+     * Builds a filter to fetch all internal user accounts while excluding
+     * account exceptions.
+     * LDAP logic:
+     * AND(FILTER_ALL_ACCOUNTS, FILTER_ACCOUNT_EXCEPTIONS)
+     * @return ZLdapFilter for all internal non-exception accounts
+     */
+    public ZLdapFilter allInternalAccountsExceptionFilter() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_INTERNAL_ACCOUNTS_EXCEPTION_FILTER,
+                FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS);
+    }
+
+    /**
+     * Builds a filter to fetch domains that do not have an explicitly
+     * configured default COS.
+     * LDAP logic:
+     * AND(
+     *   NOT(present(zimbraDomainDefaultCOSId)),
+     *   FILTER_ALL_DOMAINS
+     * )
+     * @return ZLdapFilter for domains without default COS
+     */
+    public ZLdapFilter defaultCOSDomainFilter() {
+        return new UBIDLdapFilter(
+                FilterId.DEFAULT_COS_DOMAIN_FILTER,
+                Filter.createANDFilter(Filter.createNOTFilter(
+                        Filter.createPresenceFilter(ZAttrProvisioning.A_zimbraDomainDefaultCOSId)),
+                        FILTER_ALL_DOMAINS));
+
+    }
+
+    /**
+     * Builds a filter to fetch all internal accounts belonging to the
+     * specified COS.
+     * LDAP logic:
+     * AND(
+     *   (zimbraCOSId = cosId),
+     *   FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS
+     * )
+     * @param cosId COS identifier
+     * @return ZLdapFilter for accounts in the given COS
+     */
+    public ZLdapFilter cosAccountsFilter(String cosId) {
+        return new UBIDLdapFilter(
+                FilterId.COS_ACCOUNT_FILTER,
+                cosAccountFilter(cosId));
+
+    }
+
+    /**
+     * Builds a filter that matches entries where all specified attributes
+     * are NOT present.
+     * LDAP logic:
+     * AND(
+     *   NOT(present(attr1)),
+     *   NOT(present(attr2)),
+     *   ...
+     * )
+     * @param attrNameList list of attribute names
+     * @return ZLdapFilter matching entries where attributes are unset
+     */
+    public ZLdapFilter attributesUnsetFilter(List<String> attrNameList) {
+        Filter attrAbsenceFilter = attributeAbsenceFilter(attrNameList);
+        return new UBIDLdapFilter(FilterId.ATTRIBUTE_UNSET_FILTER, attrAbsenceFilter);
+    }
+
+    /**
+     * Builds a filter that matches entries where at least one of the
+     * specified attributes is present.
+     * LDAP logic:
+     * OR(
+     *   present(attr1),
+     *   present(attr2),
+     *   ...
+     * )
+     * @param attrNameList list of attribute names
+     * @return ZLdapFilter matching entries where attributes are set
+     */
+    public ZLdapFilter attributesSetFilter(List<String> attrNameList) {
+        Filter attrPresnceFilter = attributePresenceFilter(attrNameList);
+        return new UBIDLdapFilter(FilterId.ATTRIBUTE_SET_FILTER, attrPresnceFilter);
+    }
+
+    /**
+     * Builds a filter to fetch COS entries where a given feature
+     * is enabled.
+     * LDAP logic:
+     * AND(
+     *   FILTER_ALL_COSES,
+     *   (feature = TRUE)
+     * )
+     * @param feature feature attribute name
+     * @return ZLdapFilter for COSes with the feature enabled
+     */
+    public ZLdapFilter featureCOSFilter(String feature) {
+        return new UBIDLdapFilter(
+                FilterId.FEATURE_COS_FILTER,
+                Filter.createANDFilter(
+                        FILTER_ALL_COSES,
+                        Filter.createEqualityFilter(feature, ProvisioningConstants.TRUE)));
+    }
+
+    /**
+     * Builds a filter to fetch internal accounts where a given feature
+     * is enabled.
+     * LDAP logic:
+     * AND(
+     *   FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS,
+     *   (feature = TRUE)
+     * )
+     * @param feature feature attribute name
+     * @return ZLdapFilter for accounts with the feature enabled
+     */
+    public ZLdapFilter featureAccountFilter(String feature) {
+        return new UBIDLdapFilter(
+                FilterId.FEATURE_ACCOUNT_FILTER,
+                Filter.createANDFilter(
+                        FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS,
+                        Filter.createEqualityFilter(feature, ProvisioningConstants.TRUE)));
+    }
+
+    /**
+     * Builds a filter to fetch accounts belonging to a specific COS
+     * that have at least one of the specified attributes present.
+     * LDAP logic:
+     * AND(
+     *   cosAccountFilter(cosId),
+     *   attributePresenceFilter(attrNameList)
+     * )
+     * @param cosId COS identifier
+     * @param attrNameList list of attribute names
+     * @return ZLdapFilter for COS accounts with specified attributes
+     */
+    public ZLdapFilter cosAttributeFilter(String cosId, List<String> attrNameList) {
+        Filter attrPresnceFilter = attributePresenceFilter(attrNameList);
+        Filter cosAccountFilter = cosAccountFilter(cosId);
+
+        return new UBIDLdapFilter(
+                FilterId.COS_ATTRIBUTE_FILTER,
+                Filter.createANDFilter(cosAccountFilter, attrPresnceFilter));
+    }
+
+    /**
+     * Builds a filter that matches entries where all given attributes
+     * are absent.
+     * @param attrNameList list of attribute names
+     * @return LDAP filter representing attribute absence
+     */
+    private Filter attributeAbsenceFilter(List<String> attrNameList) {
+        Filter attrAbsenceFilter = null;
+        if (!attrNameList.isEmpty()) {
+            attrAbsenceFilter = Filter.createANDFilter(
+                    Filter.createNOTFilter(
+                            Filter.createPresenceFilter(attrNameList.get(0))));
+            for (int i = 1; i < attrNameList.size(); i++) {
+                attrAbsenceFilter = Filter.createANDFilter(attrAbsenceFilter,
+                        Filter.createNOTFilter(
+                                Filter.createPresenceFilter(attrNameList.get(i))));
+            }
+        }
+
+        return attrAbsenceFilter;
+    }
+
+    /**
+     * Builds a filter that matches entries where at least one of the
+     * given attributes is present.
+     * @param attrNameList list of attribute names
+     * @return LDAP filter representing attribute presence
+     */
+    private Filter attributePresenceFilter(List<String> attrNameList) {
+        Filter attrPresnceFilter = null;
+        if (attrNameList.size() >= 1) {
+            attrPresnceFilter = Filter
+                    .createORFilter(Filter.createPresenceFilter(attrNameList.get(0)));
+            for (int i = 1; i < attrNameList.size(); i++) {
+                attrPresnceFilter = Filter.createORFilter(attrPresnceFilter,
+                        Filter.createPresenceFilter(attrNameList.get(i)));
+            }
+        }
+
+        return attrPresnceFilter;
+    }
+
+    /**
+     * Builds a filter to fetch internal accounts belonging to the
+     * specified COS.
+     * @param cosId COS identifier
+     * @return LDAP filter for COS-based account lookup
+     */
+    private Filter cosAccountFilter(String cosId) {
+        return Filter.createANDFilter(
+                Filter.createEqualityFilter(ZAttrProvisioning.A_zimbraCOSId, cosId),
+                FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS);
+    }
+
+    /*
+     * all internal accounts
+     */
+    @Override
+    public ZLdapFilter allInternalAccountsFilter() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_INTERNAL_ACCOUNTS_FILTER,
+                FILTER_ALL_INTERNAL_ACCOUNTS);
+    }
+
+    @Override
+    public ZLdapFilter internalAccountsWithoutCosAttrAbsenceFilter(List<String> attrNameList) {
+        Filter attrAbsenceFilter = attributeAbsenceFilter(attrNameList);
+        Filter filter = Filter.createANDFilter(FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS,
+                Filter.createNOTFilter(
+                        Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
+        if (attrAbsenceFilter != null) {
+            return new UBIDLdapFilter(
+                    FilterId.INTERNAL_ACCOUNTS_WITHOUT_COS_ATTR_ABSENCE_FILTER,
+                    Filter.createANDFilter(filter, attrAbsenceFilter));
+        }
+        return new UBIDLdapFilter(
+                FilterId.INTERNAL_ACCOUNTS_WITHOUT_COS_ATTR_ABSENCE_FILTER,
+                filter);
+    }
+
+    @Override
+    public ZLdapFilter internalAccountsWithoutCosAttrPresenceFilter(List<String> attrNameList) {
+        Filter attrPresenceFilter = attributePresenceFilter(attrNameList);
+        Filter filter = Filter.createANDFilter(FILTER_ALL_INTERNAL_ACCOUNTS_WITH_EXCEPTIONS,
+                Filter.createNOTFilter(
+                        Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
+        if (attrPresenceFilter != null) {
+            return new UBIDLdapFilter(
+                    FilterId.INTERNAL_ACCOUNTS_WITHOUT_COS_ATTR_PRESENCE_FILTER,
+                    Filter.createANDFilter(filter, attrPresenceFilter));
+        }
+        return new UBIDLdapFilter(
+                FilterId.INTERNAL_ACCOUNTS_WITHOUT_COS_ATTR_PRESENCE_FILTER,
+                filter);
+    }
+
+    @Override
+    public ZLdapFilter cosAccountAttrPresenceFilter(String cosId, List<String> attrNameList) {
+        Filter attrPresenceFilter = attributePresenceFilter(attrNameList);
+        Filter filter = cosAccountFilter(cosId);
+        if (attrPresenceFilter != null) {
+            return new UBIDLdapFilter(
+                    FilterId.COS_ACCOUNT_ATTR_PRESENCE_FILTER,
+                    Filter.createANDFilter(filter, attrPresenceFilter));
+        }
+        return new UBIDLdapFilter(
+                FilterId.COS_ACCOUNT_ATTR_PRESENCE_FILTER,
+                filter);
+    }
+    
 }
