@@ -88,6 +88,9 @@ public abstract class ImapMailboxStore {
      */
     public abstract List<Integer> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException;
+
+    public abstract List<Integer> imapMove(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
+            throws IOException, ServiceException;
     public abstract InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
             throws ServiceException;
     public abstract void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException;

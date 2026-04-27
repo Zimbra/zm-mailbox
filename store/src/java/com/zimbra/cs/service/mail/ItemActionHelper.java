@@ -575,6 +575,8 @@ public class ItemActionHelper {
             localResult.appendSuccessIds(batchResult.getSuccessIds());
             if (Op.COPY == mOperation) {
                 ((CopyActionResult)localResult).appendCreatedIds(batchResult);
+            } else if (Op.MOVE == mOperation) {
+                ((MoveActionResult) localResult).appendCreatedIds(batchResult);
             } else if (Op.HARD_DELETE == mOperation) {
                 ((DeleteActionResult)localResult).appendNonExistentIds(batchResult);
             }
@@ -864,6 +866,10 @@ public class ItemActionHelper {
         }
         else if (Op.COPY.equals(mOperation)) {
             ((CopyActionResult)result).setCreatedIds(createdIds);
+        }
+        else if (Op.MOVE.equals(mOperation)) {
+            ((MoveActionResult) result).setCreatedIds(createdIds);
+
         }
 
         for (int itemId : itemIds) {
