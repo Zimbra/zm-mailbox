@@ -133,6 +133,11 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
         return zMailbox.imapCopy(itemIds, type, folderId);
     }
 
+    public List<Integer> imapMove(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
+            throws IOException, ServiceException {
+        throw ServiceException.UNSUPPORTED(); // TODO
+    }
+
     @Override
     public InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
     throws ServiceException {

@@ -146,6 +146,20 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
+    public List<Integer> imapMove(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
+            throws IOException, ServiceException {
+        List<MailItem> mis = mailbox.imapMove(octxt, itemIds, MailItem.Type.fromCommon(type), folderId, null);
+        if (null == mis) {
+            return Collections.emptyList();
+        }
+        List<Integer> uids = Lists.newArrayListWithCapacity(mis.size());
+        for (MailItem mi : mis) {
+            uids.add(mi.getImapUid());
+        }
+        return uids;
+    }
+
+    @Override
     public InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
     throws ServiceException {
         MailItem mitem = mailbox.getItemByImapId(octxt, imapId, Integer.parseInt(folderId));

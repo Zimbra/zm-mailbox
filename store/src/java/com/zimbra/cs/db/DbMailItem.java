@@ -398,6 +398,50 @@ public class DbMailItem {
         }
     }
 
+    public static void imove(MailItem item, Folder folder, int moveId) throws ServiceException {
+        Mailbox mbox = item.getMailbox();
+        if (mbox != folder.getMailbox()) {
+            throw MailServiceException.WRONG_MAILBOX();
+        }
+        checkNamingConstraint(mbox, folder.getId(), item.getName(), item.getId());
+
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            String imapRenumber = mbox.isTrackingImap()
+                    ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE ? " + " END"
+                    : "";
+            int pos = 1;
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
+                    " SET folder_id = ?, prev_folders = ?, index_id = ?, mod_metadata = ?, change_date = ? "
+                    + imapRenumber + " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+            stmt.setInt(pos++, folder.getId());
+            int modseq = mbox.getOperationChangeID();
+            String prevFolders = findPrevFolders(item, modseq);
+            stmt.setString(pos++, prevFolders);
+            if (item.getIndexStatus() == MailItem.IndexStatus.NO) {
+                stmt.setNull(pos++, Types.INTEGER);
+            } else {
+                stmt.setInt(pos++, item.getIndexId());
+            }
+            stmt.setInt(pos++, modseq);
+            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setInt(pos++, moveId);
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, item.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            // catch item_id uniqueness constraint violation and return failure
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
+            } else {
+                throw ServiceException.FAILURE("writing new imove data for item " + item.getId(), e);
+            }
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     public static void icopy(MailItem source, UnderlyingData data, boolean shared) throws ServiceException {
         Mailbox mbox = source.getMailbox();
         if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0) {
