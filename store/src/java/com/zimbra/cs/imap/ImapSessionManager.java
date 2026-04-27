@@ -25,8 +25,9 @@ import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
+import java.util.concurrent.atomic.LongAdder;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -88,6 +89,18 @@ final class ImapSessionManager {
     private final Cache<String, ImapFolder> activeSessionCache; // not LRU'ed
     private final Cache<String, ImapFolder> inactiveSessionCache; // LRU'ed
 
+    private static final String THREAD_NAME = "CacheStatsLogger";
+
+    private final ScheduledExecutorService statsLogger = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, THREAD_NAME);
+        t.setDaemon(true);
+        return t;
+    });
+
+    private final LongAdder windowSkipped = new LongAdder();
+
+    private final LongAdder windowUnloaded = new LongAdder();
+
     private static final ImapSessionManager SINGLETON = new ImapSessionManager();
 
     private static final ExecutorService CLOSER = Executors.newSingleThreadExecutor(
@@ -110,6 +123,11 @@ final class ImapSessionManager {
                 new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE, false) :
                 activeSessionCache);
         Preconditions.checkState(inactiveSessionCache != null);
+
+        if (DebugConfig.enableImapCacheReport) {
+            statsLogger.scheduleAtFixedRate(this::printStats, DebugConfig.imapCacheReportInterval,
+                    DebugConfig.imapCacheReportInterval, TimeUnit.SECONDS);
+        }
     }
 
     protected static ImapSessionManager getInstance() {
@@ -668,7 +686,24 @@ final class ImapSessionManager {
             try {
                 // could use session.serialize() if we want to leave it in memory...
                 ZimbraLog.imap.debug("Paging session during close: %s", session);
-                session.unload(false);
+                int actualMsgCount = session.mFolder.getSize();
+                // skip folders where imapFolder message count exceeds the imap_ehcache_folder_max_message_count
+                // to reduce load on Ehcache
+                if (LC.imap_ehcache_skip_large_folder.booleanValue() &&
+                        actualMsgCount > LC.imap_ehcache_folder_max_message_count.intValue()) {
+                    windowSkipped.increment();
+                    ZimbraLog.imap.debug(
+                            "Skipping IMAP folder cache storage: message count (%d) exceeds threshold (%d). " +
+                                    "FolderId: %d. CacheKey: %s",
+                            actualMsgCount,
+                            LC.imap_ehcache_folder_max_message_count.intValue(),
+                            session.mFolder.getId(),
+                            cacheKey(session, false)
+                    );
+                } else {
+                    windowUnloaded.increment();
+                    session.unload(false);
+                }
             } catch (MailboxInMaintenanceException miMe) {
                 if (ZimbraLog.imap.isDebugEnabled()) {
                     ZimbraLog.imap.info("Mailbox in maintenance detected during close - will detach %s", session, miMe);
@@ -823,6 +858,28 @@ final class ImapSessionManager {
 
     public static boolean isActiveKey(String key) {
         return key.contains("_");
+    }
+
+    /**
+     * Prints cache statistics for large folder handling.
+     *
+     * <p>This method logs the number of folders that were skipped or unloaded
+     * during the current window. The log is emitted only when cache reporting
+     * is enabled via configuration (DebugConfig.enableImapCacheReport flag).</p>
+     *
+     * <p>Logging is performed at INFO level to avoid excessive DEBUG log noise.</p>
+     */
+    private void printStats() {
+        long winSkipped = windowSkipped.sumThenReset();
+        long winUnloaded = windowUnloaded.sumThenReset();
+
+        if (winSkipped > 0 || winUnloaded > 0) {
+            ZimbraLog.imap.info(
+                    "[CACHE REPORT] Large folder handling: {Unloaded: %d, Skipped: %d}",
+                    winUnloaded,
+                    winSkipped
+            );
+        }
     }
 
     static interface Cache<String, ImapFolder> {

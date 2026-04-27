@@ -179,6 +179,8 @@ public final class DebugConfig {
     public static final boolean enableThisAndFuture = value("debug_enable_calendar_thisandfuture", false);
     public static final boolean caldavAllowAttendeeForOrganizer =
             value("debug_caldav_allow_attendee_for_organizer", false);
+    public static final boolean enableImapCacheReport = value("enable_imap_cache_report", false);
+    public static final int imapCacheReportInterval = value("imap_cache_report_interval_in_seconds", 300);
 
     /** TODO: Replace/remove when support persistence of DavName to DB instead of in memory cache.
      *        In memory cache version developed to enable a test mode which is more compatible with
