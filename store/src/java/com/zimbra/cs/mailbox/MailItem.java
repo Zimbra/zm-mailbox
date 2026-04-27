@@ -2823,6 +2823,70 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return copy;
     }
 
+    MailItem imove(Folder target, int moveId, String copyUuid) throws ServiceException, IOException {
+        if (!isCopyable()) {
+            throw MailServiceException.CANNOT_COPY(mId);
+        }
+        if (!target.canContain(this)) {
+            throw MailServiceException.CANNOT_CONTAIN();
+        }
+
+        if (!isMovable()) {
+            throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        }
+
+        // permissions required are the same as for copy()
+        if (!canAccess(ACL.RIGHT_READ)) {
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
+        }
+        if (!target.canAccess(ACL.RIGHT_INSERT)) {
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
+        }
+
+        // fetch the parent *before* changing the DB
+        MailItem parent = getParent();
+        Folder oldFolder = getFolder();
+
+        if (isLeafNode()) {
+            boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
+            oldFolder.updateSize(-1, isDeleted ? -1 : 0, -getTotalSize());
+            target.updateSize(1, isDeleted ? 1 : 0, getTotalSize());
+        }
+
+        if (!inTrash() && target.inTrash()) {
+            // moving something to Trash also marks it as read
+            if (mData.unreadCount > 0) {
+                alterUnread(false);
+            }
+        } else {
+            boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
+            oldFolder.updateUnread(-mData.unreadCount, isDeleted ? -mData.unreadCount : 0);
+            target.updateUnread(mData.unreadCount, isDeleted ? mData.unreadCount : 0);
+        }
+        // moving a message (etc.) to Spam removes it from its conversation
+        if (!inSpam() && target.inSpam()) {
+            detach();
+        }
+        // item moved out of spam, so update the index id (will be written to DB in DbMailItem.setFolder());
+        if (inSpam() && !target.inSpam() && getIndexStatus() == IndexStatus.DONE) {
+            mMailbox.index.add(this);
+        }
+
+        ZimbraLog.mailop.info("Performing IMAP move of %s: copyId=%d, folderId=%d, folderName=%s, parentId.",
+                getMailopContext(this), moveId, target.getId(), target.getName());
+        DbMailItem.imove(this, target, moveId);
+        iFolderChanged(target, moveId);
+
+        if (parent != null && parent.getId() > 0) {
+            markItemModified(Change.PARENT);
+            parent.markItemModified(Change.CHILDREN);
+            mData.parentId = mData.type == Type.MESSAGE.toByte() ? -mId : -1;
+            metadataChanged();
+        }
+
+        return this;
+    }
+
     /** The regexp defining printable characters not permitted in item
      *  names.  These are: ':', '/', '"', '\t', '\r', and '\n'. */
     private static final String INVALID_NAME_CHARACTERS = "[:/\"\t\r\n]";
@@ -3061,6 +3125,24 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         markItemModified(Change.FOLDER);
         mData.folderId = newFolder.getId();
         mData.imapId   = mMailbox.isTrackingImap() ? imapId : mData.imapId;
+        metadataChanged();
+    }
+
+    /** Records all relevant changes to the in-memory object for when an item
+     *  gets moved to a new {@link Folder} through imap.  Does <u>not</u> persist
+     *  those changes to the database.
+     *
+     * @param newFolder  The folder the item is being moved to.
+     * @param imapId     The new IMAP ID for the item after the operation.
+     * @throws ServiceException if we're not in a transaction */
+    void iFolderChanged(Folder newFolder, int imapId) throws ServiceException {
+        // only mark as modified when moving to the same folder because  TODO
+        if (mData.folderId == newFolder.getId()) {
+            markItemModified(Change.IMAP_UID);
+        }
+        markItemModified(Change.FOLDER);
+        mData.imapId   = mMailbox.isTrackingImap() ? imapId : mData.imapId;
+        mData.folderId = newFolder.getId();
         metadataChanged();
     }
 

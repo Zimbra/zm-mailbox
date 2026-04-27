@@ -144,10 +144,10 @@ public abstract class ImapHandler {
     protected enum ImapExtension { CONDSTORE, QRESYNC }
 
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
-        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT",
-        "I18NLEVEL=1", "ID", "IDLE", "LIST-EXTENDED", "LIST-STATUS", "LITERAL+", "LOGIN-REFERRALS",
-        "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES",
-            "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST", "INPROGRESS"
+            "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT",
+            "I18NLEVEL=1", "ID", "IDLE", "INPROGRESS", "LIST-EXTENDED", "LIST-STATUS", "LITERAL+", "LOGIN-REFERRALS",
+            "MOVE", "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES",
+            "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST"
     ));
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 10 * Constants.MILLIS_PER_SECOND;
@@ -294,6 +294,7 @@ public abstract class ImapHandler {
         commandCount.put("CREATE",0);
         commandCount.put("DELETE",0);
         commandCount.put("LOGOUT",0);
+        commandCount.put("MOVE",0);
         mailboxSize = 0;
         inboxNumMessages = 0;
         trashNumMessages = 0;
@@ -804,7 +805,15 @@ public abstract class ImapHandler {
                 }
                 break;
             case 'M':
-                if (command.equals("MYRIGHTS") && extensionEnabled("ACL")) {
+                if (command.equals("MOVE") && extensionEnabled("ACL")) {
+                    req.skipSpace();
+                    String sequence = req.readSequence();
+                    req.skipSpace();
+                    ImapPath path = new ImapPath(req.readFolder(), credentials);
+                    checkEOF(tag, req);
+                    incrementCommandCounter("MOVE", req);
+                    return isProxied ? imapProxy.proxy(req) : doMOVE(tag, sequence, path, byUID);
+                } else if (command.equals("MYRIGHTS") && extensionEnabled("ACL")) {
                     req.skipSpace();
                     ImapPath path = new ImapPath(req.readFolder(), credentials);
                     checkEOF(tag, req);
@@ -1018,7 +1027,7 @@ public abstract class ImapHandler {
             case 'U':
                 if (command.equals("UID")) {
                     req.skipSpace();  command = req.readATOM();
-                    if (command.equals("FETCH") || command.equals("SEARCH") || command.equals("COPY") || command.equals("STORE") ||
+                    if (command.equals("FETCH") || command.equals("SEARCH") || command.equals("COPY") || command.equals("MOVE") || command.equals("STORE") ||
                             (command.equals("EXPUNGE") && extensionEnabled("UIDPLUS")) || (command.equals("SORT") && extensionEnabled("SORT")) ||
                             (command.equals("THREAD") && extensionEnabled("THREAD=ORDEREDSUBJECT"))) {
                         byUID = true;
@@ -1305,10 +1314,12 @@ public abstract class ImapHandler {
         // [I18NLEVEL=1]      RFC 5255: Internet Message Access Protocol Internationalization
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
+        // [INPROGRESS]       RFC 9585: IMAP Response Code for Command Progress Notifications
         // [LIST-EXTENDED]    RFC 5258: Internet Message Access Protocol version 4 - LIST Command Extensions
         // [LIST-STATUS]      RFC 5819: IMAP4 Extension for Returning STATUS Information in Extended LIST
         // [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
         // [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
+        // [MOVE]             RFC 6851: IMAP MOVE Extension
         // [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
         // [QRESYNC]          RFC 5162: IMAP4 Extensions for Quick Mailbox Resynchronization
@@ -4641,6 +4652,160 @@ public abstract class ImapHandler {
         return true;
     }
 
+    protected boolean doMOVE(String tag, String sequenceSet, ImapPath path, boolean byUID)
+            throws IOException, ImapException {
+        checkCommandThrottle(new MoveCommand(sequenceSet, path));
+        if (!checkState(tag, State.SELECTED)) {
+            return true;
+        }
+        String command = (byUID ? "UID MOVE" : "MOVE");
+        String moveuid = "";
+
+        ImapFolder i4folder = getSelectedFolder();
+        if (i4folder == null) {
+            throw new ImapSessionClosedException();
+        }
+
+        if (!i4folder.isWritable()) {
+            sendNO(tag, "mailbox selected READ-ONLY");
+            return true;
+        }
+
+        MailboxStore mbox = i4folder.getMailbox();
+        Set<ImapMessage> i4set;
+        mbox.lock(false);
+        try {
+            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
+        } catch (ImapParseException ipe) {
+            ZimbraLog.imap.error(ipe);
+            throw ipe;
+        } finally {
+            mbox.unlock();
+        }
+
+        if (i4set.size() > LC.imap_max_items_in_move.intValue()) {
+            sendNO(tag, "MOVE rejected, too many items in move request");
+            return true;
+        }
+
+        // RFC 6851 3.3: extensions that affect COPY affect MOVE in the same way.
+        // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
+        //                  accessed mailbox that contains expunged messages."
+        if (!byUID && i4set.contains(null)) {
+            sendNO(tag, "MOVE rejected because some of the requested messages were expunged");
+            return true;
+        }
+        i4set.remove(null);
+
+        try {
+            // check target folder permissions before attempting the move
+            if (!i4folder.getPath().isWritable(ACL.RIGHT_DELETE)) {
+                throw ServiceException.PERM_DENIED(
+                        "you do not have permission to delete messages from the selected folder");
+            } else if (!i4folder.getPath().isWritable(ACL.RIGHT_WRITE)) {
+                throw ServiceException.PERM_DENIED(
+                        "you do not have write permission on the source folder");
+            }
+
+            if (!path.isVisible()) {
+                throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
+            } else if (!path.isWritable(ACL.RIGHT_INSERT)) {
+                throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
+            }
+            MailboxStore mbxStore = path.getOwnerMailbox();
+            if (null == mbxStore) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
+            }
+            FolderStore targetFolder = path.getFolder();
+            FolderStore selectedFolder = null;
+            try {
+                selectedFolder = i4folder.getFolder();
+            } catch (ServiceException e1) {
+                ZimbraLog.imap.error("Problem with selected folder %s during doMOVE", e1.getMessage());
+                return true;
+            }
+
+            ImapMailboxStore selectedImapMboxStore = i4folder.getImapMailboxStore();
+            boolean sameMailbox = selectedImapMboxStore.getAccountId().equalsIgnoreCase(mbxStore.getAccountId());
+            boolean selectedFolderInOtherMailbox;
+            ItemIdentifier fromFolderId;
+            if (selectedFolder instanceof MountpointStore) {
+                selectedFolderInOtherMailbox = true;
+                fromFolderId = ((MountpointStore) selectedFolder).getTargetItemIdentifier();
+            } else if (selectedFolder instanceof ZSharedFolder) {
+                selectedFolderInOtherMailbox = true;
+                fromFolderId = selectedFolder.getFolderItemIdentifier();
+            } else {
+                selectedFolderInOtherMailbox = false;
+                fromFolderId = selectedFolder.getFolderItemIdentifier();
+            }
+            int uvv = targetFolder.getUIDValidity();
+            ItemId iidTarget = new ItemId(targetFolder, path.getOwnerAccount().getId());
+            ItemIdentifier targetIdentifier = iidTarget.toItemIdentifier();
+
+            List<Integer> moveUIDs = extensionEnabled("UIDPLUS") ? Lists.newArrayListWithCapacity(i4set.size()) : null;
+            final List<ImapMessage> i4list = Lists.newArrayList(i4set);
+            final List<List<ImapMessage>> batches =
+                    Lists.partition(i4list, LC.imap_suggested_batch_copy_size.intValue());
+
+            for (List<ImapMessage> batch : batches) {
+                if (sameMailbox && !selectedFolderInOtherMailbox) {
+                    moveOwnItems(selectedImapMboxStore, batch, iidTarget, moveUIDs);
+                } else {
+                    moveItemsBetweenMailboxes(selectedImapMboxStore, batch, fromFolderId, targetIdentifier,
+                            moveUIDs);
+                }
+            }
+
+            if (uvv > 0 && moveUIDs != null && moveUIDs.size() > 0) {
+                List<Integer> srcUIDs = Lists.newArrayListWithCapacity(i4set.size());
+                for (ImapMessage i4msg : i4set) {
+                    srcUIDs.add(i4msg.imapUid);
+                }
+                // RFC 6851 4.3 Servers supporting UIDPLUS [RFC4315] SHOULD send COPYUID in response
+                //   to a UID MOVE command.
+                moveuid = "[COPYUID " + uvv + ' ' + ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
+                        ImapFolder.encodeSubsequence(moveUIDs) + "] ";
+            }
+        } catch (ServiceException e) {
+            // 3.3 : "The server MUST leave each message in a state where
+            //         it is in at least one of the source or target mailboxes."
+            String rcode = "";
+            if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
+                ZimbraLog.imap.info("%s failed: no such folder: %s", command, path);
+                if (path.isCreatable()) {
+                    rcode = "[TRYCREATE] ";
+                }
+            } else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_VISIBLE)) {
+                ZimbraLog.imap.info("%s failed: folder not visible: %s", command, path);
+            } else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_WRITABLE)) {
+                ZimbraLog.imap.info("%s failed: folder not writable: %s", command, path);
+            } else {
+                ZimbraLog.imap.warn("%s failed", command, e);
+            }
+            sendNO(tag, rcode + command + " failed");
+            return canContinue(e);
+        }
+
+        // RFC 6851 4.4: "COPY is the only IMAP4 sequence number command that is safe to allow
+        //                an EXPUNGE response on.  This is because a client is not permitted
+        //                to cascade several COPY commands together."
+        sendNotifications(true, false);
+
+        String status = "";
+        try {
+            if (byUID && !i4folder.isVirtual() && sessionActivated(ImapExtension.QRESYNC)) {
+                status = "[HIGHESTMODSEQ " + i4folder.getCurrentMODSEQ() + "] ";
+                sendUntagged("OK " + status);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.imap.info("error while determining HIGHESTMODSEQ of selected folder", e);
+        }
+
+        sendOK(tag, moveuid + command + " completed");
+        return true;
+    }
+
     private ScheduledFuture<?> sendInProgressResponses(OperationProgress copyStatus) {
         return INPROGRESS_SCHEDULER.scheduleAtFixedRate(() -> {
             setLoggingContext();
@@ -4698,6 +4863,36 @@ public abstract class ImapHandler {
         }
     }
 
+    private void moveOwnItems(ImapMailboxStore selectedImapMboxStore, List<ImapMessage> batch, ItemId iidTarget,
+                              List<Integer> moveUIDs) throws ServiceException {
+        List<Integer> moveMsgUids;
+        try {
+            MailItemType type = MailItemType.UNKNOWN;
+            int[] mItemIds = new int[batch.size()];
+            int counter  = 0;
+            for (ImapMessage curMsg : batch) {
+                mItemIds[counter++] = curMsg.msgId;
+                if (counter == 1) {
+                    type = curMsg.getMailItemType();
+                } else if (curMsg.getMailItemType() != type) {
+                    type = MailItemType.UNKNOWN;
+                }
+            }
+            // Can't use this across mailboxes as mItemIds is not mailbox aware
+            moveMsgUids = selectedImapMboxStore.imapMove(getContext(), mItemIds, type, iidTarget.getId());
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Caught IOException executing " + this, e);
+        }
+        if (moveMsgUids.size() != batch.size()) {
+            throw ServiceException.FAILURE(
+                    String.format("mismatch between original (%s) and target (%s) count during IMAP MOVE",
+                            batch.size(), moveMsgUids.size()), null);
+        }
+        if (moveUIDs != null) {
+            moveUIDs.addAll(moveMsgUids);
+        }
+    }
+
     private void copyItemsBetweenMailboxes(ImapMailboxStore selectedImapMboxStore, List<ImapMessage> batch,
             ItemIdentifier fromFolderId, ItemIdentifier targetIdentifier, List<Integer> copyUIDs)
     throws ServiceException {
@@ -4726,6 +4921,35 @@ public abstract class ImapHandler {
         }
     }
 
+    private void moveItemsBetweenMailboxes(ImapMailboxStore selectedImapMboxStore, List<ImapMessage> batch,
+                                           ItemIdentifier fromFolderId, ItemIdentifier targetIdentifier,
+                                           List<Integer> moveUIDs)
+            throws ServiceException {
+        List<ItemIdentifier> identList = Lists.newArrayListWithCapacity(batch.size());
+        List<Integer> createdList = Lists.newArrayListWithCapacity(batch.size());
+        for (ImapMessage i4msg : batch) {
+            identList.add(ItemIdentifier.fromAccountIdAndItemId(fromFolderId.accountId, i4msg.msgId));
+        }
+        MailboxStore selectedStore = selectedImapMboxStore.getMailboxStore();
+        List<String>moveIds = selectedStore.moveItemAction(getContext(), targetIdentifier, identList);
+        for (String moveId : moveIds) {
+            if (moveId.isEmpty()) {
+                continue;
+            }
+            // For newly created items, the UID is the same as the id in the target mailbox
+            ItemIdentifier itemIdentifier = new ItemIdentifier(moveId, (String) null /* defaultAccountId */);
+            createdList.add(itemIdentifier.id);
+        }
+        if (createdList.size() != identList.size()) {
+            throw ServiceException.FAILURE(
+                    String.format("mismatch between original (%s) and target (%s) count during IMAP COPY",
+                            identList.size(), createdList.size()), null);
+        }
+        if (moveUIDs != null) {
+            moveUIDs.addAll(createdList);
+        }
+    }
+
     private void checkCommandThrottle(ImapCommand command) throws ImapThrottledException {
         if (reqThrottle.isIpWhitelisted(getOrigRemoteIp()) || reqThrottle.isIpWhitelisted(getRemoteIp())) {
             return;
@@ -4743,7 +4967,7 @@ public abstract class ImapHandler {
         }
 
         ImapListener i4selected = getCurrentImapListener();
-        if (i4selected == null || !i4selected.hasNotifications()) {
+        if (i4selected == null /*|| !i4selected.hasNotifications()*/) {
             return;
         }
         MailboxStore mbox = i4selected.getMailbox();

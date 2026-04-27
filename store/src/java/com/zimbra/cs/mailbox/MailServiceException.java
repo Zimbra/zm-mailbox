@@ -60,6 +60,7 @@ public class MailServiceException extends ServiceException {
     public static final String IS_NOT_CHILD    = "mail.IS_NOT_CHILD";
     public static final String CANNOT_CONTAIN  = "mail.CANNOT_CONTAIN";
     public static final String CANNOT_COPY     = "mail.CANNOT_COPY";
+    public static final String CANNOT_MOVE     = "mail.CANNOT_MOVE";
     public static final String CANNOT_TAG      = "mail.CANNOT_TAG";
     public static final String CANNOT_PARENT   = "mail.CANNOT_PARENT";
     public static final String CANNOT_RENAME   = "mail.CANNOT_RENAME";
@@ -441,6 +442,11 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException CANNOT_COPY(int id) {
         return new MailServiceException("cannot copy object: " + id, CANNOT_COPY, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
+    }
+
+    public static MailServiceException CANNOT_MOVE(int id) {
+        return new MailServiceException("cannot copy object: " + id, CANNOT_MOVE, SENDERS_FAULT,
+                new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
     public static MailServiceException CANNOT_PARENT() {

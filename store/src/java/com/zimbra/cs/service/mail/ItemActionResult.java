@@ -44,14 +44,15 @@ public class ItemActionResult {
     }
 
     public static ItemActionResult create(ItemActionHelper.Op operation) {
-        switch (operation)
-        {
-        case COPY:
-            return new CopyActionResult();
-        case HARD_DELETE:
-            return new DeleteActionResult();
-        default:
-            return new ItemActionResult();
+        switch (operation) {
+            case COPY:
+                return new CopyActionResult();
+            case MOVE:
+                return new MoveActionResult();
+            case HARD_DELETE:
+                return new DeleteActionResult();
+            default:
+                return new ItemActionResult();
         }
     }
 
@@ -60,6 +61,8 @@ public class ItemActionResult {
             return new CopyActionResult();
         } else if (MailConstants.OP_HARD_DELETE.equalsIgnoreCase(operation)) {
             return new DeleteActionResult();
+        } else if (MailConstants.OP_MOVE.equalsIgnoreCase(operation)) {
+            return new MoveActionResult();
         }
         return new ItemActionResult();
     }

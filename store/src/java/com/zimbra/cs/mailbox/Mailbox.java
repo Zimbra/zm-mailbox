@@ -178,81 +178,12 @@ import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.pop3.Pop3Message;
-import com.zimbra.cs.redolog.op.AddDocumentRevision;
-import com.zimbra.cs.redolog.op.AlterItemTag;
-import com.zimbra.cs.redolog.op.ColorItem;
-import com.zimbra.cs.redolog.op.CopyItem;
-import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
-import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
-import com.zimbra.cs.redolog.op.CreateChat;
-import com.zimbra.cs.redolog.op.CreateComment;
-import com.zimbra.cs.redolog.op.CreateContact;
-import com.zimbra.cs.redolog.op.CreateFileSharedWithMe;
-import com.zimbra.cs.redolog.op.CreateFolder;
-import com.zimbra.cs.redolog.op.CreateFolderPath;
-import com.zimbra.cs.redolog.op.CreateInvite;
-import com.zimbra.cs.redolog.op.CreateLink;
-import com.zimbra.cs.redolog.op.CreateMailbox;
-import com.zimbra.cs.redolog.op.CreateMessage;
-import com.zimbra.cs.redolog.op.CreateMountpoint;
-import com.zimbra.cs.redolog.op.CreateNote;
-import com.zimbra.cs.redolog.op.CreateSavedSearch;
-import com.zimbra.cs.redolog.op.CreateTag;
-import com.zimbra.cs.redolog.op.DateItem;
-import com.zimbra.cs.redolog.op.DeleteConfig;
-import com.zimbra.cs.redolog.op.DeleteItem;
-import com.zimbra.cs.redolog.op.DeleteItemFromDumpster;
-import com.zimbra.cs.redolog.op.DeleteMailbox;
-import com.zimbra.cs.redolog.op.DismissCalendarItemAlarm;
-import com.zimbra.cs.redolog.op.EditNote;
-import com.zimbra.cs.redolog.op.EnableSharedReminder;
-import com.zimbra.cs.redolog.op.FixCalendarItemEndTime;
-import com.zimbra.cs.redolog.op.FixCalendarItemPriority;
-import com.zimbra.cs.redolog.op.FixCalendarItemTZ;
-import com.zimbra.cs.redolog.op.GrantAccess;
-import com.zimbra.cs.redolog.op.ICalReply;
-import com.zimbra.cs.redolog.op.ImapCopyItem;
-import com.zimbra.cs.redolog.op.LockItem;
-import com.zimbra.cs.redolog.op.ModifyContact;
-import com.zimbra.cs.redolog.op.ModifyInvitePartStat;
-import com.zimbra.cs.redolog.op.ModifySavedSearch;
-import com.zimbra.cs.redolog.op.MoveItem;
-import com.zimbra.cs.redolog.op.PurgeImapDeleted;
-import com.zimbra.cs.redolog.op.PurgeOldMessages;
-import com.zimbra.cs.redolog.op.PurgeRevision;
-import com.zimbra.cs.redolog.op.RecoverItem;
-import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.redolog.op.RefreshMountpoint;
-import com.zimbra.cs.redolog.op.RenameItem;
-import com.zimbra.cs.redolog.op.RenameItemPath;
-import com.zimbra.cs.redolog.op.RenameMailbox;
-import com.zimbra.cs.redolog.op.RepositionNote;
-import com.zimbra.cs.redolog.op.RevokeAccess;
-import com.zimbra.cs.redolog.op.SaveChat;
-import com.zimbra.cs.redolog.op.SaveDocument;
-import com.zimbra.cs.redolog.op.SaveDraft;
-import com.zimbra.cs.redolog.op.SetActiveSyncDisabled;
-import com.zimbra.cs.redolog.op.SetCalendarItem;
-import com.zimbra.cs.redolog.op.SetConfig;
-import com.zimbra.cs.redolog.op.SetCustomData;
-import com.zimbra.cs.redolog.op.SetFolderDefaultView;
-import com.zimbra.cs.redolog.op.SetFolderUrl;
-import com.zimbra.cs.redolog.op.SetImapUid;
-import com.zimbra.cs.redolog.op.SetItemTags;
-import com.zimbra.cs.redolog.op.SetPermissions;
-import com.zimbra.cs.redolog.op.SetPop3Uid;
-import com.zimbra.cs.redolog.op.SetRetentionPolicy;
-import com.zimbra.cs.redolog.op.SetSubscriptionData;
-import com.zimbra.cs.redolog.op.SetWebOfflineSyncDays;
-import com.zimbra.cs.redolog.op.SnoozeCalendarItemAlarm;
-import com.zimbra.cs.redolog.op.StoreIncomingBlob;
-import com.zimbra.cs.redolog.op.TrackImap;
-import com.zimbra.cs.redolog.op.TrackSync;
-import com.zimbra.cs.redolog.op.UnlockItem;
+import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.mail.CopyActionResult;
 import com.zimbra.cs.service.mail.ItemActionHelper;
+import com.zimbra.cs.service.mail.MoveActionResult;
 import com.zimbra.cs.service.mail.SendDeliveryReport;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
@@ -7547,7 +7478,7 @@ public class Mailbox implements MailboxStore {
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on all the the source folders
      * @param octxt     The context for this request (e.g. auth user id).
-     * @param itemId    A list of the IDs of the items to move.
+     * @param itemIds    A list of the IDs of the items to move.
      * @param type      The type of the items or {@link MailItem.Type#UNKNOWN}.
      * @param targetId  The ID of the target folder for the move.
      * @param tcon      An optional constraint on the items being moved. */
@@ -7587,6 +7518,26 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public List<MailItem> imapMove(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
+                                   TargetConstraint tcon) throws ServiceException {
+        beginTrackingImap();
+        lock.lock();
+        List<MailItem> result = new ArrayList<>();
+        try {
+            try {
+                return iMove(octxt, itemIds, type, targetId, tcon);
+            } catch (ServiceException e) {
+                // make sure that move-to-Trash never fails with a naming conflict
+                if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS) || targetId != ID_FOLDER_TRASH) {
+                    throw e;
+                }
+            }
+        } finally {
+            lock.release();
+        }
+        return result;
+    }
+
     private String generateAlternativeItemName(OperationContext octxt, int id, MailItem.Type type)
     throws ServiceException {
         String name = getItemById(octxt, id, type).getName();
@@ -7598,9 +7549,59 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private void moveInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
+    private List<MailItem> iMove(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
             TargetConstraint tcon)
     throws ServiceException {
+        ImapMoveItem redoRecorder = new ImapMoveItem(mId, type, targetId);
+        boolean success = false;
+        List<MailItem> result = new ArrayList<>();
+        try {
+            beginTransaction("move", octxt, redoRecorder);
+            setOperationTargetConstraint(tcon);
+
+            Folder target = getFolderById(targetId);
+
+            for (int itemId : itemIds) {
+                MailItem item = getItemById(itemId, type);
+                checkItemChangeID(item);
+
+                int oldUIDNEXT = target.getImapUIDNEXT();
+                boolean resetUIDNEXT = false;
+
+                // train the spam filter if necessary...
+                trainSpamFilter(octxt, item, target, "move");
+
+                // ...do the move...
+                ImapMoveItem redoPlayer = (ImapMoveItem) currentChange().getRedoPlayer();
+                int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(itemId));
+                String newUuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getDestUuid(itemId);
+                int srcId = item.getId();
+                result.add(item.imove(target, newId, newUuid));
+
+                // ...and determine whether the move needs to cause an UIDNEXT change
+                if ((item instanceof Conversation || item instanceof Message || item instanceof Contact)) {
+                    resetUIDNEXT = true;
+                }
+
+                // if this operation should cause the target folder's UIDNEXT value to change
+                // but it hasn't yet, do it here
+                if (resetUIDNEXT && oldUIDNEXT == target.getImapUIDNEXT()) {
+                    redoRecorder.setDest(srcId, newId, newUuid);
+                    target.updateUIDNEXT();
+                }
+            }
+            success = true;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException while moving items for IMAP", e);
+        } finally {
+            endTransaction(success);
+        }
+        return result;
+    }
+
+    private void moveInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
+                              TargetConstraint tcon)
+            throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
 
         boolean success = false;
@@ -10903,6 +10904,34 @@ public class Mailbox implements MailboxStore {
                 MailItem.Type.UNKNOWN, null, new ItemId(targetFolder));
         CopyActionResult caResult = (CopyActionResult) op.getResult();
         return caResult.getCreatedIds();
+    }
+
+    /**
+     * Moves the items identified in {@link idlist} to folder {@link targetFolder}
+     * @param idlist - list of item ids for items to copy
+     * @param targetFolder - Destination folder
+     * @return The item IDs of the created items - these may be full item IDs in the case of remote folders
+     */
+    @Override
+    public List<String> moveItemAction(OpContext ctxt, ItemIdentifier targetFolder, List<ItemIdentifier> idlist)
+            throws ServiceException {
+        if ((idlist == null) || idlist.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Integer> ids = Lists.newArrayListWithExpectedSize(idlist.size());
+        for (ItemIdentifier ident : idlist) {
+            if (this.referencesOtherMailbox(ident)) {
+                // Mailbox doesn't support copying from another mailbox because ItemActionHelper
+                // only supports a list of int ids.  This isn't a problem for local IMAP because
+                // requests are proxied to the selected folder's owner.
+                throw ServiceException.FAILURE("Unexpected attempt to copy item from mountpoint", null);
+            }
+            ids.add(ident.id);
+        }
+        ItemActionHelper op = ItemActionHelper.MOVE((OperationContext) ctxt, this, null, ids,
+                MailItem.Type.UNKNOWN, null, new ItemId(targetFolder));
+        MoveActionResult moveActionResult = (MoveActionResult) op.getResult();
+        return moveActionResult.getCreatedIds();
     }
 
     @Override
