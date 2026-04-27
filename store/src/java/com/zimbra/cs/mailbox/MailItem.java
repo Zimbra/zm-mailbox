@@ -2823,6 +2823,158 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return copy;
     }
 
+    MailItem imove(Folder target, int moveId, String copyUuid) throws ServiceException, IOException {
+        if (!isCopyable())
+            throw MailServiceException.CANNOT_COPY(mId);
+        if (!target.canContain(this))
+            throw MailServiceException.CANNOT_CONTAIN();
+
+        // permissions required are the same as for copy()
+        if (!canAccess(ACL.RIGHT_READ))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
+        if (!target.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
+
+        // fetch the parent *before* changing the DB
+        MailItem parent = getParent();
+
+        // first, copy the item to the target folder while setting:
+        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
+        //   - INDEX_ID -> old index id
+        //   - FOLDER_ID -> new folder
+        //   - IMAP_ID -> new IMAP uid
+        //   - VOLUME_ID -> target volume ID
+        // then, update the original item
+        //   - PARENT_ID -> NULL
+        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
+        // finally, update OPEN_CONVERSATION if PARENT_ID was NULL
+        //   - ITEM_ID = copy's id for hash
+
+        String locator = null;
+       /* MailboxBlob srcMblob = getBlob();
+        if (srcMblob != null) {
+            StoreManager sm = StoreManager.getInstance();
+            MailboxBlob mblob = sm.copy(srcMblob, mMailbox, moveId, mMailbox.getOperationChangeID());
+            mMailbox.markOtherItemDirty(mblob);
+            locator = mblob.getLocator();
+        }*/
+
+        // We'll share the index entry if this item can't change out from under us. Re-index the copy if existing item
+        // (a) wasn't indexed or (b) is mutable.
+        boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !target.inSpam();
+
+        UnderlyingData data = mData.duplicate(moveId, copyUuid, target.getId(), locator);
+        this.setImapUid(moveId);
+        /*data.metadata = encodeMetadata().toString();
+        data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
+        */data.contentChanged(mMailbox);
+
+        ZimbraLog.mailop.info("Performing IMAP copy of %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
+                getMailopContext(this), moveId, target.getId(), target.getName(), data.parentId);
+        //DbMailItem.icopy(this, data, shareIndex);
+        DbMailItem.icopy2(this, target, moveId);
+        //DbMailItem.setFolder(this, target);
+
+        //MailItem copy = constructItem(mMailbox, data);
+        //copy.finishCreation(null, target.getId() == FolderConstants.ID_FOLDER_TRASH);
+
+        /*if (shareIndex && !isTagged(Flag.FlagInfo.COPIED)) {
+            Flag copiedFlag = mMailbox.getFlagById(Flag.ID_COPIED);
+            tagChanged(copiedFlag, true);
+            copy.tagChanged(copiedFlag, true);
+            if (parent != null)
+                parent.inheritedTagChanged(copiedFlag, true);
+        }*/
+
+        if (parent != null && parent.getId() > 0) {
+            markItemModified(Change.PARENT);
+            parent.markItemModified(Change.CHILDREN);
+            mData.parentId = mData.type == Type.MESSAGE.toByte() ? -mId : -1;
+            metadataChanged();
+        }
+
+        if (!shareIndex) {
+            mMailbox.index.add(this);
+        }
+
+        return this;
+    }
+
+    /*MailItem imove(Folder target, int copyId, String copyUuid) throws IOException, ServiceException {
+        if (!isMovable())
+            throw MailServiceException.CANNOT_MOVE(mId);
+        if (!target.canContain(this))
+            throw MailServiceException.CANNOT_CONTAIN();
+
+        // permissions required are the same as for copy()
+        if (!canAccess(ACL.RIGHT_READ))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
+        if (!target.canAccess(ACL.RIGHT_INSERT))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
+
+        // fetch the parent *before* changing the DB
+        MailItem parent = getParent();
+
+        // first, copy the item to the target folder while setting:
+        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
+        //   - INDEX_ID -> old index id
+        //   - FOLDER_ID -> new folder
+        //   - IMAP_ID -> new IMAP uid
+        //   - VOLUME_ID -> target volume ID
+        // then, update the original item
+        //   - PARENT_ID -> NULL
+        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
+        // finally, update OPEN_CONVERSATION if PARENT_ID was NULL
+        //   - ITEM_ID = copy's id for hash
+
+        String locator = null;
+        MailboxBlob srcMblob = getBlob();
+        if (srcMblob != null) {
+            StoreManager sm = StoreManager.getInstance();
+            MailboxBlob mblob = sm.copy(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
+            mMailbox.markOtherItemDirty(mblob);
+            locator = mblob.getLocator();
+        }
+
+        // We'll share the index entry if this item can't change out from under us. Re-index the copy if existing item
+        // (a) wasn't indexed or (b) is mutable.
+        boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !target.inSpam();
+
+        UnderlyingData data = mData.duplicate(copyId, copyUuid, target.getId(), locator);
+        data.metadata = encodeMetadata().toString();
+        data.imapId = copyId;
+        data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
+        data.contentChanged(mMailbox);
+
+        ZimbraLog.mailop.info("Performing IMAP copy of %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
+                getMailopContext(this), copyId, target.getId(), target.getName(), data.parentId);
+        DbMailItem.icopy(this, data, shareIndex);
+
+        MailItem copy = constructItem(mMailbox, data);
+        copy.finishCreation(null, target.getId() == FolderConstants.ID_FOLDER_TRASH);
+
+        if (shareIndex && !isTagged(Flag.FlagInfo.COPIED)) {
+            Flag copiedFlag = mMailbox.getFlagById(Flag.ID_COPIED);
+            tagChanged(copiedFlag, true);
+            copy.tagChanged(copiedFlag, true);
+            if (parent != null)
+                parent.inheritedTagChanged(copiedFlag, true);
+        }
+
+        if (parent != null && parent.getId() > 0) {
+            markItemModified(Change.PARENT);
+            parent.markItemModified(Change.CHILDREN);
+            mData.parentId = mData.type == Type.MESSAGE.toByte() ? -mId : -1;
+            metadataChanged();
+        }
+
+        if (!shareIndex) {
+            mMailbox.index.add(copy);
+        }
+
+        return copy;
+    }*/
+
     /** The regexp defining printable characters not permitted in item
      *  names.  These are: ':', '/', '"', '\t', '\r', and '\n'. */
     private static final String INVALID_NAME_CHARACTERS = "[:/\"\t\r\n]";

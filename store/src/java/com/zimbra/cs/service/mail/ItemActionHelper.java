@@ -19,14 +19,7 @@ package com.zimbra.cs.service.mail;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -496,6 +489,11 @@ public class ItemActionHelper {
             case SPAM:
             case MOVE:
                 getMailbox().move(getOpCtxt(), ids, type, mIidFolder.getId(), mTargetConstraint);
+                List ll = new ArrayList();
+                for (int i : ids) {
+                    ll.add(i);
+                }
+                ((MoveActionResult)result).setCreatedIds(ll);
                 break;
             case COPY:
                 List<MailItem> copies = getMailbox().copy(getOpCtxt(), ids, type, mIidFolder.getId());
@@ -575,6 +573,8 @@ public class ItemActionHelper {
             localResult.appendSuccessIds(batchResult.getSuccessIds());
             if (Op.COPY == mOperation) {
                 ((CopyActionResult)localResult).appendCreatedIds(batchResult);
+            } else if (Op.MOVE == mOperation) {
+                ((MoveActionResult)localResult).appendCreatedIds(batchResult);
             } else if (Op.HARD_DELETE == mOperation) {
                 ((DeleteActionResult)localResult).appendNonExistentIds(batchResult);
             }
@@ -864,6 +864,10 @@ public class ItemActionHelper {
         }
         else if (Op.COPY.equals(mOperation)) {
             ((CopyActionResult)result).setCreatedIds(createdIds);
+        }
+        else if (Op.MOVE.equals(mOperation)) {
+            ((MoveActionResult)result).setCreatedIds(createdIds);
+
         }
 
         for (int itemId : itemIds) {

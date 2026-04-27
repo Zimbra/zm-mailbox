@@ -253,6 +253,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.mail.CopyActionResult;
 import com.zimbra.cs.service.mail.ItemActionHelper;
+import com.zimbra.cs.service.mail.MoveActionResult;
 import com.zimbra.cs.service.mail.SendDeliveryReport;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
@@ -7443,6 +7444,55 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    /*public List<MailItem> imapMove(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
+            throws ServiceException {
+        // this is an IMAP command, so we'd better be tracking IMAP changes by now...
+        beginTrackingImap(); //TODO: there is likely no way this mailbox is not tracking IMAP already if we are here
+
+        for (int id : itemIds) {
+            if (id <= 0) {
+                throw MailItem.noSuchItem(id, type);
+            }
+        }
+
+        ImapCopyItem redoRecorder = new ImapCopyItem(mId, type, folderId);
+
+        boolean success = false;
+        lock.lock();
+        try {
+            try {
+                return moveInternal(octxt, itemIds, type, targetId, tcon);
+            } catch (ServiceException e) {
+                // make sure that move-to-Trash never fails with a naming conflict
+                if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS) || targetId != ID_FOLDER_TRASH) {
+                    throw e;
+                }
+                // if we're here, we hit a naming conflict during move-to-Trash
+                if (itemIds.length == 1) {
+                    // rename the item being moved instead of the one already there...
+                    rename(octxt, itemIds[0], type, generateAlternativeItemName(octxt, itemIds[0], type), targetId);
+                } else {
+                    // iterate one-by-one and move the items individually
+                    for (int id : itemIds) {
+                        // FIXME: non-transactional
+                        try {
+                            // still more likely than not to succeed...
+                            moveInternal(octxt, new int[] { id }, type, targetId, tcon);
+                        } catch (ServiceException e) {
+                            // rename the item being moved instead of the one already there...
+                            rename(octxt, id, type, generateAlternativeItemName(octxt, id, type), targetId);
+                        }
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException while moving items for IMAP", e);
+        } finally {
+            lock.release();
+        }
+    }*/
+
     private <T extends MailItem> T trainSpamFilter(OperationContext octxt, T item, Folder target, String opDescription) {
         if (currentChange().getRedoPlayer() != null) { // don't re-train filter
                                                        // on replayed operation
@@ -7587,6 +7637,47 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public List<MailItem> imapMove(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId, TargetConstraint tcon)
+            throws ServiceException {
+        beginTrackingImap();
+        lock.lock();
+        List<MailItem> result = new ArrayList<>();
+        try {
+            try {
+                for (int itemId : itemIds) {
+                    result.add(iMove(octxt, itemId, type, targetId, tcon));
+                }
+                return result;
+            } catch (ServiceException e) {
+                // make sure that move-to-Trash never fails with a naming conflict
+                if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS) || targetId != ID_FOLDER_TRASH) {
+                    throw e;
+                }
+            }
+
+            // if we're here, we hit a naming conflict during move-to-Trash
+            if (itemIds.length == 1) {
+                // rename the item being moved instead of the one already there...
+                rename(octxt, itemIds[0], type, generateAlternativeItemName(octxt, itemIds[0], type), targetId);
+            } else {
+                // iterate one-by-one and move the items individually
+                for (int id : itemIds) {
+                    // FIXME: non-transactional
+                    try {
+                        // still more likely than not to succeed...
+                            result.add(iMove(octxt, id, type, targetId, tcon));
+                    } catch (ServiceException e) {
+                        // rename the item being moved instead of the one already there...
+                        rename(octxt, id, type, generateAlternativeItemName(octxt, id, type), targetId);
+                    }
+                }
+            }
+        } finally {
+            lock.release();
+        }
+        return result;
+    }
+
     private String generateAlternativeItemName(OperationContext octxt, int id, MailItem.Type type)
     throws ServiceException {
         String name = getItemById(octxt, id, type).getName();
@@ -7598,9 +7689,61 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private void moveInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
+    private MailItem iMove(OperationContext octxt, int itemId, MailItem.Type type, int targetId,
             TargetConstraint tcon)
     throws ServiceException {
+        MoveItem redoRecorder = new MoveItem(mId, new int[] {itemId}, type, targetId, tcon);
+        MailItem moved = null;
+        boolean success = false;
+        try {
+            beginTransaction("move", octxt, redoRecorder);
+            setOperationTargetConstraint(tcon);
+
+            Folder target = getFolderById(targetId);
+
+            MailItem item = getItemById(itemId, type);
+
+                checkItemChangeID(item);
+
+            int oldUIDNEXT = target.getImapUIDNEXT();
+            boolean resetUIDNEXT = false;
+
+            //for (MailItem item : item) {
+
+                // train the spam filter if necessary...
+                trainSpamFilter(octxt, item, target, "move");
+
+                // ...do the move...
+            ImapCopyItem redoPlayer = (ImapCopyItem) currentChange().getRedoPlayer();
+            int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(itemId));
+            String newUuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getDestUuid(itemId);
+
+            moved = item.imove(target, newId, newUuid);
+
+                // ...and determine whether the move needs to cause an UIDNEXT change
+                if (/*moved && !resetUIDNEXT && isTrackingImap()*/
+                        (item instanceof Conversation || item instanceof Message || item instanceof Contact)) {
+                    resetUIDNEXT = true;
+                }
+            //}
+
+            // if this operation should cause the target folder's UIDNEXT value to change but it hasn't yet, do it here
+            if (resetUIDNEXT && oldUIDNEXT == target.getImapUIDNEXT()) {
+                redoRecorder.setUIDNEXT(newId);
+                target.updateUIDNEXT();
+            }
+            success = true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            endTransaction(success);
+        }
+        return moved;
+    }
+
+    private void moveInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
+                              TargetConstraint tcon)
+            throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
 
         boolean success = false;
@@ -10903,6 +11046,34 @@ public class Mailbox implements MailboxStore {
                 MailItem.Type.UNKNOWN, null, new ItemId(targetFolder));
         CopyActionResult caResult = (CopyActionResult) op.getResult();
         return caResult.getCreatedIds();
+    }
+
+    /**
+     * Moves the items identified in {@link idlist} to folder {@link targetFolder}
+     * @param idlist - list of item ids for items to copy
+     * @param targetFolder - Destination folder
+     * @return The item IDs of the created items - these may be full item IDs in the case of remote folders
+     */
+    @Override
+    public List<String> moveItemAction(OpContext ctxt, ItemIdentifier targetFolder, List<ItemIdentifier> idlist)
+            throws ServiceException {
+        if ((idlist == null) || idlist.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Integer> ids = Lists.newArrayListWithExpectedSize(idlist.size());
+        for (ItemIdentifier ident : idlist) {
+            if (this.referencesOtherMailbox(ident)) {
+                // Mailbox doesn't support copying from another mailbox because ItemActionHelper
+                // only supports a list of int ids.  This isn't a problem for local IMAP because
+                // requests are proxied to the selected folder's owner.
+                throw ServiceException.FAILURE("Unexpected attempt to copy item from mountpoint", null);
+            }
+            ids.add(ident.id);
+        }
+        ItemActionHelper op = ItemActionHelper.MOVE((OperationContext) ctxt, this, null, ids,
+                MailItem.Type.UNKNOWN, null, new ItemId(targetFolder));
+        MoveActionResult moveActionResult = (MoveActionResult) op.getResult();
+        return moveActionResult.getCreatedIds();
     }
 
     @Override

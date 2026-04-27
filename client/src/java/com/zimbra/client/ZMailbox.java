@@ -6597,6 +6597,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return invokeJaxb(req);
     }
 
+    public ItemActionResponse moveItemAction(ItemIdentifier targetFolder, List<ItemIdentifier> idList)
+            throws ServiceException {
+        String ids = Joiner.on(',').join(idList);
+        ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_MOVE);
+        action.setFolder(targetFolder.toString(this.getAccountId()));
+        action.setNewlyCreatedIds(true);
+        ItemActionRequest req = new ItemActionRequest(action);
+        return invokeJaxb(req);
+    }
+
     /**
      * Copies the items identified in {@link idlist} to folder {@link targetFolder}
      * @param idlist - list of item ids for items to copy
@@ -6606,6 +6616,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public List<String> copyItemAction(OpContext ctxt, ItemIdentifier targetFolder, List<ItemIdentifier> idlist)
     throws ServiceException {
         ItemActionResponse resp = copyItemAction(targetFolder, idlist);
+        return Lists.newArrayList(resp.getAction().getNewlyCreatedIds());
+    }
+
+    @Override
+    public List<String> moveItemAction(OpContext ctxt, ItemIdentifier targetFolder, List<ItemIdentifier> idlist)
+            throws ServiceException {
+        ItemActionResponse resp = moveItemAction(targetFolder, idlist);
         return Lists.newArrayList(resp.getAction().getNewlyCreatedIds());
     }
 
