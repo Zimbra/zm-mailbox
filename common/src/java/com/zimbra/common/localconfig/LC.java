@@ -721,8 +721,10 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_ehcache_heap_size = KnownKey.newKey(1);
 
+    @Reloadable
     public static final KnownKey imap_ehcache_skip_large_folder = KnownKey.newKey(false);
 
+    @Reloadable
     public static final KnownKey imap_ehcache_folder_max_message_count = KnownKey.newKey(80000);
 
     @Supported
