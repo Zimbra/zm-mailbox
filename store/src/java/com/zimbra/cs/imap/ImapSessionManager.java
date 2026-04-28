@@ -691,7 +691,9 @@ final class ImapSessionManager {
                 // to reduce load on Ehcache
                 if (LC.imap_ehcache_skip_large_folder.booleanValue() &&
                         actualMsgCount > LC.imap_ehcache_folder_max_message_count.intValue()) {
-                    windowSkipped.increment();
+                    if (DebugConfig.enableImapCacheReport) {
+                        windowSkipped.increment();
+                    }
                     ZimbraLog.imap.debug(
                             "Skipping IMAP folder cache storage: message count (%d) exceeds threshold (%d). " +
                                     "FolderId: %d. CacheKey: %s",
@@ -701,7 +703,9 @@ final class ImapSessionManager {
                             cacheKey(session, false)
                     );
                 } else {
-                    windowUnloaded.increment();
+                    if (DebugConfig.enableImapCacheReport) {
+                        windowUnloaded.increment();
+                    }
                     session.unload(false);
                 }
             } catch (MailboxInMaintenanceException miMe) {
