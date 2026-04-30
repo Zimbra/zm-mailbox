@@ -2850,41 +2850,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         // finally, update OPEN_CONVERSATION if PARENT_ID was NULL
         //   - ITEM_ID = copy's id for hash
 
-        String locator = null;
-       /* MailboxBlob srcMblob = getBlob();
-        if (srcMblob != null) {
-            StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mblob = sm.copy(srcMblob, mMailbox, moveId, mMailbox.getOperationChangeID());
-            mMailbox.markOtherItemDirty(mblob);
-            locator = mblob.getLocator();
-        }*/
-
         // We'll share the index entry if this item can't change out from under us. Re-index the copy if existing item
         // (a) wasn't indexed or (b) is mutable.
         boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !target.inSpam();
 
-        UnderlyingData data = mData.duplicate(moveId, copyUuid, target.getId(), locator);
-        this.setImapUid(moveId);
-        /*data.metadata = encodeMetadata().toString();
-        data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
-        */data.contentChanged(mMailbox);
-
-        ZimbraLog.mailop.info("Performing IMAP copy of %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
-                getMailopContext(this), moveId, target.getId(), target.getName(), data.parentId);
-        //DbMailItem.icopy(this, data, shareIndex);
-        DbMailItem.icopy2(this, target, moveId);
-        //DbMailItem.setFolder(this, target);
-
-        //MailItem copy = constructItem(mMailbox, data);
-        //copy.finishCreation(null, target.getId() == FolderConstants.ID_FOLDER_TRASH);
-
-        /*if (shareIndex && !isTagged(Flag.FlagInfo.COPIED)) {
-            Flag copiedFlag = mMailbox.getFlagById(Flag.ID_COPIED);
-            tagChanged(copiedFlag, true);
-            copy.tagChanged(copiedFlag, true);
-            if (parent != null)
-                parent.inheritedTagChanged(copiedFlag, true);
-        }*/
+        ZimbraLog.mailop.info("Performing IMAP move of %s: copyId=%d, folderId=%d, folderName=%s, parentId.",
+                getMailopContext(this), moveId, target.getId(), target.getName());
+        DbMailItem.imove(this, target, moveId);
+        folderChanged(target, moveId);
 
         if (parent != null && parent.getId() > 0) {
             markItemModified(Change.PARENT);
@@ -2894,6 +2867,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         if (!shareIndex) {
+            // TODO CROSS RELATE WITH MOVE METHOD
             mMailbox.index.add(this);
         }
 

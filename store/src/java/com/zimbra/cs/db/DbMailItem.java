@@ -398,7 +398,7 @@ public class DbMailItem {
         }
     }
 
-    public static void icopy2(MailItem item, Folder folder, int moveId) throws ServiceException {
+    public static void imove(MailItem item, Folder folder, int moveId) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         if (mbox != folder.getMailbox()) {
             throw MailServiceException.WRONG_MAILBOX();

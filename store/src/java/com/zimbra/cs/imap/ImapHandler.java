@@ -4676,10 +4676,6 @@ public abstract class ImapHandler {
             mbox.unlock();
         }
 
-        /*if (i4set.size() > LC.imap_max_items_in_copy.intValue()) {
-            sendNO(tag, "COPY rejected, too many items in copy request");
-            return true;
-        }*/
         // RFC 6851 3.3: extensions that affect COPY affect MOVE in the same way.
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
@@ -4732,25 +4728,14 @@ public abstract class ImapHandler {
             final List<List<ImapMessage>> batches =
                     Lists.partition(i4list, LC.imap_suggested_batch_copy_size.intValue());
 
-            /*OperationProgress copyStatus = new OperationProgress(0, i4set.size(), tag, true);
-            ScheduledFuture<?> notifier = sendInProgressResponses(copyStatus);*/
-            //try {
-                for (List<ImapMessage> batch : batches) {
-                    if (sameMailbox && !selectedFolderInOtherMailbox) {
-                        moveOwnItems(selectedImapMboxStore, batch, iidTarget, moveUIDs);
-                    } else {
-                        moveItemsBetweenMailboxes(selectedImapMboxStore, batch, fromFolderId, targetIdentifier,
-                                moveUIDs);
-                    }
-                    //copyStatus.setCompletedCount(copyStatus.getCompletedCount() + batch.size());
+            for (List<ImapMessage> batch : batches) {
+                if (sameMailbox && !selectedFolderInOtherMailbox) {
+                    moveOwnItems(selectedImapMboxStore, batch, iidTarget, moveUIDs);
+                } else {
+                    moveItemsBetweenMailboxes(selectedImapMboxStore, batch, fromFolderId, targetIdentifier,
+                            moveUIDs);
                 }
-             /*}finally {
-                // stop sending from the notifier thread after this point for safety
-                copyStatus.setIsRunning(false);
-                if (notifier != null) {
-                    notifier.cancel(true);
-                }
-            }*/
+            }
 
             if (uvv > 0 && moveUIDs != null && moveUIDs.size() > 0) {
                 List<Integer> srcUIDs = Lists.newArrayListWithCapacity(i4set.size());
@@ -4761,8 +4746,8 @@ public abstract class ImapHandler {
                         ImapFolder.encodeSubsequence(moveUIDs) + "] ";
             }
         } catch (ServiceException e) {
-            // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
-            //         MUST restore the destination mailbox to its state before the COPY attempt."
+            // 6.4.7: "If the MOVE command is unsuccessful for any reason, server implementations
+            //         MUST restore the destination mailbox to its state before the MOVE attempt."
             String rcode = "";
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
                 ZimbraLog.imap.info("%s failed: no such folder: %s", command, path);
@@ -4780,10 +4765,20 @@ public abstract class ImapHandler {
             return canContinue(e);
         }
 
+        String status = "";
+        try {
+            if (byUID && !i4folder.isVirtual() && sessionActivated(ImapExtension.QRESYNC)) {
+                status = "[HIGHESTMODSEQ " + i4folder.getCurrentMODSEQ() + "] ";
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.imap.info("error while determining HIGHESTMODSEQ of selected folder", e);
+        }
+
         // RFC 2180 4.4: "COPY is the only IMAP4 sequence number command that is safe to allow
         //                an EXPUNGE response on.  This is because a client is not permitted
         //                to cascade several COPY commands together."
         sendNotifications(true, false);
+        sendUntagged("OK " + status);
         sendOK(tag, moveuid + command + " completed");
         return true;
     }

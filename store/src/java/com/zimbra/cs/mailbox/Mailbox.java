@@ -7654,24 +7654,6 @@ public class Mailbox implements MailboxStore {
                     throw e;
                 }
             }
-
-            // if we're here, we hit a naming conflict during move-to-Trash
-            if (itemIds.length == 1) {
-                // rename the item being moved instead of the one already there...
-                rename(octxt, itemIds[0], type, generateAlternativeItemName(octxt, itemIds[0], type), targetId);
-            } else {
-                // iterate one-by-one and move the items individually
-                for (int id : itemIds) {
-                    // FIXME: non-transactional
-                    try {
-                        // still more likely than not to succeed...
-                            result.add(iMove(octxt, id, type, targetId, tcon));
-                    } catch (ServiceException e) {
-                        // rename the item being moved instead of the one already there...
-                        rename(octxt, id, type, generateAlternativeItemName(octxt, id, type), targetId);
-                    }
-                }
-            }
         } finally {
             lock.release();
         }
@@ -7703,29 +7685,25 @@ public class Mailbox implements MailboxStore {
 
             MailItem item = getItemById(itemId, type);
 
-                checkItemChangeID(item);
+            checkItemChangeID(item);
 
             int oldUIDNEXT = target.getImapUIDNEXT();
             boolean resetUIDNEXT = false;
 
-            //for (MailItem item : item) {
+            // train the spam filter if necessary...
+            trainSpamFilter(octxt, item, target, "move");
 
-                // train the spam filter if necessary...
-                trainSpamFilter(octxt, item, target, "move");
-
-                // ...do the move...
+            // ...do the move...
             ImapCopyItem redoPlayer = (ImapCopyItem) currentChange().getRedoPlayer();
             int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(itemId));
             String newUuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getDestUuid(itemId);
 
             moved = item.imove(target, newId, newUuid);
 
-                // ...and determine whether the move needs to cause an UIDNEXT change
-                if (/*moved && !resetUIDNEXT && isTrackingImap()*/
-                        (item instanceof Conversation || item instanceof Message || item instanceof Contact)) {
-                    resetUIDNEXT = true;
-                }
-            //}
+            // ...and determine whether the move needs to cause an UIDNEXT change
+            if ((item instanceof Conversation || item instanceof Message || item instanceof Contact)) {
+                resetUIDNEXT = true;
+            }
 
             // if this operation should cause the target folder's UIDNEXT value to change but it hasn't yet, do it here
             if (resetUIDNEXT && oldUIDNEXT == target.getImapUIDNEXT()) {
