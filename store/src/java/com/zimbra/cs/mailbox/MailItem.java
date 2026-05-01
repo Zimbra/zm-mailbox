@@ -2829,6 +2829,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (!target.canContain(this))
             throw MailServiceException.CANNOT_CONTAIN();
 
+        if (!isMovable()) {
+            throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        }
+
         // permissions required are the same as for copy()
         if (!canAccess(ACL.RIGHT_READ))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
@@ -2867,7 +2871,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         if (!shareIndex) {
-            // TODO CROSS RELATE WITH MOVE METHOD
             mMailbox.index.add(this);
         }
 

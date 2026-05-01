@@ -4664,6 +4664,13 @@ public abstract class ImapHandler {
         if (i4folder == null) {
             throw new ImapSessionClosedException();
         }
+
+        if (!i4folder.isWritable()) {
+            sendNO(tag, "mailbox selected READ-ONLY");
+            return true;
+        }
+
+
         MailboxStore mbox = i4folder.getMailbox();
         Set<ImapMessage> i4set;
         mbox.lock(false);
@@ -4686,6 +4693,14 @@ public abstract class ImapHandler {
         i4set.remove(null);
 
         try {
+            if (!i4folder.getPath().isWritable(ACL.RIGHT_DELETE)) {
+                throw ServiceException.PERM_DENIED("you do not have permission to set the \\Deleted flag");
+            }
+            else if (!i4folder.getPath().isWritable(ACL.RIGHT_WRITE)) {
+                throw ServiceException.PERM_DENIED(
+                        "you do not have write permission on the source folder");
+            }
+
             if (!path.isVisible()) {
                 throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
             } else if (!path.isWritable(ACL.RIGHT_INSERT)) {
@@ -4746,8 +4761,8 @@ public abstract class ImapHandler {
                         ImapFolder.encodeSubsequence(moveUIDs) + "] ";
             }
         } catch (ServiceException e) {
-            // 6.4.7: "If the MOVE command is unsuccessful for any reason, server implementations
-            //         MUST restore the destination mailbox to its state before the MOVE attempt."
+            // 3.3 : "The server MUST leave each message in a state where
+            //         it is in at least one of the source or target mailboxes."
             String rcode = "";
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
                 ZimbraLog.imap.info("%s failed: no such folder: %s", command, path);
@@ -4765,20 +4780,21 @@ public abstract class ImapHandler {
             return canContinue(e);
         }
 
+        // RFC 2180 4.4: "COPY is the only IMAP4 sequence number command that is safe to allow
+        //                an EXPUNGE response on.  This is because a client is not permitted
+        //                to cascade several COPY commands together."
+        sendNotifications(true, false);
+
         String status = "";
         try {
             if (byUID && !i4folder.isVirtual() && sessionActivated(ImapExtension.QRESYNC)) {
                 status = "[HIGHESTMODSEQ " + i4folder.getCurrentMODSEQ() + "] ";
+                sendUntagged("OK " + status);
             }
         } catch (ServiceException e) {
             ZimbraLog.imap.info("error while determining HIGHESTMODSEQ of selected folder", e);
         }
 
-        // RFC 2180 4.4: "COPY is the only IMAP4 sequence number command that is safe to allow
-        //                an EXPUNGE response on.  This is because a client is not permitted
-        //                to cascade several COPY commands together."
-        sendNotifications(true, false);
-        sendUntagged("OK " + status);
         sendOK(tag, moveuid + command + " completed");
         return true;
     }

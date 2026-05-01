@@ -7597,7 +7597,7 @@ public class Mailbox implements MailboxStore {
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on all the the source folders
      * @param octxt     The context for this request (e.g. auth user id).
-     * @param itemId    A list of the IDs of the items to move.
+     * @param itemIds    A list of the IDs of the items to move.
      * @param type      The type of the items or {@link MailItem.Type#UNKNOWN}.
      * @param targetId  The ID of the target folder for the move.
      * @param tcon      An optional constraint on the items being moved. */
@@ -7644,10 +7644,7 @@ public class Mailbox implements MailboxStore {
         List<MailItem> result = new ArrayList<>();
         try {
             try {
-                for (int itemId : itemIds) {
-                    result.add(iMove(octxt, itemId, type, targetId, tcon));
-                }
-                return result;
+                return iMove(octxt, itemIds, type, targetId, tcon);
             } catch (ServiceException e) {
                 // make sure that move-to-Trash never fails with a naming conflict
                 if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS) || targetId != ID_FOLDER_TRASH) {
@@ -7671,44 +7668,45 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private MailItem iMove(OperationContext octxt, int itemId, MailItem.Type type, int targetId,
+    private List<MailItem> iMove(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
             TargetConstraint tcon)
     throws ServiceException {
-        MoveItem redoRecorder = new MoveItem(mId, new int[] {itemId}, type, targetId, tcon);
-        MailItem moved = null;
+        MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
         boolean success = false;
+        List<MailItem> result = new ArrayList<>();
         try {
             beginTransaction("move", octxt, redoRecorder);
             setOperationTargetConstraint(tcon);
 
             Folder target = getFolderById(targetId);
 
-            MailItem item = getItemById(itemId, type);
+            for (int itemId : itemIds) {
+                MailItem item = getItemById(itemId, type);
+                checkItemChangeID(item);
 
-            checkItemChangeID(item);
+                int oldUIDNEXT = target.getImapUIDNEXT();
+                boolean resetUIDNEXT = false;
 
-            int oldUIDNEXT = target.getImapUIDNEXT();
-            boolean resetUIDNEXT = false;
+                // train the spam filter if necessary...
+                trainSpamFilter(octxt, item, target, "move");
 
-            // train the spam filter if necessary...
-            trainSpamFilter(octxt, item, target, "move");
+                // ...do the move...
+                ImapCopyItem redoPlayer = (ImapCopyItem) currentChange().getRedoPlayer();
+                int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(itemId));
+                String newUuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getDestUuid(itemId);
 
-            // ...do the move...
-            ImapCopyItem redoPlayer = (ImapCopyItem) currentChange().getRedoPlayer();
-            int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(itemId));
-            String newUuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getDestUuid(itemId);
+                result.add(item.imove(target, newId, newUuid));
 
-            moved = item.imove(target, newId, newUuid);
+                // ...and determine whether the move needs to cause an UIDNEXT change
+                if ((item instanceof Conversation || item instanceof Message || item instanceof Contact)) {
+                    resetUIDNEXT = true;
+                }
 
-            // ...and determine whether the move needs to cause an UIDNEXT change
-            if ((item instanceof Conversation || item instanceof Message || item instanceof Contact)) {
-                resetUIDNEXT = true;
-            }
-
-            // if this operation should cause the target folder's UIDNEXT value to change but it hasn't yet, do it here
-            if (resetUIDNEXT && oldUIDNEXT == target.getImapUIDNEXT()) {
-                redoRecorder.setUIDNEXT(newId);
-                target.updateUIDNEXT();
+                // if this operation should cause the target folder's UIDNEXT value to change but it hasn't yet, do it here
+                if (resetUIDNEXT && oldUIDNEXT == target.getImapUIDNEXT()) {
+                    redoRecorder.setUIDNEXT(newId);
+                    target.updateUIDNEXT();
+                }
             }
             success = true;
         } catch (IOException e) {
@@ -7716,7 +7714,7 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
-        return moved;
+        return result;
     }
 
     private void moveInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
