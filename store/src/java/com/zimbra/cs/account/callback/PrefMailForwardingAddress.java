@@ -17,6 +17,7 @@
 package com.zimbra.cs.account.callback;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -85,16 +86,36 @@ public class PrefMailForwardingAddress extends AttributeCallback {
         
         if (maxAddrs == -1)
             maxAddrs = account.getMailForwardingAddressMaxNumAddrs();
-        
+
         String newValue = mod.value();
+        String[] addrs = newValue.split(",");
+        // SELF-FORWARDING VALIDATION
+        Set<String> accountAddresses = account.getAllAddrsSet();
+
+        for (String addr : addrs) {
+            String trimmedAddr = addr.trim();
+            if (trimmedAddr.isEmpty()) {
+                continue;
+            }
+
+            for (String accountAddr : accountAddresses) {
+                if (trimmedAddr.equalsIgnoreCase(accountAddr)) {
+                    ZimbraLog.account.warn(
+                            "Attempt to set self-forwarding for account: "
+                                    + account.getName() + ", forwarding address: " + trimmedAddr);
+
+                    throw ServiceException.INVALID_REQUEST(
+                            "Cannot set forwarding address to the same account", null);
+                }
+            }
+        }
         
         if (newValue.length() > maxLen) {
             throw ServiceException.INVALID_REQUEST("value is too long, the limit(" + 
                     Provisioning.A_zimbraMailForwardingAddressMaxLength + ") is " + 
                     maxLen, null);
         }
-        
-        String[] addrs = newValue.split(",");
+
         if (addrs.length > maxAddrs) {
             throw ServiceException.INVALID_REQUEST("value is too long, the limit(" + 
                     Provisioning.A_zimbraMailForwardingAddressMaxNumAddrs + ") is " + 

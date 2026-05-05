@@ -396,7 +396,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>dynamic group membership</desc>
 </attr>
 
-<attr id="12" name="zimbraMailForwardingAddress" type="email" max="256" cardinality="multi" optionalIn="mailRecipient,groupStaticUnit" flags="accountInfo,domainAdminModifiable">
+<attr id="12" name="zimbraMailForwardingAddress" type="email" max="256" cardinality="multi" optionalIn="mailRecipient,groupStaticUnit" flags="accountInfo,domainAdminModifiable" callback="PrefMailForwardingAddress">
   <desc>RFC822 forwarding address for an account</desc>
 </attr>
 
