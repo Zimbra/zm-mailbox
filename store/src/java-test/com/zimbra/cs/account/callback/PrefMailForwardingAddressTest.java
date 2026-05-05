@@ -1,14 +1,14 @@
 package com.zimbra.cs.account.callback;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 public class PrefMailForwardingAddressTest {
 
