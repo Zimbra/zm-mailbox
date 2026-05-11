@@ -178,77 +178,7 @@ import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.pop3.Pop3Message;
-import com.zimbra.cs.redolog.op.AddDocumentRevision;
-import com.zimbra.cs.redolog.op.AlterItemTag;
-import com.zimbra.cs.redolog.op.ColorItem;
-import com.zimbra.cs.redolog.op.CopyItem;
-import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
-import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
-import com.zimbra.cs.redolog.op.CreateChat;
-import com.zimbra.cs.redolog.op.CreateComment;
-import com.zimbra.cs.redolog.op.CreateContact;
-import com.zimbra.cs.redolog.op.CreateFileSharedWithMe;
-import com.zimbra.cs.redolog.op.CreateFolder;
-import com.zimbra.cs.redolog.op.CreateFolderPath;
-import com.zimbra.cs.redolog.op.CreateInvite;
-import com.zimbra.cs.redolog.op.CreateLink;
-import com.zimbra.cs.redolog.op.CreateMailbox;
-import com.zimbra.cs.redolog.op.CreateMessage;
-import com.zimbra.cs.redolog.op.CreateMountpoint;
-import com.zimbra.cs.redolog.op.CreateNote;
-import com.zimbra.cs.redolog.op.CreateSavedSearch;
-import com.zimbra.cs.redolog.op.CreateTag;
-import com.zimbra.cs.redolog.op.DateItem;
-import com.zimbra.cs.redolog.op.DeleteConfig;
-import com.zimbra.cs.redolog.op.DeleteItem;
-import com.zimbra.cs.redolog.op.DeleteItemFromDumpster;
-import com.zimbra.cs.redolog.op.DeleteMailbox;
-import com.zimbra.cs.redolog.op.DismissCalendarItemAlarm;
-import com.zimbra.cs.redolog.op.EditNote;
-import com.zimbra.cs.redolog.op.EnableSharedReminder;
-import com.zimbra.cs.redolog.op.FixCalendarItemEndTime;
-import com.zimbra.cs.redolog.op.FixCalendarItemPriority;
-import com.zimbra.cs.redolog.op.FixCalendarItemTZ;
-import com.zimbra.cs.redolog.op.GrantAccess;
-import com.zimbra.cs.redolog.op.ICalReply;
-import com.zimbra.cs.redolog.op.ImapCopyItem;
-import com.zimbra.cs.redolog.op.LockItem;
-import com.zimbra.cs.redolog.op.ModifyContact;
-import com.zimbra.cs.redolog.op.ModifyInvitePartStat;
-import com.zimbra.cs.redolog.op.ModifySavedSearch;
-import com.zimbra.cs.redolog.op.MoveItem;
-import com.zimbra.cs.redolog.op.PurgeImapDeleted;
-import com.zimbra.cs.redolog.op.PurgeOldMessages;
-import com.zimbra.cs.redolog.op.PurgeRevision;
-import com.zimbra.cs.redolog.op.RecoverItem;
-import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.redolog.op.RefreshMountpoint;
-import com.zimbra.cs.redolog.op.RenameItem;
-import com.zimbra.cs.redolog.op.RenameItemPath;
-import com.zimbra.cs.redolog.op.RenameMailbox;
-import com.zimbra.cs.redolog.op.RepositionNote;
-import com.zimbra.cs.redolog.op.RevokeAccess;
-import com.zimbra.cs.redolog.op.SaveChat;
-import com.zimbra.cs.redolog.op.SaveDocument;
-import com.zimbra.cs.redolog.op.SaveDraft;
-import com.zimbra.cs.redolog.op.SetActiveSyncDisabled;
-import com.zimbra.cs.redolog.op.SetCalendarItem;
-import com.zimbra.cs.redolog.op.SetConfig;
-import com.zimbra.cs.redolog.op.SetCustomData;
-import com.zimbra.cs.redolog.op.SetFolderDefaultView;
-import com.zimbra.cs.redolog.op.SetFolderUrl;
-import com.zimbra.cs.redolog.op.SetImapUid;
-import com.zimbra.cs.redolog.op.SetItemTags;
-import com.zimbra.cs.redolog.op.SetPermissions;
-import com.zimbra.cs.redolog.op.SetPop3Uid;
-import com.zimbra.cs.redolog.op.SetRetentionPolicy;
-import com.zimbra.cs.redolog.op.SetSubscriptionData;
-import com.zimbra.cs.redolog.op.SetWebOfflineSyncDays;
-import com.zimbra.cs.redolog.op.SnoozeCalendarItemAlarm;
-import com.zimbra.cs.redolog.op.StoreIncomingBlob;
-import com.zimbra.cs.redolog.op.TrackImap;
-import com.zimbra.cs.redolog.op.TrackSync;
-import com.zimbra.cs.redolog.op.UnlockItem;
+import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.mail.CopyActionResult;
@@ -7444,55 +7374,6 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    /*public List<MailItem> imapMove(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
-            throws ServiceException {
-        // this is an IMAP command, so we'd better be tracking IMAP changes by now...
-        beginTrackingImap(); //TODO: there is likely no way this mailbox is not tracking IMAP already if we are here
-
-        for (int id : itemIds) {
-            if (id <= 0) {
-                throw MailItem.noSuchItem(id, type);
-            }
-        }
-
-        ImapCopyItem redoRecorder = new ImapCopyItem(mId, type, folderId);
-
-        boolean success = false;
-        lock.lock();
-        try {
-            try {
-                return moveInternal(octxt, itemIds, type, targetId, tcon);
-            } catch (ServiceException e) {
-                // make sure that move-to-Trash never fails with a naming conflict
-                if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS) || targetId != ID_FOLDER_TRASH) {
-                    throw e;
-                }
-                // if we're here, we hit a naming conflict during move-to-Trash
-                if (itemIds.length == 1) {
-                    // rename the item being moved instead of the one already there...
-                    rename(octxt, itemIds[0], type, generateAlternativeItemName(octxt, itemIds[0], type), targetId);
-                } else {
-                    // iterate one-by-one and move the items individually
-                    for (int id : itemIds) {
-                        // FIXME: non-transactional
-                        try {
-                            // still more likely than not to succeed...
-                            moveInternal(octxt, new int[] { id }, type, targetId, tcon);
-                        } catch (ServiceException e) {
-                            // rename the item being moved instead of the one already there...
-                            rename(octxt, id, type, generateAlternativeItemName(octxt, id, type), targetId);
-                        }
-                    }
-                }
-            }
-
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException while moving items for IMAP", e);
-        } finally {
-            lock.release();
-        }
-    }*/
-
     private <T extends MailItem> T trainSpamFilter(OperationContext octxt, T item, Folder target, String opDescription) {
         if (currentChange().getRedoPlayer() != null) { // don't re-train filter
                                                        // on replayed operation
@@ -7671,7 +7552,7 @@ public class Mailbox implements MailboxStore {
     private List<MailItem> iMove(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
             TargetConstraint tcon)
     throws ServiceException {
-        MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
+        ImapMoveItem redoRecorder = new ImapMoveItem(mId, type, targetId);
         boolean success = false;
         List<MailItem> result = new ArrayList<>();
         try {
@@ -7691,10 +7572,10 @@ public class Mailbox implements MailboxStore {
                 trainSpamFilter(octxt, item, target, "move");
 
                 // ...do the move...
-                ImapCopyItem redoPlayer = (ImapCopyItem) currentChange().getRedoPlayer();
+                ImapMoveItem redoPlayer = (ImapMoveItem) currentChange().getRedoPlayer();
                 int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(itemId));
                 String newUuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getDestUuid(itemId);
-
+                int srcId = item.getId();
                 result.add(item.imove(target, newId, newUuid));
 
                 // ...and determine whether the move needs to cause an UIDNEXT change
@@ -7704,13 +7585,13 @@ public class Mailbox implements MailboxStore {
 
                 // if this operation should cause the target folder's UIDNEXT value to change but it hasn't yet, do it here
                 if (resetUIDNEXT && oldUIDNEXT == target.getImapUIDNEXT()) {
-                    redoRecorder.setUIDNEXT(newId);
+                    redoRecorder.setDest(srcId, newId, newUuid);
                     target.updateUIDNEXT();
                 }
             }
             success = true;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw ServiceException.FAILURE("IOException while moving items for IMAP", e);
         } finally {
             endTransaction(success);
         }

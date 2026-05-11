@@ -2841,116 +2841,47 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         // fetch the parent *before* changing the DB
         MailItem parent = getParent();
+        Folder oldFolder = getFolder();
 
-        // first, copy the item to the target folder while setting:
-        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
-        //   - INDEX_ID -> old index id
-        //   - FOLDER_ID -> new folder
-        //   - IMAP_ID -> new IMAP uid
-        //   - VOLUME_ID -> target volume ID
-        // then, update the original item
-        //   - PARENT_ID -> NULL
-        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
-        // finally, update OPEN_CONVERSATION if PARENT_ID was NULL
-        //   - ITEM_ID = copy's id for hash
+        if (isLeafNode()) {
+            boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
+            oldFolder.updateSize(-1, isDeleted ? -1 : 0, -getTotalSize());
+            target.updateSize(1, isDeleted ? 1 : 0, getTotalSize());
+        }
 
-        // We'll share the index entry if this item can't change out from under us. Re-index the copy if existing item
-        // (a) wasn't indexed or (b) is mutable.
-        boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !target.inSpam();
+        if (!inTrash() && target.inTrash()) {
+            // moving something to Trash also marks it as read
+            if (mData.unreadCount > 0) {
+                alterUnread(false);
+            }
+        } else {
+            boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
+            oldFolder.updateUnread(-mData.unreadCount, isDeleted ? -mData.unreadCount : 0);
+            target.updateUnread(mData.unreadCount, isDeleted? mData.unreadCount : 0);
+        }
+        // moving a message (etc.) to Spam removes it from its conversation
+        if (!inSpam() && target.inSpam()) {
+            detach();
+        }
+        // item moved out of spam, so update the index id (will be written to DB in DbMailItem.setFolder());
+        if (inSpam() && !target.inSpam() && getIndexStatus() == IndexStatus.DONE) {
+            mMailbox.index.add(this);
+        }
 
         ZimbraLog.mailop.info("Performing IMAP move of %s: copyId=%d, folderId=%d, folderName=%s, parentId.",
                 getMailopContext(this), moveId, target.getId(), target.getName());
         DbMailItem.imove(this, target, moveId);
-        folderChanged(target, moveId);
+        iFolderChanged(target, moveId);
 
         if (parent != null && parent.getId() > 0) {
             markItemModified(Change.PARENT);
             parent.markItemModified(Change.CHILDREN);
             mData.parentId = mData.type == Type.MESSAGE.toByte() ? -mId : -1;
             metadataChanged();
-        }
-
-        if (!shareIndex) {
-            mMailbox.index.add(this);
         }
 
         return this;
     }
-
-    /*MailItem imove(Folder target, int copyId, String copyUuid) throws IOException, ServiceException {
-        if (!isMovable())
-            throw MailServiceException.CANNOT_MOVE(mId);
-        if (!target.canContain(this))
-            throw MailServiceException.CANNOT_CONTAIN();
-
-        // permissions required are the same as for copy()
-        if (!canAccess(ACL.RIGHT_READ))
-            throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
-        if (!target.canAccess(ACL.RIGHT_INSERT))
-            throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
-
-        // fetch the parent *before* changing the DB
-        MailItem parent = getParent();
-
-        // first, copy the item to the target folder while setting:
-        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
-        //   - INDEX_ID -> old index id
-        //   - FOLDER_ID -> new folder
-        //   - IMAP_ID -> new IMAP uid
-        //   - VOLUME_ID -> target volume ID
-        // then, update the original item
-        //   - PARENT_ID -> NULL
-        //   - FLAGS -> FLAGS | Flag.BITMASK_COPIED
-        // finally, update OPEN_CONVERSATION if PARENT_ID was NULL
-        //   - ITEM_ID = copy's id for hash
-
-        String locator = null;
-        MailboxBlob srcMblob = getBlob();
-        if (srcMblob != null) {
-            StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mblob = sm.copy(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
-            mMailbox.markOtherItemDirty(mblob);
-            locator = mblob.getLocator();
-        }
-
-        // We'll share the index entry if this item can't change out from under us. Re-index the copy if existing item
-        // (a) wasn't indexed or (b) is mutable.
-        boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !target.inSpam();
-
-        UnderlyingData data = mData.duplicate(copyId, copyUuid, target.getId(), locator);
-        data.metadata = encodeMetadata().toString();
-        data.imapId = copyId;
-        data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
-        data.contentChanged(mMailbox);
-
-        ZimbraLog.mailop.info("Performing IMAP copy of %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
-                getMailopContext(this), copyId, target.getId(), target.getName(), data.parentId);
-        DbMailItem.icopy(this, data, shareIndex);
-
-        MailItem copy = constructItem(mMailbox, data);
-        copy.finishCreation(null, target.getId() == FolderConstants.ID_FOLDER_TRASH);
-
-        if (shareIndex && !isTagged(Flag.FlagInfo.COPIED)) {
-            Flag copiedFlag = mMailbox.getFlagById(Flag.ID_COPIED);
-            tagChanged(copiedFlag, true);
-            copy.tagChanged(copiedFlag, true);
-            if (parent != null)
-                parent.inheritedTagChanged(copiedFlag, true);
-        }
-
-        if (parent != null && parent.getId() > 0) {
-            markItemModified(Change.PARENT);
-            parent.markItemModified(Change.CHILDREN);
-            mData.parentId = mData.type == Type.MESSAGE.toByte() ? -mId : -1;
-            metadataChanged();
-        }
-
-        if (!shareIndex) {
-            mMailbox.index.add(copy);
-        }
-
-        return copy;
-    }*/
 
     /** The regexp defining printable characters not permitted in item
      *  names.  These are: ':', '/', '"', '\t', '\r', and '\n'. */
@@ -3190,6 +3121,24 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         markItemModified(Change.FOLDER);
         mData.folderId = newFolder.getId();
         mData.imapId   = mMailbox.isTrackingImap() ? imapId : mData.imapId;
+        metadataChanged();
+    }
+
+    /** Records all relevant changes to the in-memory object for when an item
+     *  gets moved to a new {@link Folder} through imap.  Does <u>not</u> persist
+     *  those changes to the database.
+     *
+     * @param newFolder  The folder the item is being moved to.
+     * @param imapId     The new IMAP ID for the item after the operation.
+     * @throws ServiceException if we're not in a transaction */
+    void iFolderChanged(Folder newFolder, int imapId) throws ServiceException {
+        // only mark as modified when moving to the same folder because  TODO
+        if (mData.folderId == newFolder.getId()) {
+            markItemModified(Change.IMAP_UID);
+        }
+        markItemModified(Change.FOLDER);
+        mData.imapId   = mMailbox.isTrackingImap() ? imapId : mData.imapId;
+        mData.folderId = newFolder.getId();
         metadataChanged();
     }
 

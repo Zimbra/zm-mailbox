@@ -409,49 +409,34 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             String imapRenumber = mbox.isTrackingImap()
-                    ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE " + moveId + " END"
+                    ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE ? " + " END"
                     : "";
             int pos = 1;
-            boolean hasIndexId = false;
-            if (item instanceof Folder) {
-                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET parent_id = ?, folder_id = ?, prev_folders = ?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
-                stmt.setInt(pos++, folder.getId());
-            } else if (item instanceof Conversation && !(item instanceof VirtualConversation)) {
-                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET folder_id = ?, prev_folders = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ?");
-            } else {
-                // set the indexId, in case it changed (moving items out of junk can trigger an index ID change)
-                hasIndexId = true;
-                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET folder_id = ?, prev_folders = ?, index_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
-            }
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
+                    " SET folder_id = ?, prev_folders = ?, index_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             stmt.setInt(pos++, folder.getId());
             int modseq = mbox.getOperationChangeID();
             String prevFolders = findPrevFolders(item, modseq);
             stmt.setString(pos++, prevFolders);
-            item.getUnderlyingData().setPrevFolders(prevFolders);
-            if (hasIndexId) {
-                if (item.getIndexStatus() == MailItem.IndexStatus.NO) {
-                    stmt.setNull(pos++, Types.INTEGER);
-                } else {
-                    stmt.setInt(pos++, item.getIndexId());
-                }
+            //item.getUnderlyingData().setPrevFolders(prevFolders);
+            if (item.getIndexStatus() == MailItem.IndexStatus.NO) {
+                stmt.setNull(pos++, Types.INTEGER);
+            } else {
+                stmt.setInt(pos++, item.getIndexId());
             }
             stmt.setInt(pos++, modseq);
             stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setInt(pos++, moveId);
             pos = setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
+            stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
             } else {
-                throw ServiceException.FAILURE("writing new folder data for item " + item.getId(), e);
+                throw ServiceException.FAILURE("writing new imove data for item " + item.getId(), e);
             }
         } finally {
             DbPool.closeStatement(stmt);

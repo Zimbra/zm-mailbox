@@ -145,9 +145,9 @@ public abstract class ImapHandler {
 
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
         "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT",
-        "I18NLEVEL=1", "ID", "IDLE", "LIST-EXTENDED", "LIST-STATUS", "LITERAL+", "LOGIN-REFERRALS",
+        "I18NLEVEL=1", "ID", "IDLE", "INPROGRESS", "LIST-EXTENDED", "LIST-STATUS", "LITERAL+", "LOGIN-REFERRALS",
         "MOVE", "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES",
-            "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST", "INPROGRESS"
+            "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST"
     ));
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 10 * Constants.MILLIS_PER_SECOND;
@@ -1314,6 +1314,7 @@ public abstract class ImapHandler {
         // [I18NLEVEL=1]      RFC 5255: Internet Message Access Protocol Internationalization
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
+        // [INPROGRESS]       RFC 9585: IMAP Response Code for Command Progress Notifications
         // [LIST-EXTENDED]    RFC 5258: Internet Message Access Protocol version 4 - LIST Command Extensions
         // [LIST-STATUS]      RFC 5819: IMAP4 Extension for Returning STATUS Information in Extended LIST
         // [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
@@ -4670,7 +4671,6 @@ public abstract class ImapHandler {
             return true;
         }
 
-
         MailboxStore mbox = i4folder.getMailbox();
         Set<ImapMessage> i4set;
         mbox.lock(false);
@@ -4683,6 +4683,11 @@ public abstract class ImapHandler {
             mbox.unlock();
         }
 
+        if (i4set.size() > LC.imap_max_items_in_move.intValue()) {
+            sendNO(tag, "MOVE rejected, too many items in move request");
+            return true;
+        }
+
         // RFC 6851 3.3: extensions that affect COPY affect MOVE in the same way.
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
@@ -4693,8 +4698,9 @@ public abstract class ImapHandler {
         i4set.remove(null);
 
         try {
+            // check target folder permissions before attempting the move
             if (!i4folder.getPath().isWritable(ACL.RIGHT_DELETE)) {
-                throw ServiceException.PERM_DENIED("you do not have permission to set the \\Deleted flag");
+                throw ServiceException.PERM_DENIED("you do not have permission to delete messages from the selected folder");
             }
             else if (!i4folder.getPath().isWritable(ACL.RIGHT_WRITE)) {
                 throw ServiceException.PERM_DENIED(
@@ -4719,7 +4725,6 @@ public abstract class ImapHandler {
                 return true;
             }
 
-            // check target folder permissions before attempting the move
             ImapMailboxStore selectedImapMboxStore = i4folder.getImapMailboxStore();
             boolean sameMailbox = selectedImapMboxStore.getAccountId().equalsIgnoreCase(mbxStore.getAccountId());
             boolean selectedFolderInOtherMailbox;
@@ -4757,6 +4762,8 @@ public abstract class ImapHandler {
                 for (ImapMessage i4msg : i4set) {
                     srcUIDs.add(i4msg.imapUid);
                 }
+                // RFC 6851 4.3 Servers supporting UIDPLUS [RFC4315] SHOULD send COPYUID in response
+                //   to a UID MOVE command.
                 moveuid = "[COPYUID " + uvv + ' ' + ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
                         ImapFolder.encodeSubsequence(moveUIDs) + "] ";
             }
@@ -4780,7 +4787,7 @@ public abstract class ImapHandler {
             return canContinue(e);
         }
 
-        // RFC 2180 4.4: "COPY is the only IMAP4 sequence number command that is safe to allow
+        // RFC 6851 4.4: "COPY is the only IMAP4 sequence number command that is safe to allow
         //                an EXPUNGE response on.  This is because a client is not permitted
         //                to cascade several COPY commands together."
         sendNotifications(true, false);
@@ -4959,7 +4966,7 @@ public abstract class ImapHandler {
         }
 
         ImapListener i4selected = getCurrentImapListener();
-        if (i4selected == null || !i4selected.hasNotifications()) {
+        if (i4selected == null /*|| !i4selected.hasNotifications()*/) {
             return;
         }
         MailboxStore mbox = i4selected.getMailbox();
