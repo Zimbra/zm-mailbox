@@ -504,27 +504,32 @@ public class ContactAutoComplete {
             this.str = str;
         }
 
+        private void handleContactAttrs(Map<String, ? extends Object> attrs,
+                                       boolean isExternalGal) throws ServiceException {
+            addMatchedContacts(str, attrs, FOLDER_ID_GAL, null, result, false, isExternalGal);
+        }
+
         public void handleContactAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
-            addMatchedContacts(str, attrs, FOLDER_ID_GAL, null, result, false);
+            handleContactAttrs( attrs, false);
         }
 
         @Override
         public Element handleContact(Contact c) throws ServiceException {
             ZimbraLog.gal.debug("gal entry: %d", c.getId());
-            handleContactAttrs(c.getFields());
+            handleContactAttrs(c.getFields(), c.isExternalContactForGAL());
             return null;
         }
 
         @Override
         public void visit(GalContact c) throws ServiceException {
             ZimbraLog.gal.debug("gal entry: %s", c.getId());
-            handleContactAttrs(c.getAttrs());
+            handleContactAttrs(c.getAttrs(), !c.isZimbraGal());
         }
 
         @Override
         public void handleElement(Element e) throws ServiceException {
             ZimbraLog.gal.debug("gal entry: %s", e.getAttribute(MailConstants.A_ID));
-            handleContactAttrs(parseContactElement(e));
+            handleContactAttrs(parseContactElement(e), false);
         }
 
         @Override
@@ -668,7 +673,13 @@ public class ContactAutoComplete {
     }
 
     public void addMatchedContacts(String query, Map<String, ? extends Object> attrs, int folderId, ItemId id,
-            AutoCompleteResult result, boolean isFromContactFolder) throws ServiceException {
+                                   AutoCompleteResult result, boolean isFromContactFolder) throws ServiceException {
+        addMatchedContacts(query, attrs, FOLDER_ID_GAL, null, result, false, false);
+    }
+
+    protected void addMatchedContacts(String query, Map<String, ? extends Object> attrs, int folderId, ItemId id,
+                                   AutoCompleteResult result, boolean isFromContactFolder,
+                                   boolean isExternalGal) throws ServiceException {
         if (!result.canBeCached) {
             return;
         }
@@ -701,7 +712,8 @@ public class ContactAutoComplete {
             if (Strings.isNullOrEmpty(displayName)) {
                 displayName = Joiner.on(' ').skipNulls().join(first, middle, last);
             }
-            Set<String> eligibleEmailsForAccount = extractEligibleEmailsListForAccount(attrs, isFromContactFolder);
+            Set<String> eligibleEmailsForAccount = extractEligibleEmailsListForAccount(attrs, isFromContactFolder,
+                    isExternalGal);
             for (String email : eligibleEmailsForAccount) {
                 if (email != null && (nameMatches || matchesEmail(tokens, email))) {
                     ContactEntry entry = new ContactEntry();
@@ -751,18 +763,22 @@ public class ContactAutoComplete {
 
     /**
      * Identifies the eligible results for GAL Autocomplete for an account
+     *
      * @param attrs
      * @param isFromContactFolder true if the entry originates from a local/shared contact folder,
      *                            false if the entry originates from GAL
+     * @param isExternalGal true if the entry originates from an External GAL,
+     *                             false if the entry originates from Zimbra GAL
      * @return a set of email addresses that are eligible for autocomplete suggestions
      * @throws ServiceException
      */
     protected Set<String> extractEligibleEmailsListForAccount(Map<String, ?> attrs,
-                                                              boolean isFromContactFolder) throws ServiceException {
+                                                              boolean isFromContactFolder,
+                                                              boolean isExternalGal) throws ServiceException {
         Set<String> eligibleEmailsForAccount = new HashSet<>();
         String primaryEmail = getFieldAsString(attrs, ContactConstants.A_email);
         Account account = Provisioning.getInstance().get(Key.AccountBy.name, primaryEmail);
-        populateEligibleEmails(attrs, eligibleEmailsForAccount, account, isFromContactFolder);
+        populateEligibleEmails(attrs, eligibleEmailsForAccount, account, isFromContactFolder, isExternalGal);
         return eligibleEmailsForAccount;
     }
 
@@ -773,17 +789,20 @@ public class ContactAutoComplete {
      * @param account
      * @param isFromContactFolder true if the entry originates from a local/shared contact folder,
      *                            false if the entry originates from GAL
+     * @param isExternalGal true if the entry originates from an External GAL,
+     *                             false if the entry originates from Zimbra GAL
      * @throws ServiceException
      */
     private void populateEligibleEmails(Map<String, ?> attrs, Set<String> eligibleEmailsForAccount, Account account,
-                                        boolean isFromContactFolder) throws ServiceException {
+                                        boolean isFromContactFolder, boolean isExternalGal) throws ServiceException {
         for (String emailKey : mEmailKeys) {
             // when account is null, its external contact.Below alias logic is not applicable.
             if (null != account) {
                 // apply zimbraHideInGal restriction only to GAL results.
                 // local contacts should still be suggested regardless of the zimbraHideInGal setting.
-                if (!isFromContactFolder
-                        && ContactConstants.A_email.equalsIgnoreCase(emailKey) && account.isHideInGal()) {
+                // ZBUG-4975 : external gal shouldn't get affected by zimbraHideInGal setting.
+                if (!isFromContactFolder && ContactConstants.A_email.equalsIgnoreCase(emailKey)
+                        && account.isHideInGal() && !isExternalGal) {
                     ZimbraLog.gal.debug("Skipping account %s from autocomplete", getFieldAsString(attrs, emailKey));
                     continue;
                 }
@@ -893,7 +912,7 @@ public class ContactAutoComplete {
                     continue;
                 }
 
-                addMatchedContacts(str, fields, fid, id, result, true);
+                addMatchedContacts(str, fields, fid, id, result, true, false);
                 if (!result.canBeCached) {
                     return;
                 }
