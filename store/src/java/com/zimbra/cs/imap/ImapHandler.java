@@ -294,7 +294,7 @@ public abstract class ImapHandler {
         commandCount.put("CREATE",0);
         commandCount.put("DELETE",0);
         commandCount.put("LOGOUT",0);
-        commandCount.put("MOVE",0);
+        commandCount.put("MOVE", 0);
         mailboxSize = 0;
         inboxNumMessages = 0;
         trashNumMessages = 0;
