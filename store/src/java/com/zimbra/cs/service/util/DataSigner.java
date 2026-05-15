@@ -25,10 +25,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Security;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -63,30 +65,34 @@ public class DataSigner {
             for (Enumeration<String> en = pkcs12Store.aliases(); en.hasMoreElements();) {
                 alias = (String) en.nextElement();
             }
-            X509Certificate cert = (X509Certificate) pkcs12Store.getCertificate(alias);
+            Certificate[] chain = pkcs12Store.getCertificateChain(alias);
+            X509Certificate[] x509Chain = (chain != null && chain.length > 0)
+                    ? Arrays.copyOf(chain, chain.length, X509Certificate[].class)
+                    : new X509Certificate[]{(X509Certificate) pkcs12Store.getCertificate(alias)};
             PrivateKey privKey = (PrivateKey) pkcs12Store.getKey(alias, expPass);
-            signedData = signData(data, cert, privKey);
+            signedData = signData(data, x509Chain, privKey);
         }
         return signedData;
     }
 
-    public static byte[] signData(byte[] data, X509Certificate signingCertificate, PrivateKey signingKey)
+    public static byte[] signData(byte[] data, X509Certificate[] certChain, PrivateKey signingKey)
             throws CertificateEncodingException, OperatorCreationException, CMSException, IOException {
-        byte[] signedData = null;
         CMSTypedData cmsData = new CMSProcessableByteArray(data);
-        List<X509Certificate> certList = new ArrayList<X509Certificate>();
-        certList.add(signingCertificate);
-
+        List<X509Certificate> certList = new ArrayList<>(Arrays.asList(certChain));
         Store certs = new JcaCertStore(certList);
         CMSSignedDataGenerator cmsGenerator = new CMSSignedDataGenerator();
         ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA").build(signingKey);
         cmsGenerator.addSignerInfoGenerator(
                 new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().setProvider("BC").build())
-                        .build(contentSigner, signingCertificate));
+                        .build(contentSigner, certChain[0]));
         cmsGenerator.addCertificates(certs);
         CMSSignedData cms = cmsGenerator.generate(cmsData, true);
-        signedData = cms.getEncoded();
-        return signedData;
+        return cms.getEncoded();
+    }
+
+    public static byte[] signData(byte[] data, X509Certificate signingCertificate, PrivateKey signingKey)
+            throws CertificateEncodingException, OperatorCreationException, CMSException, IOException {
+        return signData(data, new X509Certificate[]{signingCertificate}, signingKey);
     }
 
 }
