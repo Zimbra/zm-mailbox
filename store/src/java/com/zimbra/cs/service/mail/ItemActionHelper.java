@@ -496,11 +496,6 @@ public class ItemActionHelper {
             case SPAM:
             case MOVE:
                 getMailbox().move(getOpCtxt(), ids, type, mIidFolder.getId(), mTargetConstraint);
-                List ll = new ArrayList();
-                for (int i : ids) {
-                    ll.add(i);
-                }
-                ((MoveActionResult) result).setCreatedIds(ll);
                 break;
             case COPY:
                 List<MailItem> copies = getMailbox().copy(getOpCtxt(), ids, type, mIidFolder.getId());
