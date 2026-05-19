@@ -4748,12 +4748,23 @@ public abstract class ImapHandler {
             final List<List<ImapMessage>> batches =
                     Lists.partition(i4list, LC.imap_suggested_batch_copy_size.intValue());
 
-            for (List<ImapMessage> batch : batches) {
-                if (sameMailbox && !selectedFolderInOtherMailbox) {
-                    moveOwnItems(selectedImapMboxStore, batch, iidTarget, moveUIDs);
-                } else {
-                    moveItemsBetweenMailboxes(selectedImapMboxStore, batch, fromFolderId, targetIdentifier,
-                            moveUIDs);
+            OperationProgress moveStatus = new OperationProgress(0, i4set.size(), tag, true);
+            ScheduledFuture<?> notifier = sendInProgressResponses(moveStatus);
+            try {
+                for (List<ImapMessage> batch : batches) {
+                    if (sameMailbox && !selectedFolderInOtherMailbox) {
+                        moveOwnItems(selectedImapMboxStore, batch, iidTarget, moveUIDs);
+                    } else {
+                        moveItemsBetweenMailboxes(selectedImapMboxStore, batch, fromFolderId, targetIdentifier,
+                                moveUIDs);
+                    }
+                    moveStatus.setCompletedCount(moveStatus.getCompletedCount() + batch.size());
+                }
+            } finally {
+                // stop sending from the notifier thread after this point for safety
+                moveStatus.setIsRunning(false);
+                if (notifier != null) {
+                    notifier.cancel(true);
                 }
             }
 
