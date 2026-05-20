@@ -61,4 +61,19 @@ public class XHtmlDefangTest {
         }
     }
 
+    @Test
+    public void testEncodedAttributeBreakoutXssDefang() {
+        XHtmlDefang defang = new XHtmlDefang();
+        String text = "<?xml version='1.0' encoding='UTF-8'?>" + "<img src=\"x&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot; " + "onerror=&quot;alert(document.domain)\" />";
+        StringReader reader = new StringReader(text);
+        try {
+            String sanitizedText = defang.defang(reader, true);
+            // Verify encoded quotes remain escaped
+            Assert.assertTrue("Escaped quotes should remain encoded.", sanitizedText.contains("&quot;"));
+            // Verify raw attribute breakout did not occur
+            Assert.assertFalse("Raw quote breakout should not occur.", sanitizedText.contains("src=\"x\" xmlns"));
+        } catch (IOException e) {
+            fail("No Exception should be thrown");
+        }
+    }
 }
