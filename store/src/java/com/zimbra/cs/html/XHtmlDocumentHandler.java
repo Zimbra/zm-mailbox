@@ -139,15 +139,19 @@ public class XHtmlDocumentHandler extends DefaultHandler {
             out.append("<");
             out.append(eName);
             if (attrs != null) {
-              for (int i = 0; i < attrs.getLength(); i++) {
-                String aName = "".equals(attrs.getLocalName(i))? attrs.getQName(i) : attrs.getLocalName(i); // Attr name
-                if(!allowAttributes.contains(aName.toLowerCase())) {
-                    // just skip this attribute
-                    continue;
+                for (int i = 0; i < attrs.getLength(); i++) {
+                    String aName = "".equals(attrs.getLocalName(i))
+                            ? attrs.getQName(i)
+                            : attrs.getLocalName(i); // Attr name
+                    if (!allowAttributes.contains(aName.toLowerCase())) {
+                        // just skip this attribute
+                        continue;
+                    }
+                    String rawValue = attrs.getValue(i);
+                    String escapedValue = escapeAttributeValue(rawValue);
+                    out.append(" ");
+                    out.append(aName + "=\"" + escapedValue + "\"");
                 }
-                out.append(" ");
-                out.append(aName+"=\""+attrs.getValue(i)+"\"");
-              }
             }
             out.append(">");
         }
@@ -155,6 +159,19 @@ public class XHtmlDocumentHandler extends DefaultHandler {
             throw new SAXException(e);
         }
     }
+
+    private static String escapeAttributeValue(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+            .replace("&", "&amp;")
+            .replace("\"", "&quot;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("'", "&#39;");
+    }
+
     @Override
     public void endElement(String namespaceURI,
             String sName, // simple name

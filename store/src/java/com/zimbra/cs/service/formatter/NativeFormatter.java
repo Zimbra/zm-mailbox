@@ -107,7 +107,8 @@ public final class NativeFormatter extends Formatter {
                                                                                 MimeConstants.CT_APPLICATION_ZIMBRA_SLIDES,
                                                                                 MimeConstants.CT_APPLICATION_ZIMBRA_SPREADSHEET,
                                                                                 MimeConstants.CT_IMAGE_SVG,
-                                                                                MimeConstants.CT_TEXT_XML_LEGACY);
+                                                                                MimeConstants.CT_TEXT_XML_LEGACY,
+                                                                                MimeConstants.CT_APPLICATION_SVG);
 
     @Override
     public FormatType getType() {
