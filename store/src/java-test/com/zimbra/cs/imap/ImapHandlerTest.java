@@ -126,6 +126,64 @@ public class ImapHandlerTest {
     }
 
     @Test
+    public void testDoMOVEByUID()  {
+
+        try {
+            Account acct = Provisioning.getInstance().getAccount("12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
+            acct.setFeatureAntispamEnabled(true);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+            Message m1 =  TestUtil.addMessage(mbox, "Message 1");
+            Message m2 =  TestUtil.addMessage(mbox, "Message 2");
+            Message m3 =  TestUtil.addMessage(mbox, "Message 3");
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
+            ImapHandler handler = new MockImapHandler();
+            ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
+            ImapPath pathSpam = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM), creds);
+            ImapPath pathInbox = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX), creds);
+            handler.setCredentials(creds);
+            byte params = 0;
+            handler.setSelectedFolder(pathSpam, params);
+            String sequenceSet = String.format("%d,%d,%d", m1.getId(), m2.getId(), m3.getId());
+            Assert.assertTrue(handler.doMOVE(null, sequenceSet, pathInbox, true));
+            List<Integer> newIds = TestUtil.search(mbox, "in:Inbox", MailItem.Type.MESSAGE);
+            assertEquals(3, newIds.size());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, newIds.get(0)).getFolderId());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, newIds.get(1)).getFolderId());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, newIds.get(2)).getFolderId());
+            /* Note, messages may not be returned in the original order */
+            Assert.assertTrue(String.format("message IDs should not have changed 1st ID=%s newIds=%s", m1.getId(), newIds),
+                    newIds.contains(m1.getId()));
+            Assert.assertTrue(String.format("message IDs should not have changed 2nd ID=%s newIds=%s", m2.getId(), newIds),
+                    newIds.contains(m2.getId()));
+            Assert.assertTrue(String.format("message IDs should not have changed 3rd ID=%s newIds=%s", m3.getId(), newIds),
+                    newIds.contains(m3.getId()));
+
+            handler.setSelectedFolder(pathInbox, params);
+            ImapFolder i4folder = handler.getSelectedFolder();
+            Assert.assertEquals(3,i4folder.getSize());
+            Assert.assertTrue(handler.doMOVE(null, sequenceSet, pathSpam, true));
+            newIds = TestUtil.search(mbox, "in:junk", MailItem.Type.MESSAGE);
+            assertEquals(3, newIds.size());
+            Assert.assertFalse("Message IDs should have changed", newIds.contains(m1.getId()));
+            Assert.assertFalse("Message IDs should have changed", newIds.contains(m3.getId()));
+            Assert.assertFalse("Message IDs should have changed", newIds.contains(m3.getId()));
+
+            Assert.assertEquals("Message should have been moved to Junk", Mailbox.ID_FOLDER_SPAM, mbox.getMessageById(null, newIds.get(0)).getFolderId());
+            Assert.assertEquals("Message should have been moved to Junk", Mailbox.ID_FOLDER_SPAM, mbox.getMessageById(null, newIds.get(1)).getFolderId());
+            Assert.assertEquals("Message should have been moved to Junk", Mailbox.ID_FOLDER_SPAM, mbox.getMessageById(null, newIds.get(2)).getFolderId());
+
+            Assert.assertEquals("original messages shouldn't have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
+            Assert.assertEquals("original messages shouldn't have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
+            Assert.assertEquals("original messages shouldn't have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
+        } catch (Exception e) {
+            fail("No error should be thrown");
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void testDoCOPYByNumber() throws Exception {
         
        Account acct = Provisioning.getInstance().getAccount("12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");

@@ -95,6 +95,8 @@ public final class MockProvisioning extends Provisioning {
 					"into", "is", "it", "no", "not", "of", "on", "or", "such",
 					"that", "the", "their", "then", "there", "these", "they",
 					"this", "to", "was", "will", "with" });
+            String domain = config.getDefaultDomainName();
+            System.out.println("------------------ " + domain);
         } catch (ServiceException e) {
             ZimbraLog.test.warn("Could not set default domain name?", e);
         }
@@ -222,7 +224,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs, boolean checkImmutable) {
-        Map<String, Object> map = entry.getAttrs(false, false);
+        Map<String, Object> map = entry.getOriginalAttrs(false, false);
         for (Map.Entry<String, ? extends Object> attr : attrs.entrySet()) {
             String key = attr.getKey();
             if (attr.getValue() != null) {
