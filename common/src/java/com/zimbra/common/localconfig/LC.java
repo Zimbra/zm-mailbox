@@ -1141,6 +1141,18 @@ public final class LC {
     public static final KnownKey zimbra_activesync_fb_max_number_of_recipient = KnownKey.newKey(100);
     public static final KnownKey zimbra_activesync_remote_sync_batch_size = KnownKey.newKey(50);
 
+    // Okta push MFA for EAS. Disabled unless zimbra_okta_mfa_enabled is set true and
+    // zimbra_okta_org_url + zimbra_okta_api_token are populated.
+    public static final KnownKey zimbra_okta_mfa_enabled = KnownKey.newKey(false);
+    public static final KnownKey zimbra_okta_org_url = KnownKey.newKey("");
+    public static final KnownKey zimbra_okta_api_token = KnownKey.newKey("");
+    public static final KnownKey zimbra_okta_push_deadline_ms = KnownKey.newKey(25_000L);
+    public static final KnownKey zimbra_okta_push_poll_interval_ms = KnownKey.newKey(2_000L);
+    public static final KnownKey zimbra_okta_http_connect_timeout_ms = KnownKey.newKey(5_000L);
+    public static final KnownKey zimbra_okta_http_read_timeout_ms = KnownKey.newKey(10_000L);
+    // How long an Okta-approved (account,deviceId) tuple stays trusted before another push is required.
+    public static final KnownKey zimbra_okta_device_trust_ttl_ms = KnownKey.newKey(30L * 24 * 60 * 60 * 1000);
+
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
 
