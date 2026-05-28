@@ -367,4 +367,253 @@ public class PermCacheManagerTest {
     @Test
     public void noOp() throws Exception {
     }
+
+    @Test
+    public void cacheGet_singlePermission_miss_returnsNotCached() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right = User.R_loginAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+        CachedPermission result = pcm.get(target, cacheKey, right);
+
+        Assert.assertEquals(CachedPermission.NOT_CACHED, result);
+    }
+
+    @Test
+    public void cachePut_singlePermission_allowed_storesAndRetrieves() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right = User.R_loginAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+        pcm.put(target, cacheKey, right, CachedPermission.ALLOWED);
+        CachedPermission result = pcm.get(target, cacheKey, right);
+
+        Assert.assertEquals(CachedPermission.ALLOWED, result);
+    }
+
+    @Test
+    public void cachePut_singlePermission_denied_storesAndRetrieves() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right = User.R_loginAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+        pcm.put(target, cacheKey, right, CachedPermission.DENIED);
+        CachedPermission result = pcm.get(target, cacheKey, right);
+
+        Assert.assertEquals(CachedPermission.DENIED, result);
+    }
+
+    @Test
+    public void cachePut_singlePermission_noMatchingAcl_storesAndRetrieves() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right = User.R_loginAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+        pcm.put(target, cacheKey, right, CachedPermission.NO_MATCHING_ACL);
+        CachedPermission result = pcm.get(target, cacheKey, right);
+
+        Assert.assertEquals(CachedPermission.NO_MATCHING_ACL, result);
+    }
+
+    @Test
+    public void cacheMultiplePermissions_differentRights_independentlyStored() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee1 = new MockAccount("grantee1");
+        MockAccount grantee2 = new MockAccount("grantee2");
+        Right right1 = User.R_loginAs;
+        Right right2 = User.R_viewFreeBusy;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey1 = PermissionCache.buildCacheKey(grantee1, right1, false);
+        String cacheKey2 = PermissionCache.buildCacheKey(grantee2, right2, false);
+
+        pcm.put(target, cacheKey1, right1, CachedPermission.ALLOWED);
+        pcm.put(target, cacheKey2, right2, CachedPermission.DENIED);
+
+        Assert.assertEquals(CachedPermission.ALLOWED, pcm.get(target, cacheKey1, right1));
+        Assert.assertEquals(CachedPermission.DENIED, pcm.get(target, cacheKey2, right2));
+    }
+
+    @Test
+    public void cacheInvalidateAll_afterPut_cacheClearedCompletelyAndReturnsMiss() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right = User.R_loginAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+        // Store a value
+        pcm.put(target, cacheKey, right, CachedPermission.ALLOWED);
+        Assert.assertEquals(CachedPermission.ALLOWED, pcm.get(target, cacheKey, right));
+
+        // Invalidate entire cache
+        pcm.invalidateCache();
+
+        // Verify cache miss
+        Assert.assertEquals(CachedPermission.NOT_CACHED, pcm.get(target, cacheKey, right));
+    }
+
+    @Test
+    public void cacheInvalidateTarget_afterPut_targetCacheClearedReturnsMiss() throws Exception {
+        MockAccount target1 = new MockAccount("target1");
+        MockAccount target2 = new MockAccount("target2");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right = User.R_loginAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+        // Store values for two different targets
+        pcm.put(target1, cacheKey, right, CachedPermission.ALLOWED);
+        pcm.put(target2, cacheKey, right, CachedPermission.DENIED);
+
+        Assert.assertEquals(CachedPermission.ALLOWED, pcm.get(target1, cacheKey, right));
+        Assert.assertEquals(CachedPermission.DENIED, pcm.get(target2, cacheKey, right));
+
+        // Invalidate only target1
+        pcm.invalidateCache(target1);
+
+        // Verify target1 cache is cleared
+        Assert.assertEquals(CachedPermission.NOT_CACHED, pcm.get(target1, cacheKey, right));
+        // Verify target2 cache is NOT affected (if target can't be inherited from)
+        // Otherwise entire cache is cleared
+    }
+
+    @Test
+    public void cachePutMultipleWithSameCredential_sameTargetDifferentRights_allIndependentlyStored() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right1 = User.R_loginAs;
+        Right right2 = User.R_viewFreeBusy;
+        Right right3 = User.R_sendAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right1, false);
+
+        // Store different permissions for different rights with same credential
+        pcm.put(target, cacheKey, right1, CachedPermission.ALLOWED);
+        pcm.put(target, cacheKey, right2, CachedPermission.DENIED);
+        pcm.put(target, cacheKey, right3, CachedPermission.NO_MATCHING_ACL);
+
+        // Verify all are stored independently
+        Assert.assertEquals(CachedPermission.ALLOWED, pcm.get(target, cacheKey, right1));
+        Assert.assertEquals(CachedPermission.DENIED, pcm.get(target, cacheKey, right2));
+        Assert.assertEquals(CachedPermission.NO_MATCHING_ACL, pcm.get(target, cacheKey, right3));
+    }
+
+    @Test
+    public void cacheWorkflow_putGetInvalidateGet_stateTransitionsCorrectly() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right = User.R_loginAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+        // Initial miss
+        Assert.assertEquals(CachedPermission.NOT_CACHED, pcm.get(target, cacheKey, right));
+
+        // Store ALLOWED
+        pcm.put(target, cacheKey, right, CachedPermission.ALLOWED);
+        Assert.assertEquals(CachedPermission.ALLOWED, pcm.get(target, cacheKey, right));
+
+        // Invalidate specific target
+        pcm.invalidateCache(target);
+        Assert.assertEquals(CachedPermission.NOT_CACHED, pcm.get(target, cacheKey, right));
+
+        // Store DENIED (recovery after invalidation)
+        pcm.put(target, cacheKey, right, CachedPermission.DENIED);
+        Assert.assertEquals(CachedPermission.DENIED, pcm.get(target, cacheKey, right));
+    }
+
+    @Test
+    public void cacheMultipleTargets_invalidateAll_allTargetsClearedIndependently() throws Exception {
+        MockAccount target1 = new MockAccount("target1");
+        MockAccount target2 = new MockAccount("target2");
+        MockAccount target3 = new MockAccount("target3");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right = User.R_loginAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+        // Store for all targets
+        pcm.put(target1, cacheKey, right, CachedPermission.ALLOWED);
+        pcm.put(target2, cacheKey, right, CachedPermission.DENIED);
+        pcm.put(target3, cacheKey, right, CachedPermission.NO_MATCHING_ACL);
+
+        // Verify all stored
+        Assert.assertEquals(CachedPermission.ALLOWED, pcm.get(target1, cacheKey, right));
+        Assert.assertEquals(CachedPermission.DENIED, pcm.get(target2, cacheKey, right));
+        Assert.assertEquals(CachedPermission.NO_MATCHING_ACL, pcm.get(target3, cacheKey, right));
+
+        // Invalidate all
+        pcm.invalidateCache();
+
+        // Verify all cleared
+        Assert.assertEquals(CachedPermission.NOT_CACHED, pcm.get(target1, cacheKey, right));
+        Assert.assertEquals(CachedPermission.NOT_CACHED, pcm.get(target2, cacheKey, right));
+        Assert.assertEquals(CachedPermission.NOT_CACHED, pcm.get(target3, cacheKey, right));
+    }
+
+    @Test
+    public void cacheMultipleCredentialsPerTarget_independentlyStored() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee1 = new MockAccount("grantee1");
+        MockAccount grantee2 = new MockAccount("grantee2");
+        Right right = User.R_loginAs;
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey1 = PermissionCache.buildCacheKey(grantee1, right, false);
+        String cacheKey2 = PermissionCache.buildCacheKey(grantee2, right, false);
+
+        // Store different values for same right with different credentials
+        pcm.put(target, cacheKey1, right, CachedPermission.ALLOWED);
+        pcm.put(target, cacheKey2, right, CachedPermission.DENIED);
+
+        // Verify independent retrieval
+        Assert.assertEquals(CachedPermission.ALLOWED, pcm.get(target, cacheKey1, right));
+        Assert.assertEquals(CachedPermission.DENIED, pcm.get(target, cacheKey2, right));
+    }
+
+    @Test
+    public void cacheAllCacheableRights_allStored_independentlyRetrieved() throws Exception {
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee = new MockAccount("grantee");
+
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        List<Right> cacheableRights = getAllCacheableRights();
+
+        // Store one permission per cacheable right
+        for (int i = 0; i < cacheableRights.size(); i++) {
+            Right right = cacheableRights.get(i);
+            String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+            // Alternate between ALLOWED and DENIED for variety
+            CachedPermission perm = (i % 2 == 0) ? CachedPermission.ALLOWED : CachedPermission.DENIED;
+            pcm.put(target, cacheKey, right, perm);
+        }
+
+        // Verify all retrieved correctly
+        for (int i = 0; i < cacheableRights.size(); i++) {
+            Right right = cacheableRights.get(i);
+            String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+
+            CachedPermission expected = (i % 2 == 0) ? CachedPermission.ALLOWED : CachedPermission.DENIED;
+            Assert.assertEquals(expected, pcm.get(target, cacheKey, right));
+        }
+    }
 }
