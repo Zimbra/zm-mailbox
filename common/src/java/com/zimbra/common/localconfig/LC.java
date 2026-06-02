@@ -1152,6 +1152,11 @@ public final class LC {
     public static final KnownKey zimbra_okta_http_read_timeout_ms = KnownKey.newKey(10_000L);
     // How long an Okta-approved (account,deviceId) tuple stays trusted before another push is required.
     public static final KnownKey zimbra_okta_device_trust_ttl_ms = KnownKey.newKey(30L * 24 * 60 * 60 * 1000);
+    // After an APPROVED push, any subsequent auth for the same account within this window
+    // is auto-promoted to the device-trust cache without a second push. This handles clients
+    // (notably Outlook mobile) that send several EAS requests with different DeviceIds during
+    // the same setup session.
+    public static final KnownKey zimbra_okta_recent_approval_window_ms = KnownKey.newKey(60_000L);
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
