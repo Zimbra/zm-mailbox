@@ -19,6 +19,7 @@ package com.zimbra.cs.ldap.unboundid;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Cos;
 import java.util.Collection;
 import java.util.List;
@@ -888,7 +889,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         List<Filter> filters = cosIds.stream()
                 .map(cosId -> Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId))
                 .collect(Collectors.toList());
-        filters.add(Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
+        String defaultCosId = "";
+        try {
+            defaultCosId = Provisioning.getInstance().get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME).getId();
+        } catch (ServiceException e) {
+            ZimbraLog.system.warn(String.format("unable to fetch cos Id of %s", Provisioning.DEFAULT_COS_NAME));
+        }
+        if (cosIds.contains(defaultCosId)) {
+            filters.add(Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
+        }
         return new UBIDLdapFilter(
                 FilterId.ACCOUNTS_BY_COSES_AND_LDAP_FEATURE_CHECK,
                 Filter.createANDFilter(
