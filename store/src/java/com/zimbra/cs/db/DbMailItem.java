@@ -409,7 +409,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             String imapRenumber = mbox.isTrackingImap()
-                    ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE ? " + " END"
+                    ? ", imap_id = CASE WHEN imap_id IS NULL THEN CAST(NULL AS BIGINT) ELSE CAST(? AS BIGINT) " + " END"
                     : "";
             int pos = 1;
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
