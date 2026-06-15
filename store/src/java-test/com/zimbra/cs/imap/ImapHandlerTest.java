@@ -355,8 +355,9 @@ public class ImapHandlerTest {
             for (int i = 0; i <= maxItems; i++) {
                 Message m = TestUtil.addMessage(mbox, "Message " + i);
                 msgIds.add(m.getId());
-                if (maxSequenceSet.length() > 0)
+                if (maxSequenceSet.length() > 0) {
                     maxSequenceSet.append(",");
+                }
                 maxSequenceSet.append(m.getId());
             }
             // Move should be rejected since i4set.size() > LC.imap_max_items_in_move
@@ -384,10 +385,11 @@ public class ImapHandlerTest {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
             // Create two messages in same conversation using In-Reply-To threading
             String subject = "Same Subject";
-            String msgStr1 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: " + subject + "\r\n" +
-                    "Message-ID: <msg1@test.com>\r\n" + "\r\nTest body";
+            String msgStr1 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: " + subject
+                    + "\r\n" + "Message-ID: <msg1@test.com>\r\n" + "\r\nTest body";
             String msgStr2 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: Re: " + subject + "\r\n" +
-                    "Message-ID: <msg2@test.com>\r\n" + "In-Reply-To: <msg1@test.com>\r\n" + "References: <msg1@test.com>\r\n" + "\r\nTest reply body";
+                    "Message-ID: <msg2@test.com>\r\n" + "In-Reply-To: <msg1@test.com>\r\n" + "References: <msg1@test.com>\r\n"
+                    + "\r\nTest reply body";
             long timestamp = System.currentTimeMillis();
             ParsedMessage pm1 = new ParsedMessage(msgStr1.getBytes(), timestamp, false);
             ParsedMessage pm2 = new ParsedMessage(msgStr2.getBytes(), timestamp, false);
