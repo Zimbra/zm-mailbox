@@ -3,14 +3,13 @@ package com.zimbra.cs.imap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.ArrayList;
 
-import com.zimbra.cs.mime.ParsedMessage;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.After;
 import org.junit.Before;
@@ -25,9 +24,9 @@ import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -35,6 +34,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.util.ZTestWatchman;
 import com.zimbra.qa.unittest.TestUtil;
@@ -337,7 +337,8 @@ public class ImapHandlerTest {
             Message m2 = TestUtil.addMessage(mbox, "Message 2");
             // Expunge m1 to simulate expunged message in sequence
             mbox.delete(null, m1.getId(), MailItem.Type.MESSAGE);
-            // Try move with sequence number (byUID=false) including expunged position, entire move should be rejected because i4set contains null for expunged message
+            // Try move with sequence number (byUID=false) including expunged position, entire -
+            // move should be rejected because i4set contains null for expunged message
             String sequenceSet = "1:2";
             Assert.assertTrue(handler.doMOVE(null, sequenceSet, pathSpam, false));
             // m2 should still be in Inbox - entire move rejected due to expunged message
@@ -383,8 +384,10 @@ public class ImapHandlerTest {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
             // Create two messages in same conversation using In-Reply-To threading
             String subject = "Same Subject";
-            String msgStr1 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: " + subject + "\r\n" + "Message-ID: <msg1@test.com>\r\n" + "\r\nTest body";
-            String msgStr2 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: Re: " + subject + "\r\n" + "Message-ID: <msg2@test.com>\r\n" + "In-Reply-To: <msg1@test.com>\r\n" + "References: <msg1@test.com>\r\n" + "\r\nTest reply body";
+            String msgStr1 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: " + subject + "\r\n" +
+                    "Message-ID: <msg1@test.com>\r\n" + "\r\nTest body";
+            String msgStr2 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: Re: " + subject + "\r\n" +
+                    "Message-ID: <msg2@test.com>\r\n" + "In-Reply-To: <msg1@test.com>\r\n" + "References: <msg1@test.com>\r\n" + "\r\nTest reply body";
             long timestamp = System.currentTimeMillis();
             ParsedMessage pm1 = new ParsedMessage(msgStr1.getBytes(), timestamp, false);
             ParsedMessage pm2 = new ParsedMessage(msgStr2.getBytes(), timestamp, false);
