@@ -1,7 +1,5 @@
 package com.zimbra.cs.imap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +7,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.After;
@@ -385,11 +386,11 @@ public class ImapHandlerTest {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
             // Create two messages in same conversation using In-Reply-To threading
             String subject = "Same Subject";
-            String msgStr1 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: " + subject
-                    + "\r\n" + "Message-ID: <msg1@test.com>\r\n" + "\r\nTest body";
-            String msgStr2 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: Re: " + subject + "\r\n" +
-                    "Message-ID: <msg2@test.com>\r\n" + "In-Reply-To: <msg1@test.com>\r\n" + "References: <msg1@test.com>\r\n"
-                    + "\r\nTest reply body";
+            String msgStr1 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: " +
+                    subject + "\r\n" + "Message-ID: <msg1@test.com>\r\n" + "\r\nTest body";
+            String msgStr2 = "From: sender@test.com\r\n" + "To: recipient@test.com\r\n" + "Subject: Re: "
+                    + subject + "\r\n" + "Message-ID: <msg2@test.com>\r\n" + "In-Reply-To: <msg1@test.com>\r\n"
+                    + "References: <msg1@test.com>\r\n" + "\r\nTest reply body";
             long timestamp = System.currentTimeMillis();
             ParsedMessage pm1 = new ParsedMessage(msgStr1.getBytes(), timestamp, false);
             ParsedMessage pm2 = new ParsedMessage(msgStr2.getBytes(), timestamp, false);
