@@ -34,6 +34,7 @@ public abstract class ZimbraCustomAuth {
          * register known custom auth 
          */
         ZimbraCustomAuth.register("hosted", new HostedAuth());
+        ZimbraCustomAuth.register("idp-ropc", new IRopcCustomAuth());
     }
 
     /*
