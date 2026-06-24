@@ -14,16 +14,8 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.account;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+package com.zimbra.cs.account;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -52,6 +44,14 @@ import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 import com.zimbra.cs.redolog.MockRedoLogProvider;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.DataSourceType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Mock implementation of {@link Provisioning} for testing.
@@ -62,18 +62,23 @@ public final class MockProvisioning extends Provisioning {
     public static final String DEFAULT_ACCOUNT_ID = new UUID(0L, 0L).toString();
 
     private final Map<String, Account> id2account = Maps.newHashMap();
+
     private final Map<String, Account> name2account = Maps.newHashMap();
 
     private static final String DATA_SOURCE_LIST_CACHE_KEY = "MockProvisioning.DATA_SOURCE_CACHE";
+
     private final Map<String, Domain> id2domain = Maps.newHashMap();
 
     private final Map<String, Cos> id2cos = Maps.newHashMap();
 
     private final Map<String, List<MimeTypeInfo>> mimeConfig = Maps.newHashMap();
+
     private final Config config = new Config(new HashMap<String, Object>(), this);
+
     private final Map<String, ShareLocator> shareLocators = Maps.newHashMap();
 
     private final Server localhost;
+
     private final Map<String, Server> servers = Maps.newHashMap();
 
     public MockProvisioning() {
@@ -84,17 +89,42 @@ public final class MockProvisioning extends Provisioning {
         attrs.put(A_zimbraMailMode, MailMode.http.toString());
         attrs.put(A_zimbraSmtpPort, "7025");
         attrs.put(A_zimbraLowestSupportedAuthVersion, "1");
-        attrs.put(A_zimbraSSLPrivateKey, "-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDj5CdJz5QNpk7skWqv7lC7gaymGiqbpEXAe8za1JTgjKkL0gzQNM79aGr+lnYKXU+rto15QT9uDyvVnY/iPlpeLtCEin9OIEccLsPivG0R8gL8O2HGF86ns+ZNbjjJVetr/qk1mFN/91qMfOhL/F6tBR5zSIVdCE4bdqCqpq4HywEaKyXxCwU4bKlmawrLRZeITiMQ6Je/VsFvz2wj7yrlCH5HKtoyaNuLR9KH1HHbFB/p9JCK9/qZpq5p4vNXr0fGs3PFQAfhau2ySmo1bEhYDIs3/nBLrXP3OHQqfEPEE1R7BrcEBBtUaY8t5JSduOQRr63qDyGjXnu+xcwA46v/AgMBAAECggEAUa57LoeKZ4IOk9hjRv/CTBLkkPyb/QFaRu2YtW6wlfOUu7nkAdSLxGRixTGkyX48ii16c9WhKI+jhINfCRaUSWG6N2d0zcnf8wgICgLDjUUTMNkP6HKsDYv7phE1pWR4Z1L1z1Hzy9Aa0nQKxwGD5bwJ+AQsWPYbGNjiKYhopD2/zbTnhhYCA9/aSf2vKUa9ITWpW7nbYK1dtOW+eX+CrBRBO54KQ0OlJBnzk2oZv7IOlp6PUck0HMurP/N/EV1lVwvsMaddy3osHrB1qjA/vSX+wYMaNRSyN8p9hRTAAPQKJKy3feXUrE/kzhV/MP0DYbHkV1SYDNt0nDarZ8wDAQKBgQD2r0UIdMmOwjGoR0y4/EXSvEf6+KP+t0GDEYfl9C5/Ei3BTFPU5bWg/1TEQJ5R4AsI6TchHE1k0o1tENZ09SO/9ESQPfRZHbbaMit64SAg3e8mvChEvVfaunDapOTuwiqzvTjc12plwXrzrkt2xtXLpWvZ8afWVaBhEZysieXvQQKBgQDsfzSc4AuUprqqLU7pyQGSy9zjv2Pt25aUdiyiVYawzDfcQly4x5b/b/NodQ2SG/5zN2/L+fvjHJvWcKsHx984siOGVMxEK5uUz00eKbVB/PZP+oT7MALStaI0U0gnwtnWgXCxMKl2QOfWnF3AMkF99xKywsuyFIg6ojoE9IYLPwKBgQDzxmi13pOAXC+uWCdddw+ZHS8UuLl3calv2NcvS4rXUCOfLcp6TTacDza5ahIKXxkIiU9NjSZ+SAQyj70ef1IA02ceE9twZYjZP1Lwb6DMWgWHhdFVfLdhE3WK3ADQYVjJnmie9NHUFMtoHAm/KucEBEj8a26sxJlk0368ktmDAQKBgBGMctv9J/7UzF8aU5O3bZ118SMZLZIVzDuh9Tfqfr8ZuD9o0TaI4OR9ayNiJCqmVyA3id0p5I36rnmgDKDcLO0pEsfB/RJF5hqJs2A8mg2WdrSCk2GMM3ltLucREvaYV8+59SHAyaJTuKBNJAvB7ugo8ENBfxnsuhsXtJRvjI7DAoGAG7HrReM3cX8k8jqopY8xlT03Q372v07PL8fs2aOP+zsA580IdDw0Xvea+dmykCzpj3DmBci+TOE7DYb1SW6+NPN4FOP6o6TFogrgNa/0LAWXPuct+1e5vy9F1/jFpvNbbD8uTJKdJWGKO78wLVybn9gTJ95ZZcBfytQMyXpqysk=-----END PRIVATE KEY-----");
-        attrs.put(A_zimbraMailboxMoveTempDir,System.getProperty("java.io.tmpdir")+ "/" + "testFileUtil");
+        attrs.put(A_zimbraSSLPrivateKey, "-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQ"
+                + "Dj5CdJz5QNpk7skWqv7lC7gaymGiqbpEXAe8za1JTgjKkL0gzQNM79aGr+lnYKXU+rto15QT9uDyv"
+                + "VnY/iPlpeLtCEin9OIEccLsPivG0R8gL8O2HGF86ns+ZNbjjJVetr/qk1mFN/91qMfOhL/F6tBR5z"
+                + "SIVdCE4bdqCqpq4HywEaKyXxCwU4bKlmawrLRZeITiMQ6Je/VsFvz2wj7yrlCH5HKtoyaNuLR9KH1"
+                + "HHbFB/p9JCK9/qZpq5p4vNXr0fGs3PFQAfhau2ySmo1bEhYDIs3/nBLrXP3OHQqfEPEE1R7BrcEBB"
+                + "tUaY8t5JSduOQRr63qDyGjXnu+xcwA46v/AgMBAAECggEAUa57LoeKZ4IOk9hjRv/CTBLkkPyb/QF"
+                + "aRu2YtW6wlfOUu7nkAdSLxGRixTGkyX48ii16c9WhKI+jhINfCRaUSWG6N2d0zcnf8wgICgLDjUUT"
+                + "MNkP6HKsDYv7phE1pWR4Z1L1z1Hzy9Aa0nQKxwGD5bwJ+AQsWPYbGNjiKYhopD2/zbTnhhYCA9/aS"
+                + "f2vKUa9ITWpW7nbYK1dtOW+eX+CrBRBO54KQ0OlJBnzk2oZv7IOlp6PUck0HMurP/N/EV1lVwvsMa"
+                + "ddy3osHrB1qjA/vSX+wYMaNRSyN8p9hRTAAPQKJKy3feXUrE/kzhV/MP0DYbHkV1SYDNt0nDarZ8w"
+                + "DAQKBgQD2r0UIdMmOwjGoR0y4/EXSvEf6+KP+t0GDEYfl9C5/Ei3BTFPU5bWg/1TEQJ5R4AsI6Tch"
+                + "HE1k0o1tENZ09SO/9ESQPfRZHbbaMit64SAg3e8mvChEvVfaunDapOTuwiqzvTjc12plwXrzrkt2x"
+                + "tXLpWvZ8afWVaBhEZysieXvQQKBgQDsfzSc4AuUprqqLU7pyQGSy9zjv2Pt25aUdiyiVYawzDfcQl"
+                + "y4x5b/b/NodQ2SG/5zN2/L+fvjHJvWcKsHx984siOGVMxEK5uUz00eKbVB/PZP+oT7MALStaI0U0g"
+                + "nwtnWgXCxMKl2QOfWnF3AMkF99xKywsuyFIg6ojoE9IYLPwKBgQDzxmi13pOAXC+uWCdddw+ZHS8U"
+                + "uLl3calv2NcvS4rXUCOfLcp6TTacDza5ahIKXxkIiU9NjSZ+SAQyj70ef1IA02ceE9twZYjZP1Lwb"
+                + "6DMWgWHhdFVfLdhE3WK3ADQYVjJnmie9NHUFMtoHAm/KucEBEj8a26sxJlk0368ktmDAQKBgBGMct"
+                + "v9J/7UzF8aU5O3bZ118SMZLZIVzDuh9Tfqfr8ZuD9o0TaI4OR9ayNiJCqmVyA3id0p5I36rnmgDKD"
+                + "cLO0pEsfB/RJF5hqJs2A8mg2WdrSCk2GMM3ltLucREvaYV8+59SHAyaJTuKBNJAvB7ugo8ENBfxns"
+                + "uhsXtJRvjI7DAoGAG7HrReM3cX8k8jqopY8xlT03Q372v07PL8fs2aOP+zsA580IdDw0Xvea+dmyk"
+                + "Czpj3DmBci+TOE7DYb1SW6+NPN4FOP6o6TFogrgNa/0LAWXPuct+1e5vy9F1/jFpvNbbD8uTJKdJW"
+                + "GKO78wLVybn9gTJ95ZZcBfytQMyXpqysk=-----END PRIVATE KEY-----");
+        attrs.put(A_zimbraMailboxMoveTempDir, System.getProperty("java.io.tmpdir") + "/" + "testFileUtil");
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
         servers.put("localhost", localhost);
         try {
             config.setDefaultDomainName("testdomain.biz");
-			config.setDefaultAnalyzerStopWords(new String[] { "a", "an", "and",
-					"are", "as", "at", "be", "but", "by", "for", "if", "in",
-					"into", "is", "it", "no", "not", "of", "on", "or", "such",
-					"that", "the", "their", "then", "there", "these", "they",
-					"this", "to", "was", "will", "with" });
+            config.setDefaultAnalyzerStopWords(new String[] {"a", "an", "and",
+                    "are", "as", "at", "be", "but", "by", "for", "if", "in",
+                    "into", "is", "it", "no", "not", "of", "on", "or", "such",
+                    "that", "the", "their", "then", "there", "these", "they",
+                    "this", "to", "was", "will", "with" });
+            // Seed an auth token key so ZimbraSoapContext can HMAC-encode auth tokens during
+            // handle() tests. Without it AuthTokenKey.getCurrentKey() returns null and every
+            // SOAP-handler test NPEs in ZimbraAuthToken.getEncoded().
+            config.setAuthTokenKey(new String[] {new AuthTokenKey(0, null).getEncoded()});
         } catch (ServiceException e) {
             ZimbraLog.test.warn("Could not set default domain name?", e);
         }
@@ -105,7 +135,15 @@ public final class MockProvisioning extends Provisioning {
     public Account createAccount(String email, String password, Map<String, Object> attrs) throws ServiceException {
         validate(ProvisioningValidator.CREATE_ACCOUNT, email, null, attrs);
         if (!attrs.containsKey(A_zimbraId)) {
-            attrs.put(A_zimbraId, DEFAULT_ACCOUNT_ID);
+            // Stable id on recreate; assign the well-known default id only if no account already
+            // holds it, otherwise a random id so two accounts never collide on DEFAULT_ACCOUNT_ID.
+            Account existingByName = name2account.get(email);
+            if (existingByName != null) {
+                attrs.put(A_zimbraId, existingByName.getId());
+            } else {
+                attrs.put(A_zimbraId, id2account.containsKey(DEFAULT_ACCOUNT_ID)
+                        ? UUID.randomUUID().toString() : DEFAULT_ACCOUNT_ID);
+            }
         }
         if (!attrs.containsKey(A_zimbraMailHost)) {
             attrs.put(A_zimbraMailHost, "localhost");
@@ -236,15 +274,15 @@ public final class MockProvisioning extends Provisioning {
                     String realKey = key.substring(1);
                     Object existing = map.get(key.substring(1));
                     if (existing == null) {
-                       if (add) {
-                           map.put(realKey, value);
-                       } else {
-                           return;
-                       }
+                        if (add) {
+                            map.put(realKey, value);
+                        } else {
+                            continue;
+                        }
                     } else {
                         List<Object> list = null;
                         if (existing instanceof Object[]) {
-                            list = Arrays.asList(existing);
+                            list = new ArrayList<Object>(Arrays.asList((Object[]) existing));
                         } else if (existing instanceof Object) {
                             list = new ArrayList<Object>();
                             list.add(existing);
@@ -267,6 +305,9 @@ public final class MockProvisioning extends Provisioning {
                 map.remove(attr.getKey());
             }
         }
+        // getAttrs(false, false) returns a COPY, so persist the mutated map back onto the entry,
+        // otherwise modifyAttrs is a no-op (breaks auth token key bootstrap, modify-then-reload, etc.).
+        entry.setAttrs(map);
     }
 
     @Override
@@ -282,7 +323,8 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs,
             boolean checkImmutable, boolean allowCallback) {
-        throw new UnsupportedOperationException();
+        // Delegate to the real persisting impl; allowCallback is a no-op in the in-memory harness.
+        modifyAttrs(e, attrs, checkImmutable);
     }
 
     @Override
@@ -372,11 +414,13 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public void authAccount(Account acct, String password, Protocol proto, Map<String, Object> authCtxt) throws ServiceException {
+    public void authAccount(Account acct, String password, Protocol proto, Map<String, Object> authCtxt)
+            throws ServiceException {
         String accountNamePassedIn = (String) authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
         if (!LC.alias_login_enabled.booleanValue() &&
                 Arrays.asList(acct.getAliases()).contains(authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN))) {
-            throw AuthFailedServiceException.AUTH_FAILED(accountNamePassedIn, accountNamePassedIn, "alias login not enabled.");
+            throw AuthFailedServiceException.AUTH_FAILED(accountNamePassedIn, accountNamePassedIn,
+                    "alias login not enabled.");
         }
     }
 
@@ -421,8 +465,14 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public Domain createDomain(String name, Map<String, Object> attrs) throws ServiceException {
         name = name.trim().toLowerCase();
-        if (get(Key.DomainBy.name, name) != null) {
-            throw AccountServiceException.DOMAIN_EXISTS(name);
+        // Overwrite-on-duplicate with stable id (mirrors the createAccount contract) so per-method
+        // fixtures that recreate the same domain don't collide with DOMAIN_EXISTS.
+        Domain existingDomain = get(Key.DomainBy.name, name);
+        if (existingDomain != null) {
+            id2domain.remove(existingDomain.getId());
+            if (!attrs.containsKey(A_zimbraId)) {
+                attrs.put(A_zimbraId, existingDomain.getId());
+            }
         }
 
         String id = (String) attrs.get(A_zimbraId);
@@ -528,7 +578,10 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public Server createServer(String name, Map<String, Object> attrs) {
         Server server = servers.get(name);
-        if(server == null) {
+        if (server == null) {
+            if (!attrs.containsKey(A_zimbraId)) {
+                attrs.put(A_zimbraId, UUID.randomUUID().toString());  // so Server.getId()/deleteServer work
+            }
             server = new Server(name, name, attrs, Collections.<String, Object>emptyMap(), this);
             servers.put(name,  server);
         }
@@ -539,7 +592,15 @@ public final class MockProvisioning extends Provisioning {
     public Server get(Key.ServerBy keyName, String key) {
         switch (keyName) {
             case id:
-                return localhost.getId().equals(key) ? localhost : servers.get(key);
+                if (localhost.getId().equals(key)) {
+                    return localhost;
+                }
+                for (Server s : servers.values()) {   // map is keyed by name; match real id
+                    if (s.getId() != null && s.getId().equals(key)) {   // null-safe (key may be null)
+                        return s;
+                    }
+                }
+                return null;
             case name:
                 return localhost.getName().equals(key) ? localhost : servers.get(key);
             default:
@@ -559,7 +620,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void deleteServer(String zimbraId) {
-        throw new UnsupportedOperationException();
+        servers.values().removeIf(s -> zimbraId.equals(s.getId()));
     }
 
     @Override
@@ -569,7 +630,32 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public DistributionList get(Key.DistributionListBy keyType, String key) {
-        throw new UnsupportedOperationException();
+        // No in-memory DL store: return null so callers (e.g. AccessControlUtil grantee
+        // resolution) take their not-found branch instead of hitting UnsupportedOperationException.
+        return null;
+    }
+
+    @Override
+    public Group getGroupBasic(Key.DistributionListBy keyType, String key) throws ServiceException {
+        // Return null (no group provisioned) so grantee/right resolution takes its not-found
+        // branch rather than the base impl's ServiceException.UNSUPPORTED.
+        return null;
+    }
+
+    @Override
+    public Provisioning.GroupMembership getGroupMembership(Account acct, boolean adminGroupsOnly) {
+        // Empty membership: the account belongs to no groups in the in-memory harness.
+        return new Provisioning.GroupMembership();
+    }
+
+    @Override
+    public Provisioning.GroupMembership getGroupMembership(MailTarget mailTarget, boolean adminGroupsOnly) {
+        return new Provisioning.GroupMembership();
+    }
+
+    @Override
+    public Provisioning.GroupMembership getGroupMembership(DistributionList list, boolean adminGroupsOnly) {
+        return new Provisioning.GroupMembership();
     }
 
     @Override
@@ -756,7 +842,8 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public DataSource createDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs) {
+    public DataSource createDataSource(Account account, DataSourceType type, String dataSourceName,
+            Map<String, Object> attrs) {
         attrs.put(A_zimbraDataSourceName, dataSourceName); // must be the same
         attrs.put(Provisioning.A_zimbraDataSourceType, type.toString());
 
@@ -773,13 +860,14 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public DataSource createDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs,
-            boolean passwdAlreadyEncrypted) {
+    public DataSource createDataSource(Account account, DataSourceType type, String dataSourceName,
+            Map<String, Object> attrs, boolean passwdAlreadyEncrypted) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public DataSource restoreDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs) {
+    public DataSource restoreDataSource(Account account, DataSourceType type, String dataSourceName,
+            Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
@@ -926,11 +1014,12 @@ public final class MockProvisioning extends Provisioning {
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#renameHabOrgUnit(com.zimbra.cs.account.Domain, java.lang.String, java.lang.String)
+     * @see com.zimbra.cs.account.Provisioning#renameHabOrgUnit(com.zimbra.cs.account.Domain,
+     * java.lang.String, java.lang.String)
      */
     @Override
     public Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName,
-        String newHabOrgUnitName) throws ServiceException {
+            String newHabOrgUnitName) throws ServiceException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -957,7 +1046,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void changePassword(Account acct, String currentPassword, String newPassword,
-        boolean dryRun) throws ServiceException {
+            boolean dryRun) throws ServiceException {
         // TODO Auto-generated method stub
     }
 
