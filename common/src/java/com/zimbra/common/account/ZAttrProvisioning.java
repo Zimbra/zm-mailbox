@@ -16909,6 +16909,75 @@ public class ZAttrProvisioning {
     public static final String A_zimbraRevokeAppSpecificPasswordsOnPasswordChange = "zimbraRevokeAppSpecificPasswordsOnPasswordChange";
 
     /**
+     * SAML Assertion Consumer Service URL. Replaces saml_acs from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * ACS endpoint (e.g.
+     * https://mail.corp-a.com/service/extension/samlreceiver). Falls back to
+     * global config if not set on domain.
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4153)
+    public static final String A_zimbraSamlACSURL = "zimbraSamlACSURL";
+
+    /**
+     * SAML date format for instant timestamps. Replaces
+     * saml_date_format_instant from saml-config.properties. Falls back to
+     * global config if not set on domain.
+     *
+     * @since ZCS 10.1.20
+     */
+    @ZAttr(id=4157)
+    public static final String A_zimbraSamlDateFormat = "zimbraSamlDateFormat";
+
+    /**
+     * SAML NameID format. Replaces saml_name_id_format from
+     * saml-config.properties. Common values:
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress,
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:persistent,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:transient. Falls back to
+     * global config if not set on domain.
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4156)
+    public static final String A_zimbraSamlNameIdFormat = "zimbraSamlNameIdFormat";
+
+    /**
+     * SAML IdP Single Logout URL (redirect logout destination). Replaces
+     * saml_redirect_logout_destination from saml-config.properties. When set
+     * at domain level, routes SLO to the correct IdP per domain. Falls back
+     * to global config if not set on domain.
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4155)
+    public static final String A_zimbraSamlSLOURL = "zimbraSamlSLOURL";
+
+    /**
+     * SAML Service Provider Entity ID. Replaces saml_sp_entity_id from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * SP metadata (e.g. https://mail.corp-a.com/saml/sp). Falls back to
+     * global config if not set on domain.
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4152)
+    public static final String A_zimbraSamlSpEntityId = "zimbraSamlSpEntityId";
+
+    /**
+     * SAML IdP Single Sign-On URL (redirect login destination). Replaces
+     * saml_redirect_login_destination from saml-config.properties. When set
+     * at domain level, routes SSO login to the correct IdP per domain. Falls
+     * back to global config if not set on domain.
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4154)
+    public static final String A_zimbraSamlSSOURL = "zimbraSamlSSOURL";
+
+    /**
      * whether TLS is required for IMAP/POP GSSAPI auth
      *
      * @since ZCS 5.0.20

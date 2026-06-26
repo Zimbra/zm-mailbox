@@ -10644,4 +10644,67 @@ TODO: delete them permanently from here
   <desc>Soft quota limit percentage applied over zimbraMailQuota</desc>
 </attr>
 
+  <attr id="4152" name="zimbraSamlSpEntityId" type="string" cardinality="single"
+        optionalIn="globalConfig,domain"
+        flags="domainInherited,domainAdminModifiable"
+        since="10.1.18">
+    <globalConfigValue></globalConfigValue>
+    <defaultCOSValue></defaultCOSValue>
+    <desc>SAML Service Provider Entity ID. Replaces saml_sp_entity_id from saml-config.properties.
+      When set at domain level, enables per-domain SP metadata (e.g. https://mail.corp-a.com/saml/sp).
+      Falls back to global config if not set on domain.</desc>
+  </attr>
+  <attr id="4153" name="zimbraSamlACSURL" type="string" cardinality="single"
+        optionalIn="globalConfig,domain"
+        flags="domainInherited,domainAdminModifiable"
+        since="10.1.18">
+    <globalConfigValue></globalConfigValue>
+    <defaultCOSValue></defaultCOSValue>
+    <desc>SAML Assertion Consumer Service URL. Replaces saml_acs from saml-config.properties.
+      When set at domain level, enables per-domain ACS endpoint (e.g. https://mail.corp-a.com/service/extension/samlreceiver).
+      Falls back to global config if not set on domain.</desc>
+  </attr>
+  <attr id="4154" name="zimbraSamlSSOURL" type="string" cardinality="single"
+        optionalIn="globalConfig,domain"
+        flags="domainInherited,domainAdminModifiable"
+        since="10.1.18">
+    <globalConfigValue></globalConfigValue>
+    <defaultCOSValue></defaultCOSValue>
+    <desc>SAML IdP Single Sign-On URL (redirect login destination). Replaces saml_redirect_login_destination from saml-config.properties.
+      When set at domain level, routes SSO login to the correct IdP per domain.
+      Falls back to global config if not set on domain.</desc>
+  </attr>
+  <attr id="4155" name="zimbraSamlSLOURL" type="string" cardinality="single"
+        optionalIn="globalConfig,domain"
+        flags="domainInherited,domainAdminModifiable"
+        since="10.1.18">
+    <globalConfigValue></globalConfigValue>
+    <defaultCOSValue></defaultCOSValue>
+    <desc>SAML IdP Single Logout URL (redirect logout destination). Replaces saml_redirect_logout_destination from saml-config.properties.
+      When set at domain level, routes SLO to the correct IdP per domain.
+      Falls back to global config if not set on domain.</desc>
+  </attr>
+  <attr id="4156" name="zimbraSamlNameIdFormat" type="string" cardinality="single"
+        optionalIn="globalConfig,domain"
+        flags="domainInherited,domainAdminModifiable"
+        since="10.1.18">
+    <globalConfigValue></globalConfigValue>
+    <defaultCOSValue></defaultCOSValue>
+    <desc>SAML NameID format. Replaces saml_name_id_format from saml-config.properties.
+      Common values: urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress,
+      urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified,
+      urn:oasis:names:tc:SAML:2.0:nameid-format:persistent,
+      urn:oasis:names:tc:SAML:2.0:nameid-format:transient.
+      Falls back to global config if not set on domain.</desc>
+  </attr>
+  <attr id="4157" name="zimbraSamlDateFormat" type="string" cardinality="single"
+        optionalIn="globalConfig,domain"
+        flags="domainInherited,domainAdminModifiable"
+        since="10.1.18">
+    <globalConfigValue></globalConfigValue>
+    <defaultCOSValue></defaultCOSValue>
+    <desc>SAML date format for instant timestamps. Replaces saml_date_format_instant from saml-config.properties.
+      Falls back to global config if not set on domain.</desc>
+  </attr>
+
 </attrs>

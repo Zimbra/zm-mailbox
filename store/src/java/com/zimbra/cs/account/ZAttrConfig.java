@@ -72683,6 +72683,543 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * SAML Assertion Consumer Service URL. Replaces saml_acs from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * ACS endpoint (e.g.
+     * https://mail.corp-a.com/service/extension/samlreceiver). Falls back to
+     * global config if not set on domain.
+     *
+     * @return zimbraSamlACSURL, or "" if unset
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4153)
+    public String getSamlACSURL() {
+        return getAttr(Provisioning.A_zimbraSamlACSURL, "", true);
+    }
+
+    /**
+     * SAML Assertion Consumer Service URL. Replaces saml_acs from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * ACS endpoint (e.g.
+     * https://mail.corp-a.com/service/extension/samlreceiver). Falls back to
+     * global config if not set on domain.
+     *
+     * @param zimbraSamlACSURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4153)
+    public void setSamlACSURL(String zimbraSamlACSURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlACSURL, zimbraSamlACSURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML Assertion Consumer Service URL. Replaces saml_acs from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * ACS endpoint (e.g.
+     * https://mail.corp-a.com/service/extension/samlreceiver). Falls back to
+     * global config if not set on domain.
+     *
+     * @param zimbraSamlACSURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4153)
+    public Map<String,Object> setSamlACSURL(String zimbraSamlACSURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlACSURL, zimbraSamlACSURL);
+        return attrs;
+    }
+
+    /**
+     * SAML Assertion Consumer Service URL. Replaces saml_acs from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * ACS endpoint (e.g.
+     * https://mail.corp-a.com/service/extension/samlreceiver). Falls back to
+     * global config if not set on domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4153)
+    public void unsetSamlACSURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlACSURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML Assertion Consumer Service URL. Replaces saml_acs from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * ACS endpoint (e.g.
+     * https://mail.corp-a.com/service/extension/samlreceiver). Falls back to
+     * global config if not set on domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4153)
+    public Map<String,Object> unsetSamlACSURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlACSURL, "");
+        return attrs;
+    }
+
+    /**
+     * SAML date format for instant timestamps. Replaces
+     * saml_date_format_instant from saml-config.properties. Falls back to
+     * global config if not set on domain.
+     *
+     * @return zimbraSamlDateFormat, or "" if unset
+     *
+     * @since ZCS 10.1.20
+     */
+    @ZAttr(id=4157)
+    public String getSamlDateFormat() {
+        return getAttr(Provisioning.A_zimbraSamlDateFormat, "", true);
+    }
+
+    /**
+     * SAML date format for instant timestamps. Replaces
+     * saml_date_format_instant from saml-config.properties. Falls back to
+     * global config if not set on domain.
+     *
+     * @param zimbraSamlDateFormat new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.20
+     */
+    @ZAttr(id=4157)
+    public void setSamlDateFormat(String zimbraSamlDateFormat) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlDateFormat, zimbraSamlDateFormat);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML date format for instant timestamps. Replaces
+     * saml_date_format_instant from saml-config.properties. Falls back to
+     * global config if not set on domain.
+     *
+     * @param zimbraSamlDateFormat new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.20
+     */
+    @ZAttr(id=4157)
+    public Map<String,Object> setSamlDateFormat(String zimbraSamlDateFormat, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlDateFormat, zimbraSamlDateFormat);
+        return attrs;
+    }
+
+    /**
+     * SAML date format for instant timestamps. Replaces
+     * saml_date_format_instant from saml-config.properties. Falls back to
+     * global config if not set on domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.20
+     */
+    @ZAttr(id=4157)
+    public void unsetSamlDateFormat() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlDateFormat, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML date format for instant timestamps. Replaces
+     * saml_date_format_instant from saml-config.properties. Falls back to
+     * global config if not set on domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.20
+     */
+    @ZAttr(id=4157)
+    public Map<String,Object> unsetSamlDateFormat(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlDateFormat, "");
+        return attrs;
+    }
+
+    /**
+     * SAML NameID format. Replaces saml_name_id_format from
+     * saml-config.properties. Common values:
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress,
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:persistent,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:transient. Falls back to
+     * global config if not set on domain.
+     *
+     * @return zimbraSamlNameIdFormat, or "" if unset
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4156)
+    public String getSamlNameIdFormat() {
+        return getAttr(Provisioning.A_zimbraSamlNameIdFormat, "", true);
+    }
+
+    /**
+     * SAML NameID format. Replaces saml_name_id_format from
+     * saml-config.properties. Common values:
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress,
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:persistent,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:transient. Falls back to
+     * global config if not set on domain.
+     *
+     * @param zimbraSamlNameIdFormat new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4156)
+    public void setSamlNameIdFormat(String zimbraSamlNameIdFormat) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlNameIdFormat, zimbraSamlNameIdFormat);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML NameID format. Replaces saml_name_id_format from
+     * saml-config.properties. Common values:
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress,
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:persistent,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:transient. Falls back to
+     * global config if not set on domain.
+     *
+     * @param zimbraSamlNameIdFormat new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4156)
+    public Map<String,Object> setSamlNameIdFormat(String zimbraSamlNameIdFormat, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlNameIdFormat, zimbraSamlNameIdFormat);
+        return attrs;
+    }
+
+    /**
+     * SAML NameID format. Replaces saml_name_id_format from
+     * saml-config.properties. Common values:
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress,
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:persistent,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:transient. Falls back to
+     * global config if not set on domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4156)
+    public void unsetSamlNameIdFormat() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlNameIdFormat, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML NameID format. Replaces saml_name_id_format from
+     * saml-config.properties. Common values:
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress,
+     * urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:persistent,
+     * urn:oasis:names:tc:SAML:2.0:nameid-format:transient. Falls back to
+     * global config if not set on domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4156)
+    public Map<String,Object> unsetSamlNameIdFormat(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlNameIdFormat, "");
+        return attrs;
+    }
+
+    /**
+     * SAML IdP Single Logout URL (redirect logout destination). Replaces
+     * saml_redirect_logout_destination from saml-config.properties. When set
+     * at domain level, routes SLO to the correct IdP per domain. Falls back
+     * to global config if not set on domain.
+     *
+     * @return zimbraSamlSLOURL, or "" if unset
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4155)
+    public String getSamlSLOURL() {
+        return getAttr(Provisioning.A_zimbraSamlSLOURL, "", true);
+    }
+
+    /**
+     * SAML IdP Single Logout URL (redirect logout destination). Replaces
+     * saml_redirect_logout_destination from saml-config.properties. When set
+     * at domain level, routes SLO to the correct IdP per domain. Falls back
+     * to global config if not set on domain.
+     *
+     * @param zimbraSamlSLOURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4155)
+    public void setSamlSLOURL(String zimbraSamlSLOURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSLOURL, zimbraSamlSLOURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML IdP Single Logout URL (redirect logout destination). Replaces
+     * saml_redirect_logout_destination from saml-config.properties. When set
+     * at domain level, routes SLO to the correct IdP per domain. Falls back
+     * to global config if not set on domain.
+     *
+     * @param zimbraSamlSLOURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4155)
+    public Map<String,Object> setSamlSLOURL(String zimbraSamlSLOURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSLOURL, zimbraSamlSLOURL);
+        return attrs;
+    }
+
+    /**
+     * SAML IdP Single Logout URL (redirect logout destination). Replaces
+     * saml_redirect_logout_destination from saml-config.properties. When set
+     * at domain level, routes SLO to the correct IdP per domain. Falls back
+     * to global config if not set on domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4155)
+    public void unsetSamlSLOURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSLOURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML IdP Single Logout URL (redirect logout destination). Replaces
+     * saml_redirect_logout_destination from saml-config.properties. When set
+     * at domain level, routes SLO to the correct IdP per domain. Falls back
+     * to global config if not set on domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4155)
+    public Map<String,Object> unsetSamlSLOURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSLOURL, "");
+        return attrs;
+    }
+
+    /**
+     * SAML IdP Single Sign-On URL (redirect login destination). Replaces
+     * saml_redirect_login_destination from saml-config.properties. When set
+     * at domain level, routes SSO login to the correct IdP per domain. Falls
+     * back to global config if not set on domain.
+     *
+     * @return zimbraSamlSSOURL, or "" if unset
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4154)
+    public String getSamlSSOURL() {
+        return getAttr(Provisioning.A_zimbraSamlSSOURL, "", true);
+    }
+
+    /**
+     * SAML IdP Single Sign-On URL (redirect login destination). Replaces
+     * saml_redirect_login_destination from saml-config.properties. When set
+     * at domain level, routes SSO login to the correct IdP per domain. Falls
+     * back to global config if not set on domain.
+     *
+     * @param zimbraSamlSSOURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4154)
+    public void setSamlSSOURL(String zimbraSamlSSOURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSSOURL, zimbraSamlSSOURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML IdP Single Sign-On URL (redirect login destination). Replaces
+     * saml_redirect_login_destination from saml-config.properties. When set
+     * at domain level, routes SSO login to the correct IdP per domain. Falls
+     * back to global config if not set on domain.
+     *
+     * @param zimbraSamlSSOURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4154)
+    public Map<String,Object> setSamlSSOURL(String zimbraSamlSSOURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSSOURL, zimbraSamlSSOURL);
+        return attrs;
+    }
+
+    /**
+     * SAML IdP Single Sign-On URL (redirect login destination). Replaces
+     * saml_redirect_login_destination from saml-config.properties. When set
+     * at domain level, routes SSO login to the correct IdP per domain. Falls
+     * back to global config if not set on domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4154)
+    public void unsetSamlSSOURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSSOURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML IdP Single Sign-On URL (redirect login destination). Replaces
+     * saml_redirect_login_destination from saml-config.properties. When set
+     * at domain level, routes SSO login to the correct IdP per domain. Falls
+     * back to global config if not set on domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4154)
+    public Map<String,Object> unsetSamlSSOURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSSOURL, "");
+        return attrs;
+    }
+
+    /**
+     * SAML Service Provider Entity ID. Replaces saml_sp_entity_id from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * SP metadata (e.g. https://mail.corp-a.com/saml/sp). Falls back to
+     * global config if not set on domain.
+     *
+     * @return zimbraSamlSpEntityId, or "" if unset
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4152)
+    public String getSamlSpEntityId() {
+        return getAttr(Provisioning.A_zimbraSamlSpEntityId, "", true);
+    }
+
+    /**
+     * SAML Service Provider Entity ID. Replaces saml_sp_entity_id from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * SP metadata (e.g. https://mail.corp-a.com/saml/sp). Falls back to
+     * global config if not set on domain.
+     *
+     * @param zimbraSamlSpEntityId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4152)
+    public void setSamlSpEntityId(String zimbraSamlSpEntityId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpEntityId, zimbraSamlSpEntityId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML Service Provider Entity ID. Replaces saml_sp_entity_id from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * SP metadata (e.g. https://mail.corp-a.com/saml/sp). Falls back to
+     * global config if not set on domain.
+     *
+     * @param zimbraSamlSpEntityId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4152)
+    public Map<String,Object> setSamlSpEntityId(String zimbraSamlSpEntityId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpEntityId, zimbraSamlSpEntityId);
+        return attrs;
+    }
+
+    /**
+     * SAML Service Provider Entity ID. Replaces saml_sp_entity_id from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * SP metadata (e.g. https://mail.corp-a.com/saml/sp). Falls back to
+     * global config if not set on domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4152)
+    public void unsetSamlSpEntityId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpEntityId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML Service Provider Entity ID. Replaces saml_sp_entity_id from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * SP metadata (e.g. https://mail.corp-a.com/saml/sp). Falls back to
+     * global config if not set on domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.18
+     */
+    @ZAttr(id=4152)
+    public Map<String,Object> unsetSamlSpEntityId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpEntityId, "");
+        return attrs;
+    }
+
+    /**
      * whether TLS is required for IMAP/POP GSSAPI auth
      *
      * @return zimbraSaslGssapiRequiresTls, or false if unset
