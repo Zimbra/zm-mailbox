@@ -910,6 +910,24 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
 
     @Override
+    public ZLdapFilter accountsByOrphanCosAndFeatureCheck(List<String> cosIds, String ldapAttribute) {
+        List<Filter> filters = cosIds.stream()
+                .map(cosId -> Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId))
+                .collect(Collectors.toList());
+        filters.add(Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_BY_COSES_AND_LDAP_FEATURE_CHECK,
+                Filter.createANDFilter(
+                        FILTER_ALL_NON_SYSTEM_ACCOUNTS,
+                        Filter.createNOTFilter(
+                                Filter.createORFilter(
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_TRUE),
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_FALSE))),
+                        Filter.createNOTFilter(Filter.createORFilter(filters))
+                        ));
+    }
+
+    @Override
     public ZLdapFilter accountsByCosAndFeatureCheck(String cosId, String ldapAttribute) {
         Cos cos = null;
         try {
