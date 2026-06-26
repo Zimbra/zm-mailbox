@@ -54,6 +54,7 @@ public enum CountObjectsType {
     internalUserAccountWithVideoAll(false, false),
     internalUserAccountWithDocumentEditing(false, false),
     internalUserAccountsByCosesWithLdapFeature(false, false),
+    internalUserAccountsByOrphanCosWithLdapFeature(false, false),
     internalUserAccountsByCosWithLdapFeature(false, false),
     internalUserAccountsWithLdapFeatureCheck(false, false);
 

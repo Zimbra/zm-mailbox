@@ -37,10 +37,8 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -135,7 +133,6 @@ import com.zimbra.cs.account.ldap.entry.LdapXMPPComponent;
 import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
-import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
@@ -184,9 +181,6 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.listeners.AuthListener;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
@@ -205,12 +199,10 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedValue;
 import com.zimbra.soap.type.TargetBy;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9442,6 +9434,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         Set<ObjectType> types = Sets.newHashSet();
         int argsLength = args.length;
         String ldapAttribute = null;
+        List<String> cosIds;
         switch (type) {
             case internalUserAccountsByCosesWithLdapFeature: // multiple cos ids
                 boolean isAccountsByCosesWithLdapFeatureCheck =
@@ -9452,10 +9445,24 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     throw ServiceException.OPERATION_DENIED(
                             "Counting accounts By Coses and Feature check Failed : Invalid Arguments");
                 }
-                List<String> cosIds = (List<String>) args[0];
+                cosIds = (List<String>) args[0];
                 ldapAttribute = (String) args[1];
                 types.add(ObjectType.accounts);
                 filter = filterFactory.accountsByCosesAndFeatureCheck(cosIds, ldapAttribute);
+                break;
+            case internalUserAccountsByOrphanCosWithLdapFeature:
+                boolean isAccountsByCosesWithLdapFeatureCheckOrphan =
+                        argsLength == 2 &&
+                                args[0] instanceof List &&
+                                args[1] instanceof String;
+                if (!isAccountsByCosesWithLdapFeatureCheckOrphan) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting accounts By Orphan Cos and Feature check Failed : Invalid Arguments");
+                }
+                cosIds = (List<String>) args[0];
+                ldapAttribute = (String) args[1];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsByOrphanCosAndFeatureCheck(cosIds, ldapAttribute);
                 break;
             case internalUserAccountsByCosWithLdapFeature:// single cos id
                 boolean isAccountsByCosWithLdapFeatureCheck =
