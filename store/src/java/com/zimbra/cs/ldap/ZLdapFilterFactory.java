@@ -426,6 +426,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter accountsWithVideoAll();
     public abstract ZLdapFilter accountsWithDocumentEditing();
     public abstract  ZLdapFilter accountsByCosesAndFeatureCheck(List<String> cosIds, String ldapAttribute);
+
+    public abstract  ZLdapFilter accountsByOrphanCosAndFeatureCheck(List<String> cosIds, String ldapAttribute);
     public abstract  ZLdapFilter accountsByCosAndFeatureCheck(String cosId, String ldapAttribute);
     public abstract  ZLdapFilter accountsWithLdapFeatureCheck(String ldapAttribute, String ldapValue);
 
