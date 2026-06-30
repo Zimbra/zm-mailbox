@@ -16917,6 +16917,145 @@ public class ZAttrProvisioning {
     public static final String A_zimbraRevokeAppSpecificPasswordsOnPasswordChange = "zimbraRevokeAppSpecificPasswordsOnPasswordChange";
 
     /**
+     * SAML Assertion Consumer Service URL. Replaces saml_acs from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * ACS endpoint (e.g.
+     * https://mail.corp-a.com/service/extension/samlreceiver). Falls back to
+     * global config if not set on domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4153)
+    public static final String A_zimbraSamlACSURL = "zimbraSamlACSURL";
+
+    /**
+     * SAML date format for instant timestamps. Replaces
+     * saml_date_format_instant from saml-config.properties. Falls back to
+     * global config if not set on domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4157)
+    public static final String A_zimbraSamlDateFormat = "zimbraSamlDateFormat";
+
+    /**
+     * SAML document encoding. Replaces saml_document_encoding from
+     * saml-config.properties. Controls the character encoding used for SAML
+     * logout documents and login receiver parameter decoding. Falls back to
+     * global config if not set on domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4159)
+    public static final String A_zimbraSamlDocumentEncoding = "zimbraSamlDocumentEncoding";
+
+    /**
+     * SAML error redirect URL. Replaces saml_error_redirect_url from
+     * saml-config.properties. When a SAML authentication error occurs, users
+     * are redirected to this URL with error_code and error_msg query
+     * parameters appended. If not set, the default HTTP error code pages are
+     * returned. Falls back to global config if not set on domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4160)
+    public static final String A_zimbraSamlErrorURL = "zimbraSamlErrorURL";
+
+    /**
+     * SAML inactive account redirect URL. Replaces
+     * saml_inactive_account_redirect_url from saml-config.properties. When a
+     * SAML-authenticated user maps to a Zimbra account that is not in active
+     * status, the user is redirected to this URL. Falls back to global
+     * config if not set on domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4161)
+    public static final String A_zimbraSamlInactiveAccountURL = "zimbraSamlInactiveAccountURL";
+
+    /**
+     * SAML logout landing redirect URL. Replaces
+     * saml_landing_logout_redirect_url from saml-config.properties. When the
+     * SAML extension is the landing page for a logout request, users are
+     * redirected to this URL after logout completes. Falls back to global
+     * config if not set on domain. Default is /.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4158)
+    public static final String A_zimbraSamlLogoutLandingURL = "zimbraSamlLogoutLandingURL";
+
+    /**
+     * SAML NameID format. Replaces saml_name_id_format from
+     * saml-config.properties. Falls back to global config if not set on
+     * domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4156)
+    public static final String A_zimbraSamlNameIdFormat = "zimbraSamlNameIdFormat";
+
+    /**
+     * SAML IdP Single Logout URL(s). Replaces
+     * saml_redirect_logout_destination and saml_post_logout_destination from
+     * saml-config.properties. Multi-valued to support multiple SAML
+     * bindings. Each value uses a binding-URI prefix split on the first
+     * &#039;=&#039; sign, e.g.
+     * urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect=https://idp.example.com/slo/redirect
+     * urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST=https://idp.example.com/slo/post
+     * The operating context determines which binding is used (e.g.
+     * front-channel logout uses HTTP-Redirect; back-channel logout may use
+     * SOAP). When set at domain level, routes SLO to the correct IdP per
+     * domain. Falls back to global config if not set on domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4155)
+    public static final String A_zimbraSamlSLOURL = "zimbraSamlSLOURL";
+
+    /**
+     * SAML Service Provider Entity ID. Replaces saml_sp_entity_id from
+     * saml-config.properties. When set at domain level, enables per-domain
+     * SP metadata (e.g. https://mail.corp-a.com/saml/sp). Falls back to
+     * global config if not set on domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4163)
+    public static final String A_zimbraSamlSpEntityId = "zimbraSamlSpEntityId";
+
+    /**
+     * SAML IdP Single Sign-On URL(s). Replaces
+     * saml_redirect_login_destination and saml_post_login_destination from
+     * saml-config.properties. Multi-valued to support multiple SAML
+     * bindings. Each value uses a binding-URI prefix split on the first
+     * &#039;=&#039; sign, e.g.
+     * urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect=https://idp.example.com/sso/redirect
+     * urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST=https://idp.example.com/sso/post
+     * The operating context determines which binding is used (e.g.
+     * SP-initiated login uses HTTP-Redirect; back-channel operations may use
+     * SOAP). When set at domain level, routes SSO login to the correct IdP
+     * per domain. Falls back to global config if not set on domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4154)
+    public static final String A_zimbraSamlSSOURL = "zimbraSamlSSOURL";
+
+    /**
+     * SAML webclient-disabled account redirect URL. Replaces
+     * saml_webclient_disabled_account_redirect_url from
+     * saml-config.properties. After successful SAML authentication, if the
+     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
+     * redirected to this URL instead of the web client. Falls back to global
+     * config if not set on domain.
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4162)
+    public static final String A_zimbraSamlWebclientDisabledAccountUrl = "zimbraSamlWebclientDisabledAccountUrl";
+
+    /**
      * Certificate used to verify signed SAML SP requests
      *
      * @since ZCS 10.1.21
