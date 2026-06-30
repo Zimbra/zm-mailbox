@@ -18,25 +18,24 @@ package com.zimbra.cs.account.auth;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.auth.ropc.*;
+import java.net.SocketTimeoutException;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class IROPCHandlerRegistryTest {
 
     @Test
     public void testOktaHandler() throws Exception {
         OktaRopcHandler handler = new OktaRopcHandler();
-        IRopcAuthRequest request = new IRopcAuthRequest.Builder()
-                                    .username("user")
-                                    .password("pass")
-                                    .provider("okta")
-                                    .build();
-
+        IRopcAuthRequest request = new IRopcAuthRequest.Builder().username("user").password("pass").provider("okta")
+                .build();
         assertEquals("okta", handler.getName());
-        assertTrue(handler.authenticate(request));
+        try {
+            boolean result = handler.authenticate(request);
+            assertTrue("Handler should return true", result);
+        } catch (SocketTimeoutException e) {
+            fail("Handler should not throw SocketTimeoutException: " + e.getMessage());
+        }
     }
 
     @Test
