@@ -17,12 +17,84 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
+import com.zimbra.common.util.ZimbraLog;
+import java.net.SocketTimeoutException;
+
 public final class IRopcAuthEngine {
 
     private IRopcAuthEngine() {
     }
 
-    public static Outcome authenticate(String accountName, String basicPassword, String deviceId) {
-        return Outcome.SUCCESS;
+    public static Outcome authenticate(String username,
+            String password,
+            String provider,
+            String factorConfig,
+            String protocolContext,
+            String deviceId) {
+
+        try {
+            IRopcAuthRequest.FactorType factorType;
+            try {
+                factorType = IRopcAuthRequest.FactorType.fromConfig(factorConfig);
+            } catch (IllegalArgumentException e) {
+                ZimbraLog.account.warn(
+                        "ROPC auth: unsupported factor type '%s' for user=%s",
+                        factorConfig, username);
+                ZimbraLog.account.info("Authentication outcome: ERROR for user: %s", username);
+                return Outcome.ERROR;
+            }
+
+            ZimbraLog.account.debug(
+                    "ROPC auth: resolving provider=%s for user=%s, factorType=%s",
+                    provider, username, factorType);
+
+            IRopcHandler handler = IROPCHandlerRegistry.get(provider);
+
+            IRopcAuthRequest request = new IRopcAuthRequest.Builder()
+                    .username(username)
+                    .password(password)
+                    .provider(provider)
+                    .protocolContext(protocolContext)
+                    .factorType(factorType)
+                    .build();
+
+            ZimbraLog.account.info("Invoking handler: %s for user: %s",
+                    handler.getName(), username);
+
+            Boolean result = handler.authenticate(request);
+
+            if (result == null) {
+                ZimbraLog.account.warn(
+                        "ROPC auth: handler returned null for user: %s, provider: %s",
+                        username, provider);
+                ZimbraLog.account.info("Authentication outcome: ERROR for user: %s", username);
+                return Outcome.ERROR;
+            }
+
+            Outcome outcome;
+            if (result) {
+                outcome = Outcome.SUCCESS;
+            } else {
+                outcome = Outcome.INVALID;
+            }
+
+            ZimbraLog.account.info("Authentication outcome: %s for user: %s",
+                    outcome, username);
+            return outcome;
+
+        } catch (SocketTimeoutException e) {
+            ZimbraLog.account.error(
+                    "ROPC auth timeout for user: %s, provider: %s — %s",
+                    username, provider, e.getMessage(), e);
+            ZimbraLog.account.info("Authentication outcome: TIMEOUT for user: %s", username);
+            return Outcome.MFA_TIMEOUT;
+
+        } catch (Exception e) {
+            ZimbraLog.account.error(
+                    "ROPC auth error for user: %s, provider: %s — %s",
+                    username, provider, e.getMessage(), e);
+            ZimbraLog.account.info("Authentication outcome: ERROR for user: %s", username);
+            return Outcome.ERROR;
+        }
     }
 }

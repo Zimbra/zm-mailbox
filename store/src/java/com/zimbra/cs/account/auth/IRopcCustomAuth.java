@@ -38,14 +38,16 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         String user = acct.getName();
         Protocol proto = (Protocol) context.get(AuthContext.AC_PROTOCOL);
         String deviceId = (String) context.get(AuthContext.AC_DEVICE_ID);
-
+        String factorConfig = "NONE";
+        String provider = "okta";
+        String protocolContext = (proto != null) ? proto.name() : "unknown";
         // protocol-aware caching — SKIP for zsync.
         boolean useCache = (proto != Protocol.zsync);
         if (useCache && checkInCache(user, password)) {
             return;
         }
 
-        Outcome outcome = callAuthEngine(user, password, deviceId);
+        Outcome outcome = callAuthEngine(user, password, provider, factorConfig, protocolContext, deviceId);
 
         switch (outcome) {
             case SUCCESS:
@@ -66,8 +68,9 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         }
     }
 
-    protected Outcome callAuthEngine(String user, String password, String deviceId) {
-        return IRopcAuthEngine.authenticate(user, password, deviceId);
+    protected Outcome callAuthEngine(String username, String password, String provider, String factorConfig,
+            String protocolContext, String deviceId) {
+        return IRopcAuthEngine.authenticate(username, password, provider, factorConfig, protocolContext, deviceId);
     }
 
     protected boolean checkInCache(String user, String password) {
