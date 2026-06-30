@@ -8241,7 +8241,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1630" name="zimbraCsrfAllowedRefererHosts" type="string"
-  cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0" flags="domainAdminModifiable">
+  cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0">
   <desc>A list of hosts like www.abc.com, www.xyz.com. These are used while doing CSRF referer check.</desc>
 </attr>
 
@@ -10339,7 +10339,7 @@ TODO: delete them permanently from here
 <attr id="4093" name="zimbraTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="9.0.0">
   <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
-<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" callback="GenerateSecretKeyCallback" since="10.1.0">
+<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enables the mail recall functionality</desc>
@@ -10754,6 +10754,11 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="4164" name="zimbraFeatureNativeMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.21">
+    <defaultCOSValue>FALSE</defaultCOSValue>
+    <desc>Flag to check whether Zimbra native mobile app is enabled</desc>
+</attr>
+
 <attr id="4165" name="zimbraSamlSpSigningKey" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
     <desc>Key used to sign SP-generated SAML requests. SAML requests are unsigned if empty</desc>
 </attr>
@@ -10794,6 +10799,7 @@ TODO: delete them permanently from here
         (Firebase device JSON), bundleVersion, bundleInstalledAt.
     </desc>
 </attr>
+
 <attr id="4172" name="zimbraPushNotificationPayloadMode" type="enum" value="OPAQUE,CONFIGURABLE,E2EE" cardinality="single"
       optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="MobileNotificationPayload">
   <desc>Specifies the payload mode for FCM push notifications (OPAQUE, CONFIGURABLE, E2EE)</desc>
@@ -10805,4 +10811,5 @@ git  <globalConfigValue>CONFIGURABLE</globalConfigValue>
   <desc>Specifies the disclosure level for configurable push notification payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW: sender, subject, timestamp)</desc>
   <globalConfigValue>FULL_PREVIEW</globalConfigValue>
 </attr>
+
 </attrs>
