@@ -8241,7 +8241,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1630" name="zimbraCsrfAllowedRefererHosts" type="string"
-  cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0" flags="domainAdminModifiable">
+  cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0">
   <desc>A list of hosts like www.abc.com, www.xyz.com. These are used while doing CSRF referer check.</desc>
 </attr>
 
@@ -10339,7 +10339,7 @@ TODO: delete them permanently from here
 <attr id="4093" name="zimbraTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="9.0.0">
   <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
-<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" callback="GenerateSecretKeyCallback" since="10.1.0">
+<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enables the mail recall functionality</desc>
@@ -10752,6 +10752,11 @@ TODO: delete them permanently from here
     When set at domain level, enables per-domain SP metadata (e.g. https://mail.corp-a.com/saml/sp).
     Falls back to global config if not set on domain.
   </desc>
+</attr>
+
+<attr id="4164" name="zimbraFeatureNativeMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.21">
+    <defaultCOSValue>FALSE</defaultCOSValue>
+    <desc>Flag to check whether Zimbra native mobile app is enabled</desc>
 </attr>
 
 <attr id="4165" name="zimbraSamlSpSigningKey" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
