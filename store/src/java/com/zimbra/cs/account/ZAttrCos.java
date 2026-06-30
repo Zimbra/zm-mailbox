@@ -13893,6 +13893,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @return zimbraFeatureNativeMobileAppEnabled, or false if unset
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public boolean isFeatureNativeMobileAppEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, false, true);
+    }
+
+    /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @param zimbraFeatureNativeMobileAppEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public void setFeatureNativeMobileAppEnabled(boolean zimbraFeatureNativeMobileAppEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, zimbraFeatureNativeMobileAppEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @param zimbraFeatureNativeMobileAppEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public Map<String,Object> setFeatureNativeMobileAppEnabled(boolean zimbraFeatureNativeMobileAppEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, zimbraFeatureNativeMobileAppEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public void unsetFeatureNativeMobileAppEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public Map<String,Object> unsetFeatureNativeMobileAppEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether user can create address books
      *
      * @return zimbraFeatureNewAddrBookEnabled, or true if unset

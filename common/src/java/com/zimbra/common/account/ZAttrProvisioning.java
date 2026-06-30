@@ -7460,6 +7460,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureModernVideoEnabled = "zimbraFeatureModernVideoEnabled";
 
     /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public static final String A_zimbraFeatureNativeMobileAppEnabled = "zimbraFeatureNativeMobileAppEnabled";
+
+    /**
      * Whether user can create address books
      *
      * @since ZCS 5.0.4

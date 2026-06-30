@@ -10644,4 +10644,9 @@ TODO: delete them permanently from here
   <desc>Soft quota limit percentage applied over zimbraMailQuota</desc>
 </attr>
 
+<attr id="4164" name="zimbraFeatureNativeMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.21">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Flag to check whether Zimbra native mobile app is enabled</desc>
+</attr>
+
 </attrs>
