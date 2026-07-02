@@ -8,8 +8,11 @@
 package com.zimbra.cs.account.auth;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.ropc.Outcome;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +22,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.*;
 
 public class IRopcCustomAuthTest {
     private IRopcCustomAuth ropcCustomAuth;
@@ -29,11 +34,13 @@ public class IRopcCustomAuthTest {
 
     @Before
     public void setUp() throws Exception {
-        ropcCustomAuth = new IRopcCustomAuth();
+        IRopcCustomAuth target = new IRopcCustomAuth();
+        ropcCustomAuth = spy(target);
         MailboxTestUtil.initProvisioning();
         Provisioning.getInstance().createAccount("user1@example.zimbra.com", "password", new HashMap<String, Object>());
         mockAccount = Provisioning.getInstance().get(Key.AccountBy.name, "user1@example.zimbra.com");
         mockContext = new HashMap<String, Object>();
+        mockContext.put("did", "device-123");
         mockContext.put("protocol", "zsync");
     }
 
@@ -43,21 +50,88 @@ public class IRopcCustomAuthTest {
     }
 
     @Test
-    public void testExecuteRopcAuthReturnsTrue() {
-        assertTrue("Should return true", ropcCustomAuth.executeRopcAuth());
-    }
-
-    @Test
     public void testAuthnetocateValidCallDoesnotThrowException() {
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, null);
         } catch (Exception e) {
             fail("Auth should not throw a exception");
         }
+
     }
 
     @Test
     public void testCeckPasswordAgingReturnsFalse() {
         assertFalse("Password aging should return false", ropcCustomAuth.checkPasswordAging());
+    }
+
+    @Test
+    public void testAuthenticateOutcomeSuccess() throws Exception {
+        doReturn(Outcome.SUCCESS).when(ropcCustomAuth).callAuthEngine(anyString(), anyString(), anyString());
+        ropcCustomAuth.authenticate(mockAccount, "password", mockContext, null);
+        verify(ropcCustomAuth, times(1)).callAuthEngine("user1@example.zimbra.com", "password", "device-123");
+    }
+
+    @Test
+    public void testAuthenticateOutcomeInvalid() throws Exception {
+        doReturn(Outcome.INVALID).when(ropcCustomAuth).callAuthEngine(anyString(), anyString(), anyString());
+        try {
+            ropcCustomAuth.authenticate(mockAccount, "password", mockContext, null);
+            fail("Expected AuthFailedServiceException was not thrown");
+        } catch (AccountServiceException.AuthFailedServiceException e) {
+            assertTrue("Message should indicate rejected credentials",
+                    e.getMessage().contains("Authentication failed : Invalid credentials provided"));
+        }
+    }
+
+    @Test
+    public void testAuthenticateOutcomePolicyDenied() throws Exception {
+        doReturn(Outcome.POLICY_DENIED).when(ropcCustomAuth).callAuthEngine(anyString(), anyString(), anyString());
+        try {
+            ropcCustomAuth.authenticate(mockAccount, "password", mockContext, null);
+            fail("Expected AuthFailedServiceException was not thrown");
+        } catch (AccountServiceException.AuthFailedServiceException e) {
+            assertTrue("Message should indicate rejected credentials",
+                    e.getMessage().contains("Authentication failed : Invalid credentials provided"));
+        }
+    }
+
+    @Test
+    public void testAuthenticateOutcomeMFATimeout() throws Exception {
+        doReturn(Outcome.MFA_TIMEOUT).when(ropcCustomAuth).callAuthEngine(anyString(), anyString(), anyString());
+        try {
+            ropcCustomAuth.authenticate(mockAccount, "password", mockContext, null);
+            fail("Expected AuthFailedServiceException was not thrown");
+        } catch (AccountServiceException.AuthFailedServiceException e) {
+            assertTrue("Message should indicate timeout",
+                    e.getMessage().contains("MFA request timed out. Please try again"));
+        }
+    }
+
+    @Test
+    public void testAuthenticateOutcomeDefaultError() throws Exception {
+        doReturn(Outcome.ERROR).when(ropcCustomAuth).callAuthEngine(anyString(), anyString(), anyString());
+        try {
+            ropcCustomAuth.authenticate(mockAccount, "password", mockContext, null);
+            fail("Expected ServiceException was not thrown");
+        } catch (ServiceException e) {
+            assertTrue("Message should throw a general exception",
+                    e.getMessage().contains("Authentication service temporarily unavailable."));
+        }
+    }
+
+    @Test
+    public void testAuthenticateCacheHitSkipEngineCall() throws Exception {
+        doReturn(true).when(ropcCustomAuth).checkInCache(anyString(), anyString());
+        ropcCustomAuth.authenticate(mockAccount, "password", mockContext, null);
+        verify(ropcCustomAuth, never()).callAuthEngine("user1@example.zimbra.com", "password", "device-123");
+    }
+
+    @Test
+    public void testAuthenticateZsyncrotocolByPassCacheCheck() throws Exception {
+        mockContext.put(AuthContext.AC_PROTOCOL, AuthContext.Protocol.zsync);
+        doReturn(true).when(ropcCustomAuth).checkInCache(anyString(), anyString());
+        doReturn(Outcome.SUCCESS).when(ropcCustomAuth).callAuthEngine(anyString(), anyString(), anyString());
+        ropcCustomAuth.authenticate(mockAccount, "password", mockContext, null);
+        verify(ropcCustomAuth, times(1)).callAuthEngine("user1@example.zimbra.com", "password", "device-123");
     }
 }
