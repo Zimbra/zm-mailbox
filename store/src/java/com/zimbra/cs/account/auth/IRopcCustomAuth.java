@@ -7,9 +7,13 @@
 
 package com.zimbra.cs.account.auth;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
+import com.zimbra.cs.account.auth.ropc.IRopcAuthEngine;
+import com.zimbra.cs.account.auth.ropc.Outcome;
 import java.util.List;
 import java.util.Map;
 
@@ -25,19 +29,39 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         Protocol proto = (Protocol) context.get(AuthContext.AC_PROTOCOL);
         String deviceId = (String) context.get(AuthContext.AC_DEVICE_ID);
 
-        ZimbraLog.account.debug("%s auth mech initiated for user : %s", EXTENSION_NAME, user);
+        // protocol-aware caching — SKIP for zsync.
+        boolean useCache = (proto != Protocol.zsync);
+        if (useCache && checkInCache(user, password)) {
+            return;
+        }
 
-        boolean isAuthenticated = executeRopcAuth();
+        Outcome outcome = callAuthEngine(user, password, deviceId);
 
-        if (isAuthenticated) {
-            ZimbraLog.account.debug("Auth successful for user %s", user);
-        } else {
-            ZimbraLog.account.debug("Auth failed for user %s", user);
+        switch (outcome) {
+            case SUCCESS:
+                break;
+            case INVALID:
+            case POLICY_DENIED:
+                throw AuthFailedServiceException.AUTH_FAILED(user,
+                        "Authentication failed : Invalid credentials provided");
+            case MFA_TIMEOUT:
+                throw AuthFailedServiceException.AUTH_FAILED(user, "MFA request timed out. Please try again");
+            case ERROR:
+            default:
+                throw ServiceException.FAILURE("Authentication service temporarily unavailable.", null);
+        }
+
+        if (useCache) {
+            // TODO : logic to store password in cache
         }
     }
 
-    protected boolean executeRopcAuth() {
-        return true;
+    protected Outcome callAuthEngine(String user, String password, String deviceId) {
+        return IRopcAuthEngine.authenticate(user, password, deviceId);
+    }
+
+    protected boolean checkInCache(String user, String password) {
+        return false;
     }
 
     @Override
