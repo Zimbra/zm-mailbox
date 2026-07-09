@@ -124,4 +124,6 @@ public final class IRopcConstants {
 
     public static final long CONVERT_TO_MILLI = 1000L;
 
+    public static final long TTL_MS = 3600000L;
+
 }
