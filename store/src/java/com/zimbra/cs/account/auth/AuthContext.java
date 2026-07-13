@@ -88,6 +88,11 @@ public class AuthContext {
      */
     public static final String AC_DEVICE_ID = "did";
 
+    /*
+     * Sub protocol.
+     */
+    public static final String AC_SUB_PROTOCOL = "subproto";
+
     public enum Protocol {
         client_certificate,
         http_basic,

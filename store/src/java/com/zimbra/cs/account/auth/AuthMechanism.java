@@ -93,6 +93,10 @@ public abstract class AuthMechanism {
 
     protected AuthMech authMech;
 
+    private static String IDP_ROPC = "idp-ropc";
+
+    private static String EAS_PROTOCOL = "EAS";
+
     protected AuthMechanism(AuthMech authMech) {
         this.authMech = authMech;
     }
@@ -129,6 +133,13 @@ public abstract class AuthMechanism {
 
 
         if (authMechStr.startsWith(AuthMech.custom.name() + ":")) {
+            boolean hasIdpRopc = authMechStr.contains(IDP_ROPC);
+            boolean isEASProtcol = context != null &&
+                    EAS_PROTOCOL.equalsIgnoreCase((String) context.get(AuthContext.AC_SUB_PROTOCOL));
+
+            if (hasIdpRopc && !isEASProtcol) {
+                return new ZimbraAuth(AuthMech.zimbra);
+            }
             return new CustomAuth(AuthMech.custom, authMechStr);
         } else {
             try {
@@ -406,7 +417,12 @@ public abstract class AuthMechanism {
                     for (String s : mArgs)
                         sb.append("[" + s + "] ");
                 }
-                ZimbraLog.account.debug("CustomAuth: handlerName=" + mHandlerName + ", args=" + sb);
+
+                if (mHandler instanceof IRopcCustomAuth) {
+                    ZimbraLog.account.debug("CustomAuth: handlerName=" + mHandlerName);
+                } else {
+                    ZimbraLog.account.debug("CustomAuth: handlerName=" + mHandlerName + ", args=" + sb);
+                }
             }
         }
 

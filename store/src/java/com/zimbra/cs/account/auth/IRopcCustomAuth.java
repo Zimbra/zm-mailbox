@@ -24,6 +24,7 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.account.auth.ropc.IRopcAuthEngine;
 import com.zimbra.cs.account.auth.ropc.Outcome;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,30 +36,39 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
     public void authenticate(Account acct, String password,
                              Map<String, Object> context, List<String> args) throws Exception {
 
+        if (acct == null) {
+            ZimbraLog.account.error("Authentication failed : Account is null");
+            throw ServiceException.FAILURE("Authentication failed : Account is null.", null);
+        }
         String user = acct.getName();
         Protocol proto = (Protocol) context.get(AuthContext.AC_PROTOCOL);
         String deviceId = (String) context.get(AuthContext.AC_DEVICE_ID);
-        String factorConfig = "NONE";
-        String provider = "okta";
-        String protocolContext = (proto != null) ? proto.name() : "unknown";
+        Map<String, String> configs = extractConfigsFromArgs(args);
+
         // protocol-aware caching — SKIP for zsync.
         boolean useCache = (proto != Protocol.zsync);
         if (useCache && checkInCache(user, password)) {
             return;
         }
 
-        Outcome outcome = callAuthEngine(user, password, provider, factorConfig, protocolContext, deviceId);
+        Outcome outcome = callAuthEngine(user, password, deviceId, proto, configs);
 
         switch (outcome) {
             case SUCCESS:
                 break;
+            case REJECTED:
+                throw AuthFailedServiceException.AUTH_FAILED(user,
+                        "Authentication failed : Challenge denied by user");
             case INVALID:
-            case POLICY_DENIED:
                 throw AuthFailedServiceException.AUTH_FAILED(user,
                         "Authentication failed : Invalid credentials provided");
+            case POLICY_DENIED:
+                throw AuthFailedServiceException.AUTH_FAILED(user,
+                        "Authentication failed : Policy Denied");
             case MFA_TIMEOUT:
                 throw AuthFailedServiceException.AUTH_FAILED(user, "MFA request timed out. Please try again");
             case ERROR:
+                throw AuthFailedServiceException.AUTH_FAILED(user, "Error while authentication");
             default:
                 throw ServiceException.FAILURE("Authentication service temporarily unavailable.", null);
         }
@@ -68,13 +78,41 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         }
     }
 
-    protected Outcome callAuthEngine(String username, String password, String provider, String factorConfig,
-            String protocolContext, String deviceId) {
-        return IRopcAuthEngine.authenticate(username, password, provider, factorConfig, protocolContext, deviceId);
+    protected Outcome callAuthEngine(String userName, String password, String deviceId, Protocol protocol,
+                                     Map<String, String> configs) {
+        return IRopcAuthEngine.authenticate(userName, password, deviceId, protocol, configs);
     }
 
     protected boolean checkInCache(String user, String password) {
         return false;
+    }
+
+    protected Map<String, String> extractConfigsFromArgs(List<String> args) {
+        Map<String, String> configMap = new HashMap<>();
+
+        if (args == null || args.isEmpty()) {
+            return configMap;
+        }
+
+        for (String arg : args) {
+            if (arg == null) {
+                continue;
+            }
+            String[] parts = arg.split("=", 2);
+
+            if (parts.length == 2) {
+                String key = parts[0].trim();
+                String value = parts[1].trim();
+                if (key.isEmpty()) {
+                    ZimbraLog.account.debug("Skipping configuration arguments with missing keys");
+                    continue;
+                }
+                configMap.put(key, value);
+            } else {
+                ZimbraLog.account.debug("Invalid Configuration arguments format. Expected 'key=value'");
+            }
+        }
+        return configMap;
     }
 
     @Override

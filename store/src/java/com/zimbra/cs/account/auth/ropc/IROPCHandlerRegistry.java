@@ -19,7 +19,7 @@ package com.zimbra.cs.account.auth.ropc;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-
+import com.zimbra.cs.account.auth.ropc.okta.OktaRopcHandler;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,7 +33,7 @@ public final class IROPCHandlerRegistry {
 
     static {
         register(new OktaRopcHandler());
-        ZimbraLog.account.info("ROPC provider registry initialized with default providers");
+        ZimbraLog.account.debug("ROPC provider registry initialized with default providers");
     }
 
     public static void register(IRopcHandler handler) {
@@ -43,7 +43,7 @@ public final class IROPCHandlerRegistry {
         String key = handler.getName().toLowerCase();
         IRopcHandler existing = HANDLERS.putIfAbsent(key, handler);
         if (existing != null) {
-            ZimbraLog.account.warn("ROPC provider already registered for: %s, skipping duplicate", key);
+            ZimbraLog.account.debug("ROPC provider already registered for: %s, skipping duplicate", key);
         } else {
             ZimbraLog.account.info("ROPC provider registered: %s", key);
         }
@@ -56,7 +56,7 @@ public final class IROPCHandlerRegistry {
         String key = name.toLowerCase();
         IRopcHandler handler = HANDLERS.get(key);
         if (handler == null) {
-            throw ServiceException.INVALID_REQUEST("No ROPC provider registered for type: " + name, null);
+            throw ServiceException.INVALID_REQUEST("No ROPC handler registered for type: " + name, null);
         }
         ZimbraLog.account.debug("Resolved ROPC provider type: %s", handler.getName());
         return handler;
