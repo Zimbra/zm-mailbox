@@ -18,9 +18,12 @@
 package com.zimbra.cs.account.callback;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -33,6 +36,15 @@ public class GenerateSecretKeyCallback extends AttributeCallback {
     @Override
     public void preModify(CallbackContext context, String attrName, Object value,
             Map attrsToModify, Entry entry) throws ServiceException {
+        // block domain-level and global config level enablement
+        if (ProvisioningConstants.TRUE.equals(String.valueOf(value))
+                && (entry instanceof Domain || entry instanceof Config)) {
+            String level = entry instanceof Domain ? "domain" : "global config";
+            throw ServiceException.PERM_DENIED(
+                    String.format("zimbraFeatureMailRecallEnabled cannot be configured at the %s level. "
+                            + "Please use account or COS instead.", level));
+        }
+
         try {
             Optional.ofNullable(value)
                     .map(Object::toString)
