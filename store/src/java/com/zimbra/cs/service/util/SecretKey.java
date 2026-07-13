@@ -20,10 +20,6 @@ package com.zimbra.cs.service.util;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import java.io.IOException;
-import org.apache.commons.codec.binary.Hex;
-
-import javax.mail.MessagingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
