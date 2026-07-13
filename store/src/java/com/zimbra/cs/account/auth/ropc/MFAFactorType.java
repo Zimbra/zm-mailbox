@@ -17,26 +17,20 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
-import com.zimbra.common.service.ServiceException;
+public enum MFAFactorType {
 
-/**
- * Contract for all ROPC provider handlers.
- */
-public interface IRopcHandler {
+    PUSH;
 
-    /**
-     * Returns the unique provider name/type for this handler.
-     * okta, keycloak
-     *  @return provider name
-     */
-    String getName();
-
-    /**
-     * Authenticates the user via ROPC flow.
-     * @param request the authentication request
-     * @return true if authentication is successful, false otherwise
-     */
-    IRopcAuthResult authenticate(IRopcAuthRequest request) throws ServiceException;
-
-    MFAPollResult pollChallenge(MFAChallenge challenge) throws ServiceException;
+    public static MFAFactorType fromConfig(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return PUSH;
+        }
+        String normalized = value.trim().toUpperCase();
+        try {
+            return MFAFactorType.valueOf(normalized);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Unsupported factor type: " + value);
+        }
+    }
 }
+

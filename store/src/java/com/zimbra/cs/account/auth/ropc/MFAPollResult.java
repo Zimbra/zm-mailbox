@@ -17,23 +17,15 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
-import java.net.SocketTimeoutException;
-
-/**
- * ROPC handler implementation for Okta.
- */
-public class OktaRopcHandler implements IRopcHandler {
-
-    public static final String NAME = "okta";
-
-    @Override
-    public String getName() {
-        return NAME;
-    }
-
-    @Override
-    public boolean authenticate(IRopcAuthRequest request) throws SocketTimeoutException {
-        // Stub implementation for this iteration.
-        return true;
-    }
+public enum MFAPollResult {
+    /** User has not yet approved/denied; keep polling. */
+    WAITING,
+    /** Factor satisfied. */
+    SUCCESS,
+    /** User explicitly denied the prompt. */
+    REJECTED,
+    /** Challenge expired at the IdP (or local timeout). */
+    EXPIRED,
+    /** Transient/unexpected error talking to the IdP. */
+    ERROR
 }

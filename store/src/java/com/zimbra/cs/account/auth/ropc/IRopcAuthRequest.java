@@ -17,43 +17,36 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
+import com.zimbra.cs.account.auth.AuthContext;
+import java.util.Map;
+
 public final class IRopcAuthRequest {
 
     private final String username;
 
     private final String password;
 
-    private final String provider;
-
-    private final String protocolContext;
-
-    private final FactorType factorType;
+    private final String refreshToken;
 
     private final String deviceId;
 
-    public enum FactorType {
-        NONE, PUSH;
+    private final AuthContext.Protocol protocol;
 
-        public static FactorType fromConfig(String value) {
-            if (value == null || value.trim().isEmpty()) {
-                return NONE;
-            }
-            String normalized = value.trim().toUpperCase();
-            try {
-                return FactorType.valueOf(normalized);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Unsupported factor type: " + value);
-            }
-        }
-    }
+    private final String clientIp;
 
-    private IRopcAuthRequest(Builder builder) {
-        this.username = builder.username;
-        this.password = builder.password;
-        this.provider = builder.provider;
-        this.protocolContext = builder.protocolContext;
-        this.factorType = builder.factorType;
-        this.deviceId = builder.deviceId;
+    private final String userAgent;
+
+    private final Map<String, String> config;
+
+    private IRopcAuthRequest(Builder b) {
+        this.username = b.username;
+        this.password = b.password;
+        this.refreshToken = b.refreshToken;
+        this.deviceId = b.deviceId;
+        this.protocol = b.protocol;
+        this.clientIp = b.clientIp;
+        this.userAgent = b.userAgent;
+        this.config = b.config;
     }
 
     public String getUsername() {
@@ -64,74 +57,88 @@ public final class IRopcAuthRequest {
         return password;
     }
 
-    public String getProvider() {
-        return provider;
-    }
-
-    public String getProtocolContext() {
-        return protocolContext;
-    }
-
-    public FactorType getFactorType() {
-        return factorType;
+    public String getRefreshToken() {
+        return refreshToken;
     }
 
     public String getDeviceId() {
         return deviceId;
     }
 
-    public static class Builder {
+    public AuthContext.Protocol getProtocol() {
+        return protocol;
+    }
 
+    public String getClientIp() {
+        return clientIp;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public Map<String, String> getConfig() {
+        return config;
+    }
+
+    public boolean isRefresh() {
+        return refreshToken != null && !refreshToken.isEmpty();
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
         private String username;
 
         private String password;
 
-        private String provider;
-
-        private String protocolContext;
-
-        private FactorType factorType = FactorType.NONE;
+        private String refreshToken;
 
         private String deviceId;
 
-        public Builder username(String username) {
-            this.username = username;
-            return this;
+        private AuthContext.Protocol protocol;
+
+        private String clientIp;
+
+        private String userAgent;
+
+        private Map<String, String> config;
+
+        public Builder username(String v) {
+            this.username = v; return this;
         }
 
-        public Builder password(String password) {
-            this.password = password;
-            return this;
+        public Builder password(String v) {
+            this.password = v; return this;
         }
 
-        public Builder provider(String provider) {
-            this.provider = provider;
-            return this;
+        public Builder refreshToken(String v) {
+            this.refreshToken = v; return this;
         }
 
-        public Builder protocolContext(String protocolContext) {
-            this.protocolContext = protocolContext;
-            return this;
+        public Builder deviceId(String v) {
+            this.deviceId = v; return this;
         }
 
-        public Builder factorType(FactorType factorType) {
-            this.factorType = factorType;
-            return this;
+        public Builder protocol(AuthContext.Protocol v) {
+            this.protocol = v; return this;
         }
 
-        public Builder deviceId(String deviceId) {
-            this.deviceId = deviceId;
-            return this;
+        public Builder clientIp(String v) {
+            this.clientIp = v; return this;
+        }
+
+        public Builder userAgent(String v) {
+            this.userAgent = v; return this;
+        }
+
+        public Builder config(Map<String, String> v) {
+            this.config = v; return this;
         }
 
         public IRopcAuthRequest build() {
-            if (username == null || username.trim().isEmpty() || !username.contains("@")) {
-                throw new IllegalArgumentException("username must be a valid email address");
-            }
-            if (password == null || password.trim().isEmpty()) {
-                throw new IllegalArgumentException("password must not be null or empty");
-            }
-            return new IRopcAuthRequest(this);
-        }
+            return new IRopcAuthRequest(this); }
     }
 }
