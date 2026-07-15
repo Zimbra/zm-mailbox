@@ -117,6 +117,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.CHECK_HOSTNAME_RESOLVE_REQUEST, new CheckHostnameResolve());
         dispatcher.registerHandler(AdminConstants.CHECK_EXCHANGE_AUTH_REQUEST, new CheckExchangeAuth());
         dispatcher.registerHandler(AdminConstants.CHECK_DOMAIN_MX_RECORD_REQUEST, new CheckDomainMXRecord ());
+        dispatcher.registerHandler(AdminConstants.PARSE_SAML_METADATA_REQUEST, new ParseSAMLMetadata());
 
         dispatcher.registerHandler(AdminConstants.CREATE_VOLUME_REQUEST, new CreateVolume());
         dispatcher.registerHandler(AdminConstants.GET_VOLUME_REQUEST, new GetVolume());
