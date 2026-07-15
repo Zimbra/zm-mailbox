@@ -36,6 +36,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.MailUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.accesscontrol.Rights;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
@@ -203,11 +205,41 @@ public class SaveDraft extends MailDocumentHandler {
                 delegatorMbox = MailboxManager.getInstance().getMailboxByAccountId(delegatorAccount.getId());
                 Account delegateeAccount = null;
                 OperationContext oct = null;
-                if (delegateeAccountId != null) {
-                    delegateeAccount = prov.getAccountById(delegateeAccountId);
-                    oct = new OperationContext(delegateeAccount);
-                } else if (delegatorMbox != null) {
-                    oct = new OperationContext(delegatorMbox);
+                Account authAccount = getAuthenticatedAccount(zsc);
+                if (delegateeAccountId != null && !delegateeAccountId.trim().isEmpty()) {
+                    try {
+                        delegateeAccount = prov.getAccountById(delegateeAccountId);
+                    } catch (ServiceException e) {
+                        ZimbraLog.soap.warn("Invalid delegateeAccountId=%s, falling back to authAccount=%s",
+                                delegateeAccountId, authAccount.getName(), e);
+                    }
+                }
+                if (delegateeAccount != null) {
+                    AccessManager accessMgr = AccessManager.getInstance();
+
+                    boolean canSendAs = accessMgr.canDo(authAccount, delegateeAccount,
+                            Rights.User.R_sendAs, false);
+
+                    boolean canSendOnBehalf = accessMgr.canDo(authAccount, delegateeAccount,
+                            Rights.User.R_sendOnBehalfOf, false);
+
+                    if (canSendAs || canSendOnBehalf) {
+                        oct = new OperationContext(delegateeAccount);
+                    } else {
+                        ZimbraLog.soap.warn(
+                                "Delegation denied → falling back to self. authAccount=%s, " +
+                                        "delegatee=%s, canSendAs=%s, canSendOnBehalf=%s",
+                                authAccount.getName(), delegateeAccount.getName(), canSendAs, canSendOnBehalf);
+                        oct = new OperationContext(authAccount);
+                    }
+
+                } else {
+                    ZimbraLog.soap.warn(
+                            "Invalid or missing delegateeAccountId='%s' → falling back to self (authAccount=%s)",
+                            delegateeAccountId,
+                            authAccount.getName()
+                    );
+                    oct = new OperationContext(authAccount);
                 }
                 if (oct != null && delegatorMbox != null) {
                     mm = ParseMimeMessage.parseMimeMsgSoap(zsc, oct, delegatorMbox, msgElem, null, mimeData);
