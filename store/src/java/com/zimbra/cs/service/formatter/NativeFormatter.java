@@ -216,11 +216,15 @@ public final class NativeFormatter extends Formatter {
 
             if (contentType == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
+            } else if (DefangFactory.isDefangXmlContentType(shortContentType)) {
+                contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             } else if (shortContentType.equalsIgnoreCase(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
-                if ((contentType = MimeDetect.getMimeDetect().detect(Mime.getFilename(mp), mp.getInputStream())) == null)
+                if ((contentType = MimeDetect.getMimeDetect()
+                        .detect(Mime.getFilename(mp), mp.getInputStream())) == null) {
                     contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
-                else
+                } else {
                     shortContentType = contentType;
+                }
             }
             // CR or LF in Content-Type causes Chrome to barf, unfortunately
             contentType = contentType.replace('\r', ' ').replace('\n', ' ');
