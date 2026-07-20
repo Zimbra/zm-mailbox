@@ -352,6 +352,8 @@ public final class RuleManager {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         }
         SieveToSoap sieveToSoap = new SieveToSoap(getRuleNames(account.getAttr(sieveScriptAttrName)));
+        String tzId = account.getAttr(Provisioning.A_zimbraPrefTimeZoneId);
+        Sieve.DATE_PARSER.setTimezone((StringUtil.isNullOrEmpty(tzId) ? TimeZone.getDefault().getID() : tzId));
         sieveToSoap.accept(node);
         return sieveToSoap.toFilterRules();
     }

@@ -52,7 +52,11 @@ public class DateParser {
             mFormatterHolder.set(formatter);
         }
 
-        formatter.setTimeZone(TimeZone.getTimeZone(timezone));
+        if (null != timezone) {
+            formatter.setTimeZone(TimeZone.getTimeZone(timezone));
+        } else {
+            ZimbraLog.mailbox.debug("timezone is null, proceeding with default timezone");
+        }
         return formatter;
     }
 
