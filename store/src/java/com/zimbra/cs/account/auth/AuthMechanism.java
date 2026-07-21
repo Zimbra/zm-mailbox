@@ -93,6 +93,10 @@ public abstract class AuthMechanism {
 
     protected AuthMech authMech;
 
+    private static String IDP_ROPC = "idp-ropc";
+
+    private static final String FALLBACK_PREFIX = "fallback:";
+
     protected AuthMechanism(AuthMech authMech) {
         this.authMech = authMech;
     }
@@ -126,32 +130,84 @@ public abstract class AuthMechanism {
                 }
             }
         }
-
-
+        // parse fallback prefix from zimbraAuthMech
+        // format: "fallback:<zimbra|ad|kerberos5> custom:idp-ropc arg1 arg2"
+        String fallbackMech = null;
+        if (authMechStr.startsWith(FALLBACK_PREFIX)) {
+            int spaceIdx = authMechStr.indexOf(' ');
+            if (spaceIdx > 0) {
+                fallbackMech = authMechStr.substring(FALLBACK_PREFIX.length(), spaceIdx);
+                authMechStr = authMechStr.substring(spaceIdx + 1).trim();
+            } else {
+                ZimbraLog.account.debug("Invalid auth mech config: %s — no auth mechanism after fallback prefix",
+                        authMechStr);
+                return new ZimbraAuth(AuthMech.zimbra);
+            }
+        }
         if (authMechStr.startsWith(AuthMech.custom.name() + ":")) {
-            return new CustomAuth(AuthMech.custom, authMechStr);
-        } else {
-            try {
-                AuthMech authMech = AuthMech.fromString(authMechStr);
-
-                switch (authMech) {
-                    case zimbra:
-                        return new ZimbraAuth(authMech);
-                    case ldap:
-                    case ad:
-                        return new LdapAuth(authMech);
-                    case kerberos5:
-                        return new Kerberos5Auth(authMech);
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.account.warn("invalid auth mech", e);
+            // if IdP ROPC is used with an unsupported protocol, switch to the fallback mechanism
+            boolean useFallback = false;
+            if (authMechStr.contains(IDP_ROPC)) {
+                ZimbraCustomAuth handler = ZimbraCustomAuth.getHandler(IDP_ROPC);
+                useFallback = (handler == null || !handler.supportsContext(context));
             }
 
-            ZimbraLog.account.warn("unknown value for " + Provisioning.A_zimbraAuthMech+": "
-                    + authMechStr+", falling back to default mech");
-            return new ZimbraAuth(AuthMech.zimbra);
+            if (!useFallback) {
+                // supported ROPC (EAS) or any other custom mechanism
+                return new CustomAuth(AuthMech.custom, authMechStr);
+            }
+            if (fallbackMech != null) {
+                AuthMech fallback = resolveFallbackMech(fallbackMech);
+                ZimbraLog.account.debug("Protocol not supported by IdP ROPC, using fallback: %s", fallback);
+                authMechStr = fallback.name();
+            } else {
+                ZimbraLog.account.debug("Protocol not supported by IdP ROPC and no fallback configured for %s",
+                        acct.getName());
+                return new ZimbraAuth(AuthMech.zimbra);
+            }
         }
+        // standard mechanisms (zimbra, ldap, ad, kerberos5)
+        try {
+            AuthMech authMech = AuthMech.fromString(authMechStr);
+            switch (authMech) {
+                case zimbra:
+                    return new ZimbraAuth(authMech);
+                case ldap:
+                case ad:
+                    return new LdapAuth(authMech);
+                case kerberos5:
+                    return new Kerberos5Auth(authMech);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("invalid auth mech: " + authMechStr, e);
+        }
+        ZimbraLog.account.warn(
+                "unknown value for " + Provisioning.A_zimbraAuthMech + ": " + authMechStr
+                        + ", falling back to default mech");
+        return new ZimbraAuth(AuthMech.zimbra);
+    }
 
+    /**
+     * Resolves and validates the fallback authentication mechanism from a string.
+     *
+     * @param mechName
+     *         The name of the fallback mechanism (e.g., "zimbra", "ad", "ldap", "kerberos5").
+     * @return The resolved {@link AuthMech} enum value.
+     * @throws ServiceException
+     *         If the mechanism name is invalid or is a "custom" type.
+     */
+    private static AuthMech resolveFallbackMech(String mechName) throws ServiceException {
+        if (mechName.startsWith("custom")) {
+            ZimbraLog.account.error(
+                    "Fallback to custom auth not supported: %s. Supported values: zimbra, ad, kerberos5", mechName);
+            throw AuthFailedServiceException.AUTH_FAILED("", "", "Unsupported fallback auth mechanism: " + mechName);
+        }
+        try {
+            return AuthMech.fromString(mechName);
+        } catch (ServiceException e) {
+            ZimbraLog.account.error("Unknown fallback auth mech: %s", mechName);
+            throw AuthFailedServiceException.AUTH_FAILED("", "", "Unknown fallback auth mechanism: " + mechName);
+        }
     }
 
     public static void doZimbraAuth(LdapProv prov, Domain domain, Account acct, String password,
@@ -400,13 +456,18 @@ public abstract class AuthMechanism {
             }
 
             if (ZimbraLog.account.isDebugEnabled()) {
-                StringBuffer sb = null;
-                if (mArgs != null) {
-                    sb = new StringBuffer();
-                    for (String s : mArgs)
-                        sb.append("[" + s + "] ");
+                if (IDP_ROPC.equals(mHandlerName)) {
+                    ZimbraLog.account.debug("CustomAuth: handlerName=" + mHandlerName);
+                } else {
+                    StringBuffer sb = null;
+                    if (mArgs != null) {
+                        sb = new StringBuffer();
+                        for (String s : mArgs) {
+                            sb.append("[" + s + "] ");
+                        }
+                    }
+                    ZimbraLog.account.debug("CustomAuth: handlerName=" + mHandlerName + ", args=" + sb);
                 }
-                ZimbraLog.account.debug("CustomAuth: handlerName=" + mHandlerName + ", args=" + sb);
             }
         }
 
@@ -465,4 +526,5 @@ public abstract class AuthMechanism {
                 "custom:sample http://blah.com:123    green \" ocean blue   \"  \"\" yelllow \"\"");
 
     }
+
 }

@@ -88,6 +88,16 @@ public class AuthContext {
      */
     public static final String AC_DEVICE_ID = "did";
 
+    /*
+     * Sub protocol.
+     */
+    public static final String AC_SUB_PROTOCOL = "subproto";
+
+    /*
+     * Request Type eg : OPTIONS, Sync.
+     */
+    public static final String AC_AUTH_REQUEST = "requestType";
+
     public enum Protocol {
         client_certificate,
         http_basic,
@@ -101,5 +111,10 @@ public class AuthContext {
 
         //for internal use only
         test;
+    };
+
+    public enum SubProtocol {
+        eas,
+        ews
     };
 }

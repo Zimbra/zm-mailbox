@@ -881,7 +881,9 @@ public class ProvUtil implements HttpDebugListener {
         GET_HAB_GROUP_MEMBERS("getHABGroupMembers", "ghgm", "{name@domain|id}",
                 Category.HAB, 1, 1),
         SEND_MDM_EMAIL("sendMdmEmail", "smdme", "{type | quarantined | blocked} {time interval in minutes}",
-                Category.MOBILE, 2, 2);
+                Category.MOBILE, 2, 2),
+        CLEAR_MFA_REJECTION_CACHE("clearMFARejectionCache", "cmfarc",
+                "{name@domain|id} | --all", Category.MISC, 1, 1, Via.soap);
 
         private String mName;
         private String mAlias;
@@ -1089,580 +1091,604 @@ public class ProvUtil implements HttpDebugListener {
             loadLdapSchemaExtensionAttrs();
         }
         switch (command) {
-        case ADD_ACCOUNT_ALIAS:
-            prov.addAlias(lookupAccount(args[1]), args[2]);
-            break;
-        case ADD_ACCOUNT_LOGGER:
-            alo = parseAccountLoggerOptions(args);
-            if (!command.checkArgsLength(alo.args)) {
-                usage();
-                return true;
-            }
-            doAddAccountLogger(alo);
-            break;
-        case AUTO_COMPLETE_GAL:
-            doAutoCompleteGal(args);
-            break;
-        case AUTO_PROV_CONTROL:
-            prov.autoProvControl(args[1]);
-            break;
-        case CHANGE_PRIMARY_EMAIL:
-            doChangePrimaryEmail(args);
-            break;
-        case COPY_COS:
-            console.println(prov.copyCos(lookupCos(args[1]).getId(), args[2]).getId());
-            break;
-        case COUNT_ACCOUNT:
-            doCountAccount(args);
-            break;
-        case COUNT_OBJECTS:
-            doCountObjects(args);
-            break;
-        case CREATE_ACCOUNT:
-            console.println(prov.createAccount(args[1], args[2].equals("") ? null : args[2],
-                    getMapAndCheck(args, 3, true)).getId());
-            break;
-        case CREATE_ALIAS_DOMAIN:
-            console.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3, true)).getId());
-            break;
-        case CREATE_ALWAYSONCLUSTER:
-            console.println(prov.createAlwaysOnCluster(args[1], getMapAndCheck(args, 2, true)).getId());
-            break;
-        case CREATE_COS:
-            console.println(prov.createCos(args[1], getMapAndCheck(args, 2, true)).getId());
-            break;
-        case CREATE_DOMAIN:
-            console.println(prov.createDomain(args[1], getMapAndCheck(args, 2, true)).getId());
-            break;
-        case CREATE_IDENTITY:
-            prov.createIdentity(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3, true));
-            break;
-        case CREATE_SIGNATURE:
-            console.println(prov.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3, true))
-                    .getId());
-            break;
-        case CREATE_DATA_SOURCE:
-            console.println(prov.createDataSource(lookupAccount(args[1]), DataSourceType.fromString(args[2]), args[3],
-                    getMapAndCheck(args, 4, true)).getId());
-            break;
-        case CREATE_SERVER:
-            console.println(prov.createServer(args[1], getMapAndCheck(args, 2, true)).getId());
-            break;
-        case CREATE_UC_SERVICE:
-            console.println(prov.createUCService(args[1], getMapAndCheck(args, 2, true)).getId());
-            break;
-        case CREATE_XMPP_COMPONENT:
-            doCreateXMPPComponent(args);
-            break;
-        case DESCRIBE:
-            doDescribe(args);
-            break;
-        case EXIT:
-            System.exit(errorOccursDuringInteraction ? 2 : 0);
-            break;
-        case FLUSH_CACHE:
-            doFlushCache(args);
-            break;
-        case GENERATE_DOMAIN_PRE_AUTH_KEY:
-            doGenerateDomainPreAuthKey(args);
-            break;
-        case GENERATE_DOMAIN_PRE_AUTH:
-            doGenerateDomainPreAuth(args);
-            break;
-        case GET_ACCOUNT:
-            doGetAccount(args);
-            break;
-        case GET_ACCOUNT_MEMBERSHIP:
-            doGetAccountMembership(args);
-            break;
-        case GET_ALWAYSONCLUSTER:
-            doGetAlwaysOnCluster(args);
-            break;
-        case GET_IDENTITIES:
-            doGetAccountIdentities(args);
-            break;
-        case GET_SIGNATURES:
-            doGetAccountSignatures(args);
-            break;
-        case GET_DATA_SOURCES:
-            doGetAccountDataSources(args);
-            break;
-        case GET_ACCOUNT_LOGGERS:
-            alo = parseAccountLoggerOptions(args);
-            if (!command.checkArgsLength(alo.args)) {
-                usage();
-                return true;
-            }
-            doGetAccountLoggers(alo);
-            break;
-        case GET_ALL_ACCOUNT_LOGGERS:
-            alo = parseAccountLoggerOptions(args);
-            if (!command.checkArgsLength(alo.args)) {
-                usage();
-                return true;
-            }
-            doGetAllAccountLoggers(alo);
-            break;
-        case GET_ALL_ACCOUNTS:
-            doGetAllAccounts(args);
-            break;
-        case GET_ALL_ACTIVE_SERVERS:
-            doGetAllActiveServers(args);
-            break;
-        case GET_ALL_ADMIN_ACCOUNTS:
-            doGetAllAdminAccounts(args);
-            break;
-        case GET_ALL_ALWAYSONCLUSTERS:
-            doGetAllAlwaysOnClusters(args);
-            break;
-        case GET_ALL_CONFIG:
-            dumpAttrs(prov.getConfig().getAttrs(), getArgNameSet(args, 1));
-            break;
-        case GET_ALL_COS:
-            doGetAllCos(args);
-            break;
-        case GET_ALL_DOMAINS:
-            doGetAllDomains(args);
-            break;
-        case GET_ALL_FREEBUSY_PROVIDERS:
-            doGetAllFreeBusyProviders();
-            break;
-        case GET_ALL_RIGHTS:
-            doGetAllRights(args);
-            break;
-        case GET_ALL_SERVERS:
-            doGetAllServers(args);
-            break;
-        case GET_ALL_UC_SERVICES:
-            doGetAllUCServices(args);
-            break;
-        case GET_CONFIG:
-            doGetConfig(args);
-            break;
-        case GET_COS:
-            dumpCos(lookupCos(args[1]), getArgNameSet(args, 2));
-            break;
-        case GET_DISTRIBUTION_LIST_MEMBERSHIP:
-            doGetDistributionListMembership(lookupGroup(args[1]));
-            break;
-        case GET_DOMAIN:
-            doGetDomain(args);
-            break;
-        case GET_DOMAIN_INFO:
-            doGetDomainInfo(args);
-            break;
-        case GET_CONFIG_SMIME_CONFIG:
-            doGetConfigSMIMEConfig(args);
-            break;
-        case GET_DOMAIN_SMIME_CONFIG:
-            doGetDomainSMIMEConfig(args);
-            break;
-        case GET_FREEBUSY_QUEUE_INFO:
-            doGetFreeBusyQueueInfo(args);
-            break;
-        case GET_RIGHT:
-            doGetRight(args);
-            break;
-        case GET_RIGHTS_DOC:
-            doGetRightsDoc(args);
-            break;
-        case GET_SERVER:
-            doGetServer(args);
-            break;
-        case GET_UC_SERVICES:
-            dumpUCService(lookupUCService(args[1]), getArgNameSet(args, 2));
-            break;
-        case GET_XMPP_COMPONENT:
-            doGetXMPPComponent(args);
-            break;
-        case CHECK_RIGHT:
-            doCheckRight(args);
-            break;
-        case GET_ALL_EFFECTIVE_RIGHTS:
-            doGetAllEffectiveRights(args);
-            break;
-        case GET_EFFECTIVE_RIGHTS:
-            doGetEffectiveRights(args);
-            break;
-        case GET_CREATE_OBJECT_ATTRS:
-            doGetCreateObjectAttrs(args);
-            break;
-        case GET_GRANTS:
-            doGetGrants(args);
-            break;
-        case GRANT_RIGHT:
-            doGrantRight(args);
-            break;
-        case REVOKE_RIGHT:
-            doRevokeRight(args);
-            break;
-        case HELP:
-            doHelp(args);
-            break;
-        case MODIFY_ACCOUNT:
-            prov.modifyAttrs(lookupAccount(args[1]), getMapAndCheck(args, 2, false), true);
-            break;
-        case MODIFY_ALWAYSONCLUSTER:
-            prov.modifyAttrs(lookupAlwaysOnCluster(args[1]), getMapAndCheck(args, 2, false), true);
-            break;
-        case MODIFY_DATA_SOURCE:
-            account = lookupAccount(args[1]);
-            prov.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMapAndCheck(args, 3, false));
-            break;
-        case MODIFY_IDENTITY:
-            account = lookupAccount(args[1]);
-            prov.modifyIdentity(account, args[2], getMapAndCheck(args, 3, false));
-            break;
-        case MODIFY_SIGNATURE:
-            account = lookupAccount(args[1]);
-            prov.modifySignature(account, lookupSignatureId(account, args[2]), getMapAndCheck(args, 3, false));
-            break;
-        case MODIFY_COS:
-            prov.modifyAttrs(lookupCos(args[1]), getMapAndCheck(args, 2, false), true);
-            break;
-        case MODIFY_CONFIG:
-            prov.modifyAttrs(prov.getConfig(), getMapAndCheck(args, 1, false), true);
-            break;
-        case MODIFY_DOMAIN:
-            prov.modifyAttrs(lookupDomain(args[1]), getMapAndCheck(args, 2, false), true);
-            break;
-        case MODIFY_CONFIG_SMIME_CONFIG:
-            doModifyConfigSMIMEConfig(args);
-            break;
-        case MODIFY_DOMAIN_SMIME_CONFIG:
-            doModifyDomainSMIMEConfig(args);
-            break;
-        case MODIFY_SERVER:
-            prov.modifyAttrs(lookupServer(args[1]), getMapAndCheck(args, 2, false), true);
-            break;
-        case MODIFY_UC_SERVICE:
-            prov.modifyAttrs(lookupUCService(args[1]), getMapAndCheck(args, 2, false), true);
-            break;
-        case DELETE_ACCOUNT:
-            doDeleteAccount(args);
-            break;
-        case DELETE_ALWAYSONCLUSTER:
-            prov.deleteAlwaysOnCluster(lookupAlwaysOnCluster(args[1]).getId());
-            break;
-        case DELETE_COS:
-            prov.deleteCos(lookupCos(args[1]).getId());
-            break;
-        case DELETE_DOMAIN:
-            prov.deleteDomain(lookupDomain(args[1]).getId());
-            break;
-        case DELETE_IDENTITY:
-            prov.deleteIdentity(lookupAccount(args[1]), args[2]);
-            break;
-        case DELETE_SIGNATURE:
-            account = lookupAccount(args[1]);
-            prov.deleteSignature(account, lookupSignatureId(account, args[2]));
-            break;
-        case DELETE_DATA_SOURCE:
-            account = lookupAccount(args[1]);
-            prov.deleteDataSource(account, lookupDataSourceId(account, args[2]));
-            break;
-        case DELETE_SERVER:
-            prov.deleteServer(lookupServer(args[1]).getId());
-            break;
-        case DELETE_UC_SERVICE:
-            prov.deleteUCService(lookupUCService(args[1]).getId());
-            break;
-        case DELETE_XMPP_COMPONENT:
-            prov.deleteXMPPComponent(lookupXMPPComponent(args[1]));
-            break;
-        case PUSH_FREEBUSY:
-            doPushFreeBusy(args);
-            break;
-        case PUSH_FREEBUSY_DOMAIN:
-            doPushFreeBusyForDomain(args);
-            break;
-        case PURGE_FREEBUSY_QUEUE:
-            doPurgeFreeBusyQueue(args);
-            break;
-        case PURGE_ACCOUNT_CALENDAR_CACHE:
-            doPurgeAccountCalendarCache(args);
-            break;
-        case REMOVE_ACCOUNT_ALIAS:
-            Account acct = lookupAccount(args[1], false);
-            prov.removeAlias(acct, args[2]);
-            // even if acct is null, we still invoke removeAlias and throw an exception afterwards.
-            // this is so dangling aliases can be cleaned up as much as possible
-            if (acct == null) {
-                throw AccountServiceException.NO_SUCH_ACCOUNT(args[1]);
-            }
-            break;
-        case REMOVE_ACCOUNT_LOGGER:
-            alo = parseAccountLoggerOptions(args);
-            if (!command.checkArgsLength(alo.args)) {
-                usage();
-                return true;
-            }
-            doRemoveAccountLogger(alo);
-            break;
-        case REMOVE_CONFIG_SMIME_CONFIG:
-            doRemoveConfigSMIMEConfig(args);
-            break;
-        case REMOVE_DOMAIN_SMIME_CONFIG:
-            doRemoveDomainSMIMEConfig(args);
-            break;
-        case RENAME_ACCOUNT:
-            doRenameAccount(args);
-            break;
-        case RENAME_COS:
-            prov.renameCos(lookupCos(args[1]).getId(), args[2]);
-            break;
-        case RENAME_DOMAIN:
-            doRenameDomain(args);
-            break;
-        case RENAME_UCSERVICE:
-            prov.renameUCService(lookupUCService(args[1]).getId(), args[2]);
-            break;
-        case SET_ACCOUNT_COS:
-            prov.setCOS(lookupAccount(args[1]), lookupCos(args[2]));
-            break;
-        case SET_SERVER_OFFLINE:
-            doSetServerOffline(args);
-            break;
-        case SET_LOCAL_SERVER_ONLINE:
-            doSetLocalServerOnline();
-            break;
-        case SEARCH_ACCOUNTS:
-            doSearchAccounts(args);
-            break;
-        case SEARCH_GAL:
-            doSearchGal(args);
-            break;
-        case SYNC_GAL:
-            doSyncGal(args);
-            break;
-        case SET_PASSWORD:
-            SetPasswordResult result = prov.setPassword(lookupAccount(args[1]), args[2]);
-            if (result.hasMessage()) {
-                console.println(result.getMessage());
-            }
-            break;
-        case CHECK_PASSWORD_STRENGTH:
-            prov.checkPasswordStrength(lookupAccount(args[1]), args[2]);
-            console.println("Password passed strength check.");
-            break;
-        case CREATE_DISTRIBUTION_LIST:
-            console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), false).getId());
-            break;
-        case CREATE_DYNAMIC_DISTRIBUTION_LIST:
-            console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), true).getId());
-            break;
-        case CREATE_DISTRIBUTION_LISTS_BULK:
-            doCreateDistributionListsBulk(args);
-            break;
-        case GET_ALL_DISTRIBUTION_LISTS:
-            doGetAllDistributionLists(args);
-            break;
-        case GET_DISTRIBUTION_LIST:
-            dumpGroup(lookupGroup(args[1]), getArgNameSet(args, 2));
-            break;
-        case GET_ALL_XMPP_COMPONENTS:
-            doGetAllXMPPComponents();
-            break;
-        case MODIFY_DISTRIBUTION_LIST:
-            prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2, false), true);
-            break;
-        case DELETE_DISTRIBUTION_LIST:
-            doDeleteDistributionList(args);
-            break;
-        case ADD_DISTRIBUTION_LIST_MEMBER:
-            doAddMember(args);
-            break;
-        case REMOVE_DISTRIBUTION_LIST_MEMBER:
-            doRemoveMember(args);
-            break;
-        case CREATE_BULK_ACCOUNTS:
-            doCreateAccountsBulk(args);
-            break;
-        case ADD_DISTRIBUTION_LIST_ALIAS:
-            prov.addGroupAlias(lookupGroup(args[1]), args[2]);
-            break;
-        case REMOVE_DISTRIBUTION_LIST_ALIAS:
-            Group dl = lookupGroup(args[1], false);
-            // Even if dl is null, we still invoke removeAlias.
-            // This is so dangling aliases can be cleaned up as much as possible.
-            // If dl is null, the NO_SUCH_DISTRIBUTION_LIST thrown by SOAP will contain
-            // null as the dl identity, because SoapProvisioning sends no id to the server.
-            // In this case, we catch the NO_SUCH_DISTRIBUTION_LIST and throw another one
-            // with the named/id entered on the comand line.
-            try {
-                prov.removeGroupAlias(dl, args[2]);
-            } catch (ServiceException e) {
-                if (!(dl == null && AccountServiceException.NO_SUCH_DISTRIBUTION_LIST.equals(e.getCode()))) {
-                    throw e;
+            case ADD_ACCOUNT_ALIAS:
+                prov.addAlias(lookupAccount(args[1]), args[2]);
+                break;
+            case ADD_ACCOUNT_LOGGER:
+                alo = parseAccountLoggerOptions(args);
+                if (!command.checkArgsLength(alo.args)) {
+                    usage();
+                    return true;
                 }
-                // else eat the exception, we will throw below
-            }
-            if (dl == null) {
-                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(args[1]);
-            }
-            break;
-        case RENAME_DISTRIBUTION_LIST:
-            prov.renameGroup(lookupGroup(args[1]).getId(), args[2]);
-            break;
-        case CREATE_CALENDAR_RESOURCE:
-            console.println(prov.createCalendarResource(args[1], args[2].isEmpty() ? null : args[2],
-                    getMapAndCheck(args, 3, true)).getId());
-            break;
-        case DELETE_CALENDAR_RESOURCE:
-            prov.deleteCalendarResource(lookupCalendarResource(args[1]).getId());
-            break;
-        case MODIFY_CALENDAR_RESOURCE:
-            prov.modifyAttrs(lookupCalendarResource(args[1]), getMapAndCheck(args, 2, false), true);
-            break;
-        case RENAME_CALENDAR_RESOURCE:
-            prov.renameCalendarResource(lookupCalendarResource(args[1]).getId(), args[2]);
-            break;
-        case GET_CALENDAR_RESOURCE:
-            dumpCalendarResource(lookupCalendarResource(args[1]), true, getArgNameSet(args, 2));
-            break;
-        case GET_ALL_CALENDAR_RESOURCES:
-            doGetAllCalendarResources(args);
-            break;
-        case SEARCH_CALENDAR_RESOURCES:
-            doSearchCalendarResources(args);
-            break;
-        case GET_SHARE_INFO:
-            doGetShareInfo(args);
-            break;
-        case GET_SPNEGO_DOMAIN:
-            doGetSpnegoDomain();
-            break;
-        case GET_QUOTA_USAGE:
-            doGetQuotaUsage(args);
-            break;
-        case GET_MAILBOX_INFO:
-            doGetMailboxInfo(args);
-            break;
-        case REINDEX_MAILBOX:
-            doReIndexMailbox(args);
-            break;
-        case MANAGE_MAILBOX_INDEX:
-            doManageMailboxIndex(args);
-            break;
-        case COMPACT_INBOX_MAILBOX:
-            doCompactIndexMailbox(args);
-            break;
-        case VERIFY_INDEX:
-            doVerifyIndex(args);
-            break;
-        case GET_INDEX_STATS:
-            doGetIndexStats(args);
-            break;
-        case RECALCULATE_MAILBOX_COUNTS:
-            doRecalculateMailboxCounts(args);
-            break;
-        case SELECT_MAILBOX:
-            if (!(prov instanceof SoapProvisioning)) {
-                throwSoapOnly();
-            }
-            ZMailboxUtil util = new ZMailboxUtil();
-            util.setVerbose(verboseMode);
-            util.setDebug(debugLevel != SoapDebugLevel.none);
-            boolean smInteractive = interactiveMode && args.length < 3;
-            util.setInteractive(smInteractive);
-            util.selectMailbox(args[1], (SoapProvisioning) prov);
-            if (smInteractive) {
-                util.interactive(cliReader);
-            } else if (args.length > 2) {
-                String newArgs[] = new String[args.length - 2];
-                System.arraycopy(args, 2, newArgs, 0, newArgs.length);
-                util.execute(newArgs);
-            } else {
-                throw ZClientException.CLIENT_ERROR("command only valid in interactive mode or with arguments", null);
-            }
-            break;
-        case GET_ALL_MTA_AUTH_URLS:
-            doGetAllMtaAuthURLs();
-            break;
-        case GET_ALL_REVERSE_PROXY_URLS:
-            doGetAllReverseProxyURLs();
-            break;
-        case GET_ALL_REVERSE_PROXY_BACKENDS:
-            doGetAllReverseProxyBackends();
-            break;
-        case GET_ALL_REVERSE_PROXY_DOMAINS:
-            doGetAllReverseProxyDomains();
-            break;
-        case GET_ALL_MEMCACHED_SERVERS:
-            doGetAllMemcachedServers();
-            break;
-        case RELOAD_MEMCACHED_CLIENT_CONFIG:
-            doReloadMemcachedClientConfig(args);
-            break;
-        case GET_MEMCACHED_CLIENT_CONFIG:
-            doGetMemcachedClientConfig(args);
-            break;
-        case GET_AUTH_TOKEN_INFO:
-            doGetAuthTokenInfo(args);
-            break;
-        case UPDATE_PRESENCE_SESSION_ID:
-            doUpdatePresenceSessionId(args);
-            break;
-        case SOAP:
-            // HACK FOR NOW
-            SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI("https://localhost:" + serverPort + AdminConstants.ADMIN_SERVICE_URI);
-            sp.soapZimbraAdminAuthenticate();
-            prov = sp;
-            break;
-        case LDAP:
-            // HACK FOR NOW
-            prov = Provisioning.getInstance();
-            break;
-        case RESET_ALL_LOGGERS:
-            doResetAllLoggers(args);
-            break;
-        case UNLOCK_MAILBOX:
-            doUnlockMailbox(args);
-            break;
-        case CREATE_HAB_OU:
-            doCreateHabOrgUnit(args);
-            break;
-        case LIST_HAB_OU:
-            doListHabOrgUnit(args);
-            break;
-        case RENAME_HAB_OU:
-            doRenameHabOrgUnit(args);
-            break;
-        case DELETE_HAB_OU:
-            doDeleteHabOrgUnit(args);
-            break;
-        case CREATE_HAB_GROUP:
-           doCreateHabGroup(args);
-           break;
-        case GET_HAB:
-            doGetHab(args);
-            break;
-        case MOVE_HAB_GROUP:
-            modifyHabGroup(args);
-            break;
-        case MODIFY_HAB_GROUP_SENIORITY:
-            modifyHabGroupSeniority(args);
-            break;
-        case ADD_HAB_GROUP_MEMBER:
-            doAddMember(args);
-            break;
-        case DELETE_HAB_GROUP:
-            doDeleteDistributionList(args);
-            break;
-        case REMOVE_HAB_GROUP_MEMBER:
-            doRemoveMember(args);
-            break;
-        case GET_HAB_GROUP_MEMBERS:
-            doGetHABGroupMembers(args);
-            break;
-        case SEND_MDM_EMAIL:
-            doSendMdmEmail(args);
-            break;
-        default:
-            return false;
+                doAddAccountLogger(alo);
+                break;
+            case AUTO_COMPLETE_GAL:
+                doAutoCompleteGal(args);
+                break;
+            case AUTO_PROV_CONTROL:
+                prov.autoProvControl(args[1]);
+                break;
+            case CHANGE_PRIMARY_EMAIL:
+                doChangePrimaryEmail(args);
+                break;
+            case CLEAR_MFA_REJECTION_CACHE:
+                doClearMFARejectionCache(args);
+                break;
+            case COPY_COS:
+                console.println(prov.copyCos(lookupCos(args[1]).getId(), args[2]).getId());
+                break;
+            case COUNT_ACCOUNT:
+                doCountAccount(args);
+                break;
+            case COUNT_OBJECTS:
+                doCountObjects(args);
+                break;
+            case CREATE_ACCOUNT:
+                console.println(
+                        prov.createAccount(args[1], args[2].equals("") ? null : args[2],
+                                getMapAndCheck(args, 3, true)).getId());
+                break;
+            case CREATE_ALIAS_DOMAIN:
+                console.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3,
+                        true)).getId());
+                break;
+            case CREATE_ALWAYSONCLUSTER:
+                console.println(prov.createAlwaysOnCluster(args[1], getMapAndCheck(args, 2, true)).getId());
+                break;
+            case CREATE_COS:
+                console.println(prov.createCos(args[1], getMapAndCheck(args, 2, true)).getId());
+                break;
+            case CREATE_DOMAIN:
+                console.println(prov.createDomain(args[1], getMapAndCheck(args, 2, true)).getId());
+                break;
+            case CREATE_IDENTITY:
+                prov.createIdentity(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3, true));
+                break;
+            case CREATE_SIGNATURE:
+                console.println(
+                        prov.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args,
+                                3, true)).getId());
+                break;
+            case CREATE_DATA_SOURCE:
+                console.println(
+                        prov.createDataSource(lookupAccount(args[1]), DataSourceType.fromString(args[2]), args[3],
+                                getMapAndCheck(args, 4, true)).getId());
+                break;
+            case CREATE_SERVER:
+                console.println(prov.createServer(args[1], getMapAndCheck(args, 2, true)).getId());
+                break;
+            case CREATE_UC_SERVICE:
+                console.println(prov.createUCService(args[1], getMapAndCheck(args, 2, true)).getId());
+                break;
+            case CREATE_XMPP_COMPONENT:
+                doCreateXMPPComponent(args);
+                break;
+            case DESCRIBE:
+                doDescribe(args);
+                break;
+            case EXIT:
+                System.exit(errorOccursDuringInteraction ? 2 : 0);
+                break;
+            case FLUSH_CACHE:
+                doFlushCache(args);
+                break;
+            case GENERATE_DOMAIN_PRE_AUTH_KEY:
+                doGenerateDomainPreAuthKey(args);
+                break;
+            case GENERATE_DOMAIN_PRE_AUTH:
+                doGenerateDomainPreAuth(args);
+                break;
+            case GET_ACCOUNT:
+                doGetAccount(args);
+                break;
+            case GET_ACCOUNT_MEMBERSHIP:
+                doGetAccountMembership(args);
+                break;
+            case GET_ALWAYSONCLUSTER:
+                doGetAlwaysOnCluster(args);
+                break;
+            case GET_IDENTITIES:
+                doGetAccountIdentities(args);
+                break;
+            case GET_SIGNATURES:
+                doGetAccountSignatures(args);
+                break;
+            case GET_DATA_SOURCES:
+                doGetAccountDataSources(args);
+                break;
+            case GET_ACCOUNT_LOGGERS:
+                alo = parseAccountLoggerOptions(args);
+                if (!command.checkArgsLength(alo.args)) {
+                    usage();
+                    return true;
+                }
+                doGetAccountLoggers(alo);
+                break;
+            case GET_ALL_ACCOUNT_LOGGERS:
+                alo = parseAccountLoggerOptions(args);
+                if (!command.checkArgsLength(alo.args)) {
+                    usage();
+                    return true;
+                }
+                doGetAllAccountLoggers(alo);
+                break;
+            case GET_ALL_ACCOUNTS:
+                doGetAllAccounts(args);
+                break;
+            case GET_ALL_ACTIVE_SERVERS:
+                doGetAllActiveServers(args);
+                break;
+            case GET_ALL_ADMIN_ACCOUNTS:
+                doGetAllAdminAccounts(args);
+                break;
+            case GET_ALL_ALWAYSONCLUSTERS:
+                doGetAllAlwaysOnClusters(args);
+                break;
+            case GET_ALL_CONFIG:
+                dumpAttrs(prov.getConfig().getAttrs(), getArgNameSet(args, 1));
+                break;
+            case GET_ALL_COS:
+                doGetAllCos(args);
+                break;
+            case GET_ALL_DOMAINS:
+                doGetAllDomains(args);
+                break;
+            case GET_ALL_FREEBUSY_PROVIDERS:
+                doGetAllFreeBusyProviders();
+                break;
+            case GET_ALL_RIGHTS:
+                doGetAllRights(args);
+                break;
+            case GET_ALL_SERVERS:
+                doGetAllServers(args);
+                break;
+            case GET_ALL_UC_SERVICES:
+                doGetAllUCServices(args);
+                break;
+            case GET_CONFIG:
+                doGetConfig(args);
+                break;
+            case GET_COS:
+                dumpCos(lookupCos(args[1]), getArgNameSet(args, 2));
+                break;
+            case GET_DISTRIBUTION_LIST_MEMBERSHIP:
+                doGetDistributionListMembership(lookupGroup(args[1]));
+                break;
+            case GET_DOMAIN:
+                doGetDomain(args);
+                break;
+            case GET_DOMAIN_INFO:
+                doGetDomainInfo(args);
+                break;
+            case GET_CONFIG_SMIME_CONFIG:
+                doGetConfigSMIMEConfig(args);
+                break;
+            case GET_DOMAIN_SMIME_CONFIG:
+                doGetDomainSMIMEConfig(args);
+                break;
+            case GET_FREEBUSY_QUEUE_INFO:
+                doGetFreeBusyQueueInfo(args);
+                break;
+            case GET_RIGHT:
+                doGetRight(args);
+                break;
+            case GET_RIGHTS_DOC:
+                doGetRightsDoc(args);
+                break;
+            case GET_SERVER:
+                doGetServer(args);
+                break;
+            case GET_UC_SERVICES:
+                dumpUCService(lookupUCService(args[1]), getArgNameSet(args, 2));
+                break;
+            case GET_XMPP_COMPONENT:
+                doGetXMPPComponent(args);
+                break;
+            case CHECK_RIGHT:
+                doCheckRight(args);
+                break;
+            case GET_ALL_EFFECTIVE_RIGHTS:
+                doGetAllEffectiveRights(args);
+                break;
+            case GET_EFFECTIVE_RIGHTS:
+                doGetEffectiveRights(args);
+                break;
+            case GET_CREATE_OBJECT_ATTRS:
+                doGetCreateObjectAttrs(args);
+                break;
+            case GET_GRANTS:
+                doGetGrants(args);
+                break;
+            case GRANT_RIGHT:
+                doGrantRight(args);
+                break;
+            case REVOKE_RIGHT:
+                doRevokeRight(args);
+                break;
+            case HELP:
+                doHelp(args);
+                break;
+            case MODIFY_ACCOUNT:
+                prov.modifyAttrs(lookupAccount(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
+            case MODIFY_ALWAYSONCLUSTER:
+                prov.modifyAttrs(lookupAlwaysOnCluster(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
+            case MODIFY_DATA_SOURCE:
+                account = lookupAccount(args[1]);
+                prov.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMapAndCheck(args, 3, false));
+                break;
+            case MODIFY_IDENTITY:
+                account = lookupAccount(args[1]);
+                prov.modifyIdentity(account, args[2], getMapAndCheck(args, 3, false));
+                break;
+            case MODIFY_SIGNATURE:
+                account = lookupAccount(args[1]);
+                prov.modifySignature(account, lookupSignatureId(account, args[2]), getMapAndCheck(args, 3, false));
+                break;
+            case MODIFY_COS:
+                prov.modifyAttrs(lookupCos(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
+            case MODIFY_CONFIG:
+                prov.modifyAttrs(prov.getConfig(), getMapAndCheck(args, 1, false), true);
+                break;
+            case MODIFY_DOMAIN:
+                prov.modifyAttrs(lookupDomain(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
+            case MODIFY_CONFIG_SMIME_CONFIG:
+                doModifyConfigSMIMEConfig(args);
+                break;
+            case MODIFY_DOMAIN_SMIME_CONFIG:
+                doModifyDomainSMIMEConfig(args);
+                break;
+            case MODIFY_SERVER:
+                prov.modifyAttrs(lookupServer(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
+            case MODIFY_UC_SERVICE:
+                prov.modifyAttrs(lookupUCService(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
+            case DELETE_ACCOUNT:
+                doDeleteAccount(args);
+                break;
+            case DELETE_ALWAYSONCLUSTER:
+                prov.deleteAlwaysOnCluster(lookupAlwaysOnCluster(args[1]).getId());
+                break;
+            case DELETE_COS:
+                prov.deleteCos(lookupCos(args[1]).getId());
+                break;
+            case DELETE_DOMAIN:
+                prov.deleteDomain(lookupDomain(args[1]).getId());
+                break;
+            case DELETE_IDENTITY:
+                prov.deleteIdentity(lookupAccount(args[1]), args[2]);
+                break;
+            case DELETE_SIGNATURE:
+                account = lookupAccount(args[1]);
+                prov.deleteSignature(account, lookupSignatureId(account, args[2]));
+                break;
+            case DELETE_DATA_SOURCE:
+                account = lookupAccount(args[1]);
+                prov.deleteDataSource(account, lookupDataSourceId(account, args[2]));
+                break;
+            case DELETE_SERVER:
+                prov.deleteServer(lookupServer(args[1]).getId());
+                break;
+            case DELETE_UC_SERVICE:
+                prov.deleteUCService(lookupUCService(args[1]).getId());
+                break;
+            case DELETE_XMPP_COMPONENT:
+                prov.deleteXMPPComponent(lookupXMPPComponent(args[1]));
+                break;
+            case PUSH_FREEBUSY:
+                doPushFreeBusy(args);
+                break;
+            case PUSH_FREEBUSY_DOMAIN:
+                doPushFreeBusyForDomain(args);
+                break;
+            case PURGE_FREEBUSY_QUEUE:
+                doPurgeFreeBusyQueue(args);
+                break;
+            case PURGE_ACCOUNT_CALENDAR_CACHE:
+                doPurgeAccountCalendarCache(args);
+                break;
+            case REMOVE_ACCOUNT_ALIAS:
+                Account acct = lookupAccount(args[1], false);
+                prov.removeAlias(acct, args[2]);
+                // even if acct is null, we still invoke removeAlias and throw an exception afterwards.
+                // this is so dangling aliases can be cleaned up as much as possible
+                if (acct == null) {
+                    throw AccountServiceException.NO_SUCH_ACCOUNT(args[1]);
+                }
+                break;
+            case REMOVE_ACCOUNT_LOGGER:
+                alo = parseAccountLoggerOptions(args);
+                if (!command.checkArgsLength(alo.args)) {
+                    usage();
+                    return true;
+                }
+                doRemoveAccountLogger(alo);
+                break;
+            case REMOVE_CONFIG_SMIME_CONFIG:
+                doRemoveConfigSMIMEConfig(args);
+                break;
+            case REMOVE_DOMAIN_SMIME_CONFIG:
+                doRemoveDomainSMIMEConfig(args);
+                break;
+            case RENAME_ACCOUNT:
+                doRenameAccount(args);
+                break;
+            case RENAME_COS:
+                prov.renameCos(lookupCos(args[1]).getId(), args[2]);
+                break;
+            case RENAME_DOMAIN:
+                doRenameDomain(args);
+                break;
+            case RENAME_UCSERVICE:
+                prov.renameUCService(lookupUCService(args[1]).getId(), args[2]);
+                break;
+            case SET_ACCOUNT_COS:
+                prov.setCOS(lookupAccount(args[1]), lookupCos(args[2]));
+                break;
+            case SET_SERVER_OFFLINE:
+                doSetServerOffline(args);
+                break;
+            case SET_LOCAL_SERVER_ONLINE:
+                doSetLocalServerOnline();
+                break;
+            case SEARCH_ACCOUNTS:
+                doSearchAccounts(args);
+                break;
+            case SEARCH_GAL:
+                doSearchGal(args);
+                break;
+            case SYNC_GAL:
+                doSyncGal(args);
+                break;
+            case SET_PASSWORD:
+                SetPasswordResult result = prov.setPassword(lookupAccount(args[1]), args[2]);
+                if (result.hasMessage()) {
+                    console.println(result.getMessage());
+                }
+                break;
+            case CHECK_PASSWORD_STRENGTH:
+                prov.checkPasswordStrength(lookupAccount(args[1]), args[2]);
+                console.println("Password passed strength check.");
+                break;
+            case CREATE_DISTRIBUTION_LIST:
+                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), false).getId());
+                break;
+            case CREATE_DYNAMIC_DISTRIBUTION_LIST:
+                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2, true), true).getId());
+                break;
+            case CREATE_DISTRIBUTION_LISTS_BULK:
+                doCreateDistributionListsBulk(args);
+                break;
+            case GET_ALL_DISTRIBUTION_LISTS:
+                doGetAllDistributionLists(args);
+                break;
+            case GET_DISTRIBUTION_LIST:
+                dumpGroup(lookupGroup(args[1]), getArgNameSet(args, 2));
+                break;
+            case GET_ALL_XMPP_COMPONENTS:
+                doGetAllXMPPComponents();
+                break;
+            case MODIFY_DISTRIBUTION_LIST:
+                prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
+            case DELETE_DISTRIBUTION_LIST:
+                doDeleteDistributionList(args);
+                break;
+            case ADD_DISTRIBUTION_LIST_MEMBER:
+                doAddMember(args);
+                break;
+            case REMOVE_DISTRIBUTION_LIST_MEMBER:
+                doRemoveMember(args);
+                break;
+            case CREATE_BULK_ACCOUNTS:
+                doCreateAccountsBulk(args);
+                break;
+            case ADD_DISTRIBUTION_LIST_ALIAS:
+                prov.addGroupAlias(lookupGroup(args[1]), args[2]);
+                break;
+            case REMOVE_DISTRIBUTION_LIST_ALIAS:
+                Group dl = lookupGroup(args[1], false);
+                // Even if dl is null, we still invoke removeAlias.
+                // This is so dangling aliases can be cleaned up as much as possible.
+                // If dl is null, the NO_SUCH_DISTRIBUTION_LIST thrown by SOAP will contain
+                // null as the dl identity, because SoapProvisioning sends no id to the server.
+                // In this case, we catch the NO_SUCH_DISTRIBUTION_LIST and throw another one
+                // with the named/id entered on the comand line.
+                try {
+                    prov.removeGroupAlias(dl, args[2]);
+                } catch (ServiceException e) {
+                    if (!(dl == null && AccountServiceException.NO_SUCH_DISTRIBUTION_LIST.equals(e.getCode()))) {
+                        throw e;
+                    }
+                    // else eat the exception, we will throw below
+                }
+                if (dl == null) {
+                    throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(args[1]);
+                }
+                break;
+            case RENAME_DISTRIBUTION_LIST:
+                prov.renameGroup(lookupGroup(args[1]).getId(), args[2]);
+                break;
+            case CREATE_CALENDAR_RESOURCE:
+                console.println(prov.createCalendarResource(args[1], args[2].isEmpty() ? null : args[2],
+                        getMapAndCheck(args, 3, true)).getId());
+                break;
+            case DELETE_CALENDAR_RESOURCE:
+                prov.deleteCalendarResource(lookupCalendarResource(args[1]).getId());
+                break;
+            case MODIFY_CALENDAR_RESOURCE:
+                prov.modifyAttrs(lookupCalendarResource(args[1]), getMapAndCheck(args, 2, false), true);
+                break;
+            case RENAME_CALENDAR_RESOURCE:
+                prov.renameCalendarResource(lookupCalendarResource(args[1]).getId(), args[2]);
+                break;
+            case GET_CALENDAR_RESOURCE:
+                dumpCalendarResource(lookupCalendarResource(args[1]), true, getArgNameSet(args, 2));
+                break;
+            case GET_ALL_CALENDAR_RESOURCES:
+                doGetAllCalendarResources(args);
+                break;
+            case SEARCH_CALENDAR_RESOURCES:
+                doSearchCalendarResources(args);
+                break;
+            case GET_SHARE_INFO:
+                doGetShareInfo(args);
+                break;
+            case GET_SPNEGO_DOMAIN:
+                doGetSpnegoDomain();
+                break;
+            case GET_QUOTA_USAGE:
+                doGetQuotaUsage(args);
+                break;
+            case GET_MAILBOX_INFO:
+                doGetMailboxInfo(args);
+                break;
+            case REINDEX_MAILBOX:
+                doReIndexMailbox(args);
+                break;
+            case MANAGE_MAILBOX_INDEX:
+                doManageMailboxIndex(args);
+                break;
+            case COMPACT_INBOX_MAILBOX:
+                doCompactIndexMailbox(args);
+                break;
+            case VERIFY_INDEX:
+                doVerifyIndex(args);
+                break;
+            case GET_INDEX_STATS:
+                doGetIndexStats(args);
+                break;
+            case RECALCULATE_MAILBOX_COUNTS:
+                doRecalculateMailboxCounts(args);
+                break;
+            case SELECT_MAILBOX:
+                if (!(prov instanceof SoapProvisioning)) {
+                    throwSoapOnly();
+                }
+                ZMailboxUtil util = new ZMailboxUtil();
+                util.setVerbose(verboseMode);
+                util.setDebug(debugLevel != SoapDebugLevel.none);
+                boolean smInteractive = interactiveMode && args.length < 3;
+                util.setInteractive(smInteractive);
+                util.selectMailbox(args[1], (SoapProvisioning) prov);
+                if (smInteractive) {
+                    util.interactive(cliReader);
+                } else if (args.length > 2) {
+                    String newArgs[] = new String[args.length - 2];
+                    System.arraycopy(args, 2, newArgs, 0, newArgs.length);
+                    util.execute(newArgs);
+                } else {
+                    throw ZClientException.CLIENT_ERROR("command only valid in interactive mode or with arguments",
+                            null);
+                }
+                break;
+            case GET_ALL_MTA_AUTH_URLS:
+                doGetAllMtaAuthURLs();
+                break;
+            case GET_ALL_REVERSE_PROXY_URLS:
+                doGetAllReverseProxyURLs();
+                break;
+            case GET_ALL_REVERSE_PROXY_BACKENDS:
+                doGetAllReverseProxyBackends();
+                break;
+            case GET_ALL_REVERSE_PROXY_DOMAINS:
+                doGetAllReverseProxyDomains();
+                break;
+            case GET_ALL_MEMCACHED_SERVERS:
+                doGetAllMemcachedServers();
+                break;
+            case RELOAD_MEMCACHED_CLIENT_CONFIG:
+                doReloadMemcachedClientConfig(args);
+                break;
+            case GET_MEMCACHED_CLIENT_CONFIG:
+                doGetMemcachedClientConfig(args);
+                break;
+            case GET_AUTH_TOKEN_INFO:
+                doGetAuthTokenInfo(args);
+                break;
+            case UPDATE_PRESENCE_SESSION_ID:
+                doUpdatePresenceSessionId(args);
+                break;
+            case SOAP:
+                // HACK FOR NOW
+                SoapProvisioning sp = new SoapProvisioning();
+                sp.soapSetURI("https://localhost:" + serverPort + AdminConstants.ADMIN_SERVICE_URI);
+                sp.soapZimbraAdminAuthenticate();
+                prov = sp;
+                break;
+            case LDAP:
+                // HACK FOR NOW
+                prov = Provisioning.getInstance();
+                break;
+            case RESET_ALL_LOGGERS:
+                doResetAllLoggers(args);
+                break;
+            case UNLOCK_MAILBOX:
+                doUnlockMailbox(args);
+                break;
+            case CREATE_HAB_OU:
+                doCreateHabOrgUnit(args);
+                break;
+            case LIST_HAB_OU:
+                doListHabOrgUnit(args);
+                break;
+            case RENAME_HAB_OU:
+                doRenameHabOrgUnit(args);
+                break;
+            case DELETE_HAB_OU:
+                doDeleteHabOrgUnit(args);
+                break;
+            case CREATE_HAB_GROUP:
+                doCreateHabGroup(args);
+                break;
+            case GET_HAB:
+                doGetHab(args);
+                break;
+            case MOVE_HAB_GROUP:
+                modifyHabGroup(args);
+                break;
+            case MODIFY_HAB_GROUP_SENIORITY:
+                modifyHabGroupSeniority(args);
+                break;
+            case ADD_HAB_GROUP_MEMBER:
+                doAddMember(args);
+                break;
+            case DELETE_HAB_GROUP:
+                doDeleteDistributionList(args);
+                break;
+            case REMOVE_HAB_GROUP_MEMBER:
+                doRemoveMember(args);
+                break;
+            case GET_HAB_GROUP_MEMBERS:
+                doGetHABGroupMembers(args);
+                break;
+            case SEND_MDM_EMAIL:
+                doSendMdmEmail(args);
+                break;
+            default:
+                return false;
         }
         return true;
+    }
+
+    private void doClearMFARejectionCache(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        SoapProvisioning sp = (SoapProvisioning) prov;
+        String arg = args[1];
+        Element response;
+        if ("--all".equals(arg)) {
+            response = sp.clearMFARejectionCache(null, null);
+        } else {
+            response = sp.clearMFARejectionCache(arg, guessAccountBy(arg).name());
+        }
+        console.println("Status: " + response.getAttribute(AdminConstants.A_STATUS, "unknown")
+                + ", entries cleared: " + response.getAttribute(AdminConstants.A_ENTRIES_CLEARED, "0"));
     }
 
     private void doSendMdmEmail(String[] args)  throws ServiceException {

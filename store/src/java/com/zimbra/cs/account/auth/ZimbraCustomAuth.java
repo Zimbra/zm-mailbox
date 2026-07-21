@@ -17,12 +17,12 @@
 
 package com.zimbra.cs.account.auth;
 
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import com.zimbra.cs.account.Provisioning;
 
 public abstract class ZimbraCustomAuth {
@@ -98,5 +98,9 @@ public abstract class ZimbraCustomAuth {
      */
     public boolean checkPasswordAging() {
         return false;
+    }
+
+    public boolean supportsContext(Map<String, Object> context) throws ServiceException {
+        return true;
     }
 }
