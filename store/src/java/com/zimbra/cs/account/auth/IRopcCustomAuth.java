@@ -24,7 +24,7 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.account.auth.ropc.IRopcAuthEngine;
 import com.zimbra.cs.account.auth.ropc.Outcome;
-import java.util.HashMap;
+import com.zimbra.cs.account.auth.ropc.util.IRopcUtil;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +43,9 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         String user = acct.getName();
         Protocol proto = (Protocol) context.get(AuthContext.AC_PROTOCOL);
         String deviceId = (String) context.get(AuthContext.AC_DEVICE_ID);
-        Map<String, String> configs = extractConfigsFromArgs(args);
+        String userAgent = (String) context.get(AuthContext.AC_USER_AGENT);
+        String ipAddress = (String) context.get(AuthContext.AC_ORIGINATING_CLIENT_IP);
+        Map<String, String> configs = IRopcUtil.extractConfigsFromArgs(args);
 
         // protocol-aware caching — SKIP for zsync.
         boolean useCache = (proto != Protocol.zsync);
@@ -51,7 +53,7 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
             return;
         }
 
-        Outcome outcome = callAuthEngine(user, password, deviceId, proto, configs);
+        Outcome outcome = callAuthEngine(user, password, deviceId, proto, userAgent, ipAddress, configs);
 
         switch (outcome) {
             case SUCCESS:
@@ -79,44 +81,36 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
     }
 
     protected Outcome callAuthEngine(String userName, String password, String deviceId, Protocol protocol,
-                                     Map<String, String> configs) {
-        return IRopcAuthEngine.authenticate(userName, password, deviceId, protocol, configs);
+                                     String userAgent, String ip, Map<String, String> configs) {
+        return IRopcAuthEngine.authenticate(userName, password, deviceId, protocol, userAgent, ip, configs);
     }
 
     protected boolean checkInCache(String user, String password) {
         return false;
     }
 
-    protected Map<String, String> extractConfigsFromArgs(List<String> args) {
-        Map<String, String> configMap = new HashMap<>();
-
-        if (args == null || args.isEmpty()) {
-            return configMap;
-        }
-
-        for (String arg : args) {
-            if (arg == null) {
-                continue;
-            }
-            String[] parts = arg.split("=", 2);
-
-            if (parts.length == 2) {
-                String key = parts[0].trim();
-                String value = parts[1].trim();
-                if (key.isEmpty()) {
-                    ZimbraLog.account.debug("Skipping configuration arguments with missing keys");
-                    continue;
-                }
-                configMap.put(key, value);
-            } else {
-                ZimbraLog.account.debug("Invalid Configuration arguments format. Expected 'key=value'");
-            }
-        }
-        return configMap;
-    }
-
     @Override
     public boolean checkPasswordAging() {
         return false;
+    }
+
+    public static boolean isSupported(Map<String, Object> context) {
+        try {
+            Protocol protocol = (Protocol) context.get(AuthContext.AC_PROTOCOL);
+
+            if (protocol == null) {
+                return false;
+            }
+
+            switch (protocol) {
+                case zsync:
+                    return context.get(AuthContext.AC_SUB_PROTOCOL) == AuthContext.SubProtocol.eas;
+                default:
+                    return false;
+            }
+        } catch (Exception e) {
+            ZimbraLog.account.warn("Failure while checking the protocol isSupported.", e);
+            return false;
+        }
     }
 }

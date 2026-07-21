@@ -95,8 +95,6 @@ public abstract class AuthMechanism {
 
     private static String IDP_ROPC = "idp-ropc";
 
-    private static String EAS_PROTOCOL = "EAS";
-
     protected AuthMechanism(AuthMech authMech) {
         this.authMech = authMech;
     }
@@ -134,10 +132,8 @@ public abstract class AuthMechanism {
 
         if (authMechStr.startsWith(AuthMech.custom.name() + ":")) {
             boolean hasIdpRopc = authMechStr.contains(IDP_ROPC);
-            boolean isEASProtcol = context != null &&
-                    EAS_PROTOCOL.equalsIgnoreCase((String) context.get(AuthContext.AC_SUB_PROTOCOL));
 
-            if (hasIdpRopc && !isEASProtcol) {
+            if (hasIdpRopc && !IRopcCustomAuth.isSupported(context)) {
                 return new ZimbraAuth(AuthMech.zimbra);
             }
             return new CustomAuth(AuthMech.custom, authMechStr);
