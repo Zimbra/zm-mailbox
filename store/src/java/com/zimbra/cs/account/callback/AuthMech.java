@@ -26,6 +26,8 @@ import com.zimbra.cs.account.auth.AuthMechanism;
 
 public class AuthMech extends AttributeCallback {
 
+    private static final String FALLBACK_PREFIX = "fallback:";
+
     @Override
     public void preModify(CallbackContext context, String attrName, Object attrValue,
             Map attrsToModify, Entry entry)
@@ -44,11 +46,45 @@ public class AuthMech extends AttributeCallback {
             } else if (authMech.startsWith(AuthMechanism.AuthMech.custom.name())) {
                 valid = true;
             } else {
-                try {
-                    AuthMechanism.AuthMech mech = AuthMechanism.AuthMech.fromString(authMech);
+                // allow an optional "fallback:<zimbra|ad|kerberos5> " prefix in front of the
+                // real auth mech value, e.g. "fallback:zimbra custom:idp-ropc arg1 arg2".
+                String mechToValidate = authMech;
+
+                if (mechToValidate.startsWith(FALLBACK_PREFIX)) {
+                    int spaceIdx = mechToValidate.indexOf(' ');
+                    if (spaceIdx > 0) {
+                        String fallbackMech = mechToValidate.substring(FALLBACK_PREFIX.length(), spaceIdx);
+                        // fallback to another custom auth mech is not supported
+                        if (fallbackMech.startsWith(AuthMechanism.AuthMech.custom.name())) {
+                            ZimbraLog.account.error("fallback to custom auth not supported: " + fallbackMech);
+                            throw ServiceException.INVALID_REQUEST(
+                                    "invalid value: " + authMech + " — fallback to custom auth not supported", null);
+                        }
+                        // fallback mech must be one of the standard AuthMech values
+                        try {
+                            AuthMechanism.AuthMech.fromString(fallbackMech);
+                        } catch (ServiceException e) {
+                            ZimbraLog.account.error("invalid fallback auth mech: " + fallbackMech, e);
+                            throw ServiceException.INVALID_REQUEST("invalid value: " + authMech, null);
+                        }
+
+                        // strip "fallback:<mech> " off, leaving the real mech (e.g. "custom:idp-ropc ...")
+                        mechToValidate = mechToValidate.substring(spaceIdx + 1).trim();
+                    } else {
+                        ZimbraLog.account.error(
+                                "invalid auth mech config: no mechanism after fallback prefix: " + authMech);
+                        throw ServiceException.INVALID_REQUEST("invalid value: " + authMech, null);
+                    }
+                }
+                if (mechToValidate.startsWith(AuthMechanism.AuthMech.custom.name())) {
                     valid = true;
-                } catch (ServiceException e) {
-                    ZimbraLog.account.error("invalid auth mech", e);
+                } else {
+                    try {
+                        AuthMechanism.AuthMech mech = AuthMechanism.AuthMech.fromString(mechToValidate);
+                        valid = true;
+                    } catch (ServiceException e) {
+                        ZimbraLog.account.error("invalid auth mech", e);
+                    }
                 }
             }
 

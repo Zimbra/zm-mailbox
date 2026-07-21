@@ -3312,4 +3312,22 @@ public class SoapProvisioning extends Provisioning {
 
         return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailSuccess);
     }
+
+    /**
+     * Clears the MFA push rejection counter cache for a specific account or all accounts.
+     *
+     * @param accountValue the account name or id, or {@code null} to clear all
+     * @param byValue the lookup key type (e.g. "name" or "id"), ignored when {@code accountValue} is {@code null}
+     * @return the SOAP response element
+     * @throws ServiceException if a SOAP fault or communication error occurs
+     */
+    public Element clearMFARejectionCache(String accountValue, String byValue) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.CLEAR_MFA_REJECTION_CACHE_REQUEST);
+        if (accountValue != null) {
+            Element acct = req.addElement(AdminConstants.E_ACCOUNT);
+            acct.addAttribute(AccountConstants.A_BY, byValue);
+            acct.setText(accountValue);
+        }
+        return invoke(req);
+    }
 }
