@@ -106,5 +106,10 @@ public class AuthContext {
 
         //for internal use only
         test;
+    }
+
+    public enum SubProtocol {
+        eas,
+        ews
     };
 }

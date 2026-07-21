@@ -20,32 +20,49 @@ package com.zimbra.cs.account.auth.ropc;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.auth.ropc.util.IRopcUtil;
 import java.util.Map;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.INTERVAL;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.POLLING_INTERVAL_DEFAULT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.POLLING_TIMEOUT;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.POLLING_TIMEOUT_DEFAULT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.PROVIDER;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_CLIENT_ID;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.TOKEN_ENDPOINT;
 
 public final class IRopcAuthEngine {
 
+    private static final IRopcInflightRegistry INFLIGHT = new IRopcInflightRegistry();
+
+    private static final MFAPollingService POLLER = MFAPollingService.getInstance();
+
     private IRopcAuthEngine() {
     }
 
     public static Outcome authenticate(final String user, final String password, final String deviceId,
-                                       AuthContext.Protocol protocol, Map<String, String> configs) {
-        return doAuthenticate(user, password, deviceId, protocol, configs);
-
+                                       AuthContext.Protocol protocol, String userAgent, String ip,
+                                       Map<String, String> configs) {
+        return doAuthenticate(user, password, deviceId, protocol, userAgent, ip, configs);
     }
 
-    private static Outcome doAuthenticate(String user, String password, String deviceId,
-                                          AuthContext.Protocol protocol, Map<String, String> configs) {
+    private static Outcome doAuthenticate(String user, String password, String deviceId, AuthContext.Protocol protocol,
+                                          String userAgent, String ip, Map<String, String> configs) {
         try {
             verifyMandatoryParamsforAuth(user, password, configs);
-
             IRopcHandler handler = IROPCHandlerRegistry.get(configs.get(PROVIDER));
+            String key = IRopcInflightRegistry.key(user, userAgent, configs.get(PROVIDER), protocol, deviceId);
 
-            return fullAuth(handler, user, password, deviceId, protocol, configs);
+            return INFLIGHT.execute(key, new java.util.function.Supplier<Outcome>() {
+                @Override public Outcome get() {
+                    try {
+                        return fullAuth(handler, user, password, deviceId, protocol, configs);
+                    } catch (Exception e) {
+                        ZimbraLog.account.error("Authentication Failed : Error occurred in IDP " +
+                                "based auth for %s", user, e);
+                        return Outcome.ERROR;
+                    }
+                }
+            }, Outcome.ERROR);
 
         } catch (Exception e) {
             ZimbraLog.account.error("Authentication Failed : Error occurred in IDP based auth for %s", user, e);
@@ -65,7 +82,7 @@ public final class IRopcAuthEngine {
                 ZimbraLog.account.info("Authentication SUCCESSFUL for user :  %s", user);
                 return Outcome.SUCCESS;
             case MFA_CHALLENGE:
-                return awaitPush(handler, ar.getChallenge(), user, password);
+                return awaitPush(handler, ar.getChallenge(), user);
             case INVALID_CREDENTIALS:
                 ZimbraLog.account.error("ROPC failed due to invalid credentials for user %s: %s", user,
                         ar.getErrorDescription());
@@ -81,60 +98,26 @@ public final class IRopcAuthEngine {
     }
 
     private static Outcome awaitPush(IRopcHandler handler, MFAChallenge challenge,
-                                     String user, String password) throws ServiceException {
-        MFAPollResult pollResult;
-        long startTime = System.currentTimeMillis();
-        // TODO : set the value of polling_timeout in MFAChallenge in buildPushChallenge
-        long timeoutDuration = 30 * 1000L;
-        String timeoutStr = challenge.get(POLLING_TIMEOUT);
-        if (timeoutStr != null && !timeoutStr.trim().isEmpty()) {
-            try {
-                timeoutDuration = Long.parseLong(challenge.get(POLLING_TIMEOUT)) * 1000L;
-            } catch (NumberFormatException e) {
-
-            }
+                                                 String user) throws ServiceException {
+        long pollingTimeout = IRopcUtil.parseToMillis(challenge.get(POLLING_TIMEOUT)).orElse(POLLING_TIMEOUT_DEFAULT);
+        long pollingInterval = IRopcUtil.parseToMillis(challenge.get(INTERVAL)).orElse(POLLING_INTERVAL_DEFAULT);
+        MFAPollResult pollResult = POLLER.await(handler, challenge, pollingInterval, pollingTimeout);
+        switch (pollResult) {
+            case SUCCESS:
+                ZimbraLog.account.info("MFA polling : SUCCESS. Push Challenge approved for user %s", user);
+                return Outcome.SUCCESS;
+            case REJECTED:
+                ZimbraLog.account.error("MFA polling : REJECTED. Push Challenge denied by user %s", user);
+                return Outcome.REJECTED;
+            case EXPIRED:
+                ZimbraLog.account.error("MFA polling : EXPIRED. PUSH challenge was not approved in " +
+                        "defined approval window for user  %s", user);
+                return Outcome.MFA_TIMEOUT;
+            default:
+                ZimbraLog.account.error("MFA polling : ERROR. Encountered unexpected polling status " +
+                        "for user  %s", user);
+                return Outcome.ERROR;
         }
-
-        long pollingInterval = 2 * 1000L;
-        String pollingStr = challenge.get(INTERVAL);
-        if (pollingStr != null && !pollingStr.trim().isEmpty()) {
-            try {
-                pollingInterval = Long.parseLong(challenge.get(INTERVAL)) * 1000L;
-            } catch (NumberFormatException e) {
-
-            }
-        }
-
-        do {
-            pollResult = handler.pollChallenge(challenge);
-            switch (pollResult) {
-                case WAITING:
-                    ZimbraLog.account.debug("MFA polling : WAITING for user %s to approve challenge.", user);
-                    try {
-                        Thread.sleep(pollingInterval);
-                    } catch (InterruptedException e) {
-                        // exception
-                    }
-                    break;
-                case SUCCESS:
-                    ZimbraLog.account.info("MFA polling : SUCCESS. Push Challenge approved for user %s", user);
-                    return Outcome.SUCCESS;
-                case REJECTED:
-                    ZimbraLog.account.error("MFA polling : REJECTED. Push Challenge denied by user %s", user);
-                    return Outcome.REJECTED;
-                case EXPIRED:
-                    ZimbraLog.account.error("MFA polling : EXPIRED. PUSH challenge was not approved in " +
-                            "defined approval window for user  %s", user);
-                    return Outcome.MFA_TIMEOUT;
-                default:
-                    ZimbraLog.account.error("MFA polling : ERROR. Encountered unexpected polling status " +
-                            "for user  %s", user);
-                    return Outcome.ERROR;
-            }
-        } while (System.currentTimeMillis() - startTime < timeoutDuration);
-
-        ZimbraLog.account.error("Authentication Failed : Push approval window timeout out for user %s ", user);
-        return Outcome.MFA_TIMEOUT;
     }
 
     private static void verifyMandatoryParamsforAuth(String username, String password, Map<String, String> configs)

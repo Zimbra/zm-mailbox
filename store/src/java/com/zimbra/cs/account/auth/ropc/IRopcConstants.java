@@ -110,6 +110,18 @@ public final class IRopcConstants {
 
     public static final String POLLING_TIMEOUT = "polling_timeout";
 
+    public static final long POLLING_TIMEOUT_DEFAULT = 30 * 1000L;
+
+    public static final String POLLING_INTERVAL = "polling_interval";
+
+    public static final long POLLING_INTERVAL_DEFAULT = 5 * 1000L;
+
     public static final String SCOPE_DEFAULT = "openid offline_access";
+
+    public static final long ACCESS_EXPIRY_DEFAULT = 3600000L;
+
+    public static final int MAX_LOG_LENGTH = 500;
+
+    public static final long CONVERT_TO_MILLI = 1000L;
 
 }

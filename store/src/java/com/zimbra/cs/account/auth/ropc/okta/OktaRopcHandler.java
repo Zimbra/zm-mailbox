@@ -31,6 +31,7 @@ import java.util.Map;
 import org.apache.commons.lang3.math.NumberUtils;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.ACCEPT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.ACCESS_DENIED;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.ACCESS_EXPIRY_DEFAULT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.APPLICATION_JSON;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.AUTHORIZATION;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.AUTHORIZATION_PENDING;
@@ -39,6 +40,7 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CHALLENGE_ENPOINT_C
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CHALLENGE_TYPES_SUPPORTED_FOR_PUSH_REQ;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CLIENT_SECRET_AUTH_TYPE_BASIC;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CONNECTION_TIMEOUT_DEFAULT;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CONVERT_TO_MILLI;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.ERROR_DESCRIPTION_SIGN_ON_POLICY;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.EXPIRED_TOKEN;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.FACTOR;
@@ -48,9 +50,12 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.GRANT_TYPE_FOR_POLL
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.HTTP_APPEND;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.INTERVAL;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.INVALID_GRANT;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.MAX_LOG_LENGTH;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.MFA_REQUIRED;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.OKTA_REQUEST_TYPE_CHALLENGE;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.OKTA_REQUEST_TYPE_TOKEN;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.POLLING_INTERVAL;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.POLLING_TIMEOUT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.PROVIDER_NAME_OKTA;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.PUSH;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_CHALLENGE_TYPES_SUPPORTED;
@@ -195,6 +200,7 @@ public final class OktaRopcHandler implements IRopcHandler {
         }
 
         Map<String, String> state = new HashMap<String, String>();
+        state.put(REQUEST_PARAM_USERNAME, req.getUsername());
         state.put(REQUEST_PARAM_MFA_TOKEN, getSafeString(mfaToken));
         state.put(REQUEST_PARAM_OOB_CODE, getSafeString(oobCode));
         // carry config so pollChallenge can reach the token endpoint / timeouts
@@ -208,9 +214,14 @@ public final class OktaRopcHandler implements IRopcHandler {
                 get(REQUEST_PARAM_CLIENT_SECRET_AUTH_TYPE)));
         state.put(REQUEST_PARAM_SCOPE, req.getConfig().get(REQUEST_PARAM_SCOPE) != null ?
                 req.getConfig().get(REQUEST_PARAM_SCOPE) : SCOPE_DEFAULT);
-        state.put(INTERVAL, getSafeString(pushResponse.getInterval()));
+        state.put(INTERVAL, req.getConfig().get(POLLING_INTERVAL) == null ?
+                getSafeString(pushResponse.getInterval()) : getSafeString(req.getConfig().get(POLLING_INTERVAL)));
+        state.put(POLLING_TIMEOUT, req.getConfig().get(POLLING_TIMEOUT) == null ?
+                getSafeString(pushResponse.getExpiresIn()) : getSafeString(req.getConfig().get(POLLING_TIMEOUT)));
 
-        String dedupeKey = req.getUsername() + "|" + getSafeString(req.getDeviceId());
+        String dedupeKey = req.getUserAgent() + "|" + req.getUsername() + "|" +  PROVIDER_NAME_OKTA + "|"
+                + (req.getProtocol() == null ? "" : req.getProtocol()) + "|"
+                + (req.getDeviceId() == null ? "" : req.getDeviceId());
         return new MFAChallenge(PROVIDER_NAME_OKTA, dedupeKey, MFAFactorType.PUSH, state);
     }
 
@@ -338,15 +349,25 @@ public final class OktaRopcHandler implements IRopcHandler {
             return parsedResponse;
         } catch (Exception e) {
             String rawBody = new String(body, StandardCharsets.UTF_8);
-            ZimbraLog.account.error("Failed to parse Okta response JSON.StatusCode : " +
-                    "%d , Error : %s", statusCode, rawBody);
+            String safeLogBody = rawBody.replaceAll("[\\r\\n]+", ";");
+            int maxLogLength = MAX_LOG_LENGTH;
+            if (safeLogBody.length() > maxLogLength) {
+                safeLogBody = safeLogBody.substring(0, maxLogLength) + "....[TRUNCATED]";
+            }
+            ZimbraLog.account.debug("Failed to parse Okta response JSON.StatusCode : " +
+                    "%d , Error : %s", statusCode, safeLogBody);
             throw ServiceException.FAILURE("Invalid JSON response received " +
                     "from Okta IDP (HTTP " + statusCode + ")", null);
         }
     }
 
     private static long expiryMillis(OktaResponse r) {
-        return r.getExpiresIn() > 0 ? System.currentTimeMillis() + r.getExpiresIn() * 1000L : 0L;
+        try {
+            return r.getExpiresIn() == null ? ACCESS_EXPIRY_DEFAULT :
+                    System.currentTimeMillis() + Long.parseLong(r.getExpiresIn()) * CONVERT_TO_MILLI;
+        } catch (Exception e) {
+            return ACCESS_EXPIRY_DEFAULT;
+        }
     }
 
     private static boolean isMfaRequired(OktaResponse r) {

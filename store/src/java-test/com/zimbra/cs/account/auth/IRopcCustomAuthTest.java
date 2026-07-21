@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
+import static com.zimbra.cs.account.auth.AuthContext.AC_ORIGINATING_CLIENT_IP;
+import static com.zimbra.cs.account.auth.AuthContext.AC_USER_AGENT;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -64,6 +66,8 @@ public class IRopcCustomAuthTest {
         mockContext = new HashMap<String, Object>();
         mockContext.put("did", "device-123");
         mockContext.put("proto", AuthContext.Protocol.zsync);
+        mockContext.put(AC_ORIGINATING_CLIENT_IP, "1234425");
+        mockContext.put(AC_USER_AGENT, "userAgent");
 
         validConfig = new HashMap<>();
         validConfig.put("token_endpoint", "https://okta.test/token");
@@ -83,7 +87,8 @@ public class IRopcCustomAuthTest {
     @Test
     public void testAuthenticateValidCallDoesnotThrowException() {
         doReturn(Outcome.SUCCESS).when(ropcCustomAuth)
-                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyMapOf(String.class, String.class));
+                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyString(),
+                        anyString(), anyMapOf(String.class, String.class));
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
         } catch (Exception e) {
@@ -100,17 +105,19 @@ public class IRopcCustomAuthTest {
     @Test
     public void testAuthenticateOutcomeSuccess() throws Exception {
         doReturn(Outcome.SUCCESS).when(ropcCustomAuth)
-                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyMapOf(String.class, String.class));
+                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyString(),
+                anyString(), anyMapOf(String.class, String.class));
         ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
         verify(ropcCustomAuth, times(1))
                 .callAuthEngine("user1@example.zimbra.com", "password", "device-123",
-                        AuthContext.Protocol.zsync, validConfig);
+                        AuthContext.Protocol.zsync, "userAgent", "1234425", validConfig);
     }
 
     @Test
     public void testAuthenticateOutcomeInvalid() throws Exception {
         doReturn(Outcome.INVALID).when(ropcCustomAuth)
-                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyMapOf(String.class, String.class));
+                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyString(),
+                        anyString(), anyMapOf(String.class, String.class));
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
             fail("Expected AuthFailedServiceException was not thrown");
@@ -123,7 +130,8 @@ public class IRopcCustomAuthTest {
     @Test
     public void testAuthenticateOutcomePolicyDenied() throws Exception {
         doReturn(Outcome.POLICY_DENIED).when(ropcCustomAuth)
-                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyMapOf(String.class, String.class));
+                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyString(),
+                        anyString(), anyMapOf(String.class, String.class));
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
             fail("Expected AuthFailedServiceException was not thrown");
@@ -136,7 +144,8 @@ public class IRopcCustomAuthTest {
     @Test
     public void testAuthenticateOutcomeMFATimeout() throws Exception {
         doReturn(Outcome.MFA_TIMEOUT).when(ropcCustomAuth)
-                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyMapOf(String.class, String.class));
+                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyString(),
+                        anyString(), anyMapOf(String.class, String.class));
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
             fail("Expected AuthFailedServiceException was not thrown");
@@ -152,7 +161,8 @@ public class IRopcCustomAuthTest {
         mockContext.put("proto", AuthContext.Protocol.soap);
         ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
         verify(ropcCustomAuth, never())
-                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyMapOf(String.class, String.class));
+                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyString(),
+                        anyString(), anyMapOf(String.class, String.class));
     }
 
     @Test
@@ -160,10 +170,11 @@ public class IRopcCustomAuthTest {
         mockContext.put(AuthContext.AC_PROTOCOL, AuthContext.Protocol.zsync);
         doReturn(true).when(ropcCustomAuth).checkInCache(anyString(), anyString());
         doReturn(Outcome.SUCCESS).when(ropcCustomAuth)
-                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyMapOf(String.class, String.class));
+                .callAuthEngine(anyString(), anyString(), anyString(), any(), anyString(),
+                        anyString(), anyMapOf(String.class, String.class));
         ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
         verify(ropcCustomAuth, times(1))
                 .callAuthEngine("user1@example.zimbra.com", "password", "device-123",
-                        AuthContext.Protocol.zsync, validConfig);
+                        AuthContext.Protocol.zsync, "userAgent", "1234425", validConfig);
     }
 }

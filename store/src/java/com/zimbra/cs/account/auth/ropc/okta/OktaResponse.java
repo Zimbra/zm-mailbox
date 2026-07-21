@@ -33,7 +33,7 @@ public final class OktaResponse {
     private String tokenType;
 
     @JsonProperty("expires_in")
-    private long expiresIn;
+    private String expiresIn;
 
     @JsonProperty("mfa_token")
     private String mfaToken;
@@ -76,11 +76,11 @@ public final class OktaResponse {
         this.tokenType = v;
     }
 
-    public long getExpiresIn() {
+    public String getExpiresIn() {
         return expiresIn;
     }
 
-    public void setExpiresIn(long v) {
+    public void setExpiresIn(String v) {
         this.expiresIn = v;
     }
 
