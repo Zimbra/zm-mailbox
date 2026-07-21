@@ -1,4 +1,3 @@
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
@@ -15,6 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
 /**
  * Functional JUnit tests for the admin service handlers.
  */

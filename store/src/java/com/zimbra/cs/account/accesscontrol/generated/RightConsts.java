@@ -673,6 +673,11 @@ public class RightConsts {
     public static final String RT_checkSoftwareUpdates = "checkSoftwareUpdates";
 
     /**
+     *  clear the MFA/ROPC rejection cache for a specific user or all users.
+     */
+    public static final String RT_clearMFARejectionCache = "clearMFARejectionCache";
+
+    /**
      * configure admin UI components
      */
     public static final String RT_configureAdminUI = "configureAdminUI";
