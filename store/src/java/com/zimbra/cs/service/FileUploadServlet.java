@@ -215,8 +215,7 @@ public class FileUploadServlet extends ZimbraServlet {
             String customMimeTypesPath = LC.custom_mimetypes.value();
             MediaType mediaType = null;
             String contentType = fileItem.getContentType();
-            try {
-                TikaInputStream stream = TikaInputStream.get(fileItem.getInputStream());
+            try (TikaInputStream stream = TikaInputStream.get(fileItem.getInputStream())) {
                 if (new File(customMimeTypesPath).isFile()) {
                     MimeTypes customMimeTypes = MimeTypesFactory.create(new URL("file://" + customMimeTypesPath));
                     mediaType = new CompositeDetector(customMimeTypes, detector).detect(stream, metadata);
