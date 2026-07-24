@@ -25279,6 +25279,155 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Certificate used to verify signed SAML SP requests
+     *
+     * @return zimbraSamlSpSigningCertificate, or null if unset
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4166)
+    public String getSamlSpSigningCertificate() {
+        return getAttr(Provisioning.A_zimbraSamlSpSigningCertificate, null, true);
+    }
+
+    /**
+     * Certificate used to verify signed SAML SP requests
+     *
+     * @param zimbraSamlSpSigningCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4166)
+    public void setSamlSpSigningCertificate(String zimbraSamlSpSigningCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningCertificate, zimbraSamlSpSigningCertificate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Certificate used to verify signed SAML SP requests
+     *
+     * @param zimbraSamlSpSigningCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4166)
+    public Map<String,Object> setSamlSpSigningCertificate(String zimbraSamlSpSigningCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningCertificate, zimbraSamlSpSigningCertificate);
+        return attrs;
+    }
+
+    /**
+     * Certificate used to verify signed SAML SP requests
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4166)
+    public void unsetSamlSpSigningCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Certificate used to verify signed SAML SP requests
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4166)
+    public Map<String,Object> unsetSamlSpSigningCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningCertificate, "");
+        return attrs;
+    }
+
+    /**
+     * Key used to sign SP-generated SAML requests. SAML requests are
+     * unsigned if empty
+     *
+     * @return zimbraSamlSpSigningKey, or null if unset
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4165)
+    public String getSamlSpSigningKey() {
+        return getAttr(Provisioning.A_zimbraSamlSpSigningKey, null, true);
+    }
+
+    /**
+     * Key used to sign SP-generated SAML requests. SAML requests are
+     * unsigned if empty
+     *
+     * @param zimbraSamlSpSigningKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4165)
+    public void setSamlSpSigningKey(String zimbraSamlSpSigningKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningKey, zimbraSamlSpSigningKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Key used to sign SP-generated SAML requests. SAML requests are
+     * unsigned if empty
+     *
+     * @param zimbraSamlSpSigningKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4165)
+    public Map<String,Object> setSamlSpSigningKey(String zimbraSamlSpSigningKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningKey, zimbraSamlSpSigningKey);
+        return attrs;
+    }
+
+    /**
+     * Key used to sign SP-generated SAML requests. SAML requests are
+     * unsigned if empty
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4165)
+    public void unsetSamlSpSigningKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Key used to sign SP-generated SAML requests. SAML requests are
+     * unsigned if empty
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4165)
+    public Map<String,Object> unsetSamlSpSigningKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningKey, "");
+        return attrs;
+    }
+
+    /**
      * whether or not to show client Terms of Service
      *
      * @return zimbraShowClientTOS, or false if unset
