@@ -10648,4 +10648,12 @@ TODO: delete them permanently from here
   <desc>Secret key used in Mail Recall to make it more secure from spoof.</desc>
 </attr>
 
+<attr id="4165" name="zimbraSamlSpSigningKey" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21">
+    <desc>Key used to sign SP-generated SAML requests. SAML requests are unsigned if empty</desc>
+</attr>
+
+<attr id="4166" name="zimbraSamlSpSigningCertificate" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21">
+    <desc>Certificate used to verify signed SAML SP requests</desc>
+</attr>
+
 </attrs>
