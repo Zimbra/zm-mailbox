@@ -16909,6 +16909,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraRevokeAppSpecificPasswordsOnPasswordChange = "zimbraRevokeAppSpecificPasswordsOnPasswordChange";
 
     /**
+     * Certificate used to verify signed SAML SP requests
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4166)
+    public static final String A_zimbraSamlSpSigningCertificate = "zimbraSamlSpSigningCertificate";
+
+    /**
+     * Key used to sign SP-generated SAML requests. SAML requests are
+     * unsigned if empty
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4165)
+    public static final String A_zimbraSamlSpSigningKey = "zimbraSamlSpSigningKey";
+
+    /**
      * whether TLS is required for IMAP/POP GSSAPI auth
      *
      * @since ZCS 5.0.20
