@@ -48,6 +48,8 @@ import com.zimbra.soap.mail.type.FilterTest;
  */
 public abstract class SieveVisitor {
 
+    private String timezone;
+
     protected enum VisitPhase { begin, end }
 
     @SuppressWarnings("unused")
@@ -378,6 +380,7 @@ public abstract class SieveVisitor {
         private boolean isEnabled = true;
         private boolean isNegativeTest = false;
         private Sieve.Condition condition = null;
+        private String timezone;
 
         public boolean isEnabled() {
             return isEnabled;
@@ -397,6 +400,12 @@ public abstract class SieveVisitor {
         public void setCondition(Sieve.Condition condition) {
             this.condition = condition;
         }
+        public String getTimezone() {
+            return timezone;
+        }
+        public void setTimezone(String timezone) {
+            this.timezone = timezone;
+        }
     }
 
     public void accept(Node node) throws ServiceException {
@@ -405,6 +414,10 @@ public abstract class SieveVisitor {
 
     public void accept(Node node, boolean isAdminScript) throws ServiceException {
         accept(node, null, isAdminScript);
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 
     private void accept(Node parent, RuleProperties props) throws ServiceException {
@@ -421,6 +434,7 @@ public abstract class SieveVisitor {
             if (isRuleNode(node)) {
                 // New rule tree or Nested if. New RuleProperties is created for each nested if
                 RuleProperties newProps = new RuleProperties();
+                newProps.setTimezone(props != null ? props.getTimezone() : timezone);
                 if ("disabled_if".equalsIgnoreCase(getNodeName(node))) {
                     newProps.setEnabled(false);
                 }
@@ -624,7 +638,7 @@ public abstract class SieveVisitor {
                 String s = stripLeadingColon(getValue(node, 0, 0));
                 Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
                 String dateString = getValue(node, 0, 1, 0, 0);
-                Date date = Sieve.DATE_PARSER.parse(dateString);
+                Date date = Sieve.DATE_PARSER.parse(dateString, props != null ? props.getTimezone() : timezone);
                 if (date == null) {
                     throw ServiceException.PARSE_ERROR("Invalid date value: " + dateString, null);
                 }

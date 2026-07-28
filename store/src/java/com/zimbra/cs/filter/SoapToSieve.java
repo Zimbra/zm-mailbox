@@ -47,6 +47,7 @@ public final class SoapToSieve {
 
     private final List<FilterRule> rules;
     private StringBuilder buffer;
+    private String timezone;
 
     // end of line in sieve script
     public static final String END_OF_LINE = ";\n";
@@ -59,7 +60,12 @@ public final class SoapToSieve {
     }
 
     public String getSieveScript() throws ServiceException {
+        return getSieveScript(null);
+    }
+
+    public String getSieveScript(String timezone) throws ServiceException {
         if (buffer == null) {
+            this.timezone = timezone;
             buffer = new StringBuilder();
             buffer.append("require [" + requireCommon + "]" + END_OF_LINE);
             for (FilterRule rule : rules) {
@@ -71,7 +77,12 @@ public final class SoapToSieve {
     }
 
     public String getAdminSieveScript() throws ServiceException {
+        return getAdminSieveScript(null);
+    }
+
+    public String getAdminSieveScript(String timezone) throws ServiceException {
         if (buffer == null) {
+            this.timezone = timezone;
             buffer = new StringBuilder();
             buffer.append("require [" + requireCommon + ", \"editheader\"]" + END_OF_LINE);
             for (FilterRule rule : rules) {
@@ -270,7 +281,7 @@ public final class SoapToSieve {
             FilterTest.DateTest dateTest = (FilterTest.DateTest) test;
             Sieve.DateComparison comp = Sieve.DateComparison.fromString(dateTest.getDateComparison());
             Date date = new Date(dateTest.getDate() * 1000L);
-            snippet = String.format("date :%s \"%s\"", comp, Sieve.DATE_PARSER.format(date));
+            snippet = String.format("date :%s \"%s\"", comp, Sieve.DATE_PARSER.format(date, timezone));
         } else if (test instanceof FilterTest.BodyTest) {
             FilterTest.BodyTest bodyTest = (FilterTest.BodyTest) test;
             String format = bodyTest.isCaseSensitive() ?

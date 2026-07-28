@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timezone Handling Review - Zimbra Filter Parsing</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.6; color: #222; }
+    h1, h2, h3 { color: #0f4c81; }
+    code, pre { font-family: "SFMono-Regular", Consolas, monospace; }
+    pre { background: #f5f7fa; padding: 12px; border-radius: 6px; overflow-x: auto; }
+    .card { border: 1px solid #d7e2ee; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fbfdff; }
+    .ok { color: #197b23; font-weight: bold; }
+    .warn { color: #b35f00; font-weight: bold; }
+    .bad { color: #b00020; font-weight: bold; }
+    ul { padding-left: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Timezone Handling Review for Sieve Filter Parsing</h1>
+
+  <div class="card">
+    <h2>Summary</h2>
+    <p>The issue was caused by timezone handling being attached to a shared <code>DateParser</code> instance used for filter parsing and formatting. When the timezone was null or empty, the code hit a <code>NullPointerException</code>. The fix was updated to make timezone handling explicit and local to each conversion operation, avoiding shared mutable state.</p>
+  </div>
+
+  <div class="card">
+    <h2>Root Cause</h2>
+    <ul>
+      <li>PR 1542 introduced timezone state into <code>DateParser</code>.</li>
+      <li>The shared <code>Sieve.DATE_PARSER</code> instance was then reused across filter conversions.</li>
+      <li>When a timezone value was missing, <code>TimeZone.getTimeZone(null)</code> led to an exception.</li>
+      <li>The mutable timezone state also risked leaking between requests or conversions.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Why the Original Fix Was Risky</h2>
+    <p>The earlier approach set the timezone on a globally shared parser object. That is problematic because it introduces shared mutable state into a component that is reused by multiple filter operations.</p>
+    <ul>
+      <li>Potential cross-request contamination</li>
+      <li>Possible concurrency hazards</li>
+      <li>Hidden state that is hard to reason about</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Better Fix Approach</h2>
+    <p>The safer fix is to keep timezone handling explicit and local to each parse/format operation.</p>
+    <pre>parse(String value, String timezone)
+format(Date value, String timezone)</pre>
+    <p>This avoids stale shared state and handles null/empty timezone values by falling back to the JVM default timezone.</p>
+  </div>
+
+  <div class="card">
+    <h2>Implemented Changes</h2>
+    <ul>
+      <li>Updated <code>DateParser</code> with overloads for explicit timezone usage.</li>
+      <li>Changed Sieve conversion to pass the account timezone explicitly.</li>
+      <li>Propagated timezone through the filter visitor so date comparisons are parsed with the correct zone.</li>
+      <li>Added regression tests for null/explicit timezone handling.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Files Updated</h2>
+    <ul>
+      <li><code>common/src/java/com/zimbra/common/util/DateParser.java</code></li>
+      <li><code>store/src/java/com/zimbra/cs/filter/RuleManager.java</code></li>
+      <li><code>store/src/java/com/zimbra/cs/filter/SoapToSieve.java</code></li>
+      <li><code>store/src/java/com/zimbra/cs/filter/SieveVisitor.java</code></li>
+      <li><code>common/src/java-test/com/zimbra/common/util/DateParserTest.java</code></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Verification Status</h2>
+    <p class="ok">Editor diagnostics show no Java errors in the modified files.</p>
+    <p class="warn">A full Ant/JUnit run could not be executed in this environment because Java/Ant was not available.</p>
+  </div>
+
+  <div class="card">
+    <h2>Recommendation</h2>
+    <p>This fix is a better long-term solution than simply adding a null check because it removes the shared-state hazard while also resolving the exception.</p>
+  </div>
+</body>
+</html>

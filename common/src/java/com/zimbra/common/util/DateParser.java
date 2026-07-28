@@ -30,37 +30,59 @@ import java.util.TimeZone;
 public class DateParser {
 
     private ThreadLocal<SimpleDateFormat> mFormatterHolder = new ThreadLocal<SimpleDateFormat>();
+    private ThreadLocal<String> mTimezoneHolder = new ThreadLocal<String>();
     private String mDatePattern;
-    private String timezone;
     
     public DateParser(String datePattern) {
         mDatePattern = datePattern;
     }
     
     public Date parse(String s) {
-        return getFormatter().parse(s, new ParsePosition(0));
+        return parse(s, null);
+    }
+
+    public Date parse(String s, String timezone) {
+        return getFormatter(timezone).parse(s, new ParsePosition(0));
     }
 
     public String format(Date date) {
-        return getFormatter().format(date);
+        return format(date, null);
     }
 
-    private SimpleDateFormat getFormatter() {
+    public String format(Date date, String timezone) {
+        return getFormatter(timezone).format(date);
+    }
+
+    private SimpleDateFormat getFormatter(String timezone) {
         SimpleDateFormat formatter = mFormatterHolder.get();
         if (formatter == null) {
             formatter = new SimpleDateFormat(mDatePattern);
             mFormatterHolder.set(formatter);
         }
 
-        formatter.setTimeZone(TimeZone.getTimeZone(timezone));
+        formatter.setTimeZone(resolveTimeZone(timezone));
         return formatter;
     }
 
+    private TimeZone resolveTimeZone(String timezone) {
+        if (StringUtil.isNullOrEmpty(timezone)) {
+            timezone = mTimezoneHolder.get();
+        }
+        if (StringUtil.isNullOrEmpty(timezone)) {
+            return TimeZone.getDefault();
+        }
+        return TimeZone.getTimeZone(timezone);
+    }
+
     public String getTimezone() {
-        return timezone;
+        return mTimezoneHolder.get();
     }
 
     public void setTimezone(String timezone) {
-        this.timezone = timezone;
+        if (StringUtil.isNullOrEmpty(timezone)) {
+            mTimezoneHolder.remove();
+        } else {
+            mTimezoneHolder.set(timezone);
+        }
     }
 }
