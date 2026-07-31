@@ -282,7 +282,6 @@ public class AdminService implements DocumentService {
 
         // noop
         dispatcher.registerHandler(AdminConstants.NO_OP_REQUEST, new NoOp());
-
         // cookie and authtoken maintenance
         dispatcher.registerHandler(AdminConstants.CLEAR_COOKIE_REQUEST, new ClearCookie());
         dispatcher.registerHandler(AdminConstants.LOCKOUT_MAILBOX_REQUEST, new LockoutMailbox());
