@@ -218,6 +218,14 @@ references:
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
             export PATH="$JAVA_HOME/bin:$PATH"
             bash /home/build/zm-nexus/scripts/publish-jars-to-nexus.sh
+      - run:
+          name: Publish libzimbra-native.so to Nexus
+          command: |
+            cd /home/build/zm-mailbox
+            bash /home/build/zm-nexus/scripts/publish-raw-artifacts-to-nexus.sh \
+              native/build \
+              "zm-mailbox" \
+              "*.so"
 
 jobs:
   build:
@@ -241,6 +249,18 @@ jobs:
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
             JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" publish-local-all
       - *save_deps_cache
+      - run:
+          name: Build native libzimbra-native.so
+          command: |
+            cd /home/build/zm-mailbox/native
+            export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+            export PATH="$JAVA_HOME/bin:$PATH"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            ZIMBRA_BUILDINFO_VERSION="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}"
+            ant -Dzimbra.buildinfo.version="${ZIMBRA_BUILDINFO_VERSION}" generate-native-headers
+            make
+            ls -la build/*.so
       - run:
           name: Checkout Nexus publish scripts repo
           command: |
