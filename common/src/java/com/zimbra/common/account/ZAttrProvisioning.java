@@ -17017,6 +17017,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSamlSpEntityId = "zimbraSamlSpEntityId";
 
     /**
+     * Certificate used to verify signed SAML SP requests
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4166)
+    public static final String A_zimbraSamlSpSigningCertificate = "zimbraSamlSpSigningCertificate";
+
+    /**
+     * Key used to sign SP-generated SAML requests. SAML requests are
+     * unsigned if empty
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4165)
+    public static final String A_zimbraSamlSpSigningKey = "zimbraSamlSpSigningKey";
+
+    /**
      * SAML IdP Single Sign-On URL(s). Replaces
      * saml_redirect_login_destination and saml_post_login_destination from
      * saml-config.properties. Multi-valued to support multiple SAML
@@ -17035,6 +17052,32 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSamlSSOURL = "zimbraSamlSSOURL";
 
     /**
+     * Error code for SAML test failure. Format: SSO:{message_key}. Empty
+     * implies success
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4168)
+    public static final String A_zimbraSamlTestErrorMessage = "zimbraSamlTestErrorMessage";
+
+    /**
+     * Secret nonce for an in-progress SAML test. Format: {nonce}
+     * notAfter={timestamp}
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4169)
+    public static final String A_zimbraSamlTestNonce = "zimbraSamlTestNonce";
+
+    /**
+     * Timestamp when the SAML test was completed
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4167)
+    public static final String A_zimbraSamlTestTimestamp = "zimbraSamlTestTimestamp";
+
+    /**
      * SAML webclient-disabled account redirect URL. Replaces
      * saml_webclient_disabled_account_redirect_url from
      * saml-config.properties. After successful SAML authentication, if the
@@ -17046,23 +17089,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4162)
     public static final String A_zimbraSamlWebclientDisabledAccountUrl = "zimbraSamlWebclientDisabledAccountUrl";
-
-    /**
-     * Certificate used to verify signed SAML SP requests
-     *
-     * @since ZCS 10.1.21
-     */
-    @ZAttr(id=4166)
-    public static final String A_zimbraSamlSpSigningCertificate = "zimbraSamlSpSigningCertificate";
-
-    /**
-     * Key used to sign SP-generated SAML requests. SAML requests are
-     * unsigned if empty
-     *
-     * @since ZCS 10.1.21
-     */
-    @ZAttr(id=4165)
-    public static final String A_zimbraSamlSpSigningKey = "zimbraSamlSpSigningKey";
 
     /**
      * whether TLS is required for IMAP/POP GSSAPI auth
