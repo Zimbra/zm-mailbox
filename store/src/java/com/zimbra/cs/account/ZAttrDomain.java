@@ -26433,103 +26433,6 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * SAML webclient-disabled account redirect URL. Replaces
-     * saml_webclient_disabled_account_redirect_url from
-     * saml-config.properties. After successful SAML authentication, if the
-     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
-     * redirected to this URL instead of the web client. Falls back to global
-     * config if not set on domain.
-     *
-     * @return zimbraSamlWebclientDisabledAccountUrl, or null if unset
-     *
-     * @since ZCS 10.1.21
-     */
-    @ZAttr(id=4162)
-    public String getSamlWebclientDisabledAccountUrl() {
-        return getAttr(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, null, true);
-    }
-
-    /**
-     * SAML webclient-disabled account redirect URL. Replaces
-     * saml_webclient_disabled_account_redirect_url from
-     * saml-config.properties. After successful SAML authentication, if the
-     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
-     * redirected to this URL instead of the web client. Falls back to global
-     * config if not set on domain.
-     *
-     * @param zimbraSamlWebclientDisabledAccountUrl new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.21
-     */
-    @ZAttr(id=4162)
-    public void setSamlWebclientDisabledAccountUrl(String zimbraSamlWebclientDisabledAccountUrl) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, zimbraSamlWebclientDisabledAccountUrl);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * SAML webclient-disabled account redirect URL. Replaces
-     * saml_webclient_disabled_account_redirect_url from
-     * saml-config.properties. After successful SAML authentication, if the
-     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
-     * redirected to this URL instead of the web client. Falls back to global
-     * config if not set on domain.
-     *
-     * @param zimbraSamlWebclientDisabledAccountUrl new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.21
-     */
-    @ZAttr(id=4162)
-    public Map<String,Object> setSamlWebclientDisabledAccountUrl(String zimbraSamlWebclientDisabledAccountUrl, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, zimbraSamlWebclientDisabledAccountUrl);
-        return attrs;
-    }
-
-    /**
-     * SAML webclient-disabled account redirect URL. Replaces
-     * saml_webclient_disabled_account_redirect_url from
-     * saml-config.properties. After successful SAML authentication, if the
-     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
-     * redirected to this URL instead of the web client. Falls back to global
-     * config if not set on domain.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.21
-     */
-    @ZAttr(id=4162)
-    public void unsetSamlWebclientDisabledAccountUrl() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * SAML webclient-disabled account redirect URL. Replaces
-     * saml_webclient_disabled_account_redirect_url from
-     * saml-config.properties. After successful SAML authentication, if the
-     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
-     * redirected to this URL instead of the web client. Falls back to global
-     * config if not set on domain.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.21
-     */
-    @ZAttr(id=4162)
-    public Map<String,Object> unsetSamlWebclientDisabledAccountUrl(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, "");
-        return attrs;
-    }
-
-    /**
      * Certificate used to verify signed SAML SP requests
      *
      * @return zimbraSamlSpSigningCertificate, or null if unset
@@ -26675,6 +26578,329 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetSamlSpSigningKey(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSamlSpSigningKey, "");
+        return attrs;
+    }
+
+    /**
+     * Error code for SAML test failure. Format: SSO:{message_key}. Empty
+     * implies success
+     *
+     * @return zimbraSamlTestErrorMessage, or null if unset
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4168)
+    public String getSamlTestErrorMessage() {
+        return getAttr(Provisioning.A_zimbraSamlTestErrorMessage, null, true);
+    }
+
+    /**
+     * Error code for SAML test failure. Format: SSO:{message_key}. Empty
+     * implies success
+     *
+     * @param zimbraSamlTestErrorMessage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4168)
+    public void setSamlTestErrorMessage(String zimbraSamlTestErrorMessage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestErrorMessage, zimbraSamlTestErrorMessage);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Error code for SAML test failure. Format: SSO:{message_key}. Empty
+     * implies success
+     *
+     * @param zimbraSamlTestErrorMessage new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4168)
+    public Map<String,Object> setSamlTestErrorMessage(String zimbraSamlTestErrorMessage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestErrorMessage, zimbraSamlTestErrorMessage);
+        return attrs;
+    }
+
+    /**
+     * Error code for SAML test failure. Format: SSO:{message_key}. Empty
+     * implies success
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4168)
+    public void unsetSamlTestErrorMessage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestErrorMessage, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Error code for SAML test failure. Format: SSO:{message_key}. Empty
+     * implies success
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4168)
+    public Map<String,Object> unsetSamlTestErrorMessage(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestErrorMessage, "");
+        return attrs;
+    }
+
+    /**
+     * Secret nonce for an in-progress SAML test. Format: {nonce}
+     * notAfter={timestamp}
+     *
+     * @return zimbraSamlTestNonce, or null if unset
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4169)
+    public String getSamlTestNonce() {
+        return getAttr(Provisioning.A_zimbraSamlTestNonce, null, true);
+    }
+
+    /**
+     * Secret nonce for an in-progress SAML test. Format: {nonce}
+     * notAfter={timestamp}
+     *
+     * @param zimbraSamlTestNonce new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4169)
+    public void setSamlTestNonce(String zimbraSamlTestNonce) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestNonce, zimbraSamlTestNonce);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Secret nonce for an in-progress SAML test. Format: {nonce}
+     * notAfter={timestamp}
+     *
+     * @param zimbraSamlTestNonce new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4169)
+    public Map<String,Object> setSamlTestNonce(String zimbraSamlTestNonce, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestNonce, zimbraSamlTestNonce);
+        return attrs;
+    }
+
+    /**
+     * Secret nonce for an in-progress SAML test. Format: {nonce}
+     * notAfter={timestamp}
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4169)
+    public void unsetSamlTestNonce() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestNonce, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Secret nonce for an in-progress SAML test. Format: {nonce}
+     * notAfter={timestamp}
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4169)
+    public Map<String,Object> unsetSamlTestNonce(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestNonce, "");
+        return attrs;
+    }
+
+    /**
+     * Timestamp when the SAML test was completed
+     *
+     * @return zimbraSamlTestTimestamp, or null if unset
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4167)
+    public String getSamlTestTimestamp() {
+        return getAttr(Provisioning.A_zimbraSamlTestTimestamp, null, true);
+    }
+
+    /**
+     * Timestamp when the SAML test was completed
+     *
+     * @param zimbraSamlTestTimestamp new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4167)
+    public void setSamlTestTimestamp(String zimbraSamlTestTimestamp) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestTimestamp, zimbraSamlTestTimestamp);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timestamp when the SAML test was completed
+     *
+     * @param zimbraSamlTestTimestamp new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4167)
+    public Map<String,Object> setSamlTestTimestamp(String zimbraSamlTestTimestamp, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestTimestamp, zimbraSamlTestTimestamp);
+        return attrs;
+    }
+
+    /**
+     * Timestamp when the SAML test was completed
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4167)
+    public void unsetSamlTestTimestamp() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestTimestamp, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timestamp when the SAML test was completed
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4167)
+    public Map<String,Object> unsetSamlTestTimestamp(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlTestTimestamp, "");
+        return attrs;
+    }
+
+    /**
+     * SAML webclient-disabled account redirect URL. Replaces
+     * saml_webclient_disabled_account_redirect_url from
+     * saml-config.properties. After successful SAML authentication, if the
+     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
+     * redirected to this URL instead of the web client. Falls back to global
+     * config if not set on domain.
+     *
+     * @return zimbraSamlWebclientDisabledAccountUrl, or null if unset
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4162)
+    public String getSamlWebclientDisabledAccountUrl() {
+        return getAttr(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, null, true);
+    }
+
+    /**
+     * SAML webclient-disabled account redirect URL. Replaces
+     * saml_webclient_disabled_account_redirect_url from
+     * saml-config.properties. After successful SAML authentication, if the
+     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
+     * redirected to this URL instead of the web client. Falls back to global
+     * config if not set on domain.
+     *
+     * @param zimbraSamlWebclientDisabledAccountUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4162)
+    public void setSamlWebclientDisabledAccountUrl(String zimbraSamlWebclientDisabledAccountUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, zimbraSamlWebclientDisabledAccountUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML webclient-disabled account redirect URL. Replaces
+     * saml_webclient_disabled_account_redirect_url from
+     * saml-config.properties. After successful SAML authentication, if the
+     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
+     * redirected to this URL instead of the web client. Falls back to global
+     * config if not set on domain.
+     *
+     * @param zimbraSamlWebclientDisabledAccountUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4162)
+    public Map<String,Object> setSamlWebclientDisabledAccountUrl(String zimbraSamlWebclientDisabledAccountUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, zimbraSamlWebclientDisabledAccountUrl);
+        return attrs;
+    }
+
+    /**
+     * SAML webclient-disabled account redirect URL. Replaces
+     * saml_webclient_disabled_account_redirect_url from
+     * saml-config.properties. After successful SAML authentication, if the
+     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
+     * redirected to this URL instead of the web client. Falls back to global
+     * config if not set on domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4162)
+    public void unsetSamlWebclientDisabledAccountUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SAML webclient-disabled account redirect URL. Replaces
+     * saml_webclient_disabled_account_redirect_url from
+     * saml-config.properties. After successful SAML authentication, if the
+     * account has zimbraFeatureWebClientEnabled set to FALSE, the user is
+     * redirected to this URL instead of the web client. Falls back to global
+     * config if not set on domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4162)
+    public Map<String,Object> unsetSamlWebclientDisabledAccountUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlWebclientDisabledAccountUrl, "");
         return attrs;
     }
 
