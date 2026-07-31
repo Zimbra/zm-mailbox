@@ -16,10 +16,12 @@
  */
 package com.zimbra.cs.service.account;
 
+import com.google.common.base.Strings;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
+import com.zimbra.common.account.Key;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -43,6 +45,7 @@ import com.zimbra.cs.gal.GalSearchConfig.GalType;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchQueryCallback;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.MemberOfSelector;
 import com.zimbra.soap.type.GalSearchType;
@@ -52,6 +55,16 @@ import com.zimbra.soap.type.GalSearchType;
  * @author schemers
  */
 public class SearchGal extends GalDocumentHandler {
+
+    public static String getName() {
+        return name;
+    }
+
+    public static void setName(String name) {
+        SearchGal.name = name;
+    }
+
+    private static String name;
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
@@ -78,13 +91,14 @@ public class SearchGal extends GalDocumentHandler {
         
         String name = null;
         
-	if (ref == null) {
-		galSearchQuery = request.getAttribute(MailConstants.A_QUERY, null);
-		name = request.getAttribute(AccountConstants.E_NAME, null);
-		if (galSearchQuery != null && name != null) {
-			throw ServiceException.INVALID_REQUEST("only one of the following attributes are allowed: "
+	    if (ref == null) {
+            galSearchQuery = request.getAttribute(MailConstants.A_QUERY, null);
+		    name = request.getAttribute(AccountConstants.E_NAME, null);
+            setName(name);
+            if (galSearchQuery != null && name != null) {
+			    throw ServiceException.INVALID_REQUEST("only one of the following attributes are allowed: "
 				+ MailConstants.A_QUERY + " or " + AccountConstants.E_NAME, null);
-		}
+            }
 		if (StringUtil.isNullOrEmpty(galSearchQuery) && name == null) {
 			throw ServiceException.INVALID_REQUEST("missing one of the required attributes: "
 				+ AccountConstants.A_REF + ", " + MailConstants.A_QUERY + " or " + AccountConstants.E_NAME,
@@ -149,16 +163,60 @@ public class SearchGal extends GalDocumentHandler {
         */
         
         params.setResultCallback(new SearchGalResultCallback(params, filter, null));
-
         GalSearchControl gal = new GalSearchControl(params);
         gal.search();
         return params.getResultCallback().getResponse();
     }
+
     
     private static class SearchGalResultCallback extends GalExtraSearchFilter.FilteredGalSearchResultCallback {
         
         private SearchGalResultCallback(GalSearchParams params, EntrySearchFilter filter, Set<String> attrs) {
             super(params, filter, attrs);
+        }
+
+        @Override
+        public Element handleContact(Contact c) throws ServiceException {
+            ZimbraLog.gal.debug("gal entry: %d", c.getId());
+            String primaryEmail = getFieldAsString(c.getFields(), ContactConstants.A_email);
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, primaryEmail);
+            if (account.isHideAliasesInGal()) {
+                if (!Strings.isNullOrEmpty(primaryEmail) && !isMatch(primaryEmail, name)) {
+                    return null;
+                }
+            }
+            return super.handleContact(c);
+        }
+
+        private static boolean isMatch(String email, String keyword) {
+            // Handle edge cases for empty or null inputs
+            if (StringUtil.isNullOrEmpty(email) || StringUtil.isNullOrEmpty(keyword)) {
+                return false;
+            }
+
+            // Convert both to lowercase for a case-insensitive search
+            String lowerEmail = email.toLowerCase();
+            String lowerKeyword = keyword.toLowerCase().trim();
+
+            // Check if any token starts with the keyword
+            if (lowerEmail.startsWith(lowerKeyword)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        private String getFieldAsString(Map<String, ? extends Object> attrs, String fieldName) {
+            Object value = attrs.get(fieldName);
+            if (value instanceof String) {
+                return (String) value;
+            } else if (value instanceof String[]) {
+                String[] values = (String[]) value;
+                if (values.length > 0) {
+                    return values[0];
+                }
+            }
+            return null;
         }
     }
     
