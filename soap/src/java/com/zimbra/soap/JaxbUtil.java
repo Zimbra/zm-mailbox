@@ -654,6 +654,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.MoveMailboxResponse.class,
             com.zimbra.soap.admin.message.NoOpRequest.class,
             com.zimbra.soap.admin.message.NoOpResponse.class,
+            com.zimbra.soap.admin.message.GenerateSamlTestRequest.class,
+            com.zimbra.soap.admin.message.GenerateSamlTestResponse.class,
             com.zimbra.soap.admin.message.PingRequest.class,
             com.zimbra.soap.admin.message.PingResponse.class,
             com.zimbra.soap.admin.message.PurgeAccountCalendarCacheRequest.class,

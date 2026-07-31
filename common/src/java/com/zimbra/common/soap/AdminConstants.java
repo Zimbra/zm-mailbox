@@ -498,6 +498,10 @@ public final class AdminConstants {
     public static final String E_NO_OP_REQUEST = "NoOpRequest";
     public static final String E_NO_OP_RESPONSE = "NoOpResponse";
 
+    // SAML test flow
+    public static final String E_GENERATE_SAML_TEST_REQUEST = "GenerateSamlTestRequest";
+    public static final String E_GENERATE_SAML_TEST_RESPONSE = "GenerateSamlTestResponse";
+
     // cookie
     public static final String E_CLEAR_COOKIE_REQUEST = "ClearCookieRequest";
     public static final String E_CLEAR_COOKIE_RESPONSE = "ClearCookieResponse";
@@ -1029,6 +1033,10 @@ public final class AdminConstants {
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get(E_NO_OP_RESPONSE, NAMESPACE);
 
+    // SAML test flow
+    public static final QName GENERATE_SAML_TEST_REQUEST = QName.get(E_GENERATE_SAML_TEST_REQUEST, NAMESPACE);
+    public static final QName GENERATE_SAML_TEST_RESPONSE = QName.get(E_GENERATE_SAML_TEST_RESPONSE, NAMESPACE);
+
     // cookie
     public static final QName CLEAR_COOKIE_REQUEST = QName.get(E_CLEAR_COOKIE_REQUEST, NAMESPACE);
     public static final QName CLEAR_COOKIE_RESPONSE = QName.get(E_CLEAR_COOKIE_RESPONSE, NAMESPACE);
@@ -1518,6 +1526,8 @@ public final class AdminConstants {
     // CheckExchangeAuth
     public static final String E_AUTH = "auth";
     public static final String A_URL = "url";
+    public static final String A_FORCE = "force";
+    public static final String A_RELAY_STATE = "relayState";
     public static final String A_USER = "user";
     public static final String A_PASS = "pass";
     public static final String A_SCHEME = "scheme";
