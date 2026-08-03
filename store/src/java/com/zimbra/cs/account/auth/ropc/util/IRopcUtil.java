@@ -19,6 +19,10 @@ package com.zimbra.cs.account.auth.ropc.util;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.auth.PasswordUtil;
+import com.zimbra.cs.account.auth.ropc.store.IRopcSessionRecord;
+import com.zimbra.cs.account.auth.ropc.store.IRopcTokenStore;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,5 +76,27 @@ public class IRopcUtil {
             ZimbraLog.account.error("Authentication failed while extracting args.", e);
             throw ServiceException.FAILURE("Authentication failed while extracting args .", null);
         }
+    }
+
+    public static IRopcSessionRecord findInStore(Account account, String user, String userAgent, String provider,
+                                                 String proto, String deviceId, String ip, String password,
+                                                 IRopcTokenStore store) throws ServiceException {
+        List<IRopcSessionRecord> candidates = store.find(account, user, userAgent, provider, proto, deviceId);
+        IRopcSessionRecord matchedRec = null;
+        if (candidates == null || candidates.isEmpty()) {
+            candidates = store.findByIp(account, user, userAgent, provider, proto, ip);
+        }
+
+        if (candidates != null) {
+            for (IRopcSessionRecord candidate : candidates) {
+                if (candidate.getPasswordHash() != null &&
+                        PasswordUtil.SSHA512.verifySSHA512(candidate.getPasswordHash(), password)) {
+                    matchedRec = candidate;
+                    break;
+                }
+            }
+        }
+
+        return matchedRec;
     }
 }

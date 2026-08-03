@@ -87,14 +87,14 @@ public class OktaRopcHandlerTest {
     @Test
     public void testAuthenticateDirectSuccessNoMfaRequired() throws Exception {
         mockHttpAndJsonResponse(200, "{\"access_token\":\"abc\"}",
-                createOktaResponse("token123", null, null, null));
+                createOktaResponse("access123", "refresh123", null, null, null));
         IRopcAuthResult result = handler.authenticate(mockAuthRequest);
-        assertEquals("token123", result.getAccessToken());
+        assertEquals("refresh123", result.getRefreshToken());
     }
 
     @Test
     public void testAuthenticateInvalidPasswordreturnInvalidCredntials() throws Exception {
-        OktaResponse errorRes = createOktaResponse(null, "invalid_grant", "Invalid username or password", null);
+        OktaResponse errorRes = createOktaResponse(null, null, "invalid_grant", "Invalid username or password", null);
         mockHttpAndJsonResponse(401, "{\"error\":\"invalid_grant\"}", errorRes);
         IRopcAuthResult result = handler.authenticate(mockAuthRequest);
         assertEquals(IRopcAuthResult.Status.INVALID_CREDENTIALS, result.getStatus());
@@ -102,7 +102,7 @@ public class OktaRopcHandlerTest {
 
     @Test
     public void testAuthenticateSignnPolicyDeniedreturnPolicyDenied() throws Exception {
-        OktaResponse errorRes = createOktaResponse(null, "invalid_grant", "sign on policy denied access", null);
+        OktaResponse errorRes = createOktaResponse(null, null, "invalid_grant", "sign on policy denied access", null);
         mockHttpAndJsonResponse(401, "{\"error\":\"invalid_grant\"}", errorRes);
         IRopcAuthResult result = handler.authenticate(mockAuthRequest);
         assertEquals(IRopcAuthResult.Status.POLICY_DENIED, result.getStatus());
@@ -113,7 +113,7 @@ public class OktaRopcHandlerTest {
         HttpResponseWrapper mfaRes = PowerMockito.mock(HttpResponseWrapper.class);
         when(mfaRes.getStatusCode()).thenReturn(401);
         when(mfaRes.getBody()).thenReturn("empty body".getBytes());
-        OktaResponse mfaJson = createOktaResponse(null, "mfa_required", null, "mfa_123");
+        OktaResponse mfaJson = createOktaResponse(null, null, "mfa_required", null, "mfa_123");
         HttpResponseWrapper pushHttpRes = PowerMockito.mock(HttpResponseWrapper.class);
         when(pushHttpRes.getStatusCode()).thenReturn(200);
         when(pushHttpRes.getBody()).thenReturn("empty body".getBytes());
@@ -137,7 +137,7 @@ public class OktaRopcHandlerTest {
         HttpResponseWrapper mfaRes = PowerMockito.mock(HttpResponseWrapper.class);
         when(mfaRes.getStatusCode()).thenReturn(401);
         when(mfaRes.getBody()).thenReturn("empty body".getBytes());
-        OktaResponse mfaJson = createOktaResponse(null, "mfa_required", null, "mfa_123");
+        OktaResponse mfaJson = createOktaResponse(null, null, "mfa_required", null, "mfa_123");
 
 
         HttpResponseWrapper pushHttpRes = PowerMockito.mock(HttpResponseWrapper.class);
@@ -168,7 +168,7 @@ public class OktaRopcHandlerTest {
         HttpResponseWrapper mfaRes = PowerMockito.mock(HttpResponseWrapper.class);
         when(mfaRes.getStatusCode()).thenReturn(401);
         when(mfaRes.getBody()).thenReturn("empty body".getBytes());
-        OktaResponse mfaJson = createOktaResponse(null, "mfa_required", null, "mfa_123");
+        OktaResponse mfaJson = createOktaResponse(null, null, "mfa_required", null, "mfa_123");
         HttpResponseWrapper pushHttpRes = PowerMockito.mock(HttpResponseWrapper.class);
         when(pushHttpRes.getStatusCode()).thenReturn(400);
         when(pushHttpRes.getBody()).thenReturn("empty body".getBytes());
@@ -196,7 +196,7 @@ public class OktaRopcHandlerTest {
         HttpResponseWrapper mfaRes = PowerMockito.mock(HttpResponseWrapper.class);
         when(mfaRes.getStatusCode()).thenReturn(401);
         when(mfaRes.getBody()).thenReturn("empty body".getBytes());
-        OktaResponse mfaJson = createOktaResponse(null, "mfa_required", null, "mfa_123");
+        OktaResponse mfaJson = createOktaResponse(null, null, "mfa_required", null, "mfa_123");
 
 
         HttpResponseWrapper pushHttpRes = PowerMockito.mock(HttpResponseWrapper.class);
@@ -225,7 +225,7 @@ public class OktaRopcHandlerTest {
     @Test
     public void testPollChallengeSuccess() throws Exception {
         mockHttpAndJsonResponse(200, "{\"access_token\":\"abc\"}",
-                createOktaResponse("token123", null, null, null));
+                createOktaResponse("access123", "token123", null, null, null));
         MFAPollResult result = handler.pollChallenge((mockChallenge));
         assertEquals(MFAPollResult.SUCCESS, result);
     }
@@ -233,7 +233,7 @@ public class OktaRopcHandlerTest {
     @Test
     public void testPollChallengeAuthorizationPendingReturnWAIITNG() throws Exception {
         mockHttpAndJsonResponse(400, "{\"authorization_pending\":\"abc\"}",
-                createOktaResponse(null, "authorization_pending", null, null));
+                createOktaResponse(null, null, "authorization_pending", null, null));
         MFAPollResult result = handler.pollChallenge((mockChallenge));
         assertEquals(MFAPollResult.WAITING, result);
     }
@@ -241,7 +241,7 @@ public class OktaRopcHandlerTest {
     @Test
     public void testPollChallengeAccessDeniedReturnEXPIRED() throws Exception {
         mockHttpAndJsonResponse(400, "{\"access_denied\":\"abc\"}",
-                createOktaResponse(null, "access_denied", null, null));
+                createOktaResponse(null, null, "access_denied", null, null));
         MFAPollResult result = handler.pollChallenge((mockChallenge));
         assertEquals(MFAPollResult.EXPIRED, result);
     }
@@ -249,7 +249,7 @@ public class OktaRopcHandlerTest {
     @Test
     public void testPollChallengeInvaldiGrantReturnREJECTED() throws Exception {
         mockHttpAndJsonResponse(400, "{\"invalid_grant\":\"abc\"}",
-                createOktaResponse(null, "invalid_grant", null, null));
+                createOktaResponse(null, null, "invalid_grant", null, null));
         MFAPollResult result = handler.pollChallenge((mockChallenge));
         assertEquals(MFAPollResult.REJECTED, result);
     }
@@ -266,9 +266,11 @@ public class OktaRopcHandlerTest {
                 thenReturn(jsonResponse);
     }
 
-    private OktaResponse createOktaResponse(String accesstoken, String error, String erroDesc, String mfaToken) {
+    private OktaResponse createOktaResponse(String accessToken, String refreshToken, String error,
+                                            String erroDesc, String mfaToken) {
         OktaResponse res = new OktaResponse();
-        res.setAccessToken(accesstoken);
+        res.setAccessToken(accessToken);
+        res.setRefreshToken(refreshToken);
         res.setError(error);
         res.setErrorDescription(erroDesc);
         res.setMfaToken(mfaToken);

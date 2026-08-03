@@ -19,12 +19,23 @@ package com.zimbra.cs.account.auth.ropc;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.auth.PasswordUtil.SSHA512;
+import com.zimbra.cs.account.auth.ropc.store.CacheRopcTokenStore;
+import com.zimbra.cs.account.auth.ropc.store.DbRopcTokenStore;
+import com.zimbra.cs.account.auth.ropc.store.IRopcSessionRecord;
+import com.zimbra.cs.account.auth.ropc.store.IRopcTokenStore;
+import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static com.zimbra.cs.account.auth.ropc.IRopcConstants.TTL_MS;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CACHE_EXPIRY_MIN_DURATION;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CACHE_GRACE_PERIOD_MIN_DURATION;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.FULL_AUTH;
 
 /**
  * protocol-aware credential cache for IdP ROPC (MFA) authentication.
@@ -58,28 +69,40 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.TTL_MS;
  */
 public final class IRopcCredCache {
 
-    private static final int MAX_REJECTION_COUNT = 3;
+    private static final long GRACE_PERIOD = Duration.ofMinutes(
+            Math.max(LC.mfa_idp_max_cache_grace_period_in_minutes.intValue(),
+            CACHE_GRACE_PERIOD_MIN_DURATION)).toMillis();
 
-    private static final int REJECTION_MAX_SIZE = 5000;
+    private static final long CACHE_TIMEOUT = Duration.ofMinutes(
+            Math.max(LC.mfa_idp_max_cred_cache_timeout_in_minutes.intValue(),
+            CACHE_EXPIRY_MIN_DURATION)).toMillis();
+
+    private static final long REJECTION_CACHE_TIMEOUT = Duration.ofMinutes(
+            Math.max(LC.mfa_idp_max_rejection_cache_timeout_in_minutes.intValue(),
+                    CACHE_EXPIRY_MIN_DURATION)).toMillis();
 
     /**
-     * credential cache: device key or IP key to {@link CacheEntry}.
+     * Credential cache: device key or IP key to {@link CacheEntry}.
+     * No size limit — entries are bounded naturally by TTL expiry.
      * Guava TTL is a safety net only; real expiry is per-entry via
      * {@link CacheEntry#isExpired()}.
      */
     private static final Cache<String, CacheEntry> CRED_CACHE = CacheBuilder.newBuilder()
-            .expireAfterWrite(TTL_MS, TimeUnit.MILLISECONDS)
+            .expireAfterWrite(CACHE_TIMEOUT
+                    + GRACE_PERIOD, TimeUnit.MILLISECONDS)
             .build();
 
     /**
-     * rejection counter cache: device/IP key to rejection count.
+     * Rejection counter cache: device/IP key to rejection count.
      * Separate from credentials for type safety.
      * Resets on successful Okta auth via store().
      */
     private static final Cache<String, Integer> REJECTION_CACHE = CacheBuilder.newBuilder()
-            .maximumSize(REJECTION_MAX_SIZE)
-            .expireAfterWrite(TTL_MS, TimeUnit.MILLISECONDS)
+            .expireAfterWrite((REJECTION_CACHE_TIMEOUT), TimeUnit.MILLISECONDS)
             .build();
+
+    public static final IRopcTokenStore STORE = LC.mfa_idp_enable_inmemory_store.booleanValue() ?
+            new CacheRopcTokenStore() : new DbRopcTokenStore();
 
     private IRopcCredCache() {
     }
@@ -91,21 +114,32 @@ public final class IRopcCredCache {
      */
     private static final class CacheEntry {
 
-        final String hash;
+        private final String hash;
 
         /**
          * absolute wall-clock timestamp (ms) after which this entry is considered expired.
          * computed as: System.currentTimeMillis() + (expiresInSeconds * 1000)
          */
-        final long expiryTimestamp;
+        private final long expiryTimestamp;
+
+        private final long gracePeriodTimestamp;
 
         CacheEntry(String hash, long expiresInSeconds) {
             this.hash = hash;
             this.expiryTimestamp = System.currentTimeMillis() + (expiresInSeconds * 1000);
+            this.gracePeriodTimestamp = System.currentTimeMillis() + (expiresInSeconds * 1000) + GRACE_PERIOD;
         }
 
         boolean isExpired() {
-            return System.currentTimeMillis() > expiryTimestamp;
+            return System.currentTimeMillis() > gracePeriodTimestamp;
+        }
+
+        boolean isActive() {
+            return System.currentTimeMillis() < expiryTimestamp;
+        }
+
+        boolean inGracePeriod() {
+            return System.currentTimeMillis() > expiryTimestamp && System.currentTimeMillis() < gracePeriodTimestamp;
         }
     }
 
@@ -122,40 +156,24 @@ public final class IRopcCredCache {
      * @param expiresInSeconds token lifetime from Okta's expires_in (0 = use TTL_MS)
      */
     public static void store(String email, String password, String userAgent,
-            String protocol, String provider, String ip, String deviceId,
-            long expiresInSeconds) {
+                             String protocol, String provider, String ip, String deviceId,
+                             long expiresInSeconds) {
         if (email == null || password == null) {
             return;
         }
 
-        long ttl = (expiresInSeconds > 0)
-                ? expiresInSeconds
-                : TimeUnit.MILLISECONDS.toSeconds(TTL_MS);
-
-        String effectivePassword = getEffectivePassword(password);
         String key = buildKey(email, userAgent, protocol, provider, ip, deviceId);
 
-        // store the successful credential
-        String saltedHash = SSHA512.generateSSHA512(effectivePassword, null);
-        CacheEntry entry = new CacheEntry(saltedHash, ttl);
+        CacheEntry entry = new CacheEntry(password, expiresInSeconds);
         CRED_CACHE.put(key, entry);
 
         // store IP key when deviceId is present
         if (isNotEmpty(deviceId) && isNotEmpty(ip)) {
             String ipKey = buildKey(email, userAgent, protocol, provider, ip, null);
+            // for TOTP develop a logic to have multiple values or some unique key for unique password
+            // as one ip can also have multiple password+totp
             CRED_CACHE.put(ipKey, entry);
         }
-
-        // Reset rejection count on successful Okta auth
-        REJECTION_CACHE.invalidate(key);
-        if (isNotEmpty(ip)) {
-            String ipKey = buildKey(email, userAgent, protocol, provider, ip, null);
-            REJECTION_CACHE.invalidate(ipKey);
-        }
-
-        ZimbraLog.account.debug(
-                "IRopcCredCache: stored credential for %s, expires in %ds",
-                email, ttl);
     }
 
     /**
@@ -169,41 +187,99 @@ public final class IRopcCredCache {
      * @param provider  the authentication provider
      * @param ip        the originating client IP address
      * @param deviceId  the unique device identifier
-     * @return true if the cached credential matches and is not expired, false otherwise
+     * @param account
+     * @param optionsReq
+     * @return CacheResponse
      */
-    public static boolean isValid(String email, String password, String userAgent,
-            String protocol, String provider, String ip, String deviceId) {
+    public static CacheResponse isValid(String email, String password, String userAgent,
+                                        String protocol, String provider, String ip, String deviceId,
+                                        Account account, boolean optionsReq) throws ServiceException {
         if (email == null || password == null) {
-            return false;
+            return new CacheResponse(false);
         }
         String effectivePassword = getEffectivePassword(password);
         String deviceKey = buildKey(email, userAgent, protocol, provider, ip, deviceId);
 
         // 1. Direct hit — device key (Outlook) or IP key (native)
         CacheEntry entry = CRED_CACHE.getIfPresent(deviceKey);
-        if (isMatch(entry, deviceKey, effectivePassword)) {
-            ZimbraLog.account.debug("IRopcCredCache: direct cache hit for %s", email);
-            return true;
+        if (entry != null) {
+            boolean passwordMatch = isMatch(entry, deviceKey, effectivePassword);
+            if (entry.isActive()) {
+                return passwordMatch ? new CacheResponse(true) : new CacheResponse(false);
+            } else if (entry.inGracePeriod()) {
+                return passwordMatch ? new CacheResponse(false, true) : new CacheResponse(false);
+            } else if (entry.isExpired()) {
+                CRED_CACHE.invalidate(deviceKey);
+                return new CacheResponse(false);
+            }
         }
 
         // 2. IP bridge fallback — upgrade to device key (OPCC to real deviceId)
         if (isNotEmpty(deviceId) && isNotEmpty(ip)) {
             String ipKey = buildKey(email, userAgent, protocol, provider, ip, null);
             CacheEntry ipEntry = CRED_CACHE.getIfPresent(ipKey);
+            if (ipEntry != null) {
+                boolean passwordMatch = isMatch(ipEntry, ipKey, effectivePassword);
 
-            if (isMatch(ipEntry, ipKey, effectivePassword)) {
+                if (ipEntry.isActive() && passwordMatch) {
+                    if (optionsReq) {
+                        return new CacheResponse(true);
+                    }
+                    return processIpBridgeUpgrade(email, password, userAgent, protocol, provider,
+                            ip, deviceId, account, optionsReq, deviceKey, ipEntry);
+                }
+
+                if (ipEntry.inGracePeriod() && passwordMatch && optionsReq) {
+                    return new CacheResponse(false, true);
+                }
+
+                if (ipEntry.isExpired() && passwordMatch) {
+                    CRED_CACHE.invalidate(ipKey);
+                    return new CacheResponse(false);
+                }
+            }
+
+        }
+        return new CacheResponse(false);
+    }
+
+    private static CacheResponse processIpBridgeUpgrade(String email, String password, String userAgent,
+                                                         String protocol, String provider, String ip, String deviceId,
+                                                         Account account, boolean optionsReq, String deviceKey,
+                                                         CacheEntry ipEntry) throws ServiceException {
+        Integer count = REJECTION_CACHE.getIfPresent(email);
+        if (count != null && count >= LC.mfa_idp_auth_fail_count.intValue()) {
+            return new CacheResponse(false);
+        }
+
+        List<IRopcSessionRecord> candidates = STORE.findByIp(account, email, userAgent,
+                provider, protocol, ip);
+        if (candidates == null || candidates.isEmpty()) {
+            CRED_CACHE.invalidate(buildKey(email, userAgent, protocol, provider, ip, null));
+            return new CacheResponse(false);
+        }
+        for (IRopcSessionRecord candidate : candidates) {
+            if (candidate.getPasswordHash() == null ||
+                    !PasswordUtil.SSHA512.verifySSHA512(candidate.getPasswordHash(), password)) {
+                continue;
+            }
+            if (candidate.getDeviceId() == null) {
+                candidate.setDeviceId(deviceId);
+                STORE.updateDeviceId(account, candidate);
                 CRED_CACHE.put(deviceKey, ipEntry);
-                CRED_CACHE.invalidate(ipKey);
                 ZimbraLog.account.debug(
                         "IRopcCredCache: upgraded IP-based cache to DeviceId for %s", email);
-                return true;
+                return new CacheResponse(true);
+            }
+            if (deviceId.equals(candidate.getDeviceId())) {
+                return new CacheResponse(false, true);
             }
         }
-        return false;
+        return new CacheResponse(false, FULL_AUTH);
     }
 
     /**
-     * invalidates the cache for a specific device context (Logout).
+     * Invalidates the cache for a specific device context (Logout).
      *
      * @param email     the user's email address
      * @param userAgent the client's user agent string
@@ -213,45 +289,47 @@ public final class IRopcCredCache {
      * @param deviceId  the unique device identifier
      */
     public static void invalidate(String email, String userAgent, String protocol,
-            String provider, String ip, String deviceId) {
+                                  String provider, String ip, String deviceId) {
         if (email == null) {
             return;
         }
         String key = buildKey(email, userAgent, protocol, provider, ip, deviceId);
         CRED_CACHE.invalidate(key);
-        REJECTION_CACHE.invalidate(key);
 
         // Also remove the IP bridge entry to prevent fallback after invalidation
         if (isNotEmpty(ip)) {
             String ipBridgeKey = buildKey(email, userAgent, protocol, provider, ip, null);
             CRED_CACHE.invalidate(ipBridgeKey);
-            REJECTION_CACHE.invalidate(ipBridgeKey);
         }
 
         ZimbraLog.account.info(
                 "IRopcCredCache: invalidated session and rejection blocks for %s", email);
     }
 
+    public static void invalidateRejectionCacheByUsername(String email) {
+        if (email == null) {
+            return;
+        }
+
+        REJECTION_CACHE.invalidate(email);
+
+        ZimbraLog.account.info(
+                "IRopcCredCache: invalidated rejection cache session for %s", email);
+    }
+
     /**
      * records a push rejection for this context.
      *
      * @param email     the user's email address
-     * @param userAgent the client's user agent string
-     * @param protocol  the protocol being used
-     * @param provider  the authentication provider
-     * @param ip        the originating client IP address
-     * @param deviceId  the unique device identifier
      */
-    public static void storeRejection(String email, String userAgent, String protocol,
-            String provider, String ip, String deviceId) {
+    public static void storeRejection(String email) {
         if (email == null) {
             return;
         }
-        String key = buildKey(email, userAgent, protocol, provider, ip, deviceId);
-        Integer val = REJECTION_CACHE.getIfPresent(key);
+        Integer val = REJECTION_CACHE.getIfPresent(email);
         int count = (val == null) ? 1 : val + 1;
-        REJECTION_CACHE.put(key, count);
-        ZimbraLog.account.info(
+        REJECTION_CACHE.put(email, count);
+        ZimbraLog.account.debug(
                 "IRopcCredCache: recorded push rejection #%d for %s", count, email);
     }
 
@@ -259,26 +337,20 @@ public final class IRopcCredCache {
      * checks if the user has exceeded the rejection limit.
      *
      * @param email     the user's email address
-     * @param userAgent the client's user agent string
-     * @param protocol  the protocol being used
-     * @param provider  the authentication provider
-     * @param ip        the originating client IP address
-     * @param deviceId  the unique device identifier
      * @throws AuthFailedServiceException if the rejection limit is reached
      */
-    public static void checkRejectionLimit(String email, String userAgent, String protocol,
-            String provider, String ip, String deviceId) throws AuthFailedServiceException {
+    public static void checkRejectionLimit(String email)
+            throws AuthFailedServiceException {
         if (email == null) {
             return;
         }
-        String key = buildKey(email, userAgent, protocol, provider, ip, deviceId);
-        Integer count = REJECTION_CACHE.getIfPresent(key);
-        if (count != null && count >= MAX_REJECTION_COUNT) {
+        Integer count = REJECTION_CACHE.getIfPresent(email);
+        if (count != null && count >= LC.mfa_idp_auth_fail_count.intValue()) {
             ZimbraLog.account.warn(
                     "IRopcCredCache: auth blocked for %s;"
-                            + " push rejection limit reached (%d)", email, count);
+                            + " auth rejection limit reached (%d)", email, count);
             throw AuthFailedServiceException.AUTH_FAILED(
-                    email, "MFA push rejection limit reached");
+                    email, "MFA auth rejection limit reached");
         }
     }
 
@@ -296,29 +368,16 @@ public final class IRopcCredCache {
         return passwordField; // Future: strip TOTP here
     }
 
-    /**
-     * validates entry against password. Immediately invalidates expired entries.
-     */
     private static boolean isMatch(CacheEntry entry, String key, String password) {
-        if (entry == null) {
-            return false;
-        }
-        if (entry.isExpired()) {
-            CRED_CACHE.invalidate(key); // remove immediately, don't wait for safety net
-            return false;
-        }
-        try {
-            return SSHA512.verifySSHA512(entry.hash, password);
-        } catch (Exception e) {
-            return false;
-        }
+        return SSHA512.verifySSHA512(entry.hash, password);
+
     }
 
     private static String buildKey(String email, String ua, String proto,
-            String prov, String ip, String did) {
+                                   String prov, String ip, String did) {
         String normEmail = (email != null) ? email.trim().toLowerCase() : "unknown";
         StringBuilder sb = new StringBuilder(normEmail);
-        sb.append('|').append(ua != null ? ua.hashCode() : "");
+        sb.append('|').append(ua != null ? ua : "");
         sb.append('|').append(proto != null ? proto : "");
         sb.append('|').append(prov != null ? prov : "");
         if (isNotEmpty(did)) {

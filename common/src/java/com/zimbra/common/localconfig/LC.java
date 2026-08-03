@@ -1578,11 +1578,21 @@ public final class LC {
     // Comma-delimited list of CIDR subnets or IP to which we always allow redirects.
     public static final KnownKey zimbra_proxy_servlet_whitelist = KnownKey.newKey("");
 
-    public static final KnownKey mfa_idp_max_connection_allowed = KnownKey.newKey(1000);
-
-    public static final KnownKey mfa_idp_max_retry_wait_timeout = KnownKey.newKey(5000);
-
     public static final KnownKey mfa_idp_pool_max_size = KnownKey.newKey(32);
+
+    public static final KnownKey mfa_idp_enable_inmemory_store = KnownKey.newKey(false);
+
+    public static final KnownKey mfa_idp_hard_reauth_in_days = KnownKey.newKey(60);
+
+    public static final KnownKey mfa_idp_db_cleanup_interval_days = KnownKey.newKey(7);
+
+    public static final KnownKey mfa_idp_max_cred_cache_timeout_in_minutes = KnownKey.newKey(60);
+
+    public static final KnownKey mfa_idp_max_rejection_cache_timeout_in_minutes = KnownKey.newKey(60);
+
+    public static final KnownKey mfa_idp_max_cache_grace_period_in_minutes = KnownKey.newKey(30);
+
+    public static final KnownKey mfa_idp_auth_fail_count = KnownKey.newKey(10);
 
     static {
         // Automatically set the key name with the variable name.

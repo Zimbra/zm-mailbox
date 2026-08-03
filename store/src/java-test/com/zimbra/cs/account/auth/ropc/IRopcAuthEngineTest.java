@@ -20,6 +20,8 @@ package com.zimbra.cs.account.auth.ropc;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.auth.ropc.store.IRopcTokenStore;
+import com.zimbra.cs.account.auth.ropc.util.IRopcUtil;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -35,7 +37,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({IROPCHandlerRegistry.class, IRopcAuthRequest.class, ZimbraLog.class, IRopcAuthResult.class})
+@PrepareForTest({IROPCHandlerRegistry.class, IRopcAuthRequest.class, ZimbraLog.class,
+        IRopcAuthResult.class, IRopcTokenStore.class, IRopcAuthEngine.class, IRopcUtil.class})
 public class IRopcAuthEngineTest {
 
     private Map<String, String> validConfig;
@@ -52,6 +55,11 @@ public class IRopcAuthEngineTest {
         mockHandler = PowerMockito.mock(IRopcHandler.class);
         PowerMockito.mockStatic(IROPCHandlerRegistry.class);
         PowerMockito.when(IROPCHandlerRegistry.get(anyString())).thenReturn(mockHandler);
+        PowerMockito.suppress(PowerMockito.method(IRopcAuthEngine.class, "persist"));
+
+        PowerMockito.mockStatic(IRopcUtil.class);
+        PowerMockito.when(IRopcUtil.findInStore(any(), any(), any(), any(), any(), any(),
+                any(), any(), any())).thenReturn(null);
     }
 
     @Test
@@ -59,59 +67,60 @@ public class IRopcAuthEngineTest {
         IRopcAuthRequest request = new IRopcAuthRequest.Builder()
                 .username("user")
                 .password("secret")
-                .deviceId("48758943jsdhfkhvsd")
-                .protocol(AuthContext.Protocol.zsync)
                 .config(validConfig)
                 .build();
 
         assertEquals("user", request.getUsername());
         assertEquals("secret", request.getPassword());
-        assertEquals(AuthContext.Protocol.zsync, request.getProtocol());
         assertNotNull(request.getConfig());
     }
 
     @Test
     public void testAuthenticateNullUsernameReturnsError() {
-        Outcome result = IRopcAuthEngine.authenticate(null, "pass", "device_id",
-                AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, null, "pass", "device_id",
+                AuthContext.Protocol.zsync,  AuthContext.SubProtocol.eas, "userAgent", "12312421", validConfig, false);
         assertEquals("Missing username should be caught and return error", Outcome.ERROR, result);
     }
 
     @Test
     public void testAuthenticateusernameWithoutReturnsError() {
-        Outcome result = IRopcAuthEngine.authenticate("test.com", "pass", "device_id",
-                AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, "test.com", "pass", "device_id",
+                AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas, "userAgent", "12312421", validConfig, false);
         assertEquals("Username without @ should fail and return error", Outcome.ERROR, result);
     }
 
     @Test
     public void testAuthenticateNullPasswordReturnsError() {
-        Outcome result = IRopcAuthEngine.authenticate("test@okta.com", null,
-                "device_id", AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, "test@okta.com", null,
+                "device_id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
+                "userAgent", "12312421", validConfig, false);
         assertEquals("Missing password should be caught and return error", Outcome.ERROR, result);
     }
 
     @Test
     public void testAuthenticateMissingTokenEnpointReturnsError() {
         validConfig.remove("token_endpoint");
-        Outcome result = IRopcAuthEngine.authenticate("test@okta.com", "pass",
-                "device_id", AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, "test@okta.com", "pass",
+                "device_id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
+                "userAgent", "12312421", validConfig, false);
         assertEquals("Missing token endpoint should be caught and return error", Outcome.ERROR, result);
     }
 
     @Test
     public void testAuthenticateMissingClientidReturnsError() {
         validConfig.remove("client_id");
-        Outcome result = IRopcAuthEngine.authenticate("test@okta.com", "pass",
-                "device_id", AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, "test@okta.com", "pass",
+                "device_id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
+                "userAgent", "12312421", validConfig, false);
         assertEquals("Missing client id should be caught and return error", Outcome.ERROR, result);
     }
 
     @Test
     public void testAuthenticateMissingProviderReturnsError() {
         validConfig.remove("provider");
-        Outcome result = IRopcAuthEngine.authenticate("test@okta.com", "pass",
-                "device_id", AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, "test@okta.com", "pass",
+                "device_id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
+                "userAgent", "12312421", validConfig, false);
         assertEquals("Missing provider should be caught and return error", Outcome.ERROR, result);
     }
 
@@ -120,8 +129,9 @@ public class IRopcAuthEngineTest {
         IRopcAuthResult mockResult = PowerMockito.mock(IRopcAuthResult.class);
         when(mockResult.getStatus()).thenReturn(IRopcAuthResult.Status.SUCCESS);
         when(mockHandler.authenticate(any(IRopcAuthRequest.class))).thenReturn(mockResult);
-        Outcome result = IRopcAuthEngine.authenticate("user@test.com", "pass",
-                "device-id", AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, "user@test.com", "pass",
+                "device-id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
+                "userAgent", "12312421", validConfig, false);
         assertEquals(Outcome.SUCCESS, result);
     }
 
@@ -130,8 +140,9 @@ public class IRopcAuthEngineTest {
         IRopcAuthResult mockResult = PowerMockito.mock(IRopcAuthResult.class);
         when(mockResult.getStatus()).thenReturn(IRopcAuthResult.Status.INVALID_CREDENTIALS);
         when(mockHandler.authenticate(any(IRopcAuthRequest.class))).thenReturn(mockResult);
-        Outcome result = IRopcAuthEngine.authenticate("user@test.com", "pass",
-                "device-id", AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, "user@test.com", "pass",
+                "device-id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
+                "userAgent", "12312421", validConfig, false);
         assertEquals(Outcome.INVALID, result);
     }
 
@@ -140,8 +151,9 @@ public class IRopcAuthEngineTest {
         IRopcAuthResult mockResult = PowerMockito.mock(IRopcAuthResult.class);
         when(mockResult.getStatus()).thenReturn(IRopcAuthResult.Status.POLICY_DENIED);
         when(mockHandler.authenticate(any(IRopcAuthRequest.class))).thenReturn(mockResult);
-        Outcome result = IRopcAuthEngine.authenticate("user@test.com", "pass",
-                "device-id", AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, "user@test.com", "pass",
+                "device-id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
+                "userAgent", "12312421", validConfig, false);
         assertEquals(Outcome.POLICY_DENIED, result);
     }
 
@@ -150,8 +162,9 @@ public class IRopcAuthEngineTest {
         IRopcAuthResult mockResult = PowerMockito.mock(IRopcAuthResult.class);
         when(mockResult.getStatus()).thenReturn(IRopcAuthResult.Status.ERROR);
         when(mockHandler.authenticate(any(IRopcAuthRequest.class))).thenReturn(mockResult);
-        Outcome result = IRopcAuthEngine.authenticate("user@test.com", "pass",
-                "device-id", AuthContext.Protocol.zsync, "userAgent", "12312421", validConfig);
+        Outcome result = IRopcAuthEngine.authenticate(null, "user@test.com", "pass",
+                "device-id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
+                "userAgent", "12312421", validConfig, false);
         assertEquals(Outcome.ERROR, result);
     }
 }
