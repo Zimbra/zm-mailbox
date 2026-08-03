@@ -23,6 +23,7 @@ public final class IRopcAuthResult {
         SUCCESS,
         MFA_CHALLENGE,
         INVALID_CREDENTIALS,
+        INVALID_GRANT,
         POLICY_DENIED,
         ERROR
     }
@@ -33,22 +34,22 @@ public final class IRopcAuthResult {
 
     private final String refreshToken;
 
-    private final String accessToken;
+    private final String idToken;
 
-    private final long accessTokenExpiresAtMillis;
+    private final long accessTokenExpiry;
 
     private final String errorCode;
 
     private final String errorDescription;
 
     private IRopcAuthResult(Status status, MFAChallenge challenge, String refreshToken,
-                            String accessToken, long accessTokenExpiresAtMillis, String errorCode,
+                            String idToken, long accessTokenExpiry, String errorCode,
                             String errorDescription) {
         this.status = status;
         this.challenge = challenge;
         this.refreshToken = refreshToken;
-        this.accessToken = accessToken;
-        this.accessTokenExpiresAtMillis = accessTokenExpiresAtMillis;
+        this.idToken = idToken;
+        this.accessTokenExpiry = accessTokenExpiry;
         this.errorCode = errorCode;
         this.errorDescription = errorDescription;
     }
@@ -65,12 +66,12 @@ public final class IRopcAuthResult {
         return refreshToken;
     }
 
-    public String getAccessToken() {
-        return accessToken;
+    public String getIdToken() {
+        return idToken;
     }
 
-    public long getAccessTokenExpiresAtMillis() {
-        return accessTokenExpiresAtMillis;
+    public Long getAccessTokenExpiry() {
+        return accessTokenExpiry;
     }
 
     public String getErrorCode() {
@@ -81,8 +82,8 @@ public final class IRopcAuthResult {
         return errorDescription;
     }
 
-    public static IRopcAuthResult success(String refreshToken, String accessToken, long expiresAtMillis) {
-        return new IRopcAuthResult(Status.SUCCESS, null, refreshToken, accessToken, expiresAtMillis, null, null);
+    public static IRopcAuthResult success(String refreshToken, String idToken, Long accessTokenExpiry) {
+        return new IRopcAuthResult(Status.SUCCESS, null, refreshToken, idToken, accessTokenExpiry, null, null);
     }
 
     public static IRopcAuthResult challenge(MFAChallenge c) {
@@ -91,6 +92,10 @@ public final class IRopcAuthResult {
 
     public static IRopcAuthResult invalidCredentials(String code, String desc) {
         return new IRopcAuthResult(Status.INVALID_CREDENTIALS, null, null, null, 0L, code, desc);
+    }
+
+    public static IRopcAuthResult invalidGrant(String code, String desc) {
+        return new IRopcAuthResult(Status.INVALID_GRANT, null, null, null, 0L, code, desc);
     }
 
     public static IRopcAuthResult policyDenied(String desc) {

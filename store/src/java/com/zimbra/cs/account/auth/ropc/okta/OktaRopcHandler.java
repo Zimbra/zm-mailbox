@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.account.auth.ropc.okta;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.auth.ropc.*;
@@ -40,16 +41,22 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CHALLENGE_ENPOINT_C
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CHALLENGE_TYPES_SUPPORTED_FOR_PUSH_REQ;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CLIENT_SECRET_AUTH_TYPE_BASIC;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CONNECTION_TIMEOUT_DEFAULT;
-import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CONVERT_TO_MILLI;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.DEVICE_ID;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.ERROR_DESCRIPTION_SIGN_ON_POLICY;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.EXPIRED_TOKEN;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.FACTOR;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.FACTOR_PUSH;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.GRANT_PASSWORD;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.GRANT_REFRESH;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.GRANT_TYPE_FOR_POLL;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.HEADER_AUTH0_FORWARDED_FOR;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.HEADER_USER_AGENT;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.HEADER_X_DEVICE_FINGERPRINT;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.HEADER_X_FORWARDED_FOR;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.HTTP_APPEND;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.INTERVAL;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.INVALID_GRANT;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.IP;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.MAX_LOG_LENGTH;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.MFA_REQUIRED;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.OKTA_REQUEST_TYPE_CHALLENGE;
@@ -58,6 +65,7 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.POLLING_INTERVAL;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.POLLING_TIMEOUT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.PROVIDER_NAME_OKTA;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.PUSH;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REFRESH;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_CHALLENGE_TYPES_SUPPORTED;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_CHANNEL_HINT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_CLIENT_ID;
@@ -68,6 +76,7 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_GRANT
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_MFA_TOKEN;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_OOB_CODE;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_PASSWORD;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_RFRESH_TOKEN;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_SCOPE;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_SOCKET_TIMEOUT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_USERNAME;
@@ -76,6 +85,7 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.SLOW_DOWN;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.SOCKET_TIMEOUT_DEFAULT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.TOKEN_ENDPOINT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.TOKEN_ENPOINT_CORE;
+import static com.zimbra.cs.account.auth.ropc.IRopcConstants.USER_AGENT;
 
 public final class OktaRopcHandler implements IRopcHandler {
 
@@ -93,6 +103,8 @@ public final class OktaRopcHandler implements IRopcHandler {
         MFAFactorType factor = MFAFactorType.fromConfig(req.getConfig().get(FACTOR));
 
         switch (factor.name()) {
+            case REFRESH :
+                return refreshGrant(req);
             case FACTOR_PUSH :
                 return ropcWithPush(req);
             default :
@@ -118,6 +130,22 @@ public final class OktaRopcHandler implements IRopcHandler {
         int httpSocketMs = NumberUtils.toInt(challenge.get(REQUEST_PARAM_SOCKET_TIMEOUT), SOCKET_TIMEOUT_DEFAULT);
 
         headers.put(ACCEPT, APPLICATION_JSON);
+        String ip = challenge.get(IP);
+        if (ip != null && !ip.trim().isEmpty()) {
+            headers.put(HEADER_X_FORWARDED_FOR, ip);
+            headers.put(HEADER_AUTH0_FORWARDED_FOR, ip);
+        }
+
+        String userAgent = challenge.get(USER_AGENT);
+        if (userAgent != null && !userAgent.trim().isEmpty()) {
+            headers.put(HEADER_USER_AGENT, userAgent);
+
+        }
+
+        String deviceId = challenge.get(DEVICE_ID);
+        if (deviceId != null && !deviceId.trim().isEmpty()) {
+            headers.put(HEADER_X_DEVICE_FINGERPRINT, deviceId);
+        }
 
         if (CLIENT_SECRET_AUTH_TYPE_BASIC.equalsIgnoreCase(clientSecretAuth)) {
             if (clientSecret == null || clientSecret.trim().isEmpty()) {
@@ -134,8 +162,8 @@ public final class OktaRopcHandler implements IRopcHandler {
         OktaResponse r = callEndpoint(tokenEndpoint, httpConnectMs, httpSocketMs, form, headers);
         if (r.hasAccessToken()) {
             challenge.put(MFAChallenge.REFRESH_TOKEN, getSafeString(r.getRefreshToken()));
-            challenge.put(MFAChallenge.ACCESS_TOKEN, getSafeString(r.getAccessToken()));
-            challenge.put(MFAChallenge.ACCESS_EXPIRES_AT, Long.toString(expiryMillis(r)));
+            challenge.put(MFAChallenge.ID_TOKEN, getSafeString(r.getAccessToken()));
+            challenge.put(MFAChallenge.ACCESS_TOKEN_TIMEOUT, Long.toString(expiryInSec(r)));
             return MFAPollResult.SUCCESS;
         }
         String err = getSafeString(r.getError());
@@ -152,6 +180,27 @@ public final class OktaRopcHandler implements IRopcHandler {
         return MFAPollResult.ERROR;
     }
 
+    private IRopcAuthResult refreshGrant(IRopcAuthRequest req) throws ServiceException {
+        Map<String, String> form = new LinkedHashMap<String, String>();
+        form.put(REQUEST_PARAM_GRANT_TYPE, GRANT_REFRESH);
+        form.put(REQUEST_PARAM_RFRESH_TOKEN, req.getRefreshToken());
+
+        ZimbraLog.account.debug("Authentication with existing token initiated for user :  %s", req.getUsername());
+        OktaResponse response = call(req.getConfig(), form, OKTA_REQUEST_TYPE_TOKEN, req.getIp(), req.getUserAgent(),
+                req.getDeviceId());
+        if (response.hasAccessToken()) {
+            String refresh = (response.getRefreshToken() != null && !response.getRefreshToken().isEmpty())
+                    ? response.getRefreshToken() : req.getRefreshToken();
+            return IRopcAuthResult.success(refresh, response.getIdToken(), expiryInSec(response));
+        }
+        // refresh expired
+        if (INVALID_GRANT.equals(response.getError())) {
+            return IRopcAuthResult.invalidGrant(response.getError(), response.getErrorDescription());
+        }
+
+        return IRopcAuthResult.error(getSafeString(response.getError()), response.getErrorDescription());
+    }
+
     private IRopcAuthResult ropcWithPush(IRopcAuthRequest req) throws ServiceException {
         Map<String, String> form = new LinkedHashMap<String, String>();
 
@@ -162,9 +211,10 @@ public final class OktaRopcHandler implements IRopcHandler {
                 req.getConfig().get(REQUEST_PARAM_SCOPE) : SCOPE_DEFAULT);
 
         ZimbraLog.account.debug("Authentication with ROPC initiated for user :  %s", req.getUsername());
-        OktaResponse r = call(req.getConfig(), form, OKTA_REQUEST_TYPE_TOKEN);
+        OktaResponse r = call(req.getConfig(), form, OKTA_REQUEST_TYPE_TOKEN, req.getIp(), req.getUserAgent(),
+                req.getDeviceId());
         if (r.hasAccessToken()) {
-            return IRopcAuthResult.success(r.getRefreshToken(), r.getAccessToken(), expiryMillis(r));
+            return IRopcAuthResult.success(r.getRefreshToken(), r.getIdToken(), expiryInSec(r));
         }
 
         if (isMfaRequired(r)) {
@@ -203,7 +253,6 @@ public final class OktaRopcHandler implements IRopcHandler {
         state.put(REQUEST_PARAM_USERNAME, req.getUsername());
         state.put(REQUEST_PARAM_MFA_TOKEN, getSafeString(mfaToken));
         state.put(REQUEST_PARAM_OOB_CODE, getSafeString(oobCode));
-        // carry config so pollChallenge can reach the token endpoint / timeouts
         state.put(TOKEN_ENDPOINT, getSafeString(req.getConfig().get(TOKEN_ENDPOINT)));
         state.put(REQUEST_PARAM_CLIENT_ID, getSafeString(req.getConfig().get(REQUEST_PARAM_CLIENT_ID)));
         state.put(REQUEST_PARAM_CLIENT_SECRET, getSafeString(req.getConfig().get(REQUEST_PARAM_CLIENT_SECRET)));
@@ -218,11 +267,12 @@ public final class OktaRopcHandler implements IRopcHandler {
                 getSafeString(pushResponse.getInterval()) : getSafeString(req.getConfig().get(POLLING_INTERVAL)));
         state.put(POLLING_TIMEOUT, req.getConfig().get(POLLING_TIMEOUT) == null ?
                 getSafeString(pushResponse.getExpiresIn()) : getSafeString(req.getConfig().get(POLLING_TIMEOUT)));
+        state.put(IP, getSafeString(req.getIp()));
+        state.put(USER_AGENT, getSafeString(req.getUserAgent()));
+        state.put(DEVICE_ID, getSafeString(req.getDeviceId()));
 
-        String dedupeKey = req.getUserAgent() + "|" + req.getUsername() + "|" +  PROVIDER_NAME_OKTA + "|"
-                + (req.getProtocol() == null ? "" : req.getProtocol()) + "|"
-                + (req.getDeviceId() == null ? "" : req.getDeviceId());
-        return new MFAChallenge(PROVIDER_NAME_OKTA, dedupeKey, MFAFactorType.PUSH, state);
+
+        return new MFAChallenge(PROVIDER_NAME_OKTA, MFAFactorType.PUSH, state);
     }
 
     private OktaResponse triggerPushWithRetry(IRopcAuthRequest req, OktaResponse initial) throws ServiceException {
@@ -240,7 +290,8 @@ public final class OktaRopcHandler implements IRopcHandler {
             try {
                 ZimbraLog.account.debug("MFA triggered with PUSH factor for user :  %s ," +
                         " Attempt : %d ", req.getUsername(), attempt);
-                OktaResponse ch = call(req.getConfig(), init, OKTA_REQUEST_TYPE_CHALLENGE);
+                OktaResponse ch = call(req.getConfig(), init, OKTA_REQUEST_TYPE_CHALLENGE, req.getIp(),
+                        req.getUserAgent(), req.getDeviceId());
                 int status = ch.getHttpStatusCode();
                 if (status >= 500 && status <= 504) {
                     if (attempt == maxRetries) {
@@ -284,8 +335,8 @@ public final class OktaRopcHandler implements IRopcHandler {
         }
     }
 
-    private OktaResponse call(Map<String, String> configs, Map<String, String> form, String requestType)
-            throws ServiceException {
+    private OktaResponse call(Map<String, String> configs, Map<String, String> form, String requestType, String ip,
+                              String userAgent, String deviceId) throws ServiceException {
         Map<String, String> headers = new HashMap<>();
         String tokenEndpoint = configs.get(TOKEN_ENDPOINT);
         String clientId = configs.get(REQUEST_PARAM_CLIENT_ID);
@@ -296,6 +347,19 @@ public final class OktaRopcHandler implements IRopcHandler {
         int httpSocketMs = NumberUtils.toInt(configs.get(REQUEST_PARAM_SOCKET_TIMEOUT), SOCKET_TIMEOUT_DEFAULT);
 
         headers.put(ACCEPT, APPLICATION_JSON);
+
+        if (ip != null && !ip.trim().isEmpty()) {
+            headers.put(HEADER_X_FORWARDED_FOR, ip);
+            headers.put(HEADER_AUTH0_FORWARDED_FOR, ip);
+        }
+
+        if (userAgent != null && !userAgent.trim().isEmpty()) {
+            headers.put(HEADER_USER_AGENT, userAgent);
+        }
+
+        if (deviceId != null && !deviceId.trim().isEmpty()) {
+            headers.put(HEADER_X_DEVICE_FINGERPRINT, deviceId);
+        }
 
         if (OKTA_REQUEST_TYPE_CHALLENGE.equalsIgnoreCase(requestType)) {
             tokenEndpoint = tokenEndpoint.replace(TOKEN_ENPOINT_CORE, CHALLENGE_ENPOINT_CORE);
@@ -361,10 +425,11 @@ public final class OktaRopcHandler implements IRopcHandler {
         }
     }
 
-    private static long expiryMillis(OktaResponse r) {
+    private static long expiryInSec(OktaResponse r) {
         try {
-            return r.getExpiresIn() == null ? ACCESS_EXPIRY_DEFAULT :
-                    System.currentTimeMillis() + Long.parseLong(r.getExpiresIn()) * CONVERT_TO_MILLI;
+            long maxExpiry = LC.mfa_idp_max_cred_cache_timeout_in_minutes.intValue() * 60L;
+            return r.getExpiresIn() == null ? maxExpiry :
+                    Math.min(maxExpiry, Long.parseLong(r.getExpiresIn()));
         } catch (Exception e) {
             return ACCESS_EXPIRY_DEFAULT;
         }

@@ -19,7 +19,9 @@ package com.zimbra.cs.account.auth.ropc;
 
 public enum MFAFactorType {
 
-    PUSH;
+    PUSH,
+
+    REFRESH;
 
     public static MFAFactorType fromConfig(String value) {
         if (value == null || value.trim().isEmpty()) {

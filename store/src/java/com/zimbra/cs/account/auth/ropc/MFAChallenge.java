@@ -25,22 +25,19 @@ public final class MFAChallenge {
 
     public static final String REFRESH_TOKEN = "refresh_token";
 
-    public static final String ACCESS_TOKEN = "access_token";
+    public static final String ID_TOKEN = "id_token";
 
-    public static final String ACCESS_EXPIRES_AT = "access_expires_at";
+    public static final String ACCESS_TOKEN_TIMEOUT = "expires_in";
 
     private final String providerName;
-
-    private final String dedupeKey;
 
     private final MFAFactorType factorType;
 
     private final ConcurrentHashMap<String, String> state;
 
-    public MFAChallenge(String providerName, String dedupeKey, MFAFactorType factorType,
+    public MFAChallenge(String providerName, MFAFactorType factorType,
                         Map<String, String> initialState) {
         this.providerName = providerName;
-        this.dedupeKey = dedupeKey;
         this.factorType = factorType;
         this.state = new ConcurrentHashMap<String, String>();
         if (initialState != null) {
@@ -50,10 +47,6 @@ public final class MFAChallenge {
 
     public String getProviderName() {
         return providerName;
-    }
-
-    public String getDedupeKey() {
-        return dedupeKey;
     }
 
     public MFAFactorType getFactorType() {

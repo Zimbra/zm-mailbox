@@ -50,6 +50,9 @@ public final class OktaResponse {
     @JsonProperty("error_description")
     private String errorDescription;
 
+    @JsonProperty("id_token")
+    private String idToken;
+
     private int httpStatusCode;
 
     public String getAccessToken() {
@@ -134,5 +137,13 @@ public final class OktaResponse {
 
     public void setInterval(String interval) {
         this.interval = interval;
+    }
+
+    public String getIdToken() {
+        return idToken;
+    }
+
+    public void setIdToken(String v) {
+        this.idToken = v;
     }
 }

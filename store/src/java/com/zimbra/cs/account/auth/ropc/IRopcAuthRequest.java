@@ -17,7 +17,6 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
-import com.zimbra.cs.account.auth.AuthContext;
 import java.util.Map;
 
 public final class IRopcAuthRequest {
@@ -28,11 +27,9 @@ public final class IRopcAuthRequest {
 
     private final String refreshToken;
 
+    private final String ip;
+
     private final String deviceId;
-
-    private final AuthContext.Protocol protocol;
-
-    private final String clientIp;
 
     private final String userAgent;
 
@@ -42,11 +39,10 @@ public final class IRopcAuthRequest {
         this.username = b.username;
         this.password = b.password;
         this.refreshToken = b.refreshToken;
-        this.deviceId = b.deviceId;
-        this.protocol = b.protocol;
-        this.clientIp = b.clientIp;
-        this.userAgent = b.userAgent;
+        this.ip = b.ip;
         this.config = b.config;
+        this.deviceId = b.deviceId;
+        this.userAgent = b.userAgent;
     }
 
     public String getUsername() {
@@ -61,20 +57,8 @@ public final class IRopcAuthRequest {
         return refreshToken;
     }
 
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    public AuthContext.Protocol getProtocol() {
-        return protocol;
-    }
-
-    public String getClientIp() {
-        return clientIp;
-    }
-
-    public String getUserAgent() {
-        return userAgent;
+    public String getIp() {
+        return ip;
     }
 
     public Map<String, String> getConfig() {
@@ -83,6 +67,14 @@ public final class IRopcAuthRequest {
 
     public boolean isRefresh() {
         return refreshToken != null && !refreshToken.isEmpty();
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
     }
 
     public static Builder builder() {
@@ -96,15 +88,13 @@ public final class IRopcAuthRequest {
 
         private String refreshToken;
 
-        private String deviceId;
-
-        private AuthContext.Protocol protocol;
-
-        private String clientIp;
-
-        private String userAgent;
+        private String ip;
 
         private Map<String, String> config;
+
+        private String deviceId;
+
+        private String userAgent;
 
         public Builder username(String v) {
             this.username = v; return this;
@@ -118,24 +108,20 @@ public final class IRopcAuthRequest {
             this.refreshToken = v; return this;
         }
 
-        public Builder deviceId(String v) {
-            this.deviceId = v; return this;
-        }
-
-        public Builder protocol(AuthContext.Protocol v) {
-            this.protocol = v; return this;
-        }
-
-        public Builder clientIp(String v) {
-            this.clientIp = v; return this;
-        }
-
-        public Builder userAgent(String v) {
-            this.userAgent = v; return this;
+        public Builder ip(String v) {
+            this.ip = v; return this;
         }
 
         public Builder config(Map<String, String> v) {
             this.config = v; return this;
+        }
+
+        public Builder deviceId(String v) {
+            this.deviceId = v; return this;
+        }
+
+        public Builder userAgent(String v) {
+            this.userAgent = v; return this;
         }
 
         public IRopcAuthRequest build() {

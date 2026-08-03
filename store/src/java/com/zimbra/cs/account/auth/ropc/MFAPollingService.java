@@ -20,11 +20,9 @@ package com.zimbra.cs.account.auth.ropc;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -32,24 +30,34 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_USERNAME;
 
 /**
- * Drives out-of-band MFA challenges (e.g. push) to completion in a way that scales to many
- * simultaneous EAS clients. Key properties:
- *
- * <ol>
- *   <li><b>Shared, bounded poller pool</b> — one {@link ScheduledExecutorService} sized by
- *       {@code mfa_idp_pool_max_size} performs all IdP polls. Poll concurrency is therefore
- *       capped regardless of how many clients are waiting (no thread-per-client polling).</li>
- *   <li><b>De-duplication</b> — concurrent/retried requests sharing a {@code dedupeKey}
- *       reuse a single challenge + single poll loop, so only one push is
- *       issued per login attempt (EAS clients retry aggressively).</li>
- *   <li><b>Admission control</b> — a {@link Semaphore} ({@code mfa_idp_max_connection_allowed})
- *       bounds in-flight challenges; over the limit, {@link #await} returns {@link MFAPollResult#ERROR}.
- *       </li>
- * </ol>
- *
- * <p>NOTE: the calling (servlet) thread still blocks in {@link #await} until resolution/timeout.
- * Converting the auth wait async is the follow-up
- * for freeing request threads at very high concurrency.
+ * Executes out-of-bound MFA Challenges (eg. okta PUSH).
+ * <p>
+ *     <b>Concurrency and ScalingArchitecture:</b><br>
+ *     This Service is designed to protect the server from resource exhaustion during high-concurrency
+ *     login events(eg. 1000 simultaneous mobile devices attempting to authenticate).
+ * </p>
+ *<p>
+ *     Instead of forcing the 500 individual HTTP servlet threads to actively run polling
+ *     loos-which would cause a massive spike in CPU context-switching and socket allocation-this service offloads
+ *     the actual network I/O to a small bounded background thread pool(eg. 16-32 thread
+ *     managed by a ScheduledExecutorService.
+ *</p>
+ * <b>
+ *     How it works under heavy load:
+ * </b>
+ * <ul>
+ *     <li><b>This Main HTTP Thread (Waiting):</b>When a client request arrives, the servlet thread
+ *     submits the challenge to this service and enters a lightweight wait state via
+ *     CompletableFuture. While waiting , the thread consumes almost zeroCPU cycles.</li>
+ *     <li><b>The Background poller thread (Working)O:</b>The bounded pool of daemon threads multiplexes
+ *     all active MFA challenges. A poller thread wakes up , executes a single HTTP status check against
+ *     the IDP for a specific user immediately returns to teh pool to pick up the next user's
+ *     challenge.</li>
+ * </ul>
+ * <p>
+ *     This asynchronous execution model allows tiny poll of background threads to efficiently multiplex
+ *     and manage hundreds of sleep client connections without overwhelming zimbra server.
+ * </p>
  */
 public final class MFAPollingService {
 
@@ -60,10 +68,6 @@ public final class MFAPollingService {
     }
 
     private final ScheduledExecutorService scheduler;
-
-    private final Semaphore admission;
-
-    private final ConcurrentHashMap<String, Pending> active = new ConcurrentHashMap<String, Pending>();
 
     private MFAPollingService() {
         final AtomicInteger seq = new AtomicInteger();
@@ -77,7 +81,6 @@ public final class MFAPollingService {
                         return thread;
                     }
                 });
-        this.admission = new Semaphore(Math.max(10, LC.mfa_idp_max_connection_allowed.intValue()));
     }
 
     private static final class Pending {
@@ -99,21 +102,10 @@ public final class MFAPollingService {
         if (provider == null || challenge == null) {
             return MFAPollResult.ERROR;
         }
-        if (!admission.tryAcquire()) {
-            ZimbraLog.account.warn("Authentication failed : MFA admission limit reached (%d); " +
-                            "rejecting challenge for %s",
-                    LC.mfa_idp_max_connection_allowed.intValue(), challenge.getDedupeKey());
-            return MFAPollResult.ERROR;
-        }
         Pending pendingReq = null;
         try {
-            pendingReq = active.computeIfAbsent(challenge.getDedupeKey(),
-                    new java.util.function.Function<String, Pending>() {
-                        @Override
-                        public Pending apply(String key) {
-                            return schedule(provider, challenge, pollingTimeout, interval);
-                        }
-                    });
+            pendingReq = schedule(provider, challenge, pollingTimeout, interval);
+
             return pendingReq.future.get(pollingTimeout + 1500L, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
             if (pendingReq != null) {
@@ -127,8 +119,6 @@ public final class MFAPollingService {
                 complete(pendingReq, MFAPollResult.ERROR);
             }
             return MFAPollResult.ERROR;
-        } finally {
-            admission.release();
         }
     }
 
@@ -164,7 +154,6 @@ public final class MFAPollingService {
         if (future != null) {
             future.cancel(true);
         }
-        active.remove(pendingReq.challenge.getDedupeKey(), pendingReq);
         pendingReq.future.complete(result);
     }
 }
