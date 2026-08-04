@@ -3,17 +3,17 @@ version: 2.1
 references:
   default_environment_settings: &default_environment_settings
     docker:
-      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+      - image: $DOCKER_REGISTRY/zm-base-os:executor-ubuntu18
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
     environment:
-      - BUILD: "/home/build"
-    working_directory: /home/build/zm-mailbox
+      - BUILD: "/home/jenkins"
+    working_directory: /home/jenkins/zm-mailbox
 
   default_attach_workspace: &default_attach_workspace
     attach_workspace:
-      at: /home/build
+      at: /home/jenkins
 
   test_environment_settings: &test_environment_settings
     docker:
@@ -21,12 +21,12 @@ references:
     resource_class: medium
     working_directory: /home/circleci
     environment:
-      BUILD: "/home/build"
+      BUILD: "/home/jenkins"
 
   prepare_test_workspace_mount: &prepare_test_workspace_mount
     run:
-      name: Prepare /home/build for workspace attach
-      command: sudo mkdir -p /home/build && sudo chown -R "$(id -u):$(id -g)" /home/build
+      name: Prepare /home/jenkins for workspace attach
+      command: sudo mkdir -p /home/jenkins && sudo chown -R "$(id -u):$(id -g)" /home/jenkins
 
   filter_branches: &filter_branches
     filters:
@@ -106,15 +106,15 @@ references:
           name: Build mailbox OS packages
           command: |
             set -euo pipefail
-            mkdir -p /home/build/.circleci-pkg-status
-            status_file="/home/build/.circleci-pkg-status/${CIRCLE_JOB}.status"
+            mkdir -p /home/jenkins/.circleci-pkg-status
+            status_file="/home/jenkins/.circleci-pkg-status/${CIRCLE_JOB}.status"
             printf '%s\n' "unknown" > "$status_file"
 
-            cd /home/build
+            cd /home/jenkins
             if [ ! -d "zm-pkg-tool" ]; then
               git clone --depth 1 -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
             fi
-            cd /home/build/zm-mailbox
+            cd /home/jenkins/zm-mailbox
             mkdir -p build/dist
 
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
@@ -123,12 +123,12 @@ references:
               ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" -Dzimbra.buildinfo.revision="1~develop-snapshot" pkg
             printf '%s\n' "ok" > "$status_file"
       - persist_to_workspace:
-          root: /home/build/
+          root: /home/jenkins/
           paths:
             - zm-mailbox/build/dist
             - .circleci-pkg-status
       - store_artifacts:
-          path: /home/build/zm-mailbox/build/dist
+          path: /home/jenkins/zm-mailbox/build/dist
 
   package_build_steps_centos: &package_build_steps_centos
     steps:
@@ -138,15 +138,15 @@ references:
           name: Build mailbox OS packages
           command: |
             set -euo pipefail
-            mkdir -p /home/build/.circleci-pkg-status
-            status_file="/home/build/.circleci-pkg-status/${CIRCLE_JOB}.status"
+            mkdir -p /home/jenkins/.circleci-pkg-status
+            status_file="/home/jenkins/.circleci-pkg-status/${CIRCLE_JOB}.status"
             printf '%s\n' "unknown" > "$status_file"
 
-            cd /home/build
+            cd /home/jenkins
             if [ ! -d "zm-pkg-tool" ]; then
               git clone --depth 1 -b develop --single-branch https://github.com/Zimbra/zm-pkg-tool.git
             fi
-            cd /home/build/zm-mailbox
+            cd /home/jenkins/zm-mailbox
             mkdir -p build/dist
 
             DETECTED_JAVAC="$(command -v javac)"
@@ -157,12 +157,12 @@ references:
             ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" -Dzimbra.buildinfo.revision="1_develop_snapshot" pkg
             printf '%s\n' "ok" > "$status_file"
       - persist_to_workspace:
-          root: /home/build/
+          root: /home/jenkins/
           paths:
             - zm-mailbox/build/dist
             - .circleci-pkg-status
       - store_artifacts:
-          path: /home/build/zm-mailbox/build/dist
+          path: /home/jenkins/zm-mailbox/build/dist
 
   publish_package_steps: &publish_package_steps
     steps:
@@ -171,11 +171,11 @@ references:
       - run:
           name: Publish packages to Nexus APT/Yum
           command: |
-            dist_root="/home/build/zm-mailbox/build/dist"
+            dist_root="/home/jenkins/zm-mailbox/build/dist"
             publish_root="$dist_root"
 
             for build_job in package_build_u24 package_build_u22 package_build_u20 package_build_u18 package_build_c9 package_build_c8; do
-              status_file="/home/build/.circleci-pkg-status/${build_job}.status"
+              status_file="/home/jenkins/.circleci-pkg-status/${build_job}.status"
               if [ ! -f "$status_file" ]; then
                 echo "Missing package build status file: $status_file"
                 exit 1
@@ -195,12 +195,12 @@ references:
 
             sudo apt-get update
             sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl
-            cd /home/build/zm-mailbox
+            cd /home/jenkins/zm-mailbox
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
             export PATH="$JAVA_HOME/bin:$PATH"
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
-            bash /home/build/zm-nexus/scripts/publish-packages-to-nexus.sh "$publish_root"
+            bash /home/jenkins/zm-nexus/scripts/publish-packages-to-nexus.sh "$publish_root"
 
   publish_jar_steps: &publish_jar_steps
     steps:
@@ -214,15 +214,15 @@ references:
       - run:
           name: Publish jars to Nexus
           command: |
-            cd /home/build/zm-mailbox
+            cd /home/jenkins/zm-mailbox
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
             export PATH="$JAVA_HOME/bin:$PATH"
-            bash /home/build/zm-nexus/scripts/publish-jars-to-nexus.sh
+            bash /home/jenkins/zm-nexus/scripts/publish-jars-to-nexus.sh
       - run:
           name: Publish libzimbra-native.so to Nexus
           command: |
-            cd /home/build/zm-mailbox
-            bash /home/build/zm-nexus/scripts/publish-raw-artifacts-to-nexus.sh \
+            cd /home/jenkins/zm-mailbox
+            bash /home/jenkins/zm-nexus/scripts/publish-raw-artifacts-to-nexus.sh \
               native/build \
               "zm-mailbox" \
               "*.so"
@@ -238,7 +238,7 @@ jobs:
       - run:
           name: Clone zm-timezones
           command: |
-            cd /home/build
+            cd /home/jenkins
             if [ ! -d "zm-timezones" ]; then
               git clone --depth 1 -b develop --single-branch https://github.com/Zimbra/zm-timezones.git
             fi
@@ -252,7 +252,7 @@ jobs:
       - run:
           name: Build native libzimbra-native.so
           command: |
-            cd /home/build/zm-mailbox/native
+            cd /home/jenkins/zm-mailbox/native
             export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
             export PATH="$JAVA_HOME/bin:$PATH"
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
@@ -264,12 +264,12 @@ jobs:
       - run:
           name: Checkout Nexus publish scripts repo
           command: |
-            cd /home/build
+            cd /home/jenkins
             if [ ! -d "zm-nexus" ]; then
               git clone -b master --single-branch https://$GITHUB_ACCESS_TOKEN@github.com/Zimbra/zm-nexus.git
             fi
       - persist_to_workspace:
-          root: /home/build/
+          root: /home/jenkins/
           paths:
             - zm-timezones
             - zm-mailbox
@@ -331,13 +331,18 @@ jobs:
 
   package_build_u22:
     <<: *default_environment_settings
+    docker:
+      - image: $DOCKER_REGISTRY/zm-base-os:executor-ubuntu22
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
     resource_class: medium
     <<: *package_build_steps_ubuntu
 
   package_build_u24:
     <<: *default_environment_settings
     docker:
-      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-24.04
+      - image: $DOCKER_REGISTRY/zm-base-os:executor-ubuntu24
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -347,7 +352,7 @@ jobs:
   package_build_u20:
     <<: *default_environment_settings
     docker:
-      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-20.04
+      - image: $DOCKER_REGISTRY/zm-base-os:executor-ubuntu20
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -357,7 +362,7 @@ jobs:
   package_build_u18:
     <<: *default_environment_settings
     docker:
-      - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-18.04
+      - image: $DOCKER_REGISTRY/zm-base-os:executor-ubuntu18
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -367,7 +372,7 @@ jobs:
   package_build_c9:
     <<: *default_environment_settings
     docker:
-      - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-9
+      - image: $DOCKER_REGISTRY/zm-base-os:executor-rhel9
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -377,7 +382,7 @@ jobs:
   package_build_c8:
     <<: *default_environment_settings
     docker:
-      - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-8
+      - image: $DOCKER_REGISTRY/zm-base-os:executor-rhel8
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
