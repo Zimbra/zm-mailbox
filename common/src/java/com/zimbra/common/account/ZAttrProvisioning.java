@@ -7360,14 +7360,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMailRecallEnabled = "zimbraFeatureMailRecallEnabled";
 
     /**
-     * Secret key used in Mail Recall to make it more secure from spoof.
-     *
-     * @since ZCS 10.1.17
-     */
-    @ZAttr(id=4152)
-    public static final String A_zimbraFeatureMailRecallSecretKey = "zimbraFeatureMailRecallSecretKey";
-
-    /**
      * Time(in minutes) within which a message can be recalled. The default
      * time is 30 minutes and accepts value from 1 to 30.
      *
@@ -7502,14 +7494,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4032)
     public static final String A_zimbraFeatureModernVideoEnabled = "zimbraFeatureModernVideoEnabled";
-
-    /**
-     * Flag to check whether Zimbra native mobile app is enabled
-     *
-     * @since ZCS 10.1.21
-     */
-    @ZAttr(id=4164)
-    public static final String A_zimbraFeatureNativeMobileAppEnabled = "zimbraFeatureNativeMobileAppEnabled";
 
     /**
      * Whether user can create address books
@@ -10959,28 +10943,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4120)
     public static final String A_zimbraMobileAllowedIPs = "zimbraMobileAllowedIPs";
-
-    /**
-     * JSON wrapper containing FCM server credentials and bundle metadata for
-     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
-     * deviceJSON(encrypted) (Firebase device JSON), bundleVersion,
-     * bundleInstalledAt.
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public static final String A_zimbraMobileAppFCMDeviceDetails = "zimbraMobileAppFCMDeviceDetails";
-
-    /**
-     * JSON wrapper containing FCM server credentials and bundle metadata for
-     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
-     * serverJSON(encrypted) (Firebase service-account JSON), bundleVersion,
-     * bundleInstalledAt.
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public static final String A_zimbraMobileAppFCMServerDetails = "zimbraMobileAppFCMServerDetails";
 
     /**
      * whether mobile sync should zip the skipped item and attach it to the
