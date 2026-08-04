@@ -12959,6 +12959,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMyoneloginSamlSigningCert = "zimbraMyoneloginSamlSigningCert";
 
     /**
+     * Number of days for which data should be retained in mobile device.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=7170)
+    public static final String A_zimbraNativeMobileAppLocalDataRetentionDays = "zimbraNativeMobileAppLocalDataRetentionDays";
+
+    /**
+     * Maximum stored data in mobile device.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=7171)
+    public static final String A_zimbraNativeMobileAppMaxLocalDataSize = "zimbraNativeMobileAppMaxLocalDataSize";
+
+    /**
+     * Minimum mobile app version required.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=7172)
+    public static final String A_zimbraNativeMobileAppMinVersionSupported = "zimbraNativeMobileAppMinVersionSupported";
+
+    /**
      * Deprecated since: 10.1.0. deprecated in favor for new realtime license
      * attributes. Orig desc: A signed activation key that authorizes this
      * installation.
