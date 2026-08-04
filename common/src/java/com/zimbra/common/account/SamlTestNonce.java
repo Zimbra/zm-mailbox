@@ -45,6 +45,9 @@ public final class SamlTestNonce {
     /** Validity window for a generated nonce (30 minutes). */
     public static final long NONCE_VALIDITY_MS = 30 * 60 * 1000L;
 
+    /** The SAML {@code RelayState} query/form parameter name that carries the nonce round-trip. */
+    public static final String RELAY_STATE_PARAM = "RelayState";
+
     private static final String NOT_AFTER_MARKER = " notAfter=";
     private static final String RELAY_KEY_NONCE = "nonce";
     private static final SecureRandom RANDOM = new SecureRandom();

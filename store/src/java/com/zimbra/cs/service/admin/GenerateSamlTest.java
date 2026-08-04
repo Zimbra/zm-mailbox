@@ -19,6 +19,7 @@ package com.zimbra.cs.service.admin;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,7 +152,7 @@ public class GenerateSamlTest extends AdminDocumentHandler {
     private String buildLoginUrl(String origin, String relayState) throws ServiceException {
         try {
             return new URI(origin).resolve(SAMLLOGIN_PATH).toString()
-                    + "?RelayState=" + java.net.URLEncoder.encode(relayState, "UTF-8");
+                    + "?" + SamlTestNonce.RELAY_STATE_PARAM + "=" + URLEncoder.encode(relayState, "UTF-8");
         } catch (final Exception e) {
             throw ServiceException.FAILURE("Unable to build SAML test login URL", e);
         }
