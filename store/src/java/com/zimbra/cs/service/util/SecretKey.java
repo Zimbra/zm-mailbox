@@ -1,3 +1,4 @@
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -19,26 +20,26 @@ package com.zimbra.cs.service.util;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import java.io.IOException;
-import org.apache.commons.codec.binary.Hex;
-
-import javax.mail.MessagingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import javax.mail.MessagingException;
 
 public class SecretKey {
 
     public static final int KEY_SIZE_BYTES = 32;
+
     public static final String MSGVRFY_HEADER_PREFIX = "hash=SHA256;guid=";
+
     public static final String MSGVRFY_ALGORITHM_NAME = "SHA-256";
+
     public static final String HEX_64_ZERO_PADDED_FORMAT = "%064x";
 
     /**
-     * returns the randomly generated String
+     * returns the randomly generated String.
      *
      * @return randomly generated String
      * @throws ServiceException if an error occurred
@@ -57,14 +58,17 @@ public class SecretKey {
     }
 
     /**
-     * provide the Hash for Message-Verification header field.
+     * Provide the Hash for Message-Verification header field.
      *
-     * @param id
-     * @param date
-     * @param from
-     * @throws ServiceException
+     * @param id the unique message identifier
+     * @param date the date associated with the message
+     * @param from the sender's email address
+     * @return the computed hash value for the Message-Verification header field
+     * @throws MessagingException if a messaging error occurs
+     * @throws ServiceException if a service error occurs
      */
-    public static String getMessageVerificationHeaderValue(String id, String date, String from) throws MessagingException, ServiceException {
+    public static String getMessageVerificationHeaderValue(String id, String date, String from)
+            throws MessagingException, ServiceException {
         String secretKey = Provisioning.getInstance().getConfig().getFeatureMailRecallSecretKey();
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(id);
@@ -80,8 +84,9 @@ public class SecretKey {
     /**
      * Create a digest of the given input with the given algorithm.
      *
-     * @param input
-     * @throws ServiceException
+     * @param input the input string to hash
+     * @throws ServiceException if the hashing algorithm is not available
+     * @return Base64-encoded hex string of the SHA digest of the input
      */
     private static String getHashForMessageVerification(String input) throws ServiceException {
         try {

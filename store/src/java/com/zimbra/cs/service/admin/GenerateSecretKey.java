@@ -26,7 +26,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.service.util.SecretKey;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.CacheEntryType;
-
 import java.util.Map;
 
 public class GenerateSecretKey extends AdminDocumentHandler {

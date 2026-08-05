@@ -1,7 +1,8 @@
-/*
+
+/**
  * ***** BEGIN LICENSE BLOCK *****
- * Zimbra Collaboration Suite Server
- * Copyright (C) 2025 Synacor, Inc.
+ * Zimbra Collaboration Suite Web Client
+ * Copyright (C) 2026 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -14,20 +15,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-
-package com.zimbra.soap.admin.message;
-
-import com.zimbra.common.soap.AdminConstants;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = AdminConstants.E_GENERATE_SECRET_KEY_RESPONSE)
-@XmlType(propOrder = {})
-public class GenerateSecretKeyResponse {
-
-    public GenerateSecretKeyResponse() {
-    }
-}
+/**
+ * zimbra cs service util package.
+ */
+package com.zimbra.cs.service.util;

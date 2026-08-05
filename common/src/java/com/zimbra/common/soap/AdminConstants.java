@@ -1668,8 +1668,11 @@ public final class AdminConstants {
 
     // Secret key for mail recall
     public static final String E_GENERATE_SECRET_KEY_REQUEST = "GenerateSecretKeyRequest";
+
     public static final String E_GENERATE_SECRET_KEY_RESPONSE = "GenerateSecretKeyResponse";
+
     public static final QName GENERATE_SECRET_KEY_REQUEST = QName.get(E_GENERATE_SECRET_KEY_REQUEST, NAMESPACE);
+
     public static final QName GENERATE_SECRET_KEY_RESPONSE = QName.get(E_GENERATE_SECRET_KEY_RESPONSE, NAMESPACE);
 
     // Removed Zetras zimlet package list
