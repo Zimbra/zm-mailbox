@@ -33,6 +33,7 @@ references:
       branches:
         only:
           - develop
+          - ZCS-20193
 
   restore_deps_cache: &restore_deps_cache
     restore_cache:
@@ -119,8 +120,22 @@ references:
 
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            BUILD_TS="$(date +'%Y%m%d%H%M%S')"
+            BUILD_HOST="$(hostname -f)"
+            OS_ID="$(. /etc/os-release && echo "$ID")"
+            OS_VER="$(. /etc/os-release && echo "$VERSION_ID" | cut -d. -f1)"
+            BUILD_PLATFORM="$(echo "${OS_ID}${OS_VER}_64" | tr '[:lower:]' '[:upper:]')"
+            echo "DEBUG buildinfo: buildnum=${CIRCLE_BUILD_NUM} release=${BUILD_TS} host=${BUILD_HOST} platform=${BUILD_PLATFORM}"
             JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH \
-              ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" -Dzimbra.buildinfo.revision="1~develop-snapshot" pkg
+              ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" \
+                  -Dzimbra.buildinfo.revision="1~develop-snapshot" \
+                  -Dzimbra.buildinfo.buildnum="${CIRCLE_BUILD_NUM}" \
+                  -Dzimbra.buildinfo.release="${BUILD_TS}" \
+                  -Dzimbra.buildinfo.date="${BUILD_TS}" \
+                  -Dzimbra.buildinfo.host="${BUILD_HOST}" \
+                  -Dzimbra.buildinfo.platform="${BUILD_PLATFORM}" \
+                  -Dzimbra.buildinfo.type="NETWORK" \
+                  pkg
             printf '%s\n' "ok" > "$status_file"
       - persist_to_workspace:
           root: /home/jenkins/
@@ -154,7 +169,21 @@ references:
             export PATH="$JAVA_HOME/bin:$PATH"
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
             BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
-            ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" -Dzimbra.buildinfo.revision="1_develop_snapshot" pkg
+            BUILD_TS="$(date +'%Y%m%d%H%M%S')"
+            BUILD_HOST="$(hostname -f)"
+            OS_ID="$(. /etc/os-release && echo "$ID")"
+            OS_VER="$(. /etc/os-release && echo "$VERSION_ID" | cut -d. -f1)"
+            BUILD_PLATFORM="$(echo "CENTOS${OS_VER}_64" | tr '[:lower:]' '[:upper:]')"
+            echo "DEBUG buildinfo: buildnum=${CIRCLE_BUILD_NUM} release=${BUILD_TS} host=${BUILD_HOST} platform=${BUILD_PLATFORM}"
+            ant -Dzimbra.buildinfo.version="${BUILD_RELEASE_NUMBER}_${CIRCLE_BUILD_NUM}" \
+                -Dzimbra.buildinfo.revision="1_develop_snapshot" \
+                -Dzimbra.buildinfo.buildnum="${CIRCLE_BUILD_NUM}" \
+                -Dzimbra.buildinfo.release="${BUILD_TS}" \
+                -Dzimbra.buildinfo.date="${BUILD_TS}" \
+                -Dzimbra.buildinfo.host="${BUILD_HOST}" \
+                -Dzimbra.buildinfo.platform="${BUILD_PLATFORM}" \
+                -Dzimbra.buildinfo.type="NETWORK" \
+                pkg
             printf '%s\n' "ok" > "$status_file"
       - persist_to_workspace:
           root: /home/jenkins/
