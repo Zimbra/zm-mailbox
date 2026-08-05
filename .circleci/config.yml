@@ -32,7 +32,7 @@ references:
     filters:
       branches:
         only:
-          - ZCICD-78
+          - develop
 
   restore_deps_cache: &restore_deps_cache
     restore_cache:
