@@ -222,9 +222,20 @@ references:
           name: Publish libzimbra-native.so to Nexus
           command: |
             cd /home/jenkins/zm-mailbox
+
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
+            BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+            GIT_TIMESTAMP=$(git log -1 --pretty=format:%at)
+            VERSION="${BUILD_RELEASE_NUMBER}.${GIT_TIMESTAMP}-develop-snapshot"
+
+            PUBLISH_DIR="native/build/${VERSION}"
+            mkdir -p "$PUBLISH_DIR"
+            cp native/build/libzimbra-native.so "$PUBLISH_DIR/libzimbra-native-${VERSION}.so"
+            cp native/build/libsetuid.so "$PUBLISH_DIR/libsetuid-${VERSION}.so"
+
             bash /home/jenkins/zm-nexus/scripts/publish-raw-artifacts-to-nexus.sh \
-              native/build \
-              "zm-mailbox" \
+              "$PUBLISH_DIR" \
+              "zm-mailbox/${VERSION}" \
               "*.so"
 
 jobs:
