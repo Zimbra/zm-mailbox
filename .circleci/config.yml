@@ -33,7 +33,6 @@ references:
       branches:
         only:
           - develop
-          - ZCS-20193
 
   restore_deps_cache: &restore_deps_cache
     restore_cache:
