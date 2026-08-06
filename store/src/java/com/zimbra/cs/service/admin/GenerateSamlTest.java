@@ -88,8 +88,17 @@ public class GenerateSamlTest extends AdminDocumentHandler {
         final boolean force = Boolean.TRUE.equals(req.getForce());
         final String currentNonce = entry.getAttr(Provisioning.A_zimbraSamlTestNonce, null);
         if (!force && SamlTestNonce.hasActiveNonce(currentNonce, now)) {
-            throw SamlServiceException.TEST_IN_PROGRESS(
-                    "A SAML test is already in progress; retry with force=1 to override.");
+            final String existingTimestamp = entry.getAttr(Provisioning.A_zimbraSamlTestTimestamp, null);
+            final String existingError = entry.getAttr(Provisioning.A_zimbraSamlTestErrorMessage, null);
+            final boolean previousTestFailed = !StringUtil.isNullOrEmpty(existingTimestamp)
+                    && !StringUtil.isNullOrEmpty(existingError);
+            if (!previousTestFailed) {
+                // No result recorded yet — test is genuinely still in progress.
+                throw SamlServiceException.TEST_IN_PROGRESS(
+                        "A SAML test is already in progress; retry with force=1 to override.");
+            }
+            // previous test closed with a failure — nonce is stale, fall through to start a fresh test.
+            // the unconditional modifyAttrs below will overwrite nonce, timestamp(empty), and error(empty).
         }
 
         // Determine the test origin (scheme+host) to build the pop-up URL on.

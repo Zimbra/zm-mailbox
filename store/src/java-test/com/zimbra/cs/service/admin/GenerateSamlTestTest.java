@@ -110,7 +110,9 @@ public class GenerateSamlTestTest {
 
     @Test
     public void domainTestSuccessBuildsLoginUrlAndPersistsNonce() throws Exception {
-        setDomainAttrs("https://mail.test.com/zimbra/", "", "",
+        // Active nonce + recorded failure — should fall through and start a fresh test (not throw).
+        String staleNonce = SamlTestNonce.formatStoredValue("stale", System.currentTimeMillis() + 60000);
+        setDomainAttrs("https://mail.test.com/zimbra/", "", staleNonce,
                 "20200101000000Z", "SSO:OLD_ERROR");
 
         Element resp = invoke(new DomainSelector(DomainSelector.DomainBy.name, DOMAIN), null);
@@ -119,17 +121,33 @@ public class GenerateSamlTestTest {
         assertTrue("url should target the login path on the login URL origin: " + url,
                 url.startsWith("https://mail.test.com" + LOGIN_PATH + "?RelayState="));
 
-        // nonce persisted + active, and echoed in the RelayState
+        // new nonce persisted + active, and echoed in the RelayState
         String stored = domainNonce();
+        assertFalse("stale nonce should have been replaced", staleNonce.equals(stored));
         assertTrue(SamlTestNonce.hasActiveNonce(stored, System.currentTimeMillis()));
         String relayState = resp.getAttribute(AdminConstants.A_RELAY_STATE);
         String nonceInRelay = SamlTestNonce.getNonceFromRelayState(relayState);
         assertTrue(SamlTestNonce.isValid(nonceInRelay, stored, System.currentTimeMillis()));
 
-        // stale result cleared
+        // stale result cleared by the unconditional modifyAttrs
         Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, DOMAIN);
         assertEquals("", domain.getAttr(Provisioning.A_zimbraSamlTestTimestamp, ""));
         assertEquals("", domain.getAttr(Provisioning.A_zimbraSamlTestErrorMessage, ""));
+    }
+
+    @Test
+    public void activeNonceWithPartialResultStillThrows() throws Exception {
+        // Only timestamp set, error empty — previousTestFailed is false, should still throw.
+        String active = SamlTestNonce.formatStoredValue("existing", System.currentTimeMillis() + 60000);
+        setDomainAttrs("https://mail.test.com/", "", active, "20260806120000Z", "");
+        try {
+            invoke(new DomainSelector(DomainSelector.DomainBy.name, DOMAIN), null);
+            fail("expected TEST_IN_PROGRESS");
+        } catch (ServiceException e) {
+            assertEquals(SamlServiceException.TEST_IN_PROGRESS, e.getCode());
+        }
+        // nonce untouched
+        assertEquals(active, domainNonce());
     }
 
     @Test
