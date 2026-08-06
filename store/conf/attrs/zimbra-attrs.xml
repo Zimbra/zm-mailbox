@@ -10644,4 +10644,21 @@ TODO: delete them permanently from here
   <desc>Soft quota limit percentage applied over zimbraMailQuota</desc>
 </attr>
 
+<attr id="7170" name="zimbraNativeMobileAppLocalDataRetentionDays" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
+  <globalConfigValue>30</globalConfigValue>
+  <defaultCOSValue>30</defaultCOSValue>
+  <desc>Number of days for which data should be retained in mobile device.</desc>
+</attr>
+
+<attr id="7171" name="zimbraNativeMobileAppMaxLocalDataSize" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
+  <globalConfigValue>10240</globalConfigValue>
+  <defaultCOSValue>10240</defaultCOSValue>
+  <desc>Maximum stored data in mobile device.</desc>
+</attr>
+
+<attr id="7172" name="zimbraNativeMobileAppMinVersionSupported" type="string" cardinality="single" optionalIn="globalConfig" flags="accountInfo" since="10.1.22">
+  <globalConfigValue>10.1.22</globalConfigValue>
+  <desc>Minimum mobile app version required.</desc>
+</attr>
+
 </attrs>
