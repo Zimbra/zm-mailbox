@@ -28,6 +28,8 @@ public final class IRopcConstants {
 
     public static final String FACTOR = "factor";
 
+    public static final String REFRESH = "REFRESH";
+
     public static final String PROVIDER_NAME_OKTA = "okta";
 
     public static final String FACTOR_NONE = "NONE";
@@ -35,6 +37,8 @@ public final class IRopcConstants {
     public static final String FACTOR_PUSH = "PUSH";
 
     public static final String REQUEST_PARAM_GRANT_TYPE = "grant_type";
+
+    public static final String REQUEST_PARAM_RFRESH_TOKEN = "refresh_token";
 
     public static final String REQUEST_PARAM_USERNAME = "username";
 
@@ -88,6 +92,10 @@ public final class IRopcConstants {
 
     public static final String INVALID_GRANT = "invalid_grant";
 
+    public static final String INVALID_REQUEST = "invalid_request";
+
+    public static final String AUTHORIZATION_ERROR_MSG = "another authorization server";
+
     public static final String ACCESS_DENIED = "access_denied";
 
     public static final String OKTA_REQUEST_TYPE_TOKEN = "token";
@@ -118,10 +126,43 @@ public final class IRopcConstants {
 
     public static final String SCOPE_DEFAULT = "openid offline_access";
 
-    public static final long ACCESS_EXPIRY_DEFAULT = 3600000L;
+    public static final long ACCESS_EXPIRY_DEFAULT = 3600;
 
     public static final int MAX_LOG_LENGTH = 500;
 
     public static final long CONVERT_TO_MILLI = 1000L;
+
+    public static final long TTL_MS = 3600000L;
+
+    public static final String IP = "ip";
+
+    public static final String HEADER_X_FORWARDED_FOR = "X-Forwarded-For";
+
+    public static final String HEADER_AUTH0_FORWARDED_FOR = "auth0-forwarded-for";
+
+    public static final int HARD_EXPIRY_DEFAULT = 60;
+
+    public static final String EAS = "eas";
+
+    public static final String OUTLOOK = "outlook";
+
+    public static final String FULL_AUTH = "full_auth";
+
+    public static final String HEADER_USER_AGENT = "User-Agent";
+
+    public static final String HEADER_X_DEVICE_FINGERPRINT = "X-Device-Fingerprint";
+
+    public static final String USER_AGENT = "UserAgent";
+
+    public static final String DEVICE_ID = "deviceID";
+
+    public static final long CACHE_GRACE_PERIOD_MIN_DURATION = 30;
+
+    public static final long CACHE_EXPIRY_MIN_DURATION = 30;
+
+    public static final String AUTH_REQUEST_TYPE = "OPTIONS";
+
+
+
 
 }

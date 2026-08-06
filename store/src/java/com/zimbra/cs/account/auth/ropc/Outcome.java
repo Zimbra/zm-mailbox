@@ -26,6 +26,8 @@ public enum Outcome {
 
     MFA_TIMEOUT,
 
+    TOKEN_EXPIRED,
+
     REJECTED,
 
     ERROR

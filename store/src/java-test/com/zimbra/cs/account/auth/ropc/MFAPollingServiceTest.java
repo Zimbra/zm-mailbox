@@ -18,10 +18,8 @@
 package com.zimbra.cs.account.auth.ropc;
 
 import com.zimbra.common.service.ServiceException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,17 +44,10 @@ public class MFAPollingServiceTest {
 
     @Before
     public void setUp() {
-
         testExecutor = Executors.newScheduledThreadPool(1);
-
         Whitebox.setInternalState(mfaPollingService, "scheduler", testExecutor);
-        Whitebox.setInternalState(mfaPollingService, "admission", new Semaphore(10));
-        Whitebox.setInternalState(mfaPollingService, "active", new ConcurrentHashMap<>());
-
         mockProvider = mock(IRopcHandler.class);
         mockChallenge = mock(MFAChallenge.class);
-
-        when(mockChallenge.getDedupeKey()).thenReturn("test-dedupe-key");
     }
 
     @After
@@ -79,21 +70,11 @@ public class MFAPollingServiceTest {
     }
 
     @Test
-    public void testAwaitAdmissionLimitReachedReturnsError() throws ServiceException {
-        Whitebox.setInternalState(mfaPollingService, "admission", new Semaphore(0));
-        MFAPollResult result = mfaPollingService.await(mockProvider, mockChallenge, 1000L, 5000L);
-        assertEquals(MFAPollResult.ERROR, result);
-        verify(mockProvider, never()).pollChallenge(any(MFAChallenge.class));
-    }
-
-    @Test
     public void testAwaitSuccessfulPoll() throws ServiceException {
         when(mockProvider.pollChallenge((mockChallenge))).thenReturn(MFAPollResult.SUCCESS);
 
         MFAPollResult result = mfaPollingService.await(mockProvider, mockChallenge, 10L, 2000L);
         assertEquals(MFAPollResult.SUCCESS, result);
-        ConcurrentHashMap<?, ?> active = Whitebox.getInternalState(mfaPollingService, "active");
-        assertEquals(0, active.size());
     }
 
     @Test
@@ -102,17 +83,13 @@ public class MFAPollingServiceTest {
 
         MFAPollResult result = mfaPollingService.await(mockProvider, mockChallenge, 10L, 50L);
         assertEquals(MFAPollResult.EXPIRED, result);
-        ConcurrentHashMap<?, ?> active = Whitebox.getInternalState(mfaPollingService, "active");
-        assertEquals(0, active.size());
     }
 
     @Test
-    public void testAwaitProviderThrowsExceptionREturnError() throws ServiceException {
+    public void testAwaitProviderThrowsExceptionReturnError() throws ServiceException {
         when(mockProvider.pollChallenge((mockChallenge))).thenThrow(new RuntimeException("IDP connection issue"));
 
         MFAPollResult result = mfaPollingService.await(mockProvider, mockChallenge, 10L, 50L);
         assertEquals(MFAPollResult.ERROR, result);
-        ConcurrentHashMap<?, ?> active = Whitebox.getInternalState(mfaPollingService, "active");
-        assertEquals(0, active.size());
     }
 }
