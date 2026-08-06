@@ -18,6 +18,7 @@ package com.zimbra.cs.mime;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.lucene.document.Document;
 import org.junit.Assert;
@@ -52,51 +53,44 @@ public final class ParsedMessageTest {
      */
     @Test
     public void rfc2822a5() throws Exception {
-        String raw =
-            "From: Pete(A wonderful \\) chap) <pete(his account)@(comment)silly.test(his host)>\n" +
-            "To: Chris <c@(xxx bbb)public.example>,\n" +
-            "         joe@example.org,\n" +
-            "  John <jdoe@one.test> (my dear friend); (the end of the group)\n" +
-            "Cc:(Empty list)(start)Undisclosed recipients  :(nobody(that I know))  ;\n" +
-            "Date: Thu,\n" +
-            "      13\n" +
-            "        Feb\n" +
-            "          1969\n" +
-            "      23:32\n" +
-            "               -0330 (Newfoundland Time)\n" +
-            "Message-ID:              <testabcd.1234@silly.test>\n" +
-            "\n" +
-            "Testing.";
+        String raw = "From: Pete(A wonderful \\) chap) <pete(his account)@(comment)silly." +
+                "test(his host)>\n" + "To: Chris <c@(xxx bbb)public.example>,\n" + "         " +
+                "joe@example.org,\n" + "  John <jdoe@one.test> (my dear friend); (the end of the group)\n" +
+                "Cc:(Empty list)(start)Undisclosed recipients  :(nobody(that I know))  ;\n" + "Date: Thu,\n" +
+                "      13\n" + "        Feb\n" + "          1969\n" + "      23:32\n" + "               " +
+                "-0330 (Newfoundland Time)\n" + "Message-ID:              <testabcd.1234@silly.test>\n" +
+                "\n" + "Testing.";
 
         ParsedMessage msg = new ParsedMessage(raw.getBytes(), false);
         List<IndexDocument> docs = msg.getLuceneDocuments();
         Assert.assertEquals(1, docs.size());
         Document doc = docs.get(0).toDocument();
 
-        RFC822AddressTokenStream from = (RFC822AddressTokenStream) doc.getFieldable(
-                LuceneFields.L_H_FROM).tokenStreamValue();
-        Assert.assertEquals(Arrays.asList("pete", "a", "wonderful", "chap", "pete", "his", "account", "comment",
-                "silly.test", "his", "host", "pete@silly.test", "pete", "@silly.test", "silly.test"),
-                from.getAllTokens());
+        RFC822AddressTokenStream from = (RFC822AddressTokenStream) doc.getFieldable(LuceneFields.L_H_FROM)
+                .tokenStreamValue();
+        Assert.assertEquals(
+                Arrays.asList("pete", "a", "wonderful", "chap", "pete", "his", "account", "comment", "silly.test",
+                        "his", "host", "pete@silly.test", "pete", "@silly.test", "silly.test"), from.getAllTokens());
 
-        RFC822AddressTokenStream to = (RFC822AddressTokenStream) doc.getFieldable(
-                LuceneFields.L_H_TO).tokenStreamValue();
+        RFC822AddressTokenStream to = (RFC822AddressTokenStream) doc.getFieldable(LuceneFields.L_H_TO)
+                .tokenStreamValue();
         Assert.assertEquals(Arrays.asList("chris", "c@", "c", "xxx", "bbb", "public.example", "joe@example.org", "joe",
                 "@example.org", "example.org", "example", "@example", "john", "jdoe@one.test", "jdoe", "@one.test",
                 "one.test", "my", "dear", "friend", "the", "end", "of", "the", "group", "c@public.example", "c",
                 "@public.example", "public.example"), to.getAllTokens());
 
-        RFC822AddressTokenStream cc = (RFC822AddressTokenStream) doc.getFieldable(
-                LuceneFields.L_H_CC).tokenStreamValue();
-        Assert.assertEquals(Arrays.asList("empty", "list", "start", "undisclosed", "recipients", "nobody", "that", "i",
-                "know"), cc.getAllTokens());
+        RFC822AddressTokenStream cc = (RFC822AddressTokenStream) doc.getFieldable(LuceneFields.L_H_CC)
+                .tokenStreamValue();
+        Assert.assertEquals(
+                Arrays.asList("empty", "list", "start", "undisclosed", "recipients", "nobody", "that", "i", "know"),
+                cc.getAllTokens());
 
-        RFC822AddressTokenStream xEnvFrom = (RFC822AddressTokenStream) doc.getFieldable(
-                LuceneFields.L_H_X_ENV_FROM).tokenStreamValue();
+        RFC822AddressTokenStream xEnvFrom = (RFC822AddressTokenStream) doc.getFieldable(LuceneFields.L_H_X_ENV_FROM)
+                .tokenStreamValue();
         Assert.assertEquals(0, xEnvFrom.getAllTokens().size());
 
-        RFC822AddressTokenStream xEnvTo = (RFC822AddressTokenStream) doc.getFieldable(
-                LuceneFields.L_H_X_ENV_TO).tokenStreamValue();
+        RFC822AddressTokenStream xEnvTo = (RFC822AddressTokenStream) doc.getFieldable(LuceneFields.L_H_X_ENV_TO)
+                .tokenStreamValue();
         Assert.assertEquals(0, xEnvTo.getAllTokens().size());
     }
 
@@ -135,7 +129,6 @@ public final class ParsedMessageTest {
         Assert.assertEquals("[NORMALIZE] " + description, expected, ParsedMessage.normalize(raw));
     }
 
-
     @Test
     public void encryptedFragment() throws Exception {
         String msgWasEncrypted = L10nUtil.getMessage(L10nUtil.MsgKey.encryptedMessageFragment);
@@ -144,12 +137,113 @@ public final class ParsedMessageTest {
             msgWasEncrypted = "";
         }
 
-        byte[] raw = ByteStreams.toByteArray(getClass().getResourceAsStream("smime-encrypted.txt"));
+        byte[] raw = ByteStreams.toByteArray(
+                Objects.requireNonNull(getClass().getResourceAsStream("smime-encrypted.txt")));
         ParsedMessage pm = new ParsedMessage(raw, false);
         Assert.assertEquals("encrypted-message fragment", msgWasEncrypted, pm.getFragment(null));
 
-        raw = ByteStreams.toByteArray(getClass().getResourceAsStream("smime-signed.txt"));
+        raw = ByteStreams.toByteArray(Objects.requireNonNull(getClass().getResourceAsStream("smime-signed.txt")));
         pm = new ParsedMessage(raw, false);
-        Assert.assertFalse("normal message fragment", pm.getFragment(null).equals(msgWasEncrypted));
+        Assert.assertNotEquals("normal message fragment", pm.getFragment(null), msgWasEncrypted);
+    }
+
+    @Test
+    public void getRecipientsAllWithToAndCcAndBcc() throws Exception {
+        String raw = "From: sender@example.com\n" + "To: alice@example.com, bob@example.com\n" +
+                "Cc: carol@example.com\n" + "Bcc: dave@example.com\n" + "Subject: Test\n" +
+                "Message-ID: <test1@example.com>\n" + "Date: Fri, 26 Jun 2026 10:00:00 +0530\n" +
+                "\n" + "Body text.";
+
+        ParsedMessage pm = new ParsedMessage(raw.getBytes(), false);
+        String recipients = pm.getRecipients(true);
+
+        Assert.assertTrue("should contain alice", recipients.contains("alice@example.com"));
+        Assert.assertTrue("should contain bob", recipients.contains("bob@example.com"));
+        Assert.assertTrue("should contain carol", recipients.contains("carol@example.com"));
+        Assert.assertTrue("should contain dave", recipients.contains("dave@example.com"));
+    }
+
+    @Test
+    public void getRecipientsAllWithToOnly() throws Exception {
+        String raw = "From: sender@example.com\n" + "To: alice@example.com\n" + "Subject: Test\n" +
+                "Message-ID: <test2@example.com>\n" + "Date: Fri, 26 Jun 2026 10:00:00 +0530\n" + "\n" + "Body text.";
+
+        ParsedMessage pm = new ParsedMessage(raw.getBytes(), false);
+        String recipients = pm.getRecipients(true);
+
+        Assert.assertTrue("should contain alice", recipients.contains("alice@example.com"));
+        // Should not contain commas from empty Cc/Bcc
+        Assert.assertFalse("should not start with comma", recipients.startsWith(","));
+        Assert.assertFalse("should not end with comma", recipients.endsWith(","));
+    }
+
+    @Test
+    public void getRecipientsAllWithCcAndBccOnly() throws Exception {
+        String raw = "From: sender@example.com\n" + "Cc: carol@example.com\n" + "Bcc: dave@example.com\n" +
+                "Subject: Test\n" + "Message-ID: <test3@example.com>\n" +
+                "Date: Fri, 26 Jun 2026 10:00:00 +0530\n" + "\n" + "Body text.";
+
+        ParsedMessage pm = new ParsedMessage(raw.getBytes(), false);
+        String recipients = pm.getRecipients(true);
+
+        Assert.assertTrue("should contain carol", recipients.contains("carol@example.com"));
+        Assert.assertTrue("should contain dave", recipients.contains("dave@example.com"));
+        Assert.assertFalse("should not contain empty leading segment", recipients.startsWith(","));
+    }
+
+    @Test
+    public void getRecipientsAllNoRecipientHeaders() throws Exception {
+        String raw = "From: sender@example.com\n" + "Subject: Test\n" + "Message-ID: <test4@example.com>\n" +
+                "Date: Fri, 26 Jun 2026 10:00:00 +0530\n" + "\n" + "Body text.";
+
+        ParsedMessage pm = new ParsedMessage(raw.getBytes(), false);
+        String recipients = pm.getRecipients(true);
+
+        Assert.assertEquals("no recipients should return empty string", "", recipients);
+    }
+
+    @Test
+    public void getRecipientsAllMultipleToAddresses() throws Exception {
+        String raw = "From: sender@example.com\n" + "To: alice@example.com, bob@example.com, eve@example.com\n" +
+                "Subject: Test\n" + "Message-ID: <test5@example.com>\n" + "Date: Fri, 26 Jun 2026 10:00:00 +0530\n" +
+                "\n" + "Body text.";
+
+        ParsedMessage pm = new ParsedMessage(raw.getBytes(), false);
+        String recipients = pm.getRecipients(true);
+
+        Assert.assertTrue("should contain alice", recipients.contains("alice@example.com"));
+        Assert.assertTrue("should contain bob", recipients.contains("bob@example.com"));
+        Assert.assertTrue("should contain eve", recipients.contains("eve@example.com"));
+    }
+
+    @Test
+    public void getRecipientsFalseDelegatesToOverload() throws Exception {
+        String raw = "From: sender@example.com\n" + "To: alice@example.com, bob@example.com\n" +
+                "Cc: carol@example.com\n" + "Bcc: dave@example.com\n" + "Subject: Test\n" +
+                "Message-ID: <test6@example.com>\n" + "Date: Fri, 26 Jun 2026 10:00:00 +0530\n" +
+                "\n" + "Body text.";
+
+        ParsedMessage pm = new ParsedMessage(raw.getBytes(), false);
+        String allRecipients = pm.getRecipients(true);
+        String toOnly = pm.getRecipients(false);
+
+        // getRecipients(false) delegates to getRecipients() which returns To only
+        Assert.assertTrue("To-only should contain alice", toOnly.contains("alice@example.com"));
+        // allRecipients should be a superset (has Cc/Bcc too)
+        Assert.assertTrue("all should have more or equal content", allRecipients.length() >= toOnly.length());
+    }
+
+    @Test
+    public void getRecipientsAllCommaSeparation() throws Exception {
+        String raw = "From: sender@example.com\n" + "To: alice@example.com\n" +
+                "Cc: carol@example.com\n" + "Subject: Test\n" + "Message-ID: <test7@example.com>\n" +
+                "Date: Fri, 26 Jun 2026 10:00:00 +0530\n" + "\n" + "Body text.";
+
+        ParsedMessage pm = new ParsedMessage(raw.getBytes(), false);
+        String recipients = pm.getRecipients(true);
+
+        // StringJoiner with "," delimiter should produce comma-separated output
+        String[] parts = recipients.split(",");
+        Assert.assertTrue("should have at least 2 parts", parts.length >= 2);
     }
 }

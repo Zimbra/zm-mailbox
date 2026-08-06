@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.zip.GZIPInputStream;
 
 import javax.mail.Address;
@@ -699,6 +700,34 @@ public final class ParsedMessage {
             }
         }
         return recipients;
+    }
+
+    /**
+     * Returns a comma-separated list of {@code To} addresses.
+     * @param allRecipients for getting all accounts
+     * @return comma-separated list of recipient email addresses
+     */
+    public String getRecipients(boolean allRecipients) {
+        if (allRecipients) {
+            try {
+                MimeMessage msg = getMimeMessage();
+                StringJoiner joiner = new StringJoiner(",");
+                if (msg != null) {
+                    for (String header : new String[]{"To", "Cc", "Bcc"}) {
+                        String value = msg.getHeader(header, ",");
+                        if (!StringUtil.isNullOrEmpty(value)) {
+                            joiner.add(value);
+                        }
+                    }
+                }
+                return joiner.toString();
+            } catch (MessagingException e) {
+                LOG.warn("Messaging exception while getting MimeMessage");
+                throw new RuntimeException(e);
+            }
+        } else {
+            return getRecipients();
+        }
     }
 
     /**
