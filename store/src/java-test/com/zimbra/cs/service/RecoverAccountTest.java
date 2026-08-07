@@ -38,6 +38,7 @@ import org.junit.rules.TestWatchman;
 import org.junit.runners.model.FrameworkMethod;
 
 import com.google.common.collect.Maps;
+import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.FeatureResetPasswordStatus;
 import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
@@ -59,6 +60,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.RecoverAccount;
 import com.zimbra.cs.service.mail.ServiceTestUtil;
+import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.RecoverAccountRequest;
@@ -234,6 +236,38 @@ public class RecoverAccountTest {
         Message msg = (Message) recoveryMailbox.getItemList(null, MailItem.Type.MESSAGE).get(0);
         Assert.assertEquals("Reset your zimbra.com password", msg.getSubject());
     }
+
+    @Test
+    public void testRecoveryCodeSize() throws Exception {
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798@zimbra.com");
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
+        acct1.setPrefPasswordRecoveryAddressStatus(PrefPasswordRecoveryAddressStatus.verified);
+        Assert.assertEquals("testRecovery@zimbra.com", acct1.getPrefPasswordRecoveryAddress());
+        RecoverAccountRequest request = new RecoverAccountRequest();
+        request.setOp(RecoverAccountOperation.SEND_RECOVERY_CODE);
+        request.setEmail("test4798@zimbra.com");
+        request.setChannel(Channel.EMAIL);
+        Element req = JaxbUtil.jaxbToElement(request);
+        try {
+            new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));
+        } catch (ServiceException se) {
+            Assert.fail("ServiceException should not be thrown.");
+        }
+        
+        // Retrieve the recovery code from the account and verify its size
+        acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798@zimbra.com");
+        String encodedRecoveryCode = acct1.getResetPasswordRecoveryCode();
+        Assert.assertNotNull("Recovery code should not be null", encodedRecoveryCode);
+        
+        // Decode the JWE recovery code
+        Map<String, String> recoveryCodeMap = JWEUtil.getDecodedJWE(encodedRecoveryCode);
+        Assert.assertNotNull("Decoded recovery code map should not be null", recoveryCodeMap);
+        
+        String recoveryCode = recoveryCodeMap.get(CodeConstants.CODE.toString());
+        Assert.assertNotNull("Recovery code from map should not be null", recoveryCode);
+        Assert.assertEquals("Recovery code size should be 12 characters", 12, recoveryCode.length());
+    }
+
 
     @Test
     public void testResendRecoveryCodePositiveAndNegativeScenarios() throws Exception {

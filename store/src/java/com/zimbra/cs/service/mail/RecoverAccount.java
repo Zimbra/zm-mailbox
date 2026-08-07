@@ -16,6 +16,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -48,6 +49,8 @@ import com.zimbra.soap.type.Channel;
 
 public final class RecoverAccount extends MailDocumentHandler {
     public static final String LOG_OPERATION = "RecoverAccount:";
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -161,7 +164,8 @@ public final class RecoverAccount extends MailDocumentHandler {
                         .atZone(ZoneId.systemDefault());
                 if (ChronoUnit.MILLIS.between(currentDate, storedDate) <= 0L) {
                     ZimbraLog.passwordreset.debug("%s Recovery code expired, so generating new one.", LOG_OPERATION);
-                    recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
+                    recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(12, 0,
+                            0, true, true, null, SECURE_RANDOM));
                     // add expiry duration in current time.
                     currentDate = currentDate.plus(account.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
                     Long val = currentDate.toInstant().toEpochMilli();
@@ -173,7 +177,8 @@ public final class RecoverAccount extends MailDocumentHandler {
             } else {
                 ZimbraLog.passwordreset.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION, account.getName());
                 recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryAccount);
-                recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
+                recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(12, 0,
+                        0, true, true, null, SECURE_RANDOM));
                 // add expiry duration in current time.
                 currentDate = currentDate.plus(account.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
                 Long val = currentDate.toInstant().toEpochMilli();
