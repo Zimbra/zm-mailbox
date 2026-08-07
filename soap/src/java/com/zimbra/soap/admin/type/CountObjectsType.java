@@ -55,6 +55,8 @@ public enum CountObjectsType {
     internalUserAccountWithDocumentEditing(false, false),
     internalUserAccountsByCosesWithLdapFeature(false, false),
     internalUserAccountsByCosWithLdapFeature(false, false),
+    internalUserAccountsOrphanInDomain(false, false),
+    internalUserAccountsOrphanNoCos(false, false),
     internalUserAccountsWithLdapFeatureCheck(false, false);
 
     private boolean allowsDomain;
