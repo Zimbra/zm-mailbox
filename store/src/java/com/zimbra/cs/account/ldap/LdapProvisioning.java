@@ -9478,6 +9478,38 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 types.add(ObjectType.accounts);
                 filter = filterFactory.accountsByCosAndFeatureCheck(cosId, ldapAttribute);
                 break;
+            case internalUserAccountsOrphanInDomain:
+                boolean isOrphanInDomain =
+                        argsLength == 2 &&
+                                args[0] instanceof Domain &&
+                                args[1] instanceof String;
+                if (!isOrphanInDomain) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting orphan accounts in domain failed : Invalid Arguments");
+                }
+                Domain domain = (Domain) args[0];
+                ldapAttribute = (String) args[1];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsOrphanInDomain(ldapAttribute);
+                // Domain-scoped: use domain as search base instead of global bases
+                String[] domainBases = getSearchBases(domain, types);
+                long domainCount = 0;
+                for (String base : domainBases) {
+                    domainCount += countObjects(base, filter);
+                }
+                return domainCount;
+            case internalUserAccountsOrphanNoCos:
+                boolean isOrphanNoCos =
+                        argsLength == 1 &&
+                                args[0] instanceof String;
+                if (!isOrphanNoCos) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting orphan accounts (no cos) failed : Invalid Arguments");
+                }
+                ldapAttribute = (String) args[0];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsOrphanNoCosAndFeatureCheck(ldapAttribute);
+                break;
             case internalUserAccountsWithLdapFeatureCheck: // accounts with a feature enabled or disabled
                 boolean isAccountsWithLdapFeatureCheck =
                         argsLength == 2 &&
