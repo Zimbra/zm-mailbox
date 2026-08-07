@@ -16,6 +16,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -49,6 +50,8 @@ import com.zimbra.soap.mail.message.SetRecoveryAccountResponse;
 import com.zimbra.soap.type.Channel;
 
 public class SetRecoveryAccount extends DocumentHandler {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -118,7 +121,7 @@ public class SetRecoveryAccount extends DocumentHandler {
                 throw ForgetPasswordException.CODE_ALREADY_SENT("Verification code already sent to this recovery email.");
             }
         }
-        String code = RandomStringUtils.random(8, true, true);
+        String code = RandomStringUtils.random(12, 0, 0, true, true, null, SECURE_RANDOM);
         Account authAccount = getAuthenticatedAccount(zsc);
         long expiry = account.getRecoveryAccountCodeValidity();
         Date now = new Date();
