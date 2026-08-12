@@ -94,14 +94,17 @@ public final class IRopcAuthEngine {
                                     rec.getCreatedAt(), authResult.getAccessTokenExpiry());
                         }
                         return Outcome.SUCCESS;
-                    case INVALID_GRANT:   // refresh token expired/revoked
-                    case POLICY_DENIED:
+                    case INVALID_GRANT:
                         STORE.delete(account, rec.getId(), user, userAgent, configs.get(PROVIDER), proto,
                                 rec.getDeviceId());
                         IRopcCredCache.invalidate(user, userAgent, proto, rec.getProvider(), ip, rec.getDeviceId());
                         ZimbraLog.account.error("ROPC failed as token is expired, revoked for user %s: %s", user,
                                 authResult.getErrorDescription());
                         return Outcome.TOKEN_EXPIRED;
+                    case POLICY_DENIED:
+                        ZimbraLog.account.error("ROPC refresh blocked by IDP policy denied for user %s: %s", user,
+                                authResult.getErrorDescription());
+                        return Outcome.POLICY_DENIED;
                     default:
                         ZimbraLog.account.error("ROPC failed due following error for user %s: %s", user,
                                 authResult.getErrorDescription());
