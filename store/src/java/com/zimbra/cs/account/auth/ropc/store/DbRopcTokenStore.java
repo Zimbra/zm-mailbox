@@ -158,6 +158,57 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
     }
 
     @Override
+    public List<IRopcSessionRecord> findByDeviceIdAndUsername(Account account, String deviceId)
+            throws ServiceException {
+        if (account == null || deviceId == null) {
+            return null;
+        }
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<IRopcSessionRecord> results = new ArrayList<>();
+        try {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            conn = DbPool.getConnection(mbox);
+            stmt = conn.prepareStatement(
+                    "SELECT id, username, device_id, user_agent, ip, provider, protocol, refresh_token, " +
+                            "id_token, password, created_at, updated_at"
+                            + " FROM " + getTableName(mbox) + " WHERE device_id = ? AND username = ?");
+            stmt.setString(1, deviceId);
+            stmt.setString(2, account.getName());
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                IRopcSessionRecord record = new IRopcSessionRecord.Builder()
+                        .id(rs.getLong(1))
+                        .username(rs.getString(2))
+                        .deviceId(rs.getString(3))
+                        .userAgent(rs.getString(4))
+                        .ip(rs.getString(5))
+                        .provider(rs.getString(6))
+                        .protocol(rs.getString(7))
+                        .refreshToken(rs.getString(8))
+                        .idToken(rs.getString(9))
+                        .passwordHash(rs.getString(10))
+                        .createdAt(rs.getLong(11))
+                        .lastUpdatedAt(rs.getLong(12))
+                        .build();
+                results.add(record);
+
+            }
+
+            return results.isEmpty() ? null : results;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("ROPC token lookup failed for " + account.getName(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+
+    }
+
+    @Override
     public void upsert(Account account, IRopcSessionRecord session) throws ServiceException {
         if (session == null) {
             return;
@@ -240,7 +291,7 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
             try {
                 stmt.executeUpdate();
             } catch (SQLIntegrityConstraintViolationException e) {
-                // Fallback
+                // fallback
                 deleteStmt = conn.prepareStatement(
                         "DELETE FROM " + getTableName(mbox) + " " +
                                 "WHERE username = ? AND provider = ? AND protocol = ? AND " +
@@ -343,6 +394,34 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
         } finally {
             DbPool.closeResults(resultSet);
             DbPool.closeStatement(findSchemasStmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    @Override
+    public void deleteByDeviceIdAndUsername(Account account, String deviceId) throws ServiceException {
+        if (account == null || deviceId == null) {
+            return;
+        }
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            conn = DbPool.getConnection(mbox);
+
+            stmt = conn.prepareStatement(
+                    "DELETE FROM " + getTableName(mbox) + " " + "WHERE device_id = ? AND username = ?");
+            stmt.setString(1, deviceId);
+            stmt.setString(2, account.getName());
+            stmt.executeUpdate();
+            conn.commit();
+
+        } catch (SQLException e) {
+            DbPool.quietRollback(conn);
+            throw ServiceException.FAILURE("Failed to delete ROPC session for " + account.getName(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
     }

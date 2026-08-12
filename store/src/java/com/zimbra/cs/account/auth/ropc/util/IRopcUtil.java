@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.auth.PasswordUtil;
+import com.zimbra.cs.account.auth.ropc.IRopcCredCache;
 import com.zimbra.cs.account.auth.ropc.store.IRopcSessionRecord;
 import com.zimbra.cs.account.auth.ropc.store.IRopcTokenStore;
 import java.util.HashMap;
@@ -98,5 +99,45 @@ public class IRopcUtil {
         }
 
         return matchedRec;
+    }
+
+    /*
+    * Completely removes all the authentication session data associated with a specific
+    * device for a given account.
+    * <p>
+    * Thi method performs a synchronised cleanup across two stages layer
+    * <ol>
+    *   <li>It fetches existing session candidate to explicitly invalidate their corresponding
+    * key in the in memory cache.</li>
+    *   <li>It performs an optimized bulk deletion fo all associated records from teh underlying
+    *  persistent database store.</li>
+    * </ol>
+    * </p>
+    *
+    * @param account
+    * @param deviceId
+    * @throws ServiceException
+    */
+    public static void removeDataForDevice(Account account, String deviceId) throws ServiceException {
+        if (account == null || deviceId == null) {
+            ZimbraLog.account.error("Error while flushing auth data from DB for user." +
+                    "As provided account or device id is null");
+            return;
+        }
+
+        try {
+            List<IRopcSessionRecord> candidates = IRopcCredCache.STORE.findByDeviceIdAndUsername(account, deviceId);
+            if (candidates != null && !candidates.isEmpty()) {
+                for (IRopcSessionRecord candidate : candidates) {
+                    // invalidate from in-memory cache
+                    IRopcCredCache.invalidate(candidate.getUsername(), candidate.getUserAgent(),
+                            candidate.getProtocol(), candidate.getProvider(), candidate.getIp(),
+                            candidate.getDeviceId());
+                }
+                IRopcCredCache.STORE.deleteByDeviceIdAndUsername(account, deviceId);
+            }
+        } catch (Exception e) {
+            ZimbraLog.account.error("Error while flushing auth data from DB for user %s", account.getName(), e);
+        }
     }
 }

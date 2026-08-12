@@ -272,3 +272,25 @@ CREATE TABLE *{DATABASE_NAME}.watch (
 
    CONSTRAINT pk_watch PRIMARY KEY (mailbox_id, target, item_id)
 );
+
+CREATE TABLE *${DATABASE_NAME}.ropc_token_store (
+   id               BIGINT AUTO_INCREMENT NOT NULL,
+   username         VARCHAR(255) NOT NULL,
+   device_id        VARCHAR(128) DEFAULT NULL,
+   user_agent       VARCHAR(255) DEFAULT NULL,
+   ip               VARCHAR(45) DEFAULT NULL,
+   provider         VARCHAR(32) NOT NULL,
+   protocol         VARCHAR(32) NOT NULL,
+   refresh_token    TEXT DEFAULT NULL,
+   id_token         TEXT DEFAULT NULL,
+   password         VARCHAR(256) DEFAULT NULL,
+   created_at       BIGINT NOT NULL,
+   updated_at       BIGINT NOT NULL,
+
+   PRIMARY KEY (id),
+   UNIQUE KEY `uk_user_device_session` (`username`, `provider`, `protocol`, `device_id`, `user_agent`),
+   INDEX `idx_options_ip_lookup` (`username`, `provider`, `protocol`, `ip`, `user_agent`),
+   INDEX `idx_expiry_cleanup` (`created_at`),
+   INDEX `idx_back_channel_logout` (`username`),
+   INDEX `idx_device_lookup` (`device_id`, `username`)
+);

@@ -65,6 +65,25 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
     }
 
     @Override
+    public List<IRopcSessionRecord>  findByDeviceIdAndUsername(Account account, String deviceId) {
+        if (account == null || deviceId == null) {
+            return null;
+        }
+
+        String username = account.getName();
+        List<IRopcSessionRecord> results = new ArrayList<>();
+
+        for (List<IRopcSessionRecord> cacheSessions : tokenCache.asMap().values()) {
+            for (IRopcSessionRecord record : cacheSessions) {
+                if (deviceId.equals(record.getDeviceId()) && username.equalsIgnoreCase(record.getUsername())) {
+                    results.add(record);
+                }
+            }
+        }
+        return results.isEmpty() ? null : results;
+    }
+
+    @Override
     public void upsert(Account account, IRopcSessionRecord session) throws ServiceException {
         if (session == null) {
             throw ServiceException.INVALID_REQUEST("ROPC token session missing required fields", null);
@@ -165,5 +184,25 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
             );
             return existingList.isEmpty() ? null : existingList;
         });
+    }
+
+    @Override
+    public void deleteByDeviceIdAndUsername(Account account, String deviceId) {
+        if (account == null || deviceId == null) {
+            return;
+        }
+
+        String username = account.getName();
+
+        for (String key : tokenCache.asMap().keySet()) {
+            tokenCache.asMap().computeIfPresent(key, (k, existingList) -> {
+                existingList.removeIf(record ->
+                        deviceId.equals(record.getDeviceId()) &&
+                        username.equalsIgnoreCase(record.getUsername())
+                );
+
+                return existingList.isEmpty() ? null : existingList;
+            });
+        }
     }
 }
