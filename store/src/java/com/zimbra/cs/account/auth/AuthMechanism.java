@@ -135,7 +135,7 @@ public abstract class AuthMechanism {
                 fallbackMech = authMechStr.substring(FALLBACK_PREFIX.length(), spaceIdx);
                 authMechStr = authMechStr.substring(spaceIdx + 1).trim();
             } else {
-                ZimbraLog.account.warn("Invalid auth mech config: %s — no auth mechanism after fallback prefix",
+                ZimbraLog.account.debug("Invalid auth mech config: %s — no auth mechanism after fallback prefix",
                         authMechStr);
                 return new ZimbraAuth(AuthMech.zimbra);
             }
@@ -145,13 +145,12 @@ public abstract class AuthMechanism {
             if (authMechStr.contains(IDP_ROPC) && !IRopcCustomAuth.isSupported(context)) {
                 if (fallbackMech != null) {
                     AuthMech fallback = resolveFallbackMech(fallbackMech);
-                    ZimbraLog.account.info("Protocol not supported by IdP ROPC, using fallback: %s", fallback);
+                    ZimbraLog.account.debug("Protocol not supported by IdP ROPC, using fallback: %s", fallback);
                     authMechStr = fallback.name();
                 } else {
-                    ZimbraLog.account.error("Protocol not supported by IdP ROPC and no fallback configured for %s",
+                    ZimbraLog.account.debug("Protocol not supported by IdP ROPC and no fallback configured for %s",
                             acct.getName());
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(context),
-                            "No fallback auth mechanism configured for this protocol");
+                    return new ZimbraAuth(AuthMech.zimbra);
                 }
             } else {
                 // supported ROPC (EAS) or any other custom mechanism
