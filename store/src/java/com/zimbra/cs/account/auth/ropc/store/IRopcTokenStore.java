@@ -31,10 +31,14 @@ public interface IRopcTokenStore {
     List<IRopcSessionRecord> findByIp(Account account, String username, String userAgent, String provider,
                                       String protocol, String ip) throws ServiceException;
 
+    List<IRopcSessionRecord> findByDeviceIdAndUsername(Account account, String deviceId) throws ServiceException;
+
     void upsert(Account account, IRopcSessionRecord session) throws ServiceException;
 
     void updateDeviceId(Account account, IRopcSessionRecord session) throws ServiceException;
 
     void delete(Account account, Long id, String username, String userAgent, String provider, String protocol,
                 String deviceId) throws ServiceException;
+
+    void deleteByDeviceIdAndUsername(Account account, String deviceId) throws ServiceException;
 }

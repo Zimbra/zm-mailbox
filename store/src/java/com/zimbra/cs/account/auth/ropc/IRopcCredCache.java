@@ -272,6 +272,26 @@ public final class IRopcCredCache {
         }
 
         if (recordToUpgrade != null) {
+            try {
+                List<IRopcSessionRecord> oldRecords = STORE.findByDeviceIdAndUsername(account, deviceId);
+                if (oldRecords != null) {
+                    for (IRopcSessionRecord oldRecord : oldRecords) {
+                        // if this record matches the unique constraint column, it's the one DB is about to delete
+                        // it needs to be invalidated from cache too
+                        if (userAgent.equals(oldRecord.getUserAgent()) &&
+                                protocol.equals(oldRecord.getProtocol()) &&
+                                provider.equals(oldRecord.getProvider())) {
+                            String oldIp = oldRecord.getIp();
+                            if (oldIp != null) {
+                                String ghostIpKey = buildKey(email, userAgent, protocol, provider, oldIp, null);
+                                CRED_CACHE.invalidate(ghostIpKey);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                ZimbraLog.account.error("Failed to cleanup old IP cache key during device ID upgrade", e);
+            }
             recordToUpgrade.setDeviceId(deviceId);
             STORE.updateDeviceId(account, recordToUpgrade);
             CRED_CACHE.put(deviceKey, ipEntry);
@@ -312,7 +332,7 @@ public final class IRopcCredCache {
         }
 
         ZimbraLog.account.info(
-                "IRopcCredCache: invalidated session and rejection blocks for %s", email);
+                "IRopcCredCache: invalidated session for %s", email);
     }
 
     public static void invalidateRejectionCacheByUsername(String email) {

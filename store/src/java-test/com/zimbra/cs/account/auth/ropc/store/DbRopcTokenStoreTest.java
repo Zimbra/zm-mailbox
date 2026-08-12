@@ -20,6 +20,7 @@ package com.zimbra.cs.account.auth.ropc.store;
 import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -32,6 +33,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
@@ -50,7 +52,8 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({DbPool.class, LC.class, KnownKey.class, MailboxManager.class, Mailbox.class, DbMailbox.class})
+@PrepareForTest({DbPool.class, LC.class, KnownKey.class, MailboxManager.class, Mailbox.class,
+        DbMailbox.class, Account.class})
 @SuppressStaticInitializationFor({"com.zimbra.common.localconfig.LC", "com.zimbra.cs.mailbox.Mailbox",
         "com.zimbra.cs.db.DbMailbox"})
 public class DbRopcTokenStoreTest {
@@ -61,6 +64,9 @@ public class DbRopcTokenStoreTest {
     private PreparedStatement mockStmt;
 
     private ResultSet mockRs;
+
+    @Mock
+    private Account mockAccount;
 
     @Before
     public void setUp() throws SQLException, ServiceException {
@@ -84,6 +90,7 @@ public class DbRopcTokenStoreTest {
 
         PowerMockito.mockStatic(DbMailbox.class);
         PowerMockito.when(DbMailbox.qualifyTableName(any(), anyString())).thenReturn("ropc_token_store");
+        mockAccount = Whitebox.newInstance(Account.class);
     }
 
     @Test
@@ -203,5 +210,58 @@ public class DbRopcTokenStoreTest {
         verify(mockStmt, times(1)).executeUpdate();
         verify(mockStmt).setLong(eq(1), anyLong());
         verify(mockConn, times(1)).commit();
+    }
+
+    @Test
+    public void testfindByDeviceIdAndUsernameSuccessfullyMapResultSet() throws SQLException, ServiceException {
+        PowerMockito.stub(PowerMockito.method(Account.class, "getName")).toReturn("testUser");
+        when(mockStmt.executeQuery()).thenReturn(mockRs);
+        when(mockRs.next()).thenReturn(true, false);
+
+        when(mockRs.getLong(1)).thenReturn(100L);
+        when(mockRs.getString(2)).thenReturn("testUser");
+        when(mockRs.getString(3)).thenReturn("device123");
+        when(mockRs.getString(4)).thenReturn("userAgent");
+        when(mockRs.getString(5)).thenReturn("ip1234");
+
+        List<IRopcSessionRecord> results = store.findByDeviceIdAndUsername(mockAccount, "device123");
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals(Long.valueOf(100L), results.get(0).getId());
+        assertEquals("testUser", results.get(0).getUsername());
+        assertEquals("device123", results.get(0).getDeviceId());
+
+        verify(mockStmt).setString(1, "device123");
+        verify(mockStmt).setString(2, "testUser");
+        verify(mockStmt, times(1)).executeQuery();
+    }
+
+    @Test
+    public void testfindByDeviceIdAndUsernameReturnNUllIfParamterMissing() throws SQLException, ServiceException {
+        PowerMockito.stub(PowerMockito.method(Account.class, "getName")).toReturn("testUser");
+        assertNull(store.findByDeviceIdAndUsername(null, "device123"));
+        assertNull(store.findByDeviceIdAndUsername(mockAccount, null));
+        assertNull(store.findByDeviceIdAndUsername(null, null));
+    }
+
+    @Test
+    public void testDeleteByDeviceIdAndUsernameExectedSuccessfully() throws SQLException, ServiceException {
+        PowerMockito.stub(PowerMockito.method(Account.class, "getName")).toReturn("testUser");
+        when(mockStmt.executeUpdate()).thenReturn(1);
+
+        store.deleteByDeviceIdAndUsername(mockAccount, "device123");
+        verify(mockStmt).setString(1, "device123");
+        verify(mockStmt).setString(2, "testUser");
+        verify(mockStmt, times(1)).executeUpdate();
+    }
+
+    @Test
+    public void testDeleteByDeviceIdAndUsernameReturnEarlyIfParamterMissing() throws SQLException, ServiceException {
+        PowerMockito.stub(PowerMockito.method(Account.class, "getName")).toReturn("testUser");
+
+        store.deleteByDeviceIdAndUsername(null, "device123");
+        store.deleteByDeviceIdAndUsername(mockAccount, null);
+        store.deleteByDeviceIdAndUsername(null, null);
+        verify(mockStmt, times(0)).executeUpdate();
     }
 }
