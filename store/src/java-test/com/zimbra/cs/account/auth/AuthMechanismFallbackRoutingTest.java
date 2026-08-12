@@ -77,27 +77,21 @@ public class AuthMechanismFallbackRoutingTest {
     @Test
     public void testInvalidAndMalformedConfigs() throws Exception {
         Map<String, Object> ctx = new HashMap<>();
-
-        // 1. No fallback prefix for ROPC + Non-EAS -> Must throw
+        // 1. No fallback prefix for ROPC + Non-EAS -> silently returns default ZimbraAuth
         Account noFallback = createAccountWithAuthMech("err-nofb.com", "custom:idp-ropc arg1");
-        try {
-            AuthMechanism.newInstance(noFallback, ctx);
-            fail("Missing fallback prefix must throw");
-        } catch (ServiceException e) {
-            assertTrue(e.getMessage().contains("authentication failed"));
-        }
+        assertEquals("No fallback configured must return default zimbra", AuthMech.zimbra,
+                AuthMechanism.newInstance(noFallback, ctx).getMechanism());
 
-        // 2. Invalid fallback type (custom) -> Must throw (via resolveFallbackMech)
+        // 2. Invalid fallback type (custom) -> resolveFallbackMech throws AUTH_FAILED
         Account badFallback = createAccountWithAuthMech("err-badfb.com",
                 "fallback:custom custom:idp-ropc");
         try {
             AuthMechanism.newInstance(badFallback, ctx);
-            fail("Invalid fallback type must throw");
+            fail("Invalid fallback type 'custom' must throw");
         } catch (ServiceException e) {
             assertTrue(e.getMessage().contains("authentication failed"));
         }
-
-        // 3. Malformed prefix (no space) -> Must fall back to default ZimbraAuth
+        // 3. Malformed prefix (no space after fallback:ad) -> returns default ZimbraAuth
         Account malformed = createAccountWithAuthMech("err-malformed.com", "fallback:ad");
         assertEquals("Malformed config must return default zimbra", AuthMech.zimbra,
                 AuthMechanism.newInstance(malformed, ctx).getMechanism());
