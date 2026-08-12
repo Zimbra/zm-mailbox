@@ -18,6 +18,7 @@
 package com.zimbra.cs.account.auth;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -171,7 +172,7 @@ public class IRopcCustomAuthTest {
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
             fail("Expected AuthFailedServiceException was not thrown");
-        } catch (AccountServiceException.AuthFailedServiceException e) {
+        } catch (ServiceException e) {
             assertTrue("Message should indicate rejected credentials",
                     e.getMessage().contains("Authentication failed : Policy Denied"));
         }
@@ -185,9 +186,8 @@ public class IRopcCustomAuthTest {
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
             fail("Expected AuthFailedServiceException was not thrown");
-        } catch (AccountServiceException.AuthFailedServiceException e) {
-            assertTrue("Message should indicate timeout",
-                    e.getMessage().contains("MFA request timed out. Please try again"));
+        } catch (ServiceException e) {
+            assertTrue(ServiceException.TEMPORARILY_UNAVAILABLE().getCode().equals(e.getCode()));
         }
     }
 

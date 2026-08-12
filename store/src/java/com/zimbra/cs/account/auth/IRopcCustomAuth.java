@@ -95,21 +95,18 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
                 break;
             case REJECTED:
                 IRopcCredCache.storeRejection(user);
-                throw AuthFailedServiceException.AUTH_FAILED(user,
-                        "Authentication failed : Challenge denied by user");
+                throw ServiceException.FORBIDDEN("Authentication failed : User Rejected PUSH");
             case INVALID:
                 IRopcCredCache.storeRejection(user);
                 throw AuthFailedServiceException.AUTH_FAILED(user,
                         "Authentication failed : Invalid credentials provided");
             case POLICY_DENIED:
-                throw AuthFailedServiceException.AUTH_FAILED(user,
-                        "Authentication failed : Policy Denied");
+                throw ServiceException.FORBIDDEN("Authentication failed : Policy Denied");
             case TOKEN_EXPIRED:
-                throw AuthFailedServiceException.AUTH_FAILED(user,
-                        "Authentication failed : Token Expired");
+                throw ServiceException.FORBIDDEN("Authentication failed : Token expired");
             case MFA_TIMEOUT:
                 IRopcCredCache.storeRejection(user);
-                throw AuthFailedServiceException.AUTH_FAILED(user, "MFA request timed out. Please try again");
+                throw ServiceException.TEMPORARILY_UNAVAILABLE();
             case ERROR:
                 throw ServiceException.TEMPORARILY_UNAVAILABLE();
             default:
