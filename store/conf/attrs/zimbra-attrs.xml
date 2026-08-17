@@ -5516,7 +5516,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1169" name="zimbraMyoneloginSamlSigningCert"  type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.1">
+<attr id="1169" name="zimbraMyoneloginSamlSigningCert"  type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.1" callback="SamlTestReset">
   <desc>certificate to be used for validating the SAML assertions received from myonelogin (tricipher)</desc>
 </attr>
 
