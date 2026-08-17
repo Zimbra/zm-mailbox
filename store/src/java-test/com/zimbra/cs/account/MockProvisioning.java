@@ -357,8 +357,10 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public void modifyAccountStatus(Account acct, String newStatus) {
-        throw new UnsupportedOperationException();
+    public void modifyAccountStatus(Account acct, String newStatus) throws ServiceException {
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        attrs.put(Provisioning.A_zimbraAccountStatus, newStatus);
+        modifyAttrs(acct, attrs);
     }
 
     @Override
