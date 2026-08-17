@@ -16,7 +16,14 @@
  */
 package com.zimbra.cs.service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +31,9 @@ import java.util.Random;
 import java.util.UUID;
 
 import javax.servlet.http.Cookie;
-
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.tika.mime.MediaType;
 import org.junit.After;
 import org.junit.Assert;
@@ -445,9 +454,120 @@ public class FileUploadServletTest {
         }
     }
 
+    @Test
+    public void testNoTikaTmpFileLeakOnXlsUpload() throws Exception {
+        // tika uses java.io.tmpdir for TikaInputStream temp files
+        Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
+
+        // create a minimal XLS file using Apache POI
+        byte[] xlsBytes;
+        try (HSSFWorkbook workbook = new HSSFWorkbook()) {
+            HSSFSheet sheet = workbook.createSheet("TestSheet");
+            HSSFRow row = sheet.createRow(0);
+            row.createCell(0).setCellValue("ZBUG-4593 tmp file leak test");
+            row.createCell(1).setCellValue(12345.67);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            workbook.write(baos);
+            xlsBytes = baos.toByteArray();
+        }
+
+        // count apache-tika-*.tmp files before the upload
+        long beforeCount = getTikaTmpFileCount(tmpDir);
+
+        byte[] formBytes = buildMultipartFormWithBinaryFile(
+                "test_data.xls", "application/vnd.ms-excel", xlsBytes);
+        // perform the upload
+        List<Upload> uploads = uploadForm(formBytes);
+
+        // verify upload succeeded
+        assertNotNull("Upload should succeed for XLS file", uploads);
+        assertEquals("Should have exactly 1 upload", 1, uploads.size());
+        assertEquals("test_data.xls", uploads.get(0).getName());
+
+        // count apache-tika-*.tmp files after the upload
+        long afterCount = getTikaTmpFileCount(tmpDir);
+
+        // verify no new tmp files should persist after upload completes
+        assertEquals("apache-tika tmp files leaked during XLS upload. "
+                        + "Before: " + beforeCount + ", After: " + afterCount,
+                beforeCount, afterCount);
+    }
+
+    @Test
+    public void testNoTikaTmpFileLeakOnRepeatedXlsUploads() throws Exception {
+        Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
+        // create XLS with more data to increase chance of Tika buffering to disk
+        byte[] xlsBytes;
+        try (HSSFWorkbook workbook = new HSSFWorkbook()) {
+            HSSFSheet sheet = workbook.createSheet("Data");
+            for (int i = 0; i < 100; i++) {
+                HSSFRow row = sheet.createRow(i);
+                row.createCell(0).setCellValue("Row " + i);
+                row.createCell(1).setCellValue(i * 100.0);
+                row.createCell(2).setCellValue("TestData " + i);
+            }
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            workbook.write(baos);
+            xlsBytes = baos.toByteArray();
+        }
+        // count apache-tika-*.tmp files before the upload
+        long beforeCount = getTikaTmpFileCount(tmpDir);
+
+        // perform 10 consecutive uploads
+        int uploadCount = 10;
+        for (int i = 0; i < uploadCount; i++) {
+            byte[] formBytes = buildMultipartFormWithBinaryFile("spreadsheet_" + i + ".xls",
+                    "application/vnd.ms-excel", xlsBytes);
+            List<Upload> uploads = uploadForm(formBytes);
+            assertNotNull("Upload " + i + " should succeed", uploads);
+            assertEquals(1, uploads.size());
+        }
+        // count apache-tika-*.tmp files after the upload
+        long afterCount = getTikaTmpFileCount(tmpDir);
+
+        assertEquals("apache-tika tmp files leaked after " + uploadCount + " XLS uploads. "
+                        + "Before: " + beforeCount + ", After: " + afterCount,
+                beforeCount, afterCount);
+    }
+
     // Helper method to format scenario data for debugging
     private String scenarioToString(Object[] scenario) {
         return String.format("initialMediaType='%s', contentType='%s', expectedMediaType='%s'",
                 scenario[0], scenario[1], scenario[2]);
+    }
+
+    private long getTikaTmpFileCount(Path dir) throws IOException {
+        try (Stream<Path> files = Files.list(dir)) {
+            return files
+                    .filter(p -> p.getFileName().toString().startsWith("apache-tika"))
+                    .filter(p -> p.getFileName().toString().endsWith(".tmp"))
+                    .count();
+        }
+    }
+
+    // constructs a raw multipart/form-data payload with charset, filename and unencoded binary file content
+    private byte[] buildMultipartFormWithBinaryFile(String filename, String contentType, byte[] fileContent)
+            throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+        out.write("Content-Disposition: form-data; name=\"_charset_\"\r\n".getBytes(StandardCharsets.UTF_8));
+        out.write("\r\n".getBytes(StandardCharsets.UTF_8));
+        out.write("\r\n".getBytes(StandardCharsets.UTF_8));
+        // filename1 field
+        out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+        out.write("Content-Disposition: form-data; name=\"filename1\"\r\n".getBytes(StandardCharsets.UTF_8));
+        out.write("\r\n".getBytes(StandardCharsets.UTF_8));
+        out.write((filename + "\r\n").getBytes(StandardCharsets.UTF_8));
+        // file part — binary safe
+        out.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+        out.write(("Content-Disposition: form-data; name=\"_attFile_\"; filename=\"" + filename + "\"\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+        out.write(("Content-Type: " + contentType + "\r\n").getBytes(StandardCharsets.UTF_8));
+        out.write("\r\n".getBytes(StandardCharsets.UTF_8));
+        out.write(fileContent);  // raw binary — no encoding corruption
+        out.write("\r\n".getBytes(StandardCharsets.UTF_8));
+        // closing boundary
+        out.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+        return out.toByteArray();
     }
 }
