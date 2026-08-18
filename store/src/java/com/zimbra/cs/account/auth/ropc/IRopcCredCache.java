@@ -324,21 +324,41 @@ public final class IRopcCredCache {
                 "IRopcCredCache: invalidated session for %s", email);
     }
 
-    public static void invalidateRejectionCacheByUsername(String email) {
+    /**
+     * Clears rejection cache for a specific user.
+     * @param email the user's email address
+     * @return true if an entry existed and was removed
+     */
+    public static boolean invalidateRejectionCacheByUsername(String email) {
         if (email == null) {
-            return;
+            return false;
         }
-
+        boolean exists = REJECTION_CACHE.getIfPresent(email) != null;
         REJECTION_CACHE.invalidate(email);
 
+        ZimbraLog.account.info("IRopcCredCache: invalidated rejection cache for %s (existed=%b)", email, exists);
+        return exists;
+    }
+
+    /**
+     * Clears the entire rejection cache only.
+     * Used by admin ClearRejectionCache SOAP handler.
+     *
+     * @return number of entries that were in the rejection cache before clearing
+     */
+    public static long invalidateAllRejectionCache() {
+        long size = REJECTION_CACHE.size();
+        REJECTION_CACHE.invalidateAll();
+
         ZimbraLog.account.info(
-                "IRopcCredCache: invalidated rejection cache session for %s", email);
+                "IRopcCredCache: cleared entire rejection cache. Entries removed: %d", size);
+        return size;
     }
 
     /**
      * records a push rejection for this context.
      *
-     * @param email     the user's email address
+     * @param email the user's email address
      */
     public static void storeRejection(String email) {
         if (email == null) {

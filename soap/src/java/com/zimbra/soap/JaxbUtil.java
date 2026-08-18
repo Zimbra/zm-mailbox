@@ -278,6 +278,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ClearCookieResponse.class,
             com.zimbra.soap.admin.message.ClearTwoFactorAuthDataRequest.class,
             com.zimbra.soap.admin.message.ClearTwoFactorAuthDataResponse.class,
+            com.zimbra.soap.admin.message.ClearMFARejectionCacheRequest.class,
+            com.zimbra.soap.admin.message.ClearMFARejectionCacheResponse.class,
             com.zimbra.soap.admin.message.CompactIndexRequest.class,
             com.zimbra.soap.admin.message.CompactIndexResponse.class,
             com.zimbra.soap.admin.message.ComputeAggregateQuotaUsageRequest.class,

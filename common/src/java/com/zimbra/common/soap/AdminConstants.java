@@ -1679,4 +1679,16 @@ public final class AdminConstants {
     public static final QName LICENSE_CACHE_SOAP_SERVICE_REQUEST = QName.get(E_LICENSE_CACHE_SOAP_SERVICE_REQUEST, NAMESPACE);
     public static final QName LICENSE_CACHE_SOAP_SERVICE_RESPONSE = QName.get(E_LICENSE_CACHE_SOAP_SERVICE_RESPONSE, NAMESPACE);
 
+    // ===== ClearMFARejectionCache =====
+    public static final String E_CLEAR_MFA_REJECTION_CACHE_REQUEST = "ClearMFARejectionCacheRequest";
+
+    public static final String E_CLEAR_MFA_REJECTION_CACHE_RESPONSE = "ClearMFARejectionCacheResponse";
+
+    public static final QName CLEAR_MFA_REJECTION_CACHE_REQUEST =
+            QName.get(E_CLEAR_MFA_REJECTION_CACHE_REQUEST, NAMESPACE);
+
+    public static final QName CLEAR_MFA_REJECTION_CACHE_RESPONSE =
+            QName.get(E_CLEAR_MFA_REJECTION_CACHE_RESPONSE, NAMESPACE);
+
+    public static final String A_ENTRIES_CLEARED = "entriesCleared";
 }
