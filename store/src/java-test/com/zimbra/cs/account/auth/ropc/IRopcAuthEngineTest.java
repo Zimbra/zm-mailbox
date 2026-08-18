@@ -78,14 +78,16 @@ public class IRopcAuthEngineTest {
     @Test
     public void testAuthenticateNullUsernameReturnsError() {
         Outcome result = IRopcAuthEngine.authenticate(null, null, "pass", "device_id",
-                AuthContext.Protocol.zsync,  AuthContext.SubProtocol.eas, "userAgent", "12312421", validConfig, false);
+                AuthContext.Protocol.zsync,  AuthContext.SubProtocol.eas, "userAgent", "12312421", validConfig,
+                false, false);
         assertEquals("Missing username should be caught and return error", Outcome.ERROR, result);
     }
 
     @Test
     public void testAuthenticateusernameWithoutReturnsError() {
         Outcome result = IRopcAuthEngine.authenticate(null, "test.com", "pass", "device_id",
-                AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas, "userAgent", "12312421", validConfig, false);
+                AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas, "userAgent", "12312421", validConfig,
+                false, false);
         assertEquals("Username without @ should fail and return error", Outcome.ERROR, result);
     }
 
@@ -93,7 +95,7 @@ public class IRopcAuthEngineTest {
     public void testAuthenticateNullPasswordReturnsError() {
         Outcome result = IRopcAuthEngine.authenticate(null, "test@okta.com", null,
                 "device_id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
-                "userAgent", "12312421", validConfig, false);
+                "userAgent", "12312421", validConfig, false, false);
         assertEquals("Missing password should be caught and return error", Outcome.ERROR, result);
     }
 
@@ -102,7 +104,7 @@ public class IRopcAuthEngineTest {
         validConfig.remove("token_endpoint");
         Outcome result = IRopcAuthEngine.authenticate(null, "test@okta.com", "pass",
                 "device_id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
-                "userAgent", "12312421", validConfig, false);
+                "userAgent", "12312421", validConfig, false, false);
         assertEquals("Missing token endpoint should be caught and return error", Outcome.ERROR, result);
     }
 
@@ -111,7 +113,7 @@ public class IRopcAuthEngineTest {
         validConfig.remove("client_id");
         Outcome result = IRopcAuthEngine.authenticate(null, "test@okta.com", "pass",
                 "device_id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
-                "userAgent", "12312421", validConfig, false);
+                "userAgent", "12312421", validConfig, false, false);
         assertEquals("Missing client id should be caught and return error", Outcome.ERROR, result);
     }
 
@@ -120,7 +122,7 @@ public class IRopcAuthEngineTest {
         validConfig.remove("provider");
         Outcome result = IRopcAuthEngine.authenticate(null, "test@okta.com", "pass",
                 "device_id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
-                "userAgent", "12312421", validConfig, false);
+                "userAgent", "12312421", validConfig, false, false);
         assertEquals("Missing provider should be caught and return error", Outcome.ERROR, result);
     }
 
@@ -131,7 +133,7 @@ public class IRopcAuthEngineTest {
         when(mockHandler.authenticate(any(IRopcAuthRequest.class))).thenReturn(mockResult);
         Outcome result = IRopcAuthEngine.authenticate(null, "user@test.com", "pass",
                 "device-id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
-                "userAgent", "12312421", validConfig, false);
+                "userAgent", "12312421", validConfig, false, false);
         assertEquals(Outcome.SUCCESS, result);
     }
 
@@ -142,7 +144,7 @@ public class IRopcAuthEngineTest {
         when(mockHandler.authenticate(any(IRopcAuthRequest.class))).thenReturn(mockResult);
         Outcome result = IRopcAuthEngine.authenticate(null, "user@test.com", "pass",
                 "device-id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
-                "userAgent", "12312421", validConfig, false);
+                "userAgent", "12312421", validConfig, false, false);
         assertEquals(Outcome.INVALID, result);
     }
 
@@ -153,7 +155,7 @@ public class IRopcAuthEngineTest {
         when(mockHandler.authenticate(any(IRopcAuthRequest.class))).thenReturn(mockResult);
         Outcome result = IRopcAuthEngine.authenticate(null, "user@test.com", "pass",
                 "device-id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
-                "userAgent", "12312421", validConfig, false);
+                "userAgent", "12312421", validConfig, false, false);
         assertEquals(Outcome.POLICY_DENIED, result);
     }
 
@@ -164,7 +166,7 @@ public class IRopcAuthEngineTest {
         when(mockHandler.authenticate(any(IRopcAuthRequest.class))).thenReturn(mockResult);
         Outcome result = IRopcAuthEngine.authenticate(null, "user@test.com", "pass",
                 "device-id", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
-                "userAgent", "12312421", validConfig, false);
+                "userAgent", "12312421", validConfig, false, false);
         assertEquals(Outcome.ERROR, result);
     }
 }

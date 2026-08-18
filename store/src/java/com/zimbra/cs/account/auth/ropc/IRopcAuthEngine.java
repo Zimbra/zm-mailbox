@@ -53,15 +53,15 @@ public final class IRopcAuthEngine {
     public static Outcome authenticate(Account account, final String user, final String password, final String deviceId,
                                        AuthContext.Protocol protocol, AuthContext.SubProtocol subProtocol,
                                        String userAgent, String ip, Map<String, String> configs,
-                                       boolean fullAuthRequired) {
+                                       boolean fullAuthRequired, boolean optionsReq) {
         return doAuthenticate(account, user, password, deviceId, protocol, subProtocol, userAgent, ip, configs,
-                fullAuthRequired);
+                fullAuthRequired, optionsReq);
     }
 
     private static Outcome doAuthenticate(Account account, String user, String password, String deviceId,
                                           AuthContext.Protocol protocol, AuthContext.SubProtocol subProtocol,
                                           String userAgent, String ip, Map<String, String> configs,
-                                          boolean fullAuthRequired) {
+                                          boolean fullAuthRequired, boolean optionsReq) {
         try {
             String proto = subProtocol == null ? protocol.name() : subProtocol.name();
             verifyMandatoryParamsforAuth(user, password, configs, proto);
@@ -78,7 +78,7 @@ public final class IRopcAuthEngine {
             IRopcSessionRecord rec = IRopcUtil.findInStore(account, user, userAgent, configs.get(PROVIDER),
                     proto, deviceId, ip, password, STORE);
             // first check if refresh token exists in store and session is not expired
-            // check if refresh token in valid
+            // then check if the request token is valid
             if (rec != null && !rec.isHardSessionExpired() && rec.getRefreshToken() != null && !fullAuthRequired) {
                 String refreshToken = decrypt(user, rec.getRefreshToken());
                 configs.put(FACTOR, REFRESH);
@@ -90,7 +90,7 @@ public final class IRopcAuthEngine {
                         if (authResult.getRefreshToken() != null
                                 && !refreshToken.equals(authResult.getRefreshToken())) {
                             persist(account, rec.getId(), user, userAgent, rec.getDeviceId(), ip, configs.get(PROVIDER),
-                                    authResult.getRefreshToken(), authResult.getIdToken(), passwordHash, proto,
+                                    authResult.getRefreshToken(), authResult.getIdToken(), rec.getPasswordHash(), proto,
                                     rec.getCreatedAt(), authResult.getAccessTokenExpiry());
                         }
                         return Outcome.SUCCESS;
@@ -98,12 +98,12 @@ public final class IRopcAuthEngine {
                         STORE.delete(account, rec.getId(), user, userAgent, configs.get(PROVIDER), proto,
                                 rec.getDeviceId());
                         IRopcCredCache.invalidate(user, userAgent, proto, rec.getProvider(), ip, rec.getDeviceId());
-                        ZimbraLog.account.error("ROPC failed as token is expired, revoked for user %s: %s", user,
-                                authResult.getErrorDescription());
+                        ZimbraLog.account.error("Refresh token validation failed as token is expired, revoked for " +
+                                        "user %s: %s", user, authResult.getErrorDescription());
                         return Outcome.TOKEN_EXPIRED;
                     case POLICY_DENIED:
-                        ZimbraLog.account.error("ROPC refresh blocked by IDP policy denied for user %s: %s", user,
-                                authResult.getErrorDescription());
+                        ZimbraLog.account.error("Refresh token validation failed, IDP policy denied for " +
+                                        "user %s: %s", user, authResult.getErrorDescription());
                         return Outcome.POLICY_DENIED;
                     default:
                         ZimbraLog.account.error("ROPC failed due following error for user %s: %s", user,
@@ -113,7 +113,7 @@ public final class IRopcAuthEngine {
             }
 
             return fullAuth(account, handler, user, password, deviceId, proto, userAgent, ip, configs,
-                    passwordHash, fullAuthRequired);
+                    passwordHash, fullAuthRequired, optionsReq);
         } catch (Exception e) {
             ZimbraLog.account.error("Authentication Failed : Error occurred in IDP based auth for %s", user, e);
             return Outcome.ERROR;
@@ -122,8 +122,8 @@ public final class IRopcAuthEngine {
 
     private static Outcome fullAuth(Account account, IRopcHandler handler, String user, String password,
                                     String deviceId, String proto, String userAgent, String ip,
-                                    Map<String, String> configs, String passwordHash, boolean fullAuthForceful)
-            throws ServiceException {
+                                    Map<String, String> configs, String passwordHash, boolean fullAuthForceful,
+                                    boolean optionsReq) throws ServiceException {
         IRopcAuthResult ar = handler.authenticate(IRopcAuthRequest.builder().username(user).password(password)
                 .ip(ip).deviceId(deviceId).userAgent(userAgent).config(configs).build());
 
@@ -133,13 +133,14 @@ public final class IRopcAuthEngine {
                 // passing null deviceId, as nativeIOS app do not share device id on the first OPTIONS request
                 // and outlook changes the device ID once the Microsoft cloud server registers the user.
                 // device id changes in subsequent calls. Will append device id in subsequent calls
-                persist(account, null, user, userAgent, fullAuthForceful ? deviceId : null, ip, configs.get(PROVIDER),
+                String deviceIdForDb = fullAuthForceful || !optionsReq ? deviceId : null;
+                persist(account, null, user, userAgent, deviceIdForDb, ip, configs.get(PROVIDER),
                         ar.getRefreshToken(), ar.getIdToken(), passwordHash, proto, System.currentTimeMillis(),
                         ar.getAccessTokenExpiry());
                 return Outcome.SUCCESS;
             case MFA_CHALLENGE:
                 return awaitPush(account, handler, ar.getChallenge(), user, passwordHash, deviceId,
-                        userAgent, ip, proto);
+                        userAgent, ip, proto, fullAuthForceful, optionsReq);
             case INVALID_CREDENTIALS:
                 ZimbraLog.account.error("ROPC failed due to invalid credentials for user %s: %s", user,
                         ar.getErrorDescription());
@@ -156,7 +157,8 @@ public final class IRopcAuthEngine {
 
     private static Outcome awaitPush(Account account, IRopcHandler handler, MFAChallenge challenge, String user,
                                      String passwordHash, String deviceId, String userAgent, String ip,
-                                     String proto) throws ServiceException {
+                                     String proto, boolean fullAuthForceful, boolean optionsReq)
+            throws ServiceException {
         long pollingTimeout = IRopcUtil.parseToMillis(challenge.get(POLLING_TIMEOUT))
                 .map(val -> Math.min(val, POLLING_TIMEOUT_DEFAULT))
                 .orElse(POLLING_TIMEOUT_DEFAULT);
@@ -166,10 +168,11 @@ public final class IRopcAuthEngine {
         switch (pollResult) {
             case SUCCESS:
                 ZimbraLog.account.info("MFA polling : SUCCESS. Push Challenge approved for user %s", user);
-                // passing null deviceId, as nativeIOS app oe gmail do not share device id on the first OPTIONS request
+                // passing null deviceId, as nativeIOS app or gmail do not share device id on the first OPTIONS request
                 // and outlook changes the device ID once the Microsoft cloud server registers the user.
                 // device id changes in subsequent calls. Will append device id in subsequent calls
-                persist(account, null, user, userAgent, null, ip, handler.getName(),
+                String resolvedDeviceId = fullAuthForceful || !optionsReq ? deviceId : null;
+                persist(account, null, user, userAgent, resolvedDeviceId, ip, handler.getName(),
                         challenge.get(MFAChallenge.REFRESH_TOKEN),
                         challenge.get(MFAChallenge.ID_TOKEN), passwordHash, proto, System.currentTimeMillis(),
                         parse(challenge.get(MFAChallenge.ACCESS_TOKEN_TIMEOUT)));

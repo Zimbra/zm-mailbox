@@ -50,7 +50,7 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         Protocol proto = (Protocol) context.get(AuthContext.AC_PROTOCOL);
         SubProtocol subProtocol = (SubProtocol) context.get(AuthContext.AC_SUB_PROTOCOL);
         String deviceId = (String) context.get(AuthContext.AC_DEVICE_ID);
-        String userAgent = (String) context.get(AuthContext.AC_USER_AGENT);
+        String userAgent = IRopcUtil.normalizeUserAgent((String) context.get(AuthContext.AC_USER_AGENT));
         String ipAddress = (String) context.get(AuthContext.AC_ORIGINATING_CLIENT_IP);
         boolean optionsReq = AUTH_REQUEST_TYPE.equalsIgnoreCase(String.valueOf
                 (context.get(AuthContext.AC_AUTH_REQUEST)));
@@ -87,7 +87,7 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         }
 
         Outcome outcome = callAuthEngine(acct, user, password, deviceId, proto, subProtocol,
-                userAgent, ipAddress, configs, FULL_AUTH.equals(cacheResponse.getAuthType()));
+                userAgent, ipAddress, configs, FULL_AUTH.equals(cacheResponse.getAuthType()), optionsReq);
 
 
         switch (outcome) {
@@ -95,7 +95,8 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
                 break;
             case REJECTED:
                 IRopcCredCache.storeRejection(user);
-                throw ServiceException.FORBIDDEN("Authentication failed : User Rejected PUSH");
+                throw AuthFailedServiceException.AUTH_FAILED(user,
+                        "Authentication failed : Challenge denied by user");
             case INVALID:
                 IRopcCredCache.storeRejection(user);
                 throw AuthFailedServiceException.AUTH_FAILED(user,
@@ -106,7 +107,8 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
                 throw ServiceException.FORBIDDEN("Authentication failed : Token expired");
             case MFA_TIMEOUT:
                 IRopcCredCache.storeRejection(user);
-                throw ServiceException.TEMPORARILY_UNAVAILABLE();
+                throw AuthFailedServiceException.AUTH_FAILED(user,
+                        "MFA request timed out. Please try again");
             case ERROR:
                 throw ServiceException.TEMPORARILY_UNAVAILABLE();
             default:
@@ -117,9 +119,9 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
     protected Outcome callAuthEngine(Account account, String userName, String password, String deviceId,
                                      Protocol protocol, AuthContext.SubProtocol subProtocol,
                                      String userAgent, String ip, Map<String, String> configs,
-                                     boolean fullAuthRequired) {
+                                     boolean fullAuthRequired, boolean optionsReq) {
         return IRopcAuthEngine.authenticate(account, userName, password, deviceId, protocol, subProtocol,
-                userAgent, ip, configs, fullAuthRequired);
+                userAgent, ip, configs, fullAuthRequired, optionsReq);
     }
 
     protected CacheResponse checkInCache(String user, String password, String ua, String proto,

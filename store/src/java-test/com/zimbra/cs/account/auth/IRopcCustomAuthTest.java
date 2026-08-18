@@ -124,7 +124,7 @@ public class IRopcCustomAuthTest {
     public void testAuthenticateValidCallDoesnotThrowException() {
         doReturn(Outcome.SUCCESS).when(ropcCustomAuth)
                 .callAuthEngine(any(), anyString(), anyString(), anyString(), any(), any(), anyString(), anyString(),
-                        anyMapOf(String.class, String.class), anyBoolean());
+                        anyMapOf(String.class, String.class), anyBoolean(), anyBoolean());
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
         } catch (Exception e) {
@@ -133,7 +133,7 @@ public class IRopcCustomAuthTest {
     }
 
     @Test
-    public void testCeckPasswordAgingReturnsFalse() {
+    public void testCheckPasswordAgingReturnsFalse() {
         assertFalse("Password aging should return false", ropcCustomAuth.checkPasswordAging());
     }
 
@@ -141,20 +141,21 @@ public class IRopcCustomAuthTest {
     public void testAuthenticateOutcomeSuccess() throws Exception {
         doReturn(Outcome.SUCCESS).when(ropcCustomAuth)
                 .callAuthEngine(any(), anyString(), anyString(), anyString(), any(), any(), anyString(), anyString(),
-                        anyMapOf(String.class, String.class), anyBoolean());
+                        anyMapOf(String.class, String.class), anyBoolean(), anyBoolean());
 
         ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
 
         verify(ropcCustomAuth, times(1)).callAuthEngine(mockAccount, "user1@example.zimbra.com",
                 "password", "device-123",
-                AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas, "userAgent", "1234425", validConfig, false);
+                AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas, "userAgent", "1234425", validConfig,
+                false, false);
     }
 
     @Test
     public void testAuthenticateOutcomeInvalid() throws Exception {
         doReturn(Outcome.INVALID).when(ropcCustomAuth)
                 .callAuthEngine(any(), anyString(), anyString(), anyString(), any(), any(), anyString(), anyString(),
-                        anyMapOf(String.class, String.class), anyBoolean());
+                        anyMapOf(String.class, String.class), anyBoolean(), anyBoolean());
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
             fail("Expected AuthFailedServiceException was not thrown");
@@ -168,7 +169,7 @@ public class IRopcCustomAuthTest {
     public void testAuthenticateOutcomePolicyDenied() throws Exception {
         doReturn(Outcome.POLICY_DENIED).when(ropcCustomAuth)
                 .callAuthEngine(any(), anyString(), anyString(), anyString(), any(), any(), anyString(), anyString(),
-                        anyMapOf(String.class, String.class), anyBoolean());
+                        anyMapOf(String.class, String.class), anyBoolean(), anyBoolean());
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
             fail("Expected AuthFailedServiceException was not thrown");
@@ -182,12 +183,13 @@ public class IRopcCustomAuthTest {
     public void testAuthenticateOutcomeMFATimeout() throws Exception {
         doReturn(Outcome.MFA_TIMEOUT).when(ropcCustomAuth)
                 .callAuthEngine(any(), anyString(), anyString(), anyString(), any(), any(), anyString(), anyString(),
-                        anyMapOf(String.class, String.class), anyBoolean());
+                        anyMapOf(String.class, String.class), anyBoolean(), anyBoolean());
         try {
             ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
             fail("Expected AuthFailedServiceException was not thrown");
-        } catch (ServiceException e) {
-            assertTrue(ServiceException.TEMPORARILY_UNAVAILABLE().getCode().equals(e.getCode()));
+        } catch (AccountServiceException.AuthFailedServiceException e) {
+            assertTrue("Message should indicate timeout",
+                    e.getMessage().contains("MFA request timed out. Please try again"));
         }
     }
 
@@ -203,7 +205,8 @@ public class IRopcCustomAuthTest {
         ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
 
         verify(ropcCustomAuth, never()).callAuthEngine(any(), anyString(), anyString(), anyString(),
-                any(), any(), anyString(), anyString(), anyMapOf(String.class, String.class), anyBoolean());
+                any(), any(), anyString(), anyString(), anyMapOf(String.class, String.class),
+                anyBoolean(), anyBoolean());
     }
 
     @Test
@@ -218,12 +221,12 @@ public class IRopcCustomAuthTest {
 
         doReturn(Outcome.SUCCESS).when(ropcCustomAuth)
                 .callAuthEngine(any(), anyString(), anyString(), anyString(), any(), any(), anyString(), anyString(),
-                        anyMapOf(String.class, String.class), anyBoolean());
+                        anyMapOf(String.class, String.class), anyBoolean(), anyBoolean());
 
         ropcCustomAuth.authenticate(mockAccount, "password", mockContext, args);
 
         verify(ropcCustomAuth, times(1)).callAuthEngine(mockAccount, "user1@example.zimbra.com",
                 "password", "device-123", AuthContext.Protocol.zsync, AuthContext.SubProtocol.eas,
-                "userAgent", "1234425", validConfig, false);
+                "userAgent", "1234425", validConfig, false, false);
     }
 }

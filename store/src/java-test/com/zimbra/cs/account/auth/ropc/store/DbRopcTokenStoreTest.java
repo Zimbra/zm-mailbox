@@ -106,10 +106,12 @@ public class DbRopcTokenStoreTest {
         when(mockRs.next()).thenReturn(true, false);
 
         when(mockRs.getLong(1)).thenReturn(100L);
-        when(mockRs.getString(2)).thenReturn("username");
-        when(mockRs.getString(3)).thenReturn("eas");
-        when(mockRs.getString(4)).thenReturn("userAgent");
-        when(mockRs.getString(5)).thenReturn("deviceId");
+        when(mockRs.getString(2)).thenReturn("deviceId");
+        when(mockRs.getString(3)).thenReturn("127.0.0.1");
+        when(mockRs.getString(4)).thenReturn("refreshToken");
+        when(mockRs.getString(5)).thenReturn("password");
+        when(mockRs.getLong(6)).thenReturn(123435L);
+
 
         List<IRopcSessionRecord> results = store.find(null, "username", "userAgent", "okta",
                 "eas", "deviceId");
@@ -117,7 +119,7 @@ public class DbRopcTokenStoreTest {
         assertNotNull(results);
         assertEquals(1, results.size());
         assertEquals(Long.valueOf(100L), results.get(0).getId());
-        assertEquals("username", results.get(0).getUsername());
+        assertEquals("deviceId", results.get(0).getDeviceId());
 
         verify(mockStmt).setString(1, "username");
         verify(mockStmt).setString(2, "okta");
@@ -136,10 +138,11 @@ public class DbRopcTokenStoreTest {
         when(mockRs.next()).thenReturn(true, false);
 
         when(mockRs.getLong(1)).thenReturn(100L);
-        when(mockRs.getString(2)).thenReturn("username");
-        when(mockRs.getString(3)).thenReturn("eas");
-        when(mockRs.getString(4)).thenReturn("userAgent");
-        when(mockRs.getString(5)).thenReturn("ip1234");
+        when(mockRs.getString(2)).thenReturn("deviceId");
+        when(mockRs.getString(3)).thenReturn("127.0.0.1");
+        when(mockRs.getString(4)).thenReturn("refreshToken");
+        when(mockRs.getString(5)).thenReturn("passwordHash");
+        when(mockRs.getLong(6)).thenReturn(12345678L);
 
         List<IRopcSessionRecord> results = store.find(null, "username", "userAgent", "okta",
                 "eas", "ip1234");
@@ -147,7 +150,7 @@ public class DbRopcTokenStoreTest {
         assertNotNull(results);
         assertEquals(1, results.size());
         assertEquals(Long.valueOf(100L), results.get(0).getId());
-        assertEquals("username", results.get(0).getUsername());
+        assertEquals("refreshToken", results.get(0).getRefreshToken());
 
         verify(mockStmt).setString(1, "username");
         verify(mockStmt).setString(2, "okta");
@@ -161,7 +164,7 @@ public class DbRopcTokenStoreTest {
     }
 
     @Test
-    public void testupsertWhenIdIsNotNullPerformsupdate() throws SQLException, ServiceException {
+    public void testUpsertWhenIdIsNotNullPerformsupdate() throws SQLException, ServiceException {
         IRopcSessionRecord existingSession = new IRopcSessionRecord.Builder()
                 .id(500L)
                 .refreshToken("refreshToken1234")
@@ -213,21 +216,22 @@ public class DbRopcTokenStoreTest {
     }
 
     @Test
-    public void testfindByDeviceIdAndUsernameSuccessfullyMapResultSet() throws SQLException, ServiceException {
+    public void testFindByDeviceIdAndUsernameSuccessfullyMapResultSet() throws SQLException, ServiceException {
         PowerMockito.stub(PowerMockito.method(Account.class, "getName")).toReturn("testUser");
         when(mockStmt.executeQuery()).thenReturn(mockRs);
         when(mockRs.next()).thenReturn(true, false);
 
-        when(mockRs.getLong(1)).thenReturn(100L);
-        when(mockRs.getString(2)).thenReturn("testUser");
-        when(mockRs.getString(3)).thenReturn("device123");
-        when(mockRs.getString(4)).thenReturn("userAgent");
-        when(mockRs.getString(5)).thenReturn("ip1234");
+        when(mockRs.getString(1)).thenReturn("testUser");
+        when(mockRs.getString(2)).thenReturn("device123");
+        when(mockRs.getString(3)).thenReturn("userAgent");
+        when(mockRs.getString(4)).thenReturn("ip1234");
+        when(mockRs.getString(5)).thenReturn("okta");
+        when(mockRs.getString(5)).thenReturn("eas");
 
         List<IRopcSessionRecord> results = store.findByDeviceIdAndUsername(mockAccount, "device123");
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertEquals(Long.valueOf(100L), results.get(0).getId());
+        assertEquals("userAgent", results.get(0).getUserAgent());
         assertEquals("testUser", results.get(0).getUsername());
         assertEquals("device123", results.get(0).getDeviceId());
 
@@ -237,7 +241,7 @@ public class DbRopcTokenStoreTest {
     }
 
     @Test
-    public void testfindByDeviceIdAndUsernameReturnNUllIfParamterMissing() throws SQLException, ServiceException {
+    public void testFindByDeviceIdAndUsernameReturnNUllIfParamterMissing() throws SQLException, ServiceException {
         PowerMockito.stub(PowerMockito.method(Account.class, "getName")).toReturn("testUser");
         assertNull(store.findByDeviceIdAndUsername(null, "device123"));
         assertNull(store.findByDeviceIdAndUsername(mockAccount, null));
@@ -263,5 +267,21 @@ public class DbRopcTokenStoreTest {
         store.deleteByDeviceIdAndUsername(mockAccount, null);
         store.deleteByDeviceIdAndUsername(null, null);
         verify(mockStmt, times(0)).executeUpdate();
+    }
+
+    @Test
+    public void testFindLatestPasswordByUsernameSuccessfullyMapResultSet() throws SQLException, ServiceException {
+        PowerMockito.stub(PowerMockito.method(Account.class, "getName")).toReturn("testUser");
+        when(mockStmt.executeQuery()).thenReturn(mockRs);
+        when(mockRs.next()).thenReturn(true, false);
+
+        when(mockRs.getString(1)).thenReturn("passwordHash");
+
+        IRopcSessionRecord result = store.findLatestPasswordByUsername(mockAccount, "testUser");
+        assertNotNull(result);
+        assertEquals("passwordHash", result.getPasswordHash());
+
+        verify(mockStmt).setString(1, "testUser");
+        verify(mockStmt, times(1)).executeQuery();
     }
 }
