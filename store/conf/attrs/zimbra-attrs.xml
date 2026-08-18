@@ -8241,7 +8241,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1630" name="zimbraCsrfAllowedRefererHosts" type="string"
-  cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0">
+  cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0" flags="domainAdminModifiable">
   <desc>A list of hosts like www.abc.com, www.xyz.com. These are used while doing CSRF referer check.</desc>
 </attr>
 
