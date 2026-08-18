@@ -312,6 +312,9 @@ public class AdminService implements DocumentService {
 
         // ContactBackup API
         dispatcher.registerHandler(AdminConstants.CONTACT_BACKUP_REQUEST, new ContactBackup());
+
+        //MFA clear rejection cache API
+        dispatcher.registerHandler(AdminConstants.CLEAR_MFA_REJECTION_CACHE_REQUEST, new ClearMFARejectionCache());
     }
 
     /**
