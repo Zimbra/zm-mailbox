@@ -23,6 +23,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -77,6 +78,28 @@ public final class CsrfUtil {
 
     }
 
+    /**
+     * Extracts and normalizes the host from the Referer header of the request.
+     * Handles both absolute URLs (with http/https) and bare hostnames.
+     *
+     * @param req the current HTTP request
+     * @return lowercase host from the Referer header, or null if Referer is absent
+     * @throws MalformedURLException if the Referer header contains an invalid URL
+     */
+    private static String extractRefererHost(HttpServletRequest req) throws MalformedURLException {
+        String referrer = req.getHeader(HttpHeaders.REFERER);
+        if (StringUtil.isNullOrEmpty(referrer)) {
+            return null;
+        }
+        URL refURL;
+        if (referrer.contains("http") || referrer.contains("https")) {
+            refURL = new URL(referrer);
+        } else {
+            refURL = new URL("http://" + referrer);
+        }
+        return refURL.getHost().toLowerCase();
+    }
+
    /**
     *
     * @param req
@@ -97,19 +120,7 @@ public final class CsrfUtil {
        }
 
        String host = getRequestHost(req);
-       String referrer = req.getHeader(HttpHeaders.REFERER);
-       String refHost = null;
-
-
-       if (!StringUtil.isNullOrEmpty(referrer)) {
-           URL refURL = null;
-           if (referrer.contains("http") || referrer.contains("https")) {
-               refURL = new URL(referrer);
-           } else {
-               refURL = new URL("http://" + referrer);
-           }
-           refHost = refURL.getHost().toLowerCase();
-       }
+        String refHost = extractRefererHost(req);
 
        if (refHost == null) {
            csrfReq = false;
@@ -129,7 +140,57 @@ public final class CsrfUtil {
        }
 
        return csrfReq;
-   }
+    }
+
+    /**
+     * Overload of {@link #isCsrfRequestBasedOnReferrer(HttpServletRequest, String[])} that accepts pre-built Sets for
+     * O(1) lookups. Used by CsrfFilter to avoid per-request array merge.
+     *
+     * @param req
+     *         the current HTTP request
+     * @param globalAllowedRefHosts
+     *         global CSRF allowed referer hosts from global config
+     * @param domainAllowedRefHosts
+     *         domain-level CSRF allowed referer hosts from domain config
+     * @return true if the request is a CSRF request based on the Referer header, false otherwise
+     * @throws MalformedURLException
+     *         if the Referer header contains an invalid URL
+     */
+    public static boolean isCsrfRequestBasedOnReferrer(final HttpServletRequest req,
+            final Set<String> globalAllowedRefHosts, final Set<String> domainAllowedRefHosts)
+            throws MalformedURLException {
+
+        boolean csrfReq = false;
+
+        String method = req.getMethod();
+        if (!method.equalsIgnoreCase("POST")) {
+            csrfReq = false;
+            return csrfReq;
+        }
+
+        String host = getRequestHost(req);
+        String refHost = extractRefererHost(req);
+
+        if (refHost == null) {
+            csrfReq = false;
+        } else if (refHost.equalsIgnoreCase(host)) {
+            csrfReq = false;
+        } else {
+            if (globalAllowedRefHosts.contains(refHost) || domainAllowedRefHosts.contains(refHost)) {
+                csrfReq = false;
+            } else {
+                csrfReq = true;
+            }
+        }
+
+        if (ZimbraLog.soap.isDebugEnabled()) {
+            ZimbraLog.soap.debug("Host : %s, Referrer host :%s, Allowed Hosts:[global=%s, domain=%s] Soap req is %s",
+                    host, refHost, Joiner.on(',').join(globalAllowedRefHosts),
+                    Joiner.on(',').join(domainAllowedRefHosts), (csrfReq ? " not allowed." : " allowed."));
+        }
+
+        return csrfReq;
+    }
 
    /**
    *
