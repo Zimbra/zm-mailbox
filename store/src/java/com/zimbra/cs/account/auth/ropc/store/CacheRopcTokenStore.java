@@ -35,6 +35,8 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
 
     private static final AtomicLong ID_GENERATOR = new AtomicLong(1);
 
+    private final Cache<String, String> latestSessionCache;
+
     public CacheRopcTokenStore() {
 
         int expiryDays = LC.mfa_idp_hard_reauth_in_days.intValue();
@@ -42,6 +44,10 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
             expiryDays = HARD_EXPIRY_DEFAULT;
         }
         this.tokenCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(expiryDays, TimeUnit.DAYS)
+                .build();
+
+        this.latestSessionCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(expiryDays, TimeUnit.DAYS)
                 .build();
     }
@@ -81,6 +87,20 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
             }
         }
         return results.isEmpty() ? null : results;
+    }
+
+    @Override
+    public IRopcSessionRecord findLatestPasswordByUsername(Account account, String username) throws ServiceException {
+        if (username == null) {
+            return null;
+        }
+
+        String passwordHash = latestSessionCache.getIfPresent(username);
+        if (passwordHash == null) {
+            return null;
+        }
+
+        return new IRopcSessionRecord.Builder().passwordHash(passwordHash).build();
     }
 
     @Override
@@ -124,6 +144,8 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
             }
             return existingList;
         });
+
+        latestSessionCache.put(session.getUsername(), session.getPasswordHash());
     }
 
     @Override
@@ -184,6 +206,8 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
             );
             return existingList.isEmpty() ? null : existingList;
         });
+
+        latestSessionCache.invalidate(username);
     }
 
     @Override
@@ -204,5 +228,7 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
                 return existingList.isEmpty() ? null : existingList;
             });
         }
+
+        latestSessionCache.invalidate(username);
     }
 }

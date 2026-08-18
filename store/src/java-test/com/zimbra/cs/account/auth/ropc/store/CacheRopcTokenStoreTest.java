@@ -64,6 +64,7 @@ public class CacheRopcTokenStoreTest {
                 .protocol("eas")
                 .provider("okta")
                 .deviceId("deviceid123")
+                .passwordHash("password")
                 .build();
 
         store.upsert(null, session);
@@ -90,6 +91,7 @@ public class CacheRopcTokenStoreTest {
                 .protocol("eas")
                 .provider("okta")
                 .deviceId("deviceid123")
+                .passwordHash("password")
                 .refreshToken("oldToken")
                 .build();
 
@@ -115,6 +117,7 @@ public class CacheRopcTokenStoreTest {
                 .protocol("eas")
                 .provider("okta")
                 .ip("ip123")
+                .passwordHash("password")
                 .build();
 
         store.upsert(null, session);
@@ -162,6 +165,7 @@ public class CacheRopcTokenStoreTest {
                 .protocol("eas")
                 .provider("okta")
                 .deviceId("device123")
+                .passwordHash("password")
                 .build();
 
         store.upsert(null, session);
@@ -187,6 +191,7 @@ public class CacheRopcTokenStoreTest {
                 .protocol("eas")
                 .provider("okta")
                 .deviceId("device123")
+                .passwordHash("password")
                 .build();
 
         store.upsert(null, session);
@@ -217,6 +222,7 @@ public class CacheRopcTokenStoreTest {
                 .protocol("eas")
                 .provider("okta")
                 .deviceId("device123")
+                .passwordHash("password")
                 .build();
 
         store.upsert(null, targetSession);
@@ -227,6 +233,7 @@ public class CacheRopcTokenStoreTest {
                 .protocol("eas")
                 .provider("okta")
                 .deviceId("device999")
+                .passwordHash("password")
                 .build();
 
         store.upsert(null, unrelatedSession);
@@ -253,6 +260,7 @@ public class CacheRopcTokenStoreTest {
                 .protocol("eas")
                 .provider("okta")
                 .deviceId("device123")
+                .passwordHash("password")
                 .build();
 
         store.upsert(null, session);
@@ -262,4 +270,27 @@ public class CacheRopcTokenStoreTest {
 
         assertNotNull(store.findByDeviceIdAndUsername(mockAccount, "device123"));
     }
+
+    @Test
+    public void testFindLatestPasswordByUsername() throws ServiceException {
+        PowerMockito.stub(PowerMockito.method(Account.class, "getName")).toReturn("testUser");
+
+        IRopcSessionRecord session = new IRopcSessionRecord.Builder()
+                .username("testUser")
+                .userAgent("TestAgent")
+                .protocol("eas")
+                .provider("okta")
+                .deviceId("device123")
+                .passwordHash("password")
+                .createdAt(System.currentTimeMillis())
+                .build();
+
+        store.upsert(null, session);
+
+        IRopcSessionRecord result = store.findLatestPasswordByUsername(mockAccount, "testUser");
+
+        assertNotNull(result);
+        assertEquals("password", result.getPasswordHash());
+    }
+
 }

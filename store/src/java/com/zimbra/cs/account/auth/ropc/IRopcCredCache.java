@@ -25,7 +25,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.PasswordUtil;
-import com.zimbra.cs.account.auth.PasswordUtil.SSHA512;
 import com.zimbra.cs.account.auth.ropc.store.CacheRopcTokenStore;
 import com.zimbra.cs.account.auth.ropc.store.DbRopcTokenStore;
 import com.zimbra.cs.account.auth.ropc.store.IRopcSessionRecord;
@@ -122,16 +121,13 @@ public final class IRopcCredCache {
          */
         private final long expiryTimestamp;
 
-        private final long gracePeriodTimestamp;
-
         CacheEntry(String hash, long expiresInSeconds) {
             this.hash = hash;
             this.expiryTimestamp = System.currentTimeMillis() + (expiresInSeconds * 1000);
-            this.gracePeriodTimestamp = System.currentTimeMillis() + (expiresInSeconds * 1000) + GRACE_PERIOD;
         }
 
         boolean isExpired() {
-            return System.currentTimeMillis() > gracePeriodTimestamp;
+            return System.currentTimeMillis() > (expiryTimestamp + GRACE_PERIOD);
         }
 
         boolean isActive() {
@@ -139,7 +135,8 @@ public final class IRopcCredCache {
         }
 
         boolean inGracePeriod() {
-            return System.currentTimeMillis() > expiryTimestamp && System.currentTimeMillis() < gracePeriodTimestamp;
+            return System.currentTimeMillis() > expiryTimestamp &&
+                    System.currentTimeMillis() < (expiryTimestamp + GRACE_PERIOD);
         }
     }
 
@@ -166,14 +163,7 @@ public final class IRopcCredCache {
 
         CacheEntry entry = new CacheEntry(password, expiresInSeconds);
         CRED_CACHE.put(key, entry);
-
-        // store IP key when deviceId is present
-        if (isNotEmpty(deviceId) && isNotEmpty(ip)) {
-            String ipKey = buildKey(email, userAgent, protocol, provider, ip, null);
-            // for TOTP develop a logic to have multiple values or some unique key for unique password
-            // as one ip can also have multiple password+totp
-            CRED_CACHE.put(ipKey, entry);
-        }
+        CRED_CACHE.put(email, entry);
     }
 
     /**
@@ -214,6 +204,27 @@ public final class IRopcCredCache {
             }
         }
 
+        // 2. for OPTIONS request - first check in CRED_CRED with username as key
+        // if not found lookup in db.
+        // It will be validated only on the basis of username and password.
+        if (optionsReq) {
+            CacheEntry usernameEntry = CRED_CACHE.getIfPresent(email);
+            if (usernameEntry != null) {
+                return new CacheResponse(isMatch(usernameEntry, email, effectivePassword));
+            }
+            IRopcSessionRecord candidate = STORE.findLatestPasswordByUsername(account, email);
+
+            if (candidate == null || candidate.getPasswordHash() == null) {
+                return new CacheResponse(false);
+            }
+
+            CacheEntry cacheEntry = new CacheEntry(candidate.getPasswordHash(), (CACHE_TIMEOUT
+                    + GRACE_PERIOD) / 1000);
+            CRED_CACHE.put(email, cacheEntry);
+            boolean isValidPassword = PasswordUtil.SSHA512.verifySSHA512(candidate.getPasswordHash(), password);
+            return new CacheResponse(isValidPassword);
+        }
+
         // 2. IP bridge fallback — upgrade to device key (OPCC to real deviceId)
         if (isNotEmpty(deviceId) && isNotEmpty(ip)) {
             String ipKey = buildKey(email, userAgent, protocol, provider, ip, null);
@@ -222,15 +233,8 @@ public final class IRopcCredCache {
                 boolean passwordMatch = isMatch(ipEntry, ipKey, effectivePassword);
 
                 if (ipEntry.isActive() && passwordMatch) {
-                    if (optionsReq) {
-                        return new CacheResponse(true);
-                    }
                     return processIpBridgeUpgrade(email, password, userAgent, protocol, provider,
                             ip, deviceId, account, optionsReq, deviceKey, ipEntry);
-                }
-
-                if (ipEntry.inGracePeriod() && passwordMatch && optionsReq) {
-                    return new CacheResponse(false, true);
                 }
 
                 if (ipEntry.isExpired() && passwordMatch) {
@@ -264,7 +268,7 @@ public final class IRopcCredCache {
             if (deviceId.equals(candidate.getDeviceId())) {
                 recordMached = candidate;
             } else if (candidate.getDeviceId() == null) {
-                if (candidate.getPasswordHash() != null ||
+                if (candidate.getPasswordHash() != null &&
                         PasswordUtil.SSHA512.verifySSHA512(candidate.getPasswordHash(), password)) {
                     recordToUpgrade = candidate;
                 }
@@ -272,29 +276,10 @@ public final class IRopcCredCache {
         }
 
         if (recordToUpgrade != null) {
-            try {
-                List<IRopcSessionRecord> oldRecords = STORE.findByDeviceIdAndUsername(account, deviceId);
-                if (oldRecords != null) {
-                    for (IRopcSessionRecord oldRecord : oldRecords) {
-                        // if this record matches the unique constraint column, it's the one DB is about to delete
-                        // it needs to be invalidated from cache too
-                        if (userAgent.equals(oldRecord.getUserAgent()) &&
-                                protocol.equals(oldRecord.getProtocol()) &&
-                                provider.equals(oldRecord.getProvider())) {
-                            String oldIp = oldRecord.getIp();
-                            if (oldIp != null) {
-                                String ghostIpKey = buildKey(email, userAgent, protocol, provider, oldIp, null);
-                                CRED_CACHE.invalidate(ghostIpKey);
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                ZimbraLog.account.error("Failed to cleanup old IP cache key during device ID upgrade", e);
-            }
             recordToUpgrade.setDeviceId(deviceId);
             STORE.updateDeviceId(account, recordToUpgrade);
             CRED_CACHE.put(deviceKey, ipEntry);
+            CRED_CACHE.invalidate(buildKey(email, userAgent, protocol, provider, ip, null));
             ZimbraLog.account.debug(
                     "IRopcCredCache: upgraded IP-based cache to DeviceId for %s", email);
             return new CacheResponse(true);
@@ -303,7 +288,9 @@ public final class IRopcCredCache {
         if (recordMached != null) {
             return new CacheResponse(false, true);
         }
-
+        // if ip is found in DB with this user, but device id does not match
+        // rare edge case, will trigger full auth and it contains the actual device id as it's not a OPTIONS req
+        // so save the device id in DB
         return new CacheResponse(false, FULL_AUTH);
     }
 
@@ -330,6 +317,8 @@ public final class IRopcCredCache {
             String ipBridgeKey = buildKey(email, userAgent, protocol, provider, ip, null);
             CRED_CACHE.invalidate(ipBridgeKey);
         }
+
+        CRED_CACHE.invalidate(email);
 
         ZimbraLog.account.info(
                 "IRopcCredCache: invalidated session for %s", email);
@@ -359,7 +348,7 @@ public final class IRopcCredCache {
         int count = (val == null) ? 1 : val + 1;
         REJECTION_CACHE.put(email, count);
         ZimbraLog.account.debug(
-                "IRopcCredCache: recorded push rejection #%d for %s", count, email);
+                "IRopcCredCache: recorded auth failure , updated rejection cache with #%d for %s", count, email);
     }
 
     /**
@@ -369,7 +358,7 @@ public final class IRopcCredCache {
      * @throws AuthFailedServiceException if the rejection limit is reached
      */
     public static void checkRejectionLimit(String email)
-            throws AuthFailedServiceException {
+            throws ServiceException {
         if (email == null) {
             return;
         }
@@ -378,8 +367,7 @@ public final class IRopcCredCache {
             ZimbraLog.account.warn(
                     "IRopcCredCache: auth blocked for %s;"
                             + " auth rejection limit reached (%d)", email, count);
-            throw AuthFailedServiceException.AUTH_FAILED(
-                    email, "MFA auth rejection limit reached");
+            throw ServiceException.FORBIDDEN("MFA auth rejection limit reached");
         }
     }
 
@@ -398,7 +386,7 @@ public final class IRopcCredCache {
     }
 
     private static boolean isMatch(CacheEntry entry, String key, String password) {
-        return SSHA512.verifySSHA512(entry.hash, password);
+        return PasswordUtil.SSHA512.verifySSHA512(entry.hash, password);
 
     }
 

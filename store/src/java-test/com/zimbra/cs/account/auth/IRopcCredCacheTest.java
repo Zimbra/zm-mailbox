@@ -21,11 +21,11 @@ import com.google.common.cache.CacheBuilder;
 import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.ropc.IRopcCredCache;
 import com.zimbra.cs.account.auth.ropc.store.CacheRopcTokenStore;
 import com.zimbra.cs.account.auth.ropc.store.IRopcSessionRecord;
 import java.lang.reflect.Field;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -184,7 +184,7 @@ public class IRopcCredCacheTest {
 
         IRopcCredCache.STORE.upsert(null, session);
         // Step 1: Outlook sends temporary ID (OPCC...)
-        IRopcCredCache.store(EMAIL, PASSWORD, UA, PROTOCOL, PROVIDER, IP, "OPCC-TEMP-ID", EXPIRY);
+        IRopcCredCache.store(EMAIL, PASSWORD, UA, PROTOCOL, PROVIDER, IP, null, EXPIRY);
 
         // Step 2: Outlook sends permanent ID (fef5...). System bridges via IP.
         assertTrue("System should bridge the session when Outlook changes Device ID",
@@ -196,7 +196,7 @@ public class IRopcCredCacheTest {
     // 5. Rejection Tracking (Anti-Flood)
     // ========================================================
 
-    @Test(expected = AuthFailedServiceException.class)
+    @Test(expected = ServiceException.class)
     public void testEleventhRejectionBlocksRequest() throws Exception {
         IRopcCredCache.storeRejection(EMAIL);
         IRopcCredCache.storeRejection(EMAIL);
@@ -213,7 +213,7 @@ public class IRopcCredCacheTest {
         IRopcCredCache.checkRejectionLimit(EMAIL);
     }
 
-    @Test(expected = AuthFailedServiceException.class)
+    @Test(expected = ServiceException.class)
     public void testSuccessfulLoginDoesNotResetsRejections() throws Exception {
         IRopcCredCache.storeRejection(EMAIL);
         IRopcCredCache.storeRejection(EMAIL);
@@ -237,5 +237,100 @@ public class IRopcCredCacheTest {
         assertFalse("Session should be removed after invalidation",
                 IRopcCredCache.isValid(EMAIL, PASSWORD, UA, PROTOCOL, PROVIDER, IP, DEVICE_ID, null,
                         false).isCacheHit());
+    }
+
+    @Test
+    public void testOptionsReqDBHitAndSubsequentCacheHit() throws ServiceException {
+        IRopcCredCache.clearAll();
+
+        IRopcSessionRecord session = new IRopcSessionRecord.Builder()
+                .username(EMAIL)
+                .userAgent(UA)
+                .protocol(PROTOCOL)
+                .provider(PROVIDER)
+                .passwordHash(PASSWORD)
+                .ip(IP)
+                .createdAt(System.currentTimeMillis())
+                .build();
+
+        IRopcCredCache.STORE.upsert(null, session);
+
+        assertTrue("OPTIONS req should return true after finding and validating a DB record",
+                IRopcCredCache.isValid(EMAIL, PASSWORD, UA, PROTOCOL, PROVIDER, IP, DEVICE_ID,
+                        null, true).isCacheHit());
+
+        // delete the record from DB so if again we have DB hit no record will exist
+        List<IRopcSessionRecord> sessionRecordList = IRopcCredCache.STORE.findByIp(null, EMAIL, UA,
+                PROVIDER, PROTOCOL, IP);
+        IRopcCredCache.STORE.delete(null, sessionRecordList.get(0).getId(), sessionRecordList.get(0).getUsername(),
+                sessionRecordList.get(0).getUserAgent(), sessionRecordList.get(0).getProvider(),
+                sessionRecordList.get(0).getProtocol(), sessionRecordList.get(0).getDeviceId());
+
+        // again check for OPTIONS req ,since data is not available in DB , that confirms cache hit
+        assertTrue("OPTIONS request should return true from memory cache without hitting the DB",
+                IRopcCredCache.isValid(EMAIL, PASSWORD, UA, PROTOCOL, PROVIDER, IP, DEVICE_ID,
+                        null, true).isCacheHit());
+    }
+
+    @Test
+    public void testOptionsReqDBMissReturnsfalse() throws ServiceException {
+        IRopcCredCache.clearAll();
+        assertFalse("OPTIONS req should return false if no DB record is found",
+                IRopcCredCache.isValid(EMAIL, PASSWORD, UA, PROTOCOL, PROVIDER, IP, DEVICE_ID,
+                        null, true).isCacheHit());
+    }
+
+    @Test
+    public void testOptionsReqDBHitPasswordMismatch() throws ServiceException {
+        IRopcCredCache.clearAll();
+        IRopcSessionRecord session = new IRopcSessionRecord.Builder()
+                .username(EMAIL)
+                .userAgent(UA)
+                .protocol(PROTOCOL)
+                .provider(PROVIDER)
+                .passwordHash(PASSWORD)
+                .ip(IP)
+                .createdAt(System.currentTimeMillis())
+                .build();
+
+        IRopcCredCache.STORE.upsert(null, session);
+        PowerMockito.when(PasswordUtil.SSHA512.verifySSHA512(any(), any())).thenReturn(false);
+
+        assertFalse("OPTIONS req should return False if DB password did not match",
+                IRopcCredCache.isValid(EMAIL, "wrongPassword", UA, PROTOCOL, PROVIDER, IP, DEVICE_ID,
+                        null, true).isCacheHit());
+    }
+
+    @Test
+    public void testOptionsReqCacheHitPasswordMismatch() throws Exception {
+        IRopcCredCache.clearAll();
+
+        IRopcSessionRecord session = new IRopcSessionRecord.Builder()
+                .username(EMAIL)
+                .userAgent(UA)
+                .protocol(PROTOCOL)
+                .provider(PROVIDER)
+                .passwordHash(PASSWORD)
+                .ip(IP)
+                .createdAt(System.currentTimeMillis())
+                .build();
+
+        IRopcCredCache.STORE.upsert(null, session);
+
+        assertTrue("OPTIONS req should return true after finding and validating a DB record",
+                IRopcCredCache.isValid(EMAIL, PASSWORD, UA, PROTOCOL, PROVIDER, IP, DEVICE_ID,
+                        null, true).isCacheHit());
+
+        // delete the record from DB so if again we have DB hit no record will exist
+        List<IRopcSessionRecord> sessionRecordList = IRopcCredCache.STORE.findByIp(null, EMAIL, UA,
+                PROVIDER, PROTOCOL, IP);
+        IRopcCredCache.STORE.delete(null, sessionRecordList.get(0).getId(), sessionRecordList.get(0).getUsername(),
+                sessionRecordList.get(0).getUserAgent(), sessionRecordList.get(0).getProvider(),
+                sessionRecordList.get(0).getProtocol(), sessionRecordList.get(0).getDeviceId());
+        PowerMockito.doReturn(false).when(IRopcCredCache.class, "isMatch", any(), anyString(), anyString());
+        // again check for OPTIONS req ,since data is not available in DB , that confirms cache hit
+        assertFalse("OPTIONS request should return false if cached record exists but password mismatched",
+                IRopcCredCache.isValid(EMAIL, "wrongPassword", UA, PROTOCOL, PROVIDER, IP, DEVICE_ID,
+                        null, true).isCacheHit());
     }
 }

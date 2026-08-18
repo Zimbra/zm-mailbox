@@ -159,25 +159,6 @@ public class IRopcUtilTest {
     }
 
     @Test
-    public void testFindInStoreFallBackToIpPasswordMatches() throws ServiceException {
-        String password = "password";
-        String hash = "hashedPassword";
-        when(mockRecord.getPasswordHash()).thenReturn(hash);
-        when(mockStore.find(any(), anyString(), anyString(), anyString(), anyString(), anyString())).
-                thenReturn(Collections.emptyList());
-
-        when(mockStore.findByIp(any(), anyString(), anyString(), anyString(), anyString(), anyString())).
-                thenReturn(Collections.singletonList(mockRecord));
-
-        PowerMockito.mockStatic(PasswordUtil.SSHA512.class);
-        PowerMockito.when(PasswordUtil.SSHA512.verifySSHA512(hash, password)).thenReturn(true);
-        IRopcSessionRecord result = IRopcUtil.findInStore(null, "user", "userAgent", "provider", "proto",
-                "Deviceid", "ip", password, mockStore);
-        assertNotNull(result);
-        assertEquals(mockRecord, result);
-    }
-
-    @Test
     public void testFindInStorePasswordMismatch() throws ServiceException {
         String password = "wrongPassword";
         String hash = "hashedPassword";
@@ -272,4 +253,48 @@ public class IRopcUtilTest {
         verify(mockStore, never()).deleteByDeviceIdAndUsername(any(Account.class), anyString());
     }
 
+    @Test
+    public void testNormalizaUserAgentStandardMailClients() {
+        assertEquals("Android-Mail",
+                IRopcUtil.normalizeUserAgent("Android-Mail/2026.07.27.955297563.Release"));
+
+        assertEquals("Outlook-iOS-Android",
+                IRopcUtil.normalizeUserAgent("Outlook-iOS-Android/1.0"));
+
+        assertEquals("Apple-iPhone13C2",
+                IRopcUtil.normalizeUserAgent("Apple-iPhone13C2/2207.100"));
+    }
+
+    @Test
+    public void testNormalizaUserAgentNoSlash() {
+        assertEquals("Generic-Mail",
+                IRopcUtil.normalizeUserAgent("Generic-Mail"));
+    }
+
+    @Test
+    public void testNormalizaUserAgentNullInput() {
+        assertEquals("",
+                IRopcUtil.normalizeUserAgent(null));
+    }
+
+    @Test
+    public void testNormalizaUserAgentEmptyOrBlankInput() {
+        assertEquals("",
+                IRopcUtil.normalizeUserAgent(""));
+
+        assertEquals("",
+                IRopcUtil.normalizeUserAgent("    "));
+    }
+
+    @Test
+    public void testNormalizaUserAgentSlashEdgeCase() {
+        assertEquals("",
+                IRopcUtil.normalizeUserAgent("/1.0.0"));
+
+        assertEquals("CustomApp",
+                IRopcUtil.normalizeUserAgent("CustomApp/"));
+
+        assertEquals("App",
+                IRopcUtil.normalizeUserAgent("App/v1.0/beta"));
+    }
 }

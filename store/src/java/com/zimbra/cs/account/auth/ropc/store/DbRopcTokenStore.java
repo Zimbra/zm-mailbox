@@ -63,8 +63,8 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             conn = DbPool.getConnection(mbox);
             stmt = conn.prepareStatement(
-                    "SELECT id, username, device_id, user_agent, ip, provider, protocol, refresh_token, " +
-                            "id_token, password, created_at, updated_at"
+                    "SELECT id, device_id, ip, refresh_token, " +
+                            "password, created_at"
                             + " FROM " + getTableName(mbox) + " WHERE username = ? AND provider = ? AND protocol = ? " +
                             "AND user_agent = ? AND device_id = ? ORDER BY created_at DESC");
             stmt.setString(1, username);
@@ -77,17 +77,11 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
             while (rs.next()) {
                 IRopcSessionRecord record = new IRopcSessionRecord.Builder()
                         .id(rs.getLong(1))
-                        .username(rs.getString(2))
-                        .deviceId(rs.getString(3))
-                        .userAgent(rs.getString(4))
-                        .ip(rs.getString(5))
-                        .provider(rs.getString(6))
-                        .protocol(rs.getString(7))
-                        .refreshToken(rs.getString(8))
-                        .idToken(rs.getString(9))
-                        .passwordHash(rs.getString(10))
-                        .createdAt(rs.getLong(11))
-                        .lastUpdatedAt(rs.getLong(12))
+                        .deviceId(rs.getString(2))
+                        .ip(rs.getString(3))
+                        .refreshToken(rs.getString(4))
+                        .passwordHash(rs.getString(5))
+                        .createdAt(rs.getLong(6))
                         .build();
                 results.add(record);
 
@@ -117,8 +111,8 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             conn = DbPool.getConnection(mbox);
             stmt = conn.prepareStatement(
-                    "SELECT id, username, device_id, user_agent, ip, provider, protocol, refresh_token, " +
-                            "id_token, password, created_at, updated_at"
+                    "SELECT id, device_id, ip, refresh_token, " +
+                            "password, created_at"
                             + " FROM " + getTableName(mbox) + " WHERE username = ? AND provider = ? AND protocol = ? " +
                             "AND user_agent = ? AND ip = ? ORDER BY created_at DESC");
             stmt.setString(1, username);
@@ -131,17 +125,11 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
             while (rs.next()) {
                 IRopcSessionRecord record = new IRopcSessionRecord.Builder()
                         .id(rs.getLong(1))
-                        .username(rs.getString(2))
-                        .deviceId(rs.getString(3))
-                        .userAgent(rs.getString(4))
-                        .ip(rs.getString(5))
-                        .provider(rs.getString(6))
-                        .protocol(rs.getString(7))
-                        .refreshToken(rs.getString(8))
-                        .idToken(rs.getString(9))
-                        .passwordHash(rs.getString(10))
-                        .createdAt(rs.getLong(11))
-                        .lastUpdatedAt(rs.getLong(12))
+                        .deviceId(rs.getString(2))
+                        .ip(rs.getString(3))
+                        .refreshToken(rs.getString(4))
+                        .passwordHash(rs.getString(5))
+                        .createdAt(rs.getLong(6))
                         .build();
                 results.add(record);
 
@@ -171,8 +159,7 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             conn = DbPool.getConnection(mbox);
             stmt = conn.prepareStatement(
-                    "SELECT id, username, device_id, user_agent, ip, provider, protocol, refresh_token, " +
-                            "id_token, password, created_at, updated_at"
+                    "SELECT username, device_id, user_agent, ip, provider, protocol"
                             + " FROM " + getTableName(mbox) + " WHERE device_id = ? AND username = ?");
             stmt.setString(1, deviceId);
             stmt.setString(2, account.getName());
@@ -180,18 +167,12 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
 
             while (rs.next()) {
                 IRopcSessionRecord record = new IRopcSessionRecord.Builder()
-                        .id(rs.getLong(1))
-                        .username(rs.getString(2))
-                        .deviceId(rs.getString(3))
-                        .userAgent(rs.getString(4))
-                        .ip(rs.getString(5))
-                        .provider(rs.getString(6))
-                        .protocol(rs.getString(7))
-                        .refreshToken(rs.getString(8))
-                        .idToken(rs.getString(9))
-                        .passwordHash(rs.getString(10))
-                        .createdAt(rs.getLong(11))
-                        .lastUpdatedAt(rs.getLong(12))
+                        .username(rs.getString(1))
+                        .deviceId(rs.getString(2))
+                        .userAgent(rs.getString(3))
+                        .ip(rs.getString(4))
+                        .provider(rs.getString(5))
+                        .protocol(rs.getString(6))
                         .build();
                 results.add(record);
 
@@ -206,6 +187,39 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
             DbPool.quietClose(conn);
         }
 
+    }
+
+    @Override
+    public IRopcSessionRecord findLatestPasswordByUsername(Account account, String username) throws ServiceException {
+        if (account == null || username == null) {
+            return null;
+        }
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            conn = DbPool.getConnection(mbox);
+            stmt = conn.prepareStatement(
+                    "SELECT password" +
+                            " FROM " + getTableName(mbox) + " WHERE username = ? ORDER BY created_at DESC LIMIT 1");
+            stmt.setString(1, username);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new IRopcSessionRecord.Builder()
+                        .passwordHash(rs.getString(1))
+                        .build();
+            }
+
+            return null;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("ROPC token lookup failed for " + username, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
     }
 
     @Override

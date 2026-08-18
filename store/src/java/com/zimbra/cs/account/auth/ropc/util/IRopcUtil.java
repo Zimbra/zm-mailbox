@@ -84,9 +84,6 @@ public class IRopcUtil {
                                                  IRopcTokenStore store) throws ServiceException {
         List<IRopcSessionRecord> candidates = store.find(account, user, userAgent, provider, proto, deviceId);
         IRopcSessionRecord matchedRec = null;
-        if (candidates == null || candidates.isEmpty()) {
-            candidates = store.findByIp(account, user, userAgent, provider, proto, ip);
-        }
 
         if (candidates != null) {
             for (IRopcSessionRecord candidate : candidates) {
@@ -136,8 +133,27 @@ public class IRopcUtil {
                 }
                 IRopcCredCache.STORE.deleteByDeviceIdAndUsername(account, deviceId);
             }
+            ZimbraLog.account.info("Auth token data successfully flushed for user %s", account.getName());
         } catch (Exception e) {
             ZimbraLog.account.error("Error while flushing auth data from DB for user %s", account.getName(), e);
         }
+    }
+
+    /*
+    * Normalizes the User-Agent string by stripping dynamic versioning and build dates.
+    * This prevents OS or app store updates from breaking active MFA cache sessions.
+    *
+    * @param userAgent
+    * @return normalizes userAgent
+     */
+    public static String normalizeUserAgent(String userAgent) {
+        if (userAgent == null || userAgent.trim().isEmpty()) {
+            return "";
+        }
+        int slashIndex = userAgent.indexOf('/');
+        if (slashIndex > -1) {
+            return userAgent.substring(0, slashIndex);
+        }
+        return userAgent;
     }
 }

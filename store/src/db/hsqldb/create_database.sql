@@ -292,5 +292,6 @@ CREATE TABLE *${DATABASE_NAME}.ropc_token_store (
    INDEX `idx_options_ip_lookup` (`username`, `provider`, `protocol`, `ip`, `user_agent`),
    INDEX `idx_expiry_cleanup` (`created_at`),
    INDEX `idx_back_channel_logout` (`username`),
-   INDEX `idx_device_lookup` (`device_id`, `username`)
+   INDEX `idx_device_lookup` (`device_id`, `username`),
+   INDEX `idx_latest_session_lookup` (`username`, `created_at`)
 );
