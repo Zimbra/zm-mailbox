@@ -49,6 +49,7 @@ import javax.xml.bind.annotation.XmlType;
 public class ClearMFARejectionCacheRequest {
 
     /**
+     * @zm-api-field-tag account
      * @zm-api-field-description Account to clear MFA rejection cache for.
      * If not specified, clears cache for all accounts.
      */
