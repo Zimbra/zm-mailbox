@@ -33,12 +33,14 @@ import javax.xml.bind.annotation.XmlType;
 public class ClearMFARejectionCacheResponse {
 
     /**
+     * @zm-api-field-tag status
      * @zm-api-field-description Status of the cache clear operation
      */
     @XmlAttribute(name = AdminConstants.A_STATUS, required = true)
     private String status;
 
     /**
+     * @zm-api-field-tag entriesCleared
      * @zm-api-field-description Number of cache entries cleared
      */
     @XmlAttribute(name = AdminConstants.A_ENTRIES_CLEARED, required = true)
