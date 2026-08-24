@@ -25,6 +25,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Scheduler for periodic cleanup of expired ROPC session tokens from the database.
+ *
+ * <p>Runs as a single daemon thread named {@value #THREAD_NAME}, started lazily
+ * the first time a user authenticates via the IdP ROPC flow with DB-backed storage.
+ * The first execution is aligned to the next midnight; subsequent runs follow the
+ * configured interval ({@code mfa_idp_db_cleanup_interval_days}).
+ * Disabled automatically if the configured interval is {@code <= 0}.
+ */
 public class IRopcTokenCleanupScheduler {
 
     private static final String THREAD_NAME = "D-RopcTokenCleanup";

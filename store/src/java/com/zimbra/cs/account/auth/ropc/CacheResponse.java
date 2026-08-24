@@ -17,6 +17,10 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
+/**
+ * holds the result of a credential cache lookup.
+ * contains flags for cache hit, rejection skip, and the auth type associated with the cached entry.
+ */
 public class CacheResponse {
 
     private boolean cacheHit;

@@ -83,6 +83,10 @@ public final class MFAPollingService {
                 });
     }
 
+    /**
+     * Holds the challenge, its deadline, the polling task, and the future
+     * that will be completed with the final {@link MFAPollResult}.
+     */
     private static final class Pending {
         private final MFAChallenge challenge;
 
@@ -98,6 +102,16 @@ public final class MFAPollingService {
         }
     }
 
+    /**
+     * Blocks until the MFA push challenge is resolved or the polling timeout is exceeded.
+     * Schedules repeated polls at the given interval and waits on the result future.
+     *
+     * @param provider       the {@link IRopcHandler} used to poll the IdP
+     * @param challenge      the active MFA challenge to poll
+     * @param interval       polling interval in milliseconds
+     * @param pollingTimeout maximum time to wait for user approval in milliseconds
+     * @return {@link MFAPollResult} indicating the final outcome
+     */
     public MFAPollResult await(IRopcHandler provider, MFAChallenge challenge, long interval, long pollingTimeout) {
         if (provider == null || challenge == null) {
             return MFAPollResult.ERROR;

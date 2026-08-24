@@ -17,6 +17,11 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
+/**
+ * Immutable result of an ROPC authentication attempt.
+ * Carries the {@link Status}, tokens on success, an {@link MFAChallenge} on MFA,
+ * and error details on failure. Use the static factory methods to construct instances.
+ */
 public final class IRopcAuthResult {
 
     public enum Status {

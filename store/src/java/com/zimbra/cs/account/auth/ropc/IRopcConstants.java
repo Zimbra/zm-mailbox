@@ -17,6 +17,9 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
+/**
+ * Constants used across the IdP ROPC authentication flow.
+ */
 public final class IRopcConstants {
     public static final String PROVIDER = "provider";
 

@@ -17,6 +17,11 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
+/**
+ * Represents the result of a single MFA push-challenge poll attempt.
+ * consumed by {@link MFAPollingService} to decide whether to continue polling
+ * or terminate with a final {@link Outcome}.
+ */
 public enum MFAPollResult {
     /** User has not yet approved/denied; keep polling. */
     WAITING,
