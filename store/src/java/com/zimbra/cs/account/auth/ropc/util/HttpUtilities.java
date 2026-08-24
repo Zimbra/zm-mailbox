@@ -36,6 +36,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+/**
+ * HTTP utility for the ROPC authentication flow.
+ */
 public final class HttpUtilities {
 
     private static final CloseableHttpClient CLIENT =
