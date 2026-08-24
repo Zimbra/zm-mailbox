@@ -68,14 +68,33 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.FULL_AUTH;
  */
 public final class IRopcCredCache {
 
+    /**
+     * Grace period in milliseconds, applied after a token's nominal expiry, during which
+     * cached credentials remain usable. Derived from
+     * {@link LC#mfa_idp_max_cache_grace_period_in_minutes}, bounded below by
+     * {@link IRopcConstants#CACHE_GRACE_PERIOD_MIN_DURATION}.
+     */
     private static final long GRACE_PERIOD = Duration.ofMinutes(
             Math.max(LC.mfa_idp_max_cache_grace_period_in_minutes.intValue(),
-            CACHE_GRACE_PERIOD_MIN_DURATION)).toMillis();
+                    CACHE_GRACE_PERIOD_MIN_DURATION)).toMillis();
 
+    /**
+     * Maximum credential cache TTL in milliseconds. Used as the Guava write-expiry
+     * for {@link #CRED_CACHE} (together with {@link #GRACE_PERIOD}). Derived from
+     * {@link LC#mfa_idp_max_cred_cache_timeout_in_minutes}, bounded below by
+     * {@link IRopcConstants#CACHE_EXPIRY_MIN_DURATION}.
+     */
     private static final long CACHE_TIMEOUT = Duration.ofMinutes(
             Math.max(LC.mfa_idp_max_cred_cache_timeout_in_minutes.intValue(),
-            CACHE_EXPIRY_MIN_DURATION)).toMillis();
+                    CACHE_EXPIRY_MIN_DURATION)).toMillis();
 
+
+    /**
+     * Maximum rejection cache TTL in milliseconds. Used as the Guava write-expiry
+     * for {@link #REJECTION_CACHE}. Derived from
+     * {@link LC#mfa_idp_max_rejection_cache_timeout_in_minutes}, bounded below by
+     * {@link IRopcConstants#CACHE_EXPIRY_MIN_DURATION}.
+     */
     private static final long REJECTION_CACHE_TIMEOUT = Duration.ofMinutes(
             Math.max(LC.mfa_idp_max_rejection_cache_timeout_in_minutes.intValue(),
                     CACHE_EXPIRY_MIN_DURATION)).toMillis();
@@ -91,15 +110,22 @@ public final class IRopcCredCache {
                     + GRACE_PERIOD, TimeUnit.MILLISECONDS)
             .build();
 
+
     /**
      * Rejection counter cache: device/IP key to rejection count.
      * Separate from credentials for type safety.
-     * Resets on successful Okta auth via store().
+     * Resets on successful Okta auth via {@link #store(String, String, String, String, String, String, String, long)}.
      */
     private static final Cache<String, Integer> REJECTION_CACHE = CacheBuilder.newBuilder()
             .expireAfterWrite((REJECTION_CACHE_TIMEOUT), TimeUnit.MILLISECONDS)
             .build();
 
+    /**
+     * Backing token store used for persistent session lookups and upgrades.
+     * Resolved at class-load time: uses an in-memory {@link CacheRopcTokenStore}
+     * when {@link LC#mfa_idp_enable_inmemory_store} is {@code true}, otherwise
+     * uses the database-backed {@link DbRopcTokenStore}.
+     */
     public static final IRopcTokenStore STORE = LC.mfa_idp_enable_inmemory_store.booleanValue() ?
             new CacheRopcTokenStore() : new DbRopcTokenStore();
 
@@ -107,17 +133,17 @@ public final class IRopcCredCache {
     }
 
     /**
-     * holds a salted password hash and its per-entry expiry timestamp.
-     * expiry is derived from Okta's {@code expires_in} (seconds) at the time of store.
-     * falls back to {@code TTL_MS} if {@code expires_in} is not provided.
+     * Holds a salted password hash and its per-entry expiry timestamp.
+     * Expiry is derived from Okta's {@code expires_in} (seconds) at the time of store.
+     * Falls back to {@code CACHE_TIMEOUT + GRACE_PERIOD} if {@code expires_in} is not provided.
      */
     private static final class CacheEntry {
 
         private final String hash;
 
         /**
-         * absolute wall-clock timestamp (ms) after which this entry is considered expired.
-         * computed as: System.currentTimeMillis() + (expiresInSeconds * 1000)
+         * Absolute wall-clock timestamp (ms) after which this entry is considered expired.
+         * Computed as: {@code System.currentTimeMillis() + (expiresInSeconds * 1000)}.
          */
         private final long expiryTimestamp;
 
@@ -141,20 +167,26 @@ public final class IRopcCredCache {
     }
 
     /**
-     * stores the successful credential in the cache and resets rejection counts.
+     * Stores a successfully authenticated credential in the cache and resets any
+     * existing rejection count for the given context.
+     *
+     * <p>Two entries are written: one keyed by the full device/IP context key
+     * (see class-level key format) and one keyed by {@code email} alone, to support
+     * OPTIONS-request lookups that carry no device context.</p>
      *
      * @param email            the user's email address
-     * @param password         the user's password
-     * @param userAgent        the client's user agent string
-     * @param protocol         the protocol being used
-     * @param provider         the authentication provider
+     * @param password         the SSHA512-hashed password to cache
+     * @param userAgent        the client's User-Agent string
+     * @param protocol         the protocol being used (e.g., {@code EAS}, {@code IMAP})
+     * @param provider         the authentication provider identifier
      * @param ip               the originating client IP address
-     * @param deviceId         the unique device identifier
-     * @param expiresInSeconds token lifetime from Okta's expires_in (0 = use TTL_MS)
+     * @param deviceId         the unique device identifier; may be {@code null} for IP-only contexts
+     * @param expiresInSeconds token lifetime in seconds from Okta's {@code expires_in};
+     *                         pass {@code 0} to fall back to the configured cache TTL
      */
     public static void store(String email, String password, String userAgent,
-                             String protocol, String provider, String ip, String deviceId,
-                             long expiresInSeconds) {
+            String protocol, String provider, String ip, String deviceId,
+            long expiresInSeconds) {
         if (email == null || password == null) {
             return;
         }
@@ -167,23 +199,26 @@ public final class IRopcCredCache {
     }
 
     /**
-     * validates the password against the cache. Handles IP-to-Device upgrades.
-     * expired entries are invalidated immediately on access.
+     * Validates the password against the cache for the given authentication context.
      *
-     * @param email     the user's email address
-     * @param password  the user's password
-     * @param userAgent the client's user agent string
-     * @param protocol  the protocol being used
-     * @param provider  the authentication provider
-     * @param ip        the originating client IP address
-     * @param deviceId  the unique device identifier
-     * @param account
-     * @param optionsReq
-     * @return CacheResponse
+     * <p>Lookup order: (1) direct device/IP key hit, (2) OPTIONS — email key then
+     * backing store, (3) IP bridge upgrade via {@link #processIpBridgeUpgrade}.</p>
+     *
+     * @param email      user's email address
+     * @param password   plaintext password to verify against the cached hash
+     * @param userAgent  client User-Agent string
+     * @param protocol   protocol in use (e.g., {@code EAS}, {@code IMAP})
+     * @param provider   authentication provider identifier
+     * @param ip         originating client IP address
+     * @param deviceId   unique device identifier; {@code null} for IP-only contexts
+     * @param account    resolved {@link Account} for the authenticating user
+     * @param optionsReq {@code true} if this is an OPTIONS pre-flight request
+     * @return {@link CacheResponse} indicating hit, grace-period, or miss
+     * @throws ServiceException if a store lookup or device-ID upgrade fails
      */
     public static CacheResponse isValid(String email, String password, String userAgent,
-                                        String protocol, String provider, String ip, String deviceId,
-                                        Account account, boolean optionsReq) throws ServiceException {
+            String protocol, String provider, String ip, String deviceId,
+            Account account, boolean optionsReq) throws ServiceException {
         if (email == null || password == null) {
             return new CacheResponse(false);
         }
@@ -204,9 +239,6 @@ public final class IRopcCredCache {
             }
         }
 
-        // 2. for OPTIONS request - first check in CRED_CRED with username as key
-        // if not found lookup in db.
-        // It will be validated only on the basis of username and password.
         if (optionsReq) {
             CacheEntry usernameEntry = CRED_CACHE.getIfPresent(email);
             if (usernameEntry != null) {
@@ -225,7 +257,6 @@ public final class IRopcCredCache {
             return new CacheResponse(isValidPassword);
         }
 
-        // 2. IP bridge fallback — upgrade to device key (OPCC to real deviceId)
         if (isNotEmpty(deviceId) && isNotEmpty(ip)) {
             String ipKey = buildKey(email, userAgent, protocol, provider, ip, null);
             CacheEntry ipEntry = CRED_CACHE.getIfPresent(ipKey);
@@ -247,10 +278,30 @@ public final class IRopcCredCache {
         return new CacheResponse(false);
     }
 
+    /**
+     * Promotes an IP-keyed cache entry to a device-keyed entry when a client
+     * presents a {@code deviceId} for the first time after an OPTIONS pre-flight.
+     * Returns a grace-period response if the device is already known, or
+     * {@link IRopcConstants#FULL_AUTH} if no matching record is found.
+     *
+     * @param email      user's email address
+     * @param password   plaintext password presented by the client
+     * @param userAgent  client User-Agent string
+     * @param protocol   protocol in use
+     * @param provider   authentication provider identifier
+     * @param ip         originating client IP address
+     * @param deviceId   device identifier now presented by the client
+     * @param account    resolved {@link Account} for the authenticating user
+     * @param optionsReq {@code true} if this is an OPTIONS request
+     * @param deviceKey  fully-qualified device cache key for the current context
+     * @param ipEntry    existing IP-keyed {@link CacheEntry} to be promoted
+     * @return {@link CacheResponse} reflecting the upgrade outcome
+     * @throws ServiceException if a store lookup or update fails
+     */
     private static CacheResponse processIpBridgeUpgrade(String email, String password, String userAgent,
-                                                         String protocol, String provider, String ip, String deviceId,
-                                                         Account account, boolean optionsReq, String deviceKey,
-                                                         CacheEntry ipEntry) throws ServiceException {
+            String protocol, String provider, String ip, String deviceId,
+            Account account, boolean optionsReq, String deviceKey,
+            CacheEntry ipEntry) throws ServiceException {
         Integer count = REJECTION_CACHE.getIfPresent(email);
         if (count != null && count >= LC.mfa_idp_auth_fail_count.intValue()) {
             return new CacheResponse(false);
@@ -295,17 +346,18 @@ public final class IRopcCredCache {
     }
 
     /**
-     * Invalidates the cache for a specific device context (Logout).
+     * Invalidates cache entries for the given device context (e.g., on logout).
+     * Also evicts the IP-bridge key and the email-keyed entry.
      *
-     * @param email     the user's email address
-     * @param userAgent the client's user agent string
-     * @param protocol  the protocol being used
-     * @param provider  the authentication provider
-     * @param ip        the originating client IP address
-     * @param deviceId  the unique device identifier
+     * @param email     user's email address
+     * @param userAgent client User-Agent string
+     * @param protocol  protocol in use
+     * @param provider  authentication provider identifier
+     * @param ip        originating client IP address
+     * @param deviceId  unique device identifier; {@code null} for IP-only contexts
      */
     public static void invalidate(String email, String userAgent, String protocol,
-                                  String provider, String ip, String deviceId) {
+            String provider, String ip, String deviceId) {
         if (email == null) {
             return;
         }
@@ -325,9 +377,10 @@ public final class IRopcCredCache {
     }
 
     /**
-     * Clears rejection cache for a specific user.
-     * @param email the user's email address
-     * @return true if an entry existed and was removed
+     * Clears the rejection cache entry for the given user.
+     *
+     * @param email user's email address
+     * @return {@code true} if an entry existed and was removed
      */
     public static boolean invalidateRejectionCacheByUsername(String email) {
         if (email == null) {
@@ -341,10 +394,10 @@ public final class IRopcCredCache {
     }
 
     /**
-     * Clears the entire rejection cache only.
-     * Used by admin ClearRejectionCache SOAP handler.
+     * Clears the entire rejection cache. Used by the admin ClearRejectionCache SOAP handler.
+     * Does not affect the credential cache.
      *
-     * @return number of entries that were in the rejection cache before clearing
+     * @return number of entries removed
      */
     public static long invalidateAllRejectionCache() {
         long size = REJECTION_CACHE.size();
@@ -356,9 +409,11 @@ public final class IRopcCredCache {
     }
 
     /**
-     * records a push rejection for this context.
+     * Increments the push-rejection counter for the given user.
+     * Once the counter reaches {@link LC#mfa_idp_auth_fail_count}, further
+     * attempts are blocked by {@link #checkRejectionLimit(String)}.
      *
-     * @param email the user's email address
+     * @param email user's email address
      */
     public static void storeRejection(String email) {
         if (email == null) {
@@ -372,10 +427,11 @@ public final class IRopcCredCache {
     }
 
     /**
-     * checks if the user has exceeded the rejection limit.
+     * Throws {@link ServiceException#FORBIDDEN} if the user's rejection count
+     * meets or exceeds {@link LC#mfa_idp_auth_fail_count}.
      *
-     * @param email     the user's email address
-     * @throws AuthFailedServiceException if the rejection limit is reached
+     * @param email user's email address
+     * @throws ServiceException if the rejection limit has been reached
      */
     public static void checkRejectionLimit(String email)
             throws ServiceException {
@@ -411,7 +467,7 @@ public final class IRopcCredCache {
     }
 
     private static String buildKey(String email, String ua, String proto,
-                                   String prov, String ip, String did) {
+            String prov, String ip, String did) {
         String normEmail = (email != null) ? email.trim().toLowerCase() : "unknown";
         StringBuilder sb = new StringBuilder(normEmail);
         sb.append('|').append(ua != null ? ua : "");

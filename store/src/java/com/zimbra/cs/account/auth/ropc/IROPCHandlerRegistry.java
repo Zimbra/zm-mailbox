@@ -23,6 +23,12 @@ import com.zimbra.cs.account.auth.ropc.okta.OktaRopcHandler;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * registry for ROPC (Resource Owner Password Credentials) handler implementations.
+ * maintains a map of provider name to {@link IRopcHandler} and provides
+ * static methods to register and retrieve handlers.
+ * initialized with {@link OktaRopcHandler} by default.
+ */
 public final class IROPCHandlerRegistry {
 
     private static final Map<String, IRopcHandler> HANDLERS = new ConcurrentHashMap<>();
@@ -36,6 +42,14 @@ public final class IROPCHandlerRegistry {
         ZimbraLog.account.debug("ROPC provider registry initialized with default providers");
     }
 
+
+    /**
+     * registers an {@link IRopcHandler} in the registry.
+     * duplicate registrations for the same provider name are silently skipped.
+     *
+     * @param handler the handler to register; must not be {@code null}
+     * @throws IllegalArgumentException if {@code handler} is {@code null}
+     */
     public static void register(IRopcHandler handler) {
         if (handler == null) {
             throw new IllegalArgumentException("ROPC provider must not be null");
@@ -49,6 +63,13 @@ public final class IROPCHandlerRegistry {
         }
     }
 
+    /**
+     * retrieves the {@link IRopcHandler} registered for the given provider name.
+     *
+     * @param name the provider name; must not be {@code null} or empty
+     * @return the matching {@link IRopcHandler}
+     * @throws ServiceException if the name is null/empty or no handler is registered for it
+     */
     public static IRopcHandler get(String name) throws ServiceException {
         if (name == null || name.trim().isEmpty()) {
             throw ServiceException.INVALID_REQUEST("ROPC provider type/name must not be null or empty", null);

@@ -20,6 +20,10 @@ package com.zimbra.cs.account.auth.ropc.okta;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Represents the HTTP response from Okta during the ROPC authentication flow.
+ * Holds token details on success
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class OktaResponse {
 

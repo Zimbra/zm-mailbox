@@ -41,6 +41,11 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REFRESH;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.REQUEST_PARAM_CLIENT_ID;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.TOKEN_ENDPOINT;
 
+/**
+ * Core authentication engine for the IdP ROPC flow.
+ * Handles refresh-token reuse, full password-based auth, and MFA push polling.
+ * Persists session records and updates the credential cache on success.
+ */
 public final class IRopcAuthEngine {
 
     private static final MFAPollingService POLLER = MFAPollingService.getInstance();
@@ -50,6 +55,23 @@ public final class IRopcAuthEngine {
     private IRopcAuthEngine() {
     }
 
+
+    /**
+     * Entry point for ROPC authentication.
+     * Delegates to {@link #doAuthenticate} and returns the resulting {@link Outcome}.
+     *
+     * @param account          the account being authenticated
+     * @param user             the username
+     * @param password         the user's password
+     * @param deviceId         the device identifier
+     * @param protocol         the auth protocol
+     * @param subProtocol      the auth sub-protocol, or {@code null}
+     * @param userAgent        the client user agent
+     * @param ip               the client IP address
+     * @param configs          provider-specific config map
+     * @param fullAuthRequired {@code true} to force a full IdP round-trip
+     * @return the {@link Outcome} of the authentication attempt
+     */
     public static Outcome authenticate(Account account, final String user, final String password, final String deviceId,
                                        AuthContext.Protocol protocol, AuthContext.SubProtocol subProtocol,
                                        String userAgent, String ip, Map<String, String> configs,
@@ -58,6 +80,13 @@ public final class IRopcAuthEngine {
                 fullAuthRequired, optionsReq);
     }
 
+    /**
+     * Core authentication logic.
+     * Tries refresh-token auth first if a valid session record exists;
+     * falls back to full password-based auth otherwise.
+     *
+     * @return the {@link Outcome} of the authentication attempt
+     */
     private static Outcome doAuthenticate(Account account, String user, String password, String deviceId,
                                           AuthContext.Protocol protocol, AuthContext.SubProtocol subProtocol,
                                           String userAgent, String ip, Map<String, String> configs,
@@ -120,6 +149,12 @@ public final class IRopcAuthEngine {
         }
     }
 
+    /**
+     * Performs a full password-based IdP authentication.
+     * On MFA challenge, delegates to {@link #awaitPush}.
+     *
+     * @return the {@link Outcome} of the full auth attempt
+     */
     private static Outcome fullAuth(Account account, IRopcHandler handler, String user, String password,
                                     String deviceId, String proto, String userAgent, String ip,
                                     Map<String, String> configs, String passwordHash, boolean fullAuthForceful,
@@ -155,6 +190,13 @@ public final class IRopcAuthEngine {
         }
     }
 
+    /**
+     * Polls the MFA push challenge until it is approved, rejected, or times out.
+     * Persists the session on success.
+     *
+     * @param challenge the MFA challenge containing polling parameters and tokens
+     * @return the {@link Outcome} based on the poll result
+     */
     private static Outcome awaitPush(Account account, IRopcHandler handler, MFAChallenge challenge, String user,
                                      String passwordHash, String deviceId, String userAgent, String ip,
                                      String proto, boolean fullAuthForceful, boolean optionsReq)
@@ -191,6 +233,10 @@ public final class IRopcAuthEngine {
         }
     }
 
+    /**
+     * Builds and upserts an {@link IRopcSessionRecord} in the token store,
+     * then updates the in-memory credential cache.
+     */
     private static void persist(Account account, Long id, String user, String userAgent, String deviceId, String ip,
                                 String provider, String refreshToken, String idToken, String passwordHash,
                                 String protocol, long createdAt, Long accessTokenExpiry) throws ServiceException {
@@ -218,6 +264,11 @@ public final class IRopcAuthEngine {
         IRopcCredCache.store(user, passwordHash, userAgent, protocol, provider, ip, deviceId, accessTokenExpiry);
     }
 
+    /**
+     * Validates that all mandatory authentication parameters are present.
+     *
+     * @throws ServiceException if any required parameter is missing or invalid
+     */
     private static void verifyMandatoryParamsforAuth(String username, String password, Map<String, String> configs,
                                                      String proto)
             throws ServiceException {
@@ -249,10 +300,18 @@ public final class IRopcAuthEngine {
         }
     }
 
+    /**
+     * Encrypts a token using the account ID as the key.
+     * Returns {@code null} if plaintext is {@code null}.
+     */
     private static String encrypt(String accountId, String plaintext) throws ServiceException {
         return plaintext == null ? null : DataSource.encryptData(accountId, plaintext);
     }
 
+    /**
+     * Decrypts a token using the account ID as the key.
+     * Returns {@code null} if ciphertext is {@code null} or decryption fails.
+     */
     private static String decrypt(String accountId, String ciphertext) {
         if (ciphertext == null) {
             return null;
@@ -265,6 +324,10 @@ public final class IRopcAuthEngine {
         }
     }
 
+    /**
+     * Parses the access token expiry value, capping it at the configured maximum.
+     * Returns {@link IRopcConstants#ACCESS_EXPIRY_DEFAULT} on parse failure.
+     */
     private static Long parse(String expiry) {
         try {
             long maxExpiry = LC.mfa_idp_max_cred_cache_timeout_in_minutes.intValue() * 60L;

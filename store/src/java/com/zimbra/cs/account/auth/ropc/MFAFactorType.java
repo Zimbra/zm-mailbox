@@ -17,6 +17,10 @@
 
 package com.zimbra.cs.account.auth.ropc;
 
+/**
+ * Represents the MFA factor type used during the ROPC authentication flow.
+ * Defaults to {@link #PUSH} if no value is configured.
+ */
 public enum MFAFactorType {
 
     PUSH,

@@ -30,6 +30,9 @@ import java.util.Map;
 import java.util.Optional;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.CONVERT_TO_MILLI;
 
+/**
+ * Utility methods for the ROPC authentication flow.
+ */
 public class IRopcUtil {
 
     public static Optional<Long> parseToMillis(String value) {

@@ -34,10 +34,27 @@ import java.util.Map;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.AUTH_REQUEST_TYPE;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.FULL_AUTH;
 
+
+/**
+ * Custom authentication handler for the IdP ROPC flow.
+ * Checks the credential cache first; if no cache hit, delegates to {@link IRopcAuthEngine}.
+ * Currently supported only for EAS over zsync protocol.
+ */
 public class IRopcCustomAuth extends ZimbraCustomAuth {
 
     private static final String EXTENSION_NAME = "idp-ropc";
 
+    /**
+     * Authenticates the account using the IdP ROPC flow.
+     * Checks the cache first; on a miss, validates the rejection limit and calls the auth engine.
+     * Throws {@link AuthFailedServiceException} for all non-success outcomes.
+     *
+     * @param acct     the account to authenticate
+     * @param password the user's password
+     * @param context  auth context containing protocol, device ID, user agent, and IP
+     * @param args     provider-specific config arguments
+     * @throws Exception on auth failure or service error
+     */
     @Override
     public void authenticate(Account acct, String password,
                              Map<String, Object> context, List<String> args) throws Exception {
@@ -116,6 +133,21 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         }
     }
 
+    /**
+     * Delegates authentication to {@link IRopcAuthEngine}.
+     *
+     * @param account          the account to authenticate
+     * @param userName         the username
+     * @param password         the user's password
+     * @param deviceId         the device identifier
+     * @param protocol         the auth protocol
+     * @param subProtocol      the auth sub-protocol, or {@code null}
+     * @param userAgent        the client user agent
+     * @param ip               the client IP address
+     * @param configs          provider-specific config map
+     * @param fullAuthRequired {@code true} if a full IdP round-trip is required
+     * @return the {@link Outcome} of the authentication attempt
+     */
     protected Outcome callAuthEngine(Account account, String userName, String password, String deviceId,
                                      Protocol protocol, AuthContext.SubProtocol subProtocol,
                                      String userAgent, String ip, Map<String, String> configs,
@@ -130,11 +162,23 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         return IRopcCredCache.isValid(user, password, ua, proto, prov, ip, did, account, optionsReq);
     }
 
+    /**
+     * Returns {@code false} — password aging is not applicable for IdP ROPC auth.
+     *
+     * @return {@code false} always
+     */
     @Override
     public boolean checkPasswordAging() {
         return false;
     }
 
+    /**
+     * Returns {@code true} if ROPC auth is supported for the given context.
+     * Supported only for {@link Protocol#zsync} with EAS sub-protocol.
+     *
+     * @param context the auth context map
+     * @return {@code true} if supported, {@code false} otherwise
+     */
     public static boolean isSupported(Map<String, Object> context) {
         try {
             Protocol protocol = (Protocol) context.get(AuthContext.AC_PROTOCOL);
@@ -155,6 +199,11 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
         }
     }
 
+    /**
+     * Returns the extension name {@code "idp-ropc"}
+     *
+     * @return {@code "idp-ropc"}
+     */
     public String getName() {
         return EXTENSION_NAME;
     }
