@@ -1567,7 +1567,15 @@ public final class LC {
     public static final KnownKey DEFANG_XML_CONTENT_TYPES = KnownKey.newKey("application/rss+xml," +
             "application/atom+xml,application/svg+xml,application/mathml+xml,application/xhtml+xml," +
             "application/xslt+xml,application/xsd+xml,application/gml+xml,application/rdf+xml");
-            
+
+    public static final KnownKey fcm_server_config_path = KnownKey.newKey("${zimbra_home}/conf/fcm_server_config.json");
+
+    public static final KnownKey fcm_mobile_config_path = KnownKey.newKey("${zimbra_home}/conf/fcm_mobile_config.json");
+
+    public static final KnownKey fcm_server_thread_count = KnownKey.newKey(10);
+
+    public static final KnownKey mobile_notification_cache_size_mb = KnownKey.newKey("124");
+
     @Supported
     public static final KnownKey proxy_chat_config_enabled = KnownKey.newKey(true);
 

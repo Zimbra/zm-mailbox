@@ -22,8 +22,12 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,6 +79,24 @@ public class Config extends ZAttrConfig {
     @SuppressWarnings("unchecked")
     public Map<String, Object> getServerDefaults() {
         return mServerDefaults;
+    }
+
+    public String getFCMDeviceJSON() {
+        try {
+            return new String(Files.readAllBytes(
+                    Paths.get(LC.fcm_mobile_config_path.value())));
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public String getFCMServerJSON() {
+        try {
+            return new String(Files.readAllBytes(
+                    Paths.get(LC.fcm_server_config_path.value())));
+        } catch (IOException e) {
+            return null;
+        }
     }
 
 }
