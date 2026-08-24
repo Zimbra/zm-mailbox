@@ -180,7 +180,7 @@ public class Auth extends AccountDocumentHandler {
                 // so the account will show in log context
                 if (!checkPasswordSecurity(context))
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
-                AuthToken.Usage usage = at.getUsage();
+                Usage usage = at.getUsage();
                 if (usage != Usage.AUTH && usage != Usage.TWO_FACTOR_AUTH) {
                     AuthFailedServiceException e = AuthFailedServiceException
                         .AUTH_FAILED("invalid auth token");
@@ -484,6 +484,21 @@ public class Auth extends AccountDocumentHandler {
             Map<String, Object> context, Element request, TwoFactorAuth twoFactorManager, ZimbraSoapContext zsc,
             TokenType tokenType) throws ServiceException {
         try {
+            // ZCS-20285: for a real password (not a recovery code), give a Keycloak-backed
+            // provider first refusal. NOT_SUPPORTED/UNAVAILABLE both fall through to the
+            // existing direct LDAP bind below, unchanged; REJECTED is a real auth failure and
+            // must not retry against LDAP too (see poc-implementation-guide.md §3.5).
+            if (AuthMode.PASSWORD.equals(authCtxt.get(Provisioning.AUTH_MODE_KEY))) {
+                AuthProvider.ExternalVerificationResult result =
+                        AuthProvider.verifyPasswordExternally(acct, code, authCtxt);
+                if (result == AuthProvider.ExternalVerificationResult.VERIFIED) {
+                    return null;
+                } else if (result == AuthProvider.ExternalVerificationResult.REJECTED) {
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+                            "credential rejected by external auth provider");
+                }
+                // NOT_SUPPORTED or UNAVAILABLE - fall through to today's behavior below.
+            }
             prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
             return null;
         } catch (AccountServiceException ase) {

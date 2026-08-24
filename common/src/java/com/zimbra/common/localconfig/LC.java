@@ -888,6 +888,22 @@ public final class LC {
     public static final KnownKey zimbra_csv_mapping_file = KnownKey.newKey("${zimbra_home}/conf/zimbra-contact-fields.xml");
 
     public static final KnownKey zimbra_auth_provider = KnownKey.newKey("");
+
+    // ZCS-20285: Keycloak-backed password verification, tried by KeycloakAuthProvider
+    // ahead of the direct LDAP bind when "keycloak" is included in zimbra_auth_provider.
+    // An empty keycloak_base_url means the provider is inert (NOT_SUPPORTED) regardless
+    // of zimbra_auth_provider, so these keys are the real on/off switch for the POC.
+    public static final KnownKey keycloak_base_url = KnownKey.newKey("");
+    public static final KnownKey keycloak_realm = KnownKey.newKey("");
+    public static final KnownKey keycloak_client_id = KnownKey.newKey("");
+    public static final KnownKey keycloak_client_secret = KnownKey.newKey("").protect();
+    public static final KnownKey keycloak_connect_timeout_ms = KnownKey.newKey(3000);
+    public static final KnownKey keycloak_socket_timeout_ms = KnownKey.newKey(5000);
+    // Circuit breaker: after a failed (unavailable, not rejected) verification attempt,
+    // skip Keycloak entirely for this long and fall back directly - no wasted timeouts
+    // on every login while Keycloak is down. See ZCS-20285 poc-implementation-guide.md §3.5.
+    public static final KnownKey keycloak_circuit_breaker_cooldown_ms = KnownKey.newKey(60000);
+
     public static final KnownKey zimbra_authtoken_cache_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_deregistered_authtoken_queue_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_jwt_cookie_size_limit = KnownKey.newKey(4096);

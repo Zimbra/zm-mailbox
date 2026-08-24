@@ -57,6 +57,7 @@ public abstract class AuthProvider {
     static {
         register(new ZimbraAuthProvider());
         register(new ZimbraAuthProviderForOAuth());
+        register(new KeycloakAuthProvider());
         refresh();
     }
 
@@ -154,6 +155,50 @@ public abstract class AuthProvider {
      */
     protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt)
     throws AuthProviderException, AuthTokenException;
+
+    /**
+     * Result of {@link #verifyPasswordExternal}. Distinct from a boolean because the caller
+     * (Auth.java's password branch, ZCS-20285) must react differently to "no external provider
+     * has an opinion" / "provider unreachable" (both: proceed with the normal direct LDAP bind)
+     * versus "provider reachable and it rejected the credential" (must NOT fall back to LDAP -
+     * retrying a bad password against a second backend only helps an attacker and confuses
+     * lockout counters).
+     */
+    public enum ExternalVerificationResult {
+        NOT_SUPPORTED,
+        VERIFIED,
+        REJECTED,
+        UNAVAILABLE
+    }
+
+    /**
+     * Verify a password against an external identity provider, as an alternative to
+     * {@link Provisioning#authAccount} direct LDAP bind. Default: not supported by this
+     * provider. See {@link KeycloakAuthProvider} for the one real implementation.
+     *
+     * Must never throw - any failure reaching Keycloak (or whatever's behind this) is reported
+     * as {@code UNAVAILABLE}, not propagated, so the caller can fall back cleanly.
+     */
+    protected ExternalVerificationResult verifyPasswordExternal(Account acct, String password,
+            Map<String, Object> authCtxt) {
+        return ExternalVerificationResult.NOT_SUPPORTED;
+    }
+
+    /**
+     * Asks each enabled provider, in order, whether it wants to verify this password externally.
+     * Stops at the first provider that returns something other than NOT_SUPPORTED - in practice
+     * at most one enabled provider implements this today.
+     */
+    public static ExternalVerificationResult verifyPasswordExternally(Account acct, String password,
+            Map<String, Object> authCtxt) {
+        for (AuthProvider ap : getProviders()) {
+            ExternalVerificationResult result = ap.verifyPasswordExternal(acct, password, authCtxt);
+            if (result != ExternalVerificationResult.NOT_SUPPORTED) {
+                return result;
+            }
+        }
+        return ExternalVerificationResult.NOT_SUPPORTED;
+    }
 
     protected AuthToken jwToken(Element soapCtxt, Map engineCtxt)
     throws AuthProviderException, AuthTokenException {
