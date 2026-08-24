@@ -87,6 +87,32 @@ import static com.zimbra.cs.account.auth.ropc.IRopcConstants.TOKEN_ENDPOINT;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.TOKEN_ENPOINT_CORE;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.USER_AGENT;
 
+/**
+ * Okta implementation of {@link IRopcHandler} for the ROPC authentication flow.
+ *
+ * <p>Supports two factor types configured via {@code mfa_idp_factor}:
+ * <ul>
+ *   <li><b>PUSH:</b> Submits a password grant to Okta, detects an MFA challenge in the
+ *       response, triggers a push notification, and returns
+ *       an {@link MFAChallenge} for the polling service to resolve.</li>
+ *   <li><b>REFRESH:</b> Exchanges an existing refresh token for new tokens without
+ *       re-prompting the user.</li>
+ * </ul>
+ *
+ * <p><b>Polling:</b> {@link #pollChallenge(MFAChallenge)} submits an OOB grant to the
+ * token endpoint and maps Okta error codes to {@link MFAPollResult} values:
+ * {@code authorization_pending} / {@code slow_down} → WAITING,
+ * {@code expired_token} / {@code access_denied} → EXPIRED,
+ * {@code invalid_grant} → REJECTED.
+ *
+ * <p><b>Client authentication:</b> Supports both HTTP Basic ({@code Authorization: Basic})
+ * and form-body ({@code client_id} / {@code client_secret}) modes, selected by
+ * {@code mfa_idp_client_secret_auth_type}.
+ *
+ * <p><b>Error mapping:</b> Okta {@code invalid_grant} responses containing
+ * {@code sign_on_policy} in the description are mapped to
+ * {@link IRopcAuthResult#policyDenied(String)} rather than invalid credentials.
+ */
 public final class OktaRopcHandler implements IRopcHandler {
 
     @Override
@@ -94,6 +120,17 @@ public final class OktaRopcHandler implements IRopcHandler {
         return PROVIDER_NAME_OKTA;
     }
 
+    /**
+     * Authenticates the user via the Okta ROPC flow.
+     * Delegates to {@link #refreshGrant(IRopcAuthRequest)} for REFRESH factor
+     * or {@link #ropcWithPush(IRopcAuthRequest)} for PUSH factor.
+     *
+     * @param req the authentication request containing credentials and config
+     * @return {@link IRopcAuthResult} with tokens on success, challenge on MFA,
+     *         or error/policy details on failure
+     * @throws ServiceException on unexpected errors
+     * @throws IllegalArgumentException if the configured factor type is unsupported
+     */
     @Override
     public IRopcAuthResult authenticate(IRopcAuthRequest req) throws ServiceException {
         if (req == null || req.getConfig() == null) {
@@ -112,6 +149,16 @@ public final class OktaRopcHandler implements IRopcHandler {
         }
     }
 
+    /**
+     * Polls Okta for the result of a pending MFA push challenge using an OOB grant.
+     * Reads all required parameters
+     * from the {@link MFAChallenge} state map.
+     * On success, writes refresh token, id token, and expiry back into the challenge state.
+     *
+     * @param challenge the active MFA challenge carrying poll parameters
+     * @return {@link MFAPollResult} — SUCCESS, WAITING, REJECTED, EXPIRED, or ERROR
+     * @throws ServiceException if client secret is missing when Basic auth is configured
+     */
     @Override
     public MFAPollResult pollChallenge(MFAChallenge challenge) throws ServiceException {
         Map<String, String> form = new LinkedHashMap<String, String>();
@@ -180,6 +227,17 @@ public final class OktaRopcHandler implements IRopcHandler {
         return MFAPollResult.ERROR;
     }
 
+    /**
+     * Performs a refresh token grant against Okta.
+     * If Okta returns a new refresh token it is used; otherwise the original
+     * refresh token from the request is preserved in the result.
+     *
+     * @param req the authentication request containing the refresh token and config
+     * @return {@link IRopcAuthResult} with new tokens on success,
+     *         {@code invalidGrant} if the refresh token has expired,
+     *         or {@code error} for any other failure
+     * @throws ServiceException on HTTP or parsing errors
+     */
     private IRopcAuthResult refreshGrant(IRopcAuthRequest req) throws ServiceException {
         Map<String, String> form = new LinkedHashMap<String, String>();
         form.put(REQUEST_PARAM_GRANT_TYPE, GRANT_REFRESH);
@@ -201,6 +259,19 @@ public final class OktaRopcHandler implements IRopcHandler {
         return IRopcAuthResult.error(getSafeString(response.getError()), response.getErrorDescription());
     }
 
+    /**
+     * Performs a password grant against Okta and handles the MFA challenge response.
+     * On a direct token response, returns success immediately.
+     * On an MFA required response, builds and returns a {@link MFAChallenge} via
+     * {@link #buildPushChallenge(IRopcAuthRequest, OktaResponse)}.
+     * Maps {@code invalid_grant} with {@code sign_on_policy} to
+     * {@link IRopcAuthResult#policyDenied(String)}.
+     *
+     * @param req the authentication request containing username, password, and config
+     * @return {@link IRopcAuthResult} with tokens, MFA challenge, policy denial,
+     *         invalid credentials, or error
+     * @throws ServiceException on HTTP or parsing errors
+     */
     private IRopcAuthResult ropcWithPush(IRopcAuthRequest req) throws ServiceException {
         Map<String, String> form = new LinkedHashMap<String, String>();
 
@@ -229,6 +300,17 @@ public final class OktaRopcHandler implements IRopcHandler {
         return IRopcAuthResult.error(getSafeString(r.getError()), r.getErrorDescription());
     }
 
+    /**
+     * Builds an {@link MFAChallenge} from the initial Okta MFA response.
+     * If the initial response does not contain an oob_code, triggers a push
+     * notification via {@link #triggerPushWithRetry(IRopcAuthRequest, OktaResponse)}.
+     * Populates the challenge state with all parameters needed for polling
+     *
+     * @param req     the original authentication request
+     * @param initial the initial Okta MFA response containing mfa_token and optionally oob_code
+     * @return a fully populated {@link MFAChallenge} ready for polling
+     * @throws ServiceException if oob_code is missing after push trigger
+     */
     private MFAChallenge buildPushChallenge(IRopcAuthRequest req, OktaResponse initial)
             throws ServiceException {
         String oobCode = getSafeString(initial.getOobCode());
@@ -275,6 +357,16 @@ public final class OktaRopcHandler implements IRopcHandler {
         return new MFAChallenge(PROVIDER_NAME_OKTA, MFAFactorType.PUSH, state);
     }
 
+    /**
+     * Triggers an Okta push challenge with up to 2 retries on 5xx errors.
+     * Retries are separated by a 500ms delay.
+     * Fails immediately on 4xx responses or if oob_code is missing in the response.
+     *
+     * @param req     the authentication request providing config and context
+     * @param initial the initial Okta MFA response containing the mfa_token
+     * @return {@link OktaResponse} containing the oob_code for polling
+     * @throws ServiceException on 4xx errors, missing oob_code, or exhausted retries
+     */
     private OktaResponse triggerPushWithRetry(IRopcAuthRequest req, OktaResponse initial) throws ServiceException {
         int maxRetries = 2;
         long retryDelayMs = 500L;
@@ -335,6 +427,22 @@ public final class OktaRopcHandler implements IRopcHandler {
         }
     }
 
+    /**
+     * Builds and sends an HTTP form POST to the Okta token or challenge endpoint.
+     * Switches the endpoint from token to challenge when {@code requestType} is
+     * {@code OKTA_REQUEST_TYPE_CHALLENGE}.
+     * Applies IP forwarding headers, user agent, device fingerprint, and
+     * client authentication (Basic or form-body) based on config.
+     *
+     * @param configs     the provider config map
+     * @param form        the form parameters to send
+     * @param requestType {@code OKTA_REQUEST_TYPE_TOKEN} or {@code OKTA_REQUEST_TYPE_CHALLENGE}
+     * @param ip          the originating client IP address
+     * @param userAgent   the client user agent string
+     * @param deviceId    the unique device identifier
+     * @return parsed {@link OktaResponse}
+     * @throws ServiceException if client secret is missing when Basic auth is configured
+     */
     private OktaResponse call(Map<String, String> configs, Map<String, String> form, String requestType, String ip,
                               String userAgent, String deviceId) throws ServiceException {
         Map<String, String> headers = new HashMap<>();
@@ -384,6 +492,20 @@ public final class OktaRopcHandler implements IRopcHandler {
         return Base64.getEncoder().encodeToString(creds.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Executes the HTTP POST, parses the response body into {@link OktaResponse},
+     * and sets the HTTP status code on the result.
+     * On 4xx/5xx with a missing or unparseable body, sets a synthetic error code
+     * prefixed with {@code HTTP_APPEND}.
+     *
+     * @param endpoint  the full Okta endpoint URL
+     * @param connectMs connect and connection-request timeout in milliseconds
+     * @param socketMs  socket read timeout in milliseconds
+     * @param form      the form parameters to POST
+     * @param headers   the HTTP headers to include
+     * @return parsed {@link OktaResponse} with HTTP status code set
+     * @throws ServiceException on empty body, null parse result, or invalid JSON
+     */
     private OktaResponse callEndpoint(String endpoint, int connectMs, int socketMs,
                                       Map<String, String> form, Map<String, String> headers)
             throws ServiceException {
@@ -425,6 +547,11 @@ public final class OktaRopcHandler implements IRopcHandler {
         }
     }
 
+    /**
+     * Returns the token expiry in seconds from the Okta response,
+     * capped at {@code mfa_idp_max_cred_cache_timeout_in_minutes} converted to seconds.
+     * Falls back to {@code ACCESS_EXPIRY_DEFAULT} if the value is missing or unparseable.
+     */
     private static long expiryInSec(OktaResponse r) {
         try {
             long maxExpiry = LC.mfa_idp_max_cred_cache_timeout_in_minutes.intValue() * 60L;
@@ -435,6 +562,11 @@ public final class OktaRopcHandler implements IRopcHandler {
         }
     }
 
+    /**
+     * Returns {@code true} if the Okta response indicates MFA is required.
+     * Checks for a non-empty mfa_token, non-empty oob_code, or error equal to
+     * {@code MFA_REQUIRED}.
+     */
     private static boolean isMfaRequired(OktaResponse r) {
         return (r.getMfaToken() != null && !r.getMfaToken().isEmpty())
                 || (r.getOobCode() != null && !r.getOobCode().isEmpty())

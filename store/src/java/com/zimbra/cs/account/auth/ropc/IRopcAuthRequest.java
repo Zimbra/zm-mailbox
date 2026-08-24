@@ -19,6 +19,10 @@ package com.zimbra.cs.account.auth.ropc;
 
 import java.util.Map;
 
+/**
+ * Immutable request object carrying credentials and context for an ROPC authentication attempt.
+ * Use {@link #builder()} to construct instances.
+ */
 public final class IRopcAuthRequest {
 
     private final String username;
