@@ -113,7 +113,7 @@ public final class IRopcCredCache {
     /**
      * Rejection counter cache: device/IP key to rejection count.
      * Separate from credentials for type safety.
-     * Resets on successful Okta auth.
+     * Resets on successful Okta auth via store().
      */
     private static final Cache<String, Integer> REJECTION_CACHE = CacheBuilder.newBuilder()
             .expireAfterWrite((REJECTION_CACHE_TIMEOUT), TimeUnit.MILLISECONDS)
