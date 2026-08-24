@@ -10648,4 +10648,11 @@ TODO: delete them permanently from here
   <desc>Secret key used in Mail Recall to make it more secure from spoof.</desc>
 </attr>
 
+
+  <attr id="9017" name="zimbraMtaSmtpdTlsEccertFile" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.0">
+    <desc>Value for postconf smtpd_tls_eccert_file for Dual ECDSA/RSA certificate support</desc>
+  </attr>
+  <attr id="9018" name="zimbraMtaSmtpdTlsEckeyFile" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.0">
+    <desc>Value for postconf smtpd_tls_eckey_file for Dual ECDSA/RSA certificate support</desc>
+  </attr>
 </attrs>
