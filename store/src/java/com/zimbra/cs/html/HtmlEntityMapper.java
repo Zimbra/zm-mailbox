@@ -32,7 +32,7 @@ public final class HtmlEntityMapper {
     private static final Map<Integer, String> sUnicodeToHtmlEntityMap = new HashMap<Integer, String>();
     
     private static final Pattern htmlEntityPat = Pattern.compile("&([A-Za-z0-9]{2,6});");
-    private static final Pattern numEntityPat = Pattern.compile("&#([0-9]{1,5});");
+    private static final Pattern numEntityPat = Pattern.compile("&#(?:[xX]([0-9a-fA-F]+)|([0-9]{1,5}));");
     
     /**
      * Given an input string, replace all HTML-entities with the numberic versions
@@ -90,7 +90,7 @@ public final class HtmlEntityMapper {
      * Given an input string, replace all numberic entities with known HTML versions
      *     &#160; --> &nbsp;
      *  
-     * TODO FIXME: Does NOT currently support hexadecimal entities      
+     * Supports both decimal and hexadecimal entities      
      *     
      * @param s
      * @return
@@ -127,7 +127,12 @@ public final class HtmlEntityMapper {
                 toRet.append(s.substring(curIdx, m.start()));
                 boolean ok = false;
                 try {
-                    Integer id = Integer.parseInt(m.group(1));
+                    Integer id;
+                    if (m.group(1) != null) {
+                        id = Integer.parseInt(m.group(1), 16);
+                    } else {
+                        id = Integer.parseInt(m.group(2));
+                    }
                     if (map.containsKey(id)) {
                         toRet.append(prefix).append(map.get(id)).append(";");
                         ok = true;
