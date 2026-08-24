@@ -55,7 +55,6 @@ public final class IRopcAuthEngine {
     private IRopcAuthEngine() {
     }
 
-
     /**
      * Entry point for ROPC authentication.
      * Delegates to {@link #doAuthenticate} and returns the resulting {@link Outcome}.

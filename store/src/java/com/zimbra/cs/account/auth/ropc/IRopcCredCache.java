@@ -88,7 +88,6 @@ public final class IRopcCredCache {
             Math.max(LC.mfa_idp_max_cred_cache_timeout_in_minutes.intValue(),
                     CACHE_EXPIRY_MIN_DURATION)).toMillis();
 
-
     /**
      * Maximum rejection cache TTL in milliseconds. Used as the Guava write-expiry
      * for {@link #REJECTION_CACHE}. Derived from

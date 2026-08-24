@@ -42,7 +42,6 @@ public final class IROPCHandlerRegistry {
         ZimbraLog.account.debug("ROPC provider registry initialized with default providers");
     }
 
-
     /**
      * registers an {@link IRopcHandler} in the registry.
      * duplicate registrations for the same provider name are silently skipped.

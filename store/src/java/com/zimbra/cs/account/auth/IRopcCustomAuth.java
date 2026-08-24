@@ -34,7 +34,6 @@ import java.util.Map;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.AUTH_REQUEST_TYPE;
 import static com.zimbra.cs.account.auth.ropc.IRopcConstants.FULL_AUTH;
 
-
 /**
  * Custom authentication handler for the IdP ROPC flow.
  * Checks the credential cache first; if no cache hit, delegates to {@link IRopcAuthEngine}.
@@ -200,7 +199,7 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
     }
 
     /**
-     * Returns the extension name {@code "idp-ropc"}
+     * Returns the extension name {@code "idp-ropc"}.
      *
      * @return {@code "idp-ropc"}
      */

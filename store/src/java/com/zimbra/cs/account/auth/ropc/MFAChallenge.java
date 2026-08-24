@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 /**
  * Represents an active MFA challenge issued by the IdP during the ROPC flow.
  * Carries the provider name, factor type, and a thread-safe state map used to
