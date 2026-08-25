@@ -51,6 +51,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 
+
 public class KeycloakAuthProvider extends AuthProvider {
 
     public static final String KEYCLOAK_AUTH_PROVIDER = "keycloak";
@@ -213,7 +214,7 @@ public class KeycloakAuthProvider extends AuthProvider {
             } else {
                 throw new IOException("unexpected Keycloak token endpoint status " + status);
             }
-        } catch (RuntimeException e) {
+        } catch (Exception  e) {
             throw new IOException(e);
         } finally {
             post.releaseConnection();
