@@ -38,16 +38,18 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
-
 
 public class KeycloakAuthProvider extends AuthProvider {
 
@@ -78,54 +80,103 @@ public class KeycloakAuthProvider extends AuthProvider {
     }
 
     @Override
-    protected ExternalVerificationResult verifyPasswordExternal(Account acct, String password,
+    protected ExternalVerificationOutcome verifyPasswordExternal(Account acct, String password,
             Map<String, Object> authCtxt) {
         if (Strings.isNullOrEmpty(LC.keycloak_base_url.value())) {
             // Not configured - this POC's "off switch". Registered but inert.
-            return ExternalVerificationResult.NOT_SUPPORTED;
+            return ExternalVerificationOutcome.NOT_SUPPORTED;
         }
 
         long openUntil = sCircuitOpenUntilMillis.get();
         if (System.currentTimeMillis() < openUntil) {
             logger().debug("Keycloak circuit breaker open for another %dms; skipping straight to fallback",
                     openUntil - System.currentTimeMillis());
-            return ExternalVerificationResult.UNAVAILABLE;
+            return new ExternalVerificationOutcome(ExternalVerificationResult.UNAVAILABLE, null);
         }
 
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("grant_type", "password"));
+        params.add(new BasicNameValuePair("username", acct.getName()));
+        params.add(new BasicNameValuePair("password", password));
+
         try {
-            boolean verified = callKeycloakTokenEndpoint(acct, password);
+            TokenResult result = callKeycloakTokenEndpoint(params);
             // Reached Keycloak and got a definitive answer either way - the circuit stays closed.
             sCircuitOpenUntilMillis.set(0);
-            return verified ? ExternalVerificationResult.VERIFIED : ExternalVerificationResult.REJECTED;
+            return result.verified
+                    ? new ExternalVerificationOutcome(ExternalVerificationResult.VERIFIED, result.refreshToken)
+                    : new ExternalVerificationOutcome(ExternalVerificationResult.REJECTED, null);
         } catch (Exception e) {
             // Never log the password. acct.getName() only.
             logger().warn("Keycloak verification unavailable for %s, opening circuit breaker for %dms: %s",
                     acct.getName(), LC.keycloak_circuit_breaker_cooldown_ms.longValue(), e.getMessage());
             sCircuitOpenUntilMillis.set(System.currentTimeMillis() + LC.keycloak_circuit_breaker_cooldown_ms.longValue());
-            return ExternalVerificationResult.UNAVAILABLE;
+            return new ExternalVerificationOutcome(ExternalVerificationResult.UNAVAILABLE, null);
+        }
+    }
+
+    @Override
+    protected ExternalVerificationOutcome refreshExternal(Account acct, String refreshToken,
+            Map<String, Object> authCtxt) {
+        if (Strings.isNullOrEmpty(LC.keycloak_base_url.value())) {
+            return ExternalVerificationOutcome.NOT_SUPPORTED;
+        }
+
+        long openUntil = sCircuitOpenUntilMillis.get();
+        if (System.currentTimeMillis() < openUntil) {
+            logger().debug("Keycloak circuit breaker open for another %dms; refresh for %s has no fallback",
+                    openUntil - System.currentTimeMillis(), acct.getName());
+            return new ExternalVerificationOutcome(ExternalVerificationResult.UNAVAILABLE, null);
+        }
+
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("grant_type", "refresh_token"));
+        params.add(new BasicNameValuePair("refresh_token", refreshToken));
+
+        try {
+            TokenResult result = callKeycloakTokenEndpoint(params);
+            sCircuitOpenUntilMillis.set(0);
+            return result.verified
+                    ? new ExternalVerificationOutcome(ExternalVerificationResult.VERIFIED, result.refreshToken)
+                    : new ExternalVerificationOutcome(ExternalVerificationResult.REJECTED, null);
+        } catch (Exception e) {
+            logger().warn("Keycloak refresh unavailable for %s, opening circuit breaker for %dms: %s",
+                    acct.getName(), LC.keycloak_circuit_breaker_cooldown_ms.longValue(), e.getMessage());
+            sCircuitOpenUntilMillis.set(System.currentTimeMillis() + LC.keycloak_circuit_breaker_cooldown_ms.longValue());
+            return new ExternalVerificationOutcome(ExternalVerificationResult.UNAVAILABLE, null);
+        }
+    }
+
+    /** Outcome of one call to Keycloak's token endpoint, whichever grant type. */
+    private static final class TokenResult {
+        final boolean verified;
+        final String refreshToken;
+
+        TokenResult(boolean verified, String refreshToken) {
+            this.verified = verified;
+            this.refreshToken = refreshToken;
         }
     }
 
     /**
-     * Direct Access Grant (OAuth2 "password" grant) against Keycloak's token endpoint.
-     * Both mailstore and this call are trusted, confidential-client, server-to-server - the
-     * mobile app never sees this credential flow (§1.1). We only need a yes/no; the returned
-     * access token itself is discarded unread, not stored or forwarded anywhere.
+     * Calls Keycloak's token endpoint with the given grant-specific params (grant_type plus
+     * either username/password or refresh_token) and the confidential client_id/client_secret
+     * common to both grants. Both mailstore and this call are trusted, confidential-client,
+     * server-to-server - the mobile app never talks to Keycloak directly (§1.1). The access_token
+     * itself is discarded unread; only the refresh_token (if any) is kept, as an opaque value the
+     * mobile app can hand back later without ever needing to understand it's a Keycloak concept.
      *
-     * @return true if Keycloak accepted the credential, false if it explicitly rejected it
-     * @throws IOException on anything else - unreachable, timed out, or an unexpected response -
-     *         callers must treat this as UNAVAILABLE, never as a rejected credential.
+     * @throws IOException on anything other than a clean accept/reject - unreachable, timed out,
+     *         or an unexpected response - callers must treat this as UNAVAILABLE, never as a
+     *         rejected credential.
      */
-    private boolean callKeycloakTokenEndpoint(Account acct, String password) throws IOException {
+    private TokenResult callKeycloakTokenEndpoint(List<NameValuePair> grantParams) throws IOException {
         String tokenUrl = LC.keycloak_base_url.value() + "/realms/" + LC.keycloak_realm.value()
                 + "/protocol/openid-connect/token";
 
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair("grant_type", "password"));
+        List<NameValuePair> params = new ArrayList<NameValuePair>(grantParams);
         params.add(new BasicNameValuePair("client_id", LC.keycloak_client_id.value()));
         params.add(new BasicNameValuePair("client_secret", LC.keycloak_client_secret.value()));
-        params.add(new BasicNameValuePair("username", acct.getName()));
-        params.add(new BasicNameValuePair("password", password));
         params.add(new BasicNameValuePair("scope", "openid"));
 
         HttpPost post = new HttpPost(tokenUrl);
@@ -142,17 +193,27 @@ public class KeycloakAuthProvider extends AuthProvider {
         try {
             HttpResponse response = HttpClientUtil.executeMethod(clientBuilder.build(), post);
             int status = response.getStatusLine().getStatusCode();
-            EntityUtils.consumeQuietly(response.getEntity());
+            String body = response.getEntity() == null ? "" : EntityUtils.toString(response.getEntity(), "UTF-8");
             if (status == 200) {
-                return true;
+                String refreshToken = null;
+                try {
+                    JSONObject json = new JSONObject(body);
+                    refreshToken = json.optString("refresh_token", null);
+                } catch (JSONException e) {
+                    // Unparseable success body is unexpected enough to treat as unavailable
+                    // rather than silently issuing a token with no refresh capability.
+                    throw new IOException("could not parse Keycloak token response", e);
+                }
+                return new TokenResult(true, refreshToken);
             } else if (status == 400 || status == 401) {
-                // Keycloak reached and it explicitly rejected the credential - a real auth
-                // failure, not an availability problem. Do not throw here (§3.5 false-fallback risk).
-                return false;
+                // Keycloak reached and it explicitly rejected the credential/refresh token - a
+                // real auth failure, not an availability problem. Do not throw here (§3.5
+                // false-fallback risk).
+                return new TokenResult(false, null);
             } else {
                 throw new IOException("unexpected Keycloak token endpoint status " + status);
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw new IOException(e);
         } finally {
             post.releaseConnection();

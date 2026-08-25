@@ -172,6 +172,25 @@ public abstract class AuthProvider {
     }
 
     /**
+     * Outcome of {@link #verifyPasswordExternal} or {@link #refreshExternal}. Carries an opaque
+     * external refresh token (ZCS-20285) alongside the status - only ever non-null when
+     * {@code status == VERIFIED} and the provider issues one (Keycloak does; a provider with no
+     * refresh concept just leaves it null and the caller mints a native-only token as before).
+     */
+    public static final class ExternalVerificationOutcome {
+        public static final ExternalVerificationOutcome NOT_SUPPORTED =
+                new ExternalVerificationOutcome(ExternalVerificationResult.NOT_SUPPORTED, null);
+
+        public final ExternalVerificationResult status;
+        public final String refreshToken;
+
+        public ExternalVerificationOutcome(ExternalVerificationResult status, String refreshToken) {
+            this.status = status;
+            this.refreshToken = refreshToken;
+        }
+    }
+
+    /**
      * Verify a password against an external identity provider, as an alternative to
      * {@link Provisioning#authAccount} direct LDAP bind. Default: not supported by this
      * provider. See {@link KeycloakAuthProvider} for the one real implementation.
@@ -179,9 +198,9 @@ public abstract class AuthProvider {
      * Must never throw - any failure reaching Keycloak (or whatever's behind this) is reported
      * as {@code UNAVAILABLE}, not propagated, so the caller can fall back cleanly.
      */
-    protected ExternalVerificationResult verifyPasswordExternal(Account acct, String password,
+    protected ExternalVerificationOutcome verifyPasswordExternal(Account acct, String password,
             Map<String, Object> authCtxt) {
-        return ExternalVerificationResult.NOT_SUPPORTED;
+        return ExternalVerificationOutcome.NOT_SUPPORTED;
     }
 
     /**
@@ -189,15 +208,42 @@ public abstract class AuthProvider {
      * Stops at the first provider that returns something other than NOT_SUPPORTED - in practice
      * at most one enabled provider implements this today.
      */
-    public static ExternalVerificationResult verifyPasswordExternally(Account acct, String password,
+    public static ExternalVerificationOutcome verifyPasswordExternally(Account acct, String password,
             Map<String, Object> authCtxt) {
         for (AuthProvider ap : getProviders()) {
-            ExternalVerificationResult result = ap.verifyPasswordExternal(acct, password, authCtxt);
-            if (result != ExternalVerificationResult.NOT_SUPPORTED) {
+            ExternalVerificationOutcome result = ap.verifyPasswordExternal(acct, password, authCtxt);
+            if (result.status != ExternalVerificationResult.NOT_SUPPORTED) {
                 return result;
             }
         }
-        return ExternalVerificationResult.NOT_SUPPORTED;
+        return ExternalVerificationOutcome.NOT_SUPPORTED;
+    }
+
+    /**
+     * Renew an external session using an opaque refresh token, as an alternative to a full
+     * password re-login (ZCS-20285). Default: not supported. There is no LDAP-side equivalent of
+     * a refresh token, so {@code NOT_SUPPORTED}/{@code UNAVAILABLE} here means the caller must
+     * fall back to a full password AuthRequest, not a silent retry - unlike password verification,
+     * refresh has no "try the other backend" fallback available.
+     */
+    protected ExternalVerificationOutcome refreshExternal(Account acct, String refreshToken,
+            Map<String, Object> authCtxt) {
+        return ExternalVerificationOutcome.NOT_SUPPORTED;
+    }
+
+    /**
+     * Asks each enabled provider, in order, whether it wants to handle this refresh externally.
+     * Same first-responder pattern as {@link #verifyPasswordExternally}.
+     */
+    public static ExternalVerificationOutcome refreshExternally(Account acct, String refreshToken,
+            Map<String, Object> authCtxt) {
+        for (AuthProvider ap : getProviders()) {
+            ExternalVerificationOutcome result = ap.refreshExternal(acct, refreshToken, authCtxt);
+            if (result.status != ExternalVerificationResult.NOT_SUPPORTED) {
+                return result;
+            }
+        }
+        return ExternalVerificationOutcome.NOT_SUPPORTED;
     }
 
     protected AuthToken jwToken(Element soapCtxt, Map engineCtxt)

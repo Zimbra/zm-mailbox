@@ -342,6 +342,10 @@ public class AccountConstants {
     public static final String E_ALIAS = "alias";
     public static final String E_ADMIN_DELEGATED = "adminDelegated";
     public static final String E_AUTH_TOKEN = "authToken";
+    // ZCS-20285: opaque external refresh token (currently Keycloak's), round-tripped through
+    // AuthRequest/AuthResponse so mailstore can mint a fresh native token without the mobile app
+    // ever holding a password or talking to the external IdP directly.
+    public static final String E_REFRESH_TOKEN = "refreshToken";
     public static final String E_TRUSTED_TOKEN = "trustedToken";
     public static final String E_CRUMB = "crumb";
     public static final String E_REFERRAL = "refer";

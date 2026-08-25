@@ -85,6 +85,11 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class Auth extends AccountDocumentHandler {
 
+    // ZCS-20285: authAccountInternal() stashes an external provider's refresh token here (via
+    // authCtxt, which it already receives) so handle() can attach it to the AuthResponse after
+    // minting the native token below - authAccountInternal itself has no access to the response.
+    private static final String CTXT_EXTERNAL_REFRESH_TOKEN = "zcs20285.externalRefreshToken";
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -215,6 +220,53 @@ public class Auth extends AccountDocumentHandler {
         }
         if (!checkPasswordSecurity(context)) {
             throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
+        }
+
+        // ZCS-20285: refresh using an opaque external (Keycloak) refresh token instead of a
+        // password. Mailstore is the only party that ever calls Keycloak's refresh_token grant
+        // (§1.1) - the app just hands back what it was given at login. Requires <account> like
+        // the password path, since we deliberately don't trust/parse claims out of Keycloak's
+        // token to identify the account (see KeycloakAuthProvider). No LDAP-side fallback exists
+        // for refresh, so anything other than VERIFIED means the client must do a full
+        // password AuthRequest instead of retrying this one.
+        Element refreshTokenEl = request.getOptionalElement(AccountConstants.E_REFRESH_TOKEN);
+        if (refreshTokenEl != null) {
+            if (acct == null) {
+                throw ServiceException.INVALID_REQUEST("missing required element: " + AccountConstants.E_ACCOUNT, null);
+            }
+            String refreshToken = refreshTokenEl.getText();
+            Map<String, Object> refreshCtxt = new HashMap<String, Object>();
+            refreshCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
+            refreshCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
+            refreshCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
+            refreshCtxt.put(AuthContext.AC_SOAP_PORT, zsc.getPort());
+
+            AuthProvider.ExternalVerificationOutcome result =
+                    AuthProvider.refreshExternally(acct, refreshToken, refreshCtxt);
+            if (result.status == AuthProvider.ExternalVerificationResult.VERIFIED) {
+                AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+                AuthToken at = AuthProvider.getAuthToken(acct, tokenType);
+                ServletRequest refreshHttpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+                if (csrfSupport && !at.isCsrfTokenEnabled()) {
+                    at.setCsrfTokenEnabled(csrfSupport);
+                }
+                refreshHttpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+                AuthListener.invokeOnSuccess(acct);
+                Element response = doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
+                if (result.refreshToken != null) {
+                    response.addNonUniqueElement(AccountConstants.E_REFRESH_TOKEN).setText(result.refreshToken);
+                }
+                return response;
+            } else if (result.status == AuthProvider.ExternalVerificationResult.REJECTED) {
+                AuthFailedServiceException e = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+                        "refresh token rejected by external auth provider");
+                AuthListener.invokeOnException(e);
+                throw e;
+            } else {
+                // UNAVAILABLE (Keycloak unreachable/circuit open) or NOT_SUPPORTED (not
+                // configured) - no fallback exists for refresh.
+                throw ServiceException.TEMPORARILY_UNAVAILABLE();
+            }
         }
 
         Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
@@ -416,7 +468,12 @@ public class Auth extends AccountDocumentHandler {
         }
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
         AuthListener.invokeOnSuccess(acct);
-        return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
+        Element response = doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
+        Object externalRefreshToken = authCtxt.get(CTXT_EXTERNAL_REFRESH_TOKEN);
+        if (externalRefreshToken instanceof String) {
+            response.addNonUniqueElement(AccountConstants.E_REFRESH_TOKEN).setText((String) externalRefreshToken);
+        }
+        return response;
     }
 
     private Map<String, Object> getTrustedDeviceAttrs(ZimbraSoapContext zsc, String deviceId) {
@@ -489,11 +546,14 @@ public class Auth extends AccountDocumentHandler {
             // existing direct LDAP bind below, unchanged; REJECTED is a real auth failure and
             // must not retry against LDAP too (see poc-implementation-guide.md §3.5).
             if (AuthMode.PASSWORD.equals(authCtxt.get(Provisioning.AUTH_MODE_KEY))) {
-                AuthProvider.ExternalVerificationResult result =
+                AuthProvider.ExternalVerificationOutcome result =
                         AuthProvider.verifyPasswordExternally(acct, code, authCtxt);
-                if (result == AuthProvider.ExternalVerificationResult.VERIFIED) {
+                if (result.status == AuthProvider.ExternalVerificationResult.VERIFIED) {
+                    if (result.refreshToken != null) {
+                        authCtxt.put(CTXT_EXTERNAL_REFRESH_TOKEN, result.refreshToken);
+                    }
                     return null;
-                } else if (result == AuthProvider.ExternalVerificationResult.REJECTED) {
+                } else if (result.status == AuthProvider.ExternalVerificationResult.REJECTED) {
                     throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
                             "credential rejected by external auth provider");
                 }
