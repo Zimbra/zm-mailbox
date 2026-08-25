@@ -17,12 +17,14 @@
 
 package com.zimbra.cs.service.admin;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.auth.ropc.IRopcCredCache;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -63,12 +65,20 @@ public class ClearMFARejectionCache extends AdminDocumentHandler {
         if (accountEl != null) {
             String accountValue = accountEl.getText();
             String by = accountEl.getAttribute(AdminConstants.A_BY, "name");
-            Account account = prov.get(com.zimbra.common.account.Key.AccountBy.fromString(by), accountValue);
+            Account account = prov.get(Key.AccountBy.fromString(by), accountValue);
             if (account == null) {
                 throw ServiceException.INVALID_REQUEST("account not found: "
                         + accountValue, null);
             }
-
+            if (!Provisioning.onLocalServer(account)) {
+                Server targetServer = account.getServer();
+                if (targetServer != null) {
+                    ZimbraLog.account.debug(
+                            "ClearMFARejectionCache: account=%s mailhost=%s is non-local, proxying SOAP request",
+                            account.getName(), targetServer.getName());
+                    return proxyRequest(request, context, targetServer);
+                }
+            }
             String email = account.getName();
             boolean removed = IRopcCredCache.invalidateRejectionCacheByUsername(email);
             entriesCleared = removed ? 1 : 0;
