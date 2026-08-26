@@ -1588,6 +1588,9 @@ public final class LC {
     @Reloadable
     public static final KnownKey zimbra_forward_servlet_allowed_paths = KnownKey.newKey("");
 
+    // Content type not supported by convertd
+    public static final KnownKey convertd_unsupported_mime_type = KnownKey.newKey("application/pdf");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
