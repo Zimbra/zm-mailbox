@@ -33,7 +33,7 @@ public class ZimbraHttpClientManager {
     private final CloseableHttpAsyncClient internalAsyncClient;
     private final CloseableHttpClient internalClient;
     private final CloseableHttpClient externalClient;
-    public ZimbraHttpClientManager() {
+    private ZimbraHttpClientManager() {
         PoolingHttpClientConnectionManager internalConnectionMgr;
         PoolingHttpClientConnectionManager externallConnectionMgr;
         RequestConfig internalRequestConfig;
