@@ -24,7 +24,9 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
@@ -43,7 +45,6 @@ import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.file.VolumeMailboxBlob;
 import com.zimbra.cs.volume.Volume;
 
 /**
@@ -146,32 +147,54 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs) throws IOException, ServiceException {
-        // the default implementation iterates through the mailbox's blobs and deletes them one by one
-        IOException ioException = null;
-        int consecutiveIoExceptions = 0;
-        for (MailboxBlob.MailboxBlobInfo mbinfo : blobs) {
-            try {
-                delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator, false));
-                consecutiveIoExceptions = 0;
-            } catch (IOException ioe) {
-                if (ioException == null) {
-                    ioException = ioe;
-                }
-                consecutiveIoExceptions++;
-                ZimbraLog.store.warn("IOException during deleteStore() for mbox [%d] item [%d] revision [%d] locator [%s]"
-                    , mbox.getId(), mbinfo.itemId, mbinfo.revision, mbinfo.locator, ioe);
-                if (consecutiveIoExceptions > LC.external_store_delete_max_ioexceptions.intValue()) {
-                    ZimbraLog.store.error("too many consecutive IOException during delete store, bailing");
-                    break;
-                }
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs)
+            throws IOException, ServiceException {
+        List<MailboxBlob.MailboxBlobInfo> blobList = new ArrayList<>();
+        Set<String> locators = new HashSet<>();
+        for (MailboxBlob.MailboxBlobInfo blob : blobs) {
+            blobList.add(blob);
+            if (blob.locator != null) {
+                locators.add(blob.locator);
             }
         }
-        if (ioException != null) {
-            throw new IOException("deleteStore failed due to IOException", ioException);
+        try {
+            // try bulk delete first
+            deleteFromStoreInBulk(locators, mbox);
+            return true;
+        } catch (Exception bulkEx) {
+            // fallback to deleting one by one
+            IOException firstIoException = null;
+            int consecutiveIoExceptions = 0;
+            int maxIoExceptions = LC.external_store_delete_max_ioexceptions.intValue();
+
+            for (MailboxBlob.MailboxBlobInfo mbinfo : blobList) {
+                try {
+                    delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator, false));
+                    consecutiveIoExceptions = 0; // reset on success
+                } catch (IOException ioe) {
+                    if (firstIoException == null) {
+                        firstIoException = ioe; // capture the first
+                    }
+                    consecutiveIoExceptions++;
+
+                    ZimbraLog.store.warn(
+                            "IOException during deleteStore() for mbox [{}] item [{}] revision [{}] locator [{}]",
+                            mbox.getId(), mbinfo.itemId, mbinfo.revision, mbinfo.locator, ioe);
+
+                    if (consecutiveIoExceptions > maxIoExceptions) {
+                        ZimbraLog.store.error("Too many consecutive IOExceptions during deleteStore, bailing");
+                        break;
+                    }
+                }
+            }
+
+            if (firstIoException != null) {
+                throw new IOException("deleteStore failed due to IOException", firstIoException);
+            }
+            return true;
         }
-        return true;
     }
+
 
     @Override
     public BlobBuilder getBlobBuilder() throws IOException, ServiceException {
