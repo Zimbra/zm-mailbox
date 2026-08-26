@@ -10648,4 +10648,133 @@ TODO: delete them permanently from here
   <desc>Secret key used in Mail Recall to make it more secure from spoof.</desc>
 </attr>
 
+<attr id="4153" name="zimbraSamlACSURL" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML Assertion Consumer Service URL. Replaces saml_acs from saml-config.properties.
+    When set at domain level, enables per-domain ACS endpoint (e.g. https://mail.corp-a.com/service/extension/samlreceiver).
+    Falls back to global config if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4154" name="zimbraSamlSSOURL" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML IdP Single Sign-On URL(s). Replaces saml_redirect_login_destination
+    and saml_post_login_destination from saml-config.properties. Multi-valued to
+    support multiple SAML bindings. Each value uses a binding-URI prefix split on
+    the first '=' sign, e.g.
+    urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect=https://idp.example.com/sso/redirect
+    urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST=https://idp.example.com/sso/post
+    The operating context determines which binding is used (e.g. SP-initiated login
+    uses HTTP-Redirect; back-channel operations may use SOAP). When set at domain
+    level, routes SSO login to the correct IdP per domain. Falls back to global
+    config if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4155" name="zimbraSamlSLOURL" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML IdP Single Logout URL(s). Replaces saml_redirect_logout_destination
+    and saml_post_logout_destination from saml-config.properties. Multi-valued to
+    support multiple SAML bindings. Each value uses a binding-URI prefix split on
+    the first '=' sign, e.g.
+    urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect=https://idp.example.com/slo/redirect
+    urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST=https://idp.example.com/slo/post
+    The operating context determines which binding is used (e.g. front-channel
+    logout uses HTTP-Redirect; back-channel logout may use SOAP). When set at
+    domain level, routes SLO to the correct IdP per domain. Falls back to global
+    config if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4156" name="zimbraSamlNameIdFormat" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML NameID format. Replaces saml_name_id_format from saml-config.properties.
+    Falls back to global config if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4157" name="zimbraSamlDateFormat" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML date format for instant timestamps. Replaces saml_date_format_instant from saml-config.properties.
+    Falls back to global config if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4158" name="zimbraSamlLogoutLandingURL" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML logout landing redirect URL. Replaces saml_landing_logout_redirect_url
+    from saml-config.properties. When the SAML extension is the landing page for a
+    logout request, users are redirected to this URL after logout completes. Falls
+    back to global config if not set on domain. Default is /.
+  </desc>
+</attr>
+
+<attr id="4159" name="zimbraSamlDocumentEncoding" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML document encoding. Replaces saml_document_encoding from
+    saml-config.properties. Controls the character encoding used for SAML logout
+    documents and login receiver parameter decoding. Falls back to global config
+    if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4160" name="zimbraSamlErrorURL" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML error redirect URL. Replaces saml_error_redirect_url from
+    saml-config.properties. When a SAML authentication error occurs, users are
+    redirected to this URL with error_code and error_msg query parameters appended.
+    If not set, the default HTTP error code pages are returned. Falls back to global
+    config if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4161" name="zimbraSamlInactiveAccountURL" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML inactive account redirect URL. Replaces saml_inactive_account_redirect_url
+    from saml-config.properties. When a SAML-authenticated user maps to a Zimbra
+    account that is not in active status, the user is redirected to this URL. Falls
+    back to global config if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4162" name="zimbraSamlWebclientDisabledAccountUrl" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML webclient-disabled account redirect URL. Replaces saml_webclient_disabled_account_redirect_url
+    from saml-config.properties. After successful SAML authentication, if the account has
+    zimbraFeatureWebClientEnabled set to FALSE, the user is redirected to this URL instead of
+    the web client. Falls back to global config if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4163" name="zimbraSamlSpEntityId" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+  <desc>
+    SAML Service Provider Entity ID. Replaces saml_sp_entity_id from saml-config.properties.
+    When set at domain level, enables per-domain SP metadata (e.g. https://mail.corp-a.com/saml/sp).
+    Falls back to global config if not set on domain.
+  </desc>
+</attr>
+
+<attr id="4165" name="zimbraSamlSpSigningKey" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+    <desc>Key used to sign SP-generated SAML requests. SAML requests are unsigned if empty</desc>
+</attr>
+
+<attr id="4166" name="zimbraSamlSpSigningCertificate" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
+    <desc>Certificate used to verify signed SAML SP requests</desc>
+</attr>
+
+<attr id="4167" name="zimbraSamlTestTimestamp" type="astring" cardinality="single"
+      optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21">
+    <desc>Timestamp when the SAML test was completed</desc>
+</attr>
+
+<attr id="4168" name="zimbraSamlTestErrorMessage" type="astring" cardinality="single"
+      optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21">
+    <desc>Error code for SAML test failure. Format: SSO:{message_key}. Empty implies success</desc>
+</attr>
+
+<attr id="4169" name="zimbraSamlTestNonce" type="astring" cardinality="single"
+      optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21">
+    <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
+</attr>
+
 </attrs>
