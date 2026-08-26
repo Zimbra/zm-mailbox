@@ -10763,17 +10763,17 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="4167" name="zimbraSamlTestTimestamp" type="astring" cardinality="single"
-      optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21">
+      optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21" callback="SamlTestCacheFlush">
     <desc>Timestamp when the SAML test was completed</desc>
 </attr>
 
 <attr id="4168" name="zimbraSamlTestErrorMessage" type="astring" cardinality="single"
-      optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21">
+      optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21" callback="SamlTestCacheFlush">
     <desc>Error code for SAML test failure. Format: SSO:{message_key}. Empty implies success</desc>
 </attr>
 
 <attr id="4169" name="zimbraSamlTestNonce" type="astring" cardinality="single"
-      optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21">
+      optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21" callback="SamlTestCacheFlush">
     <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
 </attr>
 
