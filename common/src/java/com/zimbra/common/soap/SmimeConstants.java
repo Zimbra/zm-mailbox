@@ -45,6 +45,7 @@ public class SmimeConstants {
     public static final String A_DEFAULT = "default";
     public static final String A_DECRYPTION_ERROR_CODE = "decryptionErrorCode";
 
+    public static final String CERT_CHAIN = "certChain";
     public static final String E_CERTIFICATE = "certificate";
     public static final String E_EMAIL_ADDR = "emailAddress";
     public static final String E_SUBJECT_DN = "issuedTo";

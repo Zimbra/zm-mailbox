@@ -43,6 +43,8 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class CertValidationUtil {
 
+    private static final String X509_CERT_TYPE = "X509";
+
     public static void validateCertificate(X509Certificate cert, boolean revocationCheckEnabled, Set<TrustAnchor> trustedCertsSet)
             throws CertificateException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, CertPathValidatorException {
 
@@ -53,7 +55,7 @@ public class CertValidationUtil {
                 certificates.add(cert);
                 CertificateFactory cf;
                 CertPath cp;
-                cf = CertificateFactory.getInstance("X509");
+                cf = CertificateFactory.getInstance(X509_CERT_TYPE);
                 cp = cf.generateCertPath(certificates);
 
                 // init PKIX parameters
@@ -67,6 +69,38 @@ public class CertValidationUtil {
                 PKIXCertPathValidatorResult cpv_result = (PKIXCertPathValidatorResult) cpv.validate(cp, params);
                 ZimbraLog.account.debug("Certificate Validation Result %s", cpv_result.toString());
             }
+    }
+
+    // overloaded method — adds intermediate certificate support for PKIX chain building
+    public static void validateCertificate(X509Certificate cert, boolean revocationCheckEnabled, Set<TrustAnchor>
+                    trustedCertsSet, List<X509Certificate> intermediateCerts) throws CertificateException,
+            InvalidAlgorithmParameterException, NoSuchAlgorithmException, CertPathValidatorException {
+
+        cert.checkValidity();
+
+        if (revocationCheckEnabled) {
+            List<X509Certificate> certificates = new ArrayList<>();
+            certificates.add(cert);
+
+            // add intermediate certs to the path, filtering out self-signed roots and duplicate leaf
+            if (intermediateCerts != null) {
+                for (X509Certificate ic : intermediateCerts) {
+                    if (!ic.equals(cert)
+                            && !ic.getSubjectX500Principal().equals(ic.getIssuerX500Principal())) {
+                        certificates.add(ic);
+                    }
+                }
+            }
+
+            CertificateFactory certFactory = CertificateFactory.getInstance(X509_CERT_TYPE);
+            CertPath certPath = certFactory.generateCertPath(certificates);
+
+            PKIXParameters params = new PKIXParameters(trustedCertsSet);
+            params.setRevocationEnabled(revocationCheckEnabled);
+
+            CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
+            cpv.validate(certPath, params);
+        }
     }
 
     public static Set<TrustAnchor> loadTrustedAnchors(char[] pass, String keystorePath) throws KeyStoreException,
