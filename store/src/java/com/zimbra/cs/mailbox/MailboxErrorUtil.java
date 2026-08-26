@@ -66,7 +66,7 @@ class MailboxErrorUtil {
                         Conversation conv = (Conversation) item;
                         List<Message> children = conv.getMessages();
                         if (children != null && children.size() > 0) {
-                            ZimbraLog.mailbox.error("converstaion["+conv.getId()+"] still has "+children.size()+" children.");
+                            ZimbraLog.mailbox.error("conversation["+conv.getId()+"] still has "+children.size()+" children.");
                             for (Message msg: children) {
                                 logMsg="child["+msg+"] type["+msg.getType()+"] subject["+msg.getSubject()+"] in folder["+
                                         msg.getFolderId()+":"+msg.getFolder().getName()+"] still associated with conv ["+conv.getId()+"]";
