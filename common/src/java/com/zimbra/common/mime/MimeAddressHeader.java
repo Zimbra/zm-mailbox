@@ -90,10 +90,23 @@ public class MimeAddressHeader extends MimeHeader {
     @Override protected void reserialize() {
         if (isDirty()) {
             StringBuilder value = new StringBuilder();
+            int lineLen = getName().length() + 2; // Account for "Name: "
             for (int i = 0; i < mAddresses.size(); i++) {
-                value.append(i == 0 ? "" : ", ").append(mAddresses.get(i));
+                String addr = mAddresses.get(i).toString();
+                if (i > 0) {
+                    value.append(",");
+                    lineLen++;
+                    if (lineLen + 1 + addr.length() > 76) {
+                        value.append("\r\n\t");
+                        lineLen = 1;
+                    } else {
+                        value.append(" ");
+                        lineLen++;
+                    }
+                }
+                value.append(addr);
+                lineLen += addr.length();
             }
-            // FIXME: need to fold every 75 bytes
             updateContent(value.toString().getBytes());
         }
     }
