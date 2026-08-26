@@ -275,7 +275,11 @@ public abstract class DocumentHandler {
     public boolean checkForwardFilterAttr(Account account, List<FilterRule> filterRules, String filterRuleType) throws ServiceException {
         if (!account.isFeatureMailForwardingInFiltersEnabled() && !filterRules.isEmpty()) {
             for (FilterRule filterRule:filterRules) {
-                if (Objects.requireNonNull(filterRule.getFilterActions()).stream().anyMatch(FilterAction.RedirectAction.class::isInstance)  && !checkIfFilterAlreadyExists(filterRule, account, filterRuleType)) {
+                boolean hasForwarding = Objects.requireNonNull(filterRule.getFilterActions()).stream()
+                        .anyMatch(a -> a instanceof FilterAction.RedirectAction
+                                || a instanceof FilterAction.NotifyAction
+                                || a instanceof FilterAction.RFCCompliantNotifyAction);
+                if (hasForwarding && !checkIfFilterAlreadyExists(filterRule, account, filterRuleType)) {
                     return false;
                 }
             }
@@ -305,6 +309,29 @@ public abstract class DocumentHandler {
             if (filterAction instanceof FilterAction.RedirectAction) {
                 String redirectAddress = ((FilterAction.RedirectAction) filterAction).getAddress();
                 if (redirectAddress != null && existingFilterActions.stream().filter(action -> action instanceof FilterAction.RedirectAction).noneMatch(action -> redirectAddress.equals(((FilterAction.RedirectAction) action).getAddress()))) {
+                    return false;
+                }
+            }
+            else if (filterAction instanceof FilterAction.NotifyAction) {
+                FilterAction.NotifyAction notifyAction = (FilterAction.NotifyAction) filterAction;
+                if (existingFilterActions.stream()
+                        .filter(action -> action instanceof FilterAction.NotifyAction)
+                        .noneMatch(action -> {
+                            FilterAction.NotifyAction existingNotifyAction = (FilterAction.NotifyAction) action;
+                            return Objects.equals(notifyAction.getAddress(), existingNotifyAction.getAddress());
+                        })) {
+                    return false;
+                }
+            } else if (filterAction instanceof FilterAction.RFCCompliantNotifyAction) {
+                FilterAction.RFCCompliantNotifyAction rfcNotifyAction =
+                        (FilterAction.RFCCompliantNotifyAction) filterAction;
+                if (existingFilterActions.stream()
+                        .filter(action -> action instanceof FilterAction.RFCCompliantNotifyAction)
+                        .noneMatch(action -> {
+                            FilterAction.RFCCompliantNotifyAction existingRfcNotifyAction =
+                                    (FilterAction.RFCCompliantNotifyAction) action;
+                            return Objects.equals(rfcNotifyAction.getMethod(), existingRfcNotifyAction.getMethod());
+                        })) {
                     return false;
                 }
             }
