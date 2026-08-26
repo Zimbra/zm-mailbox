@@ -200,6 +200,7 @@
     <url-pattern>/home/*</url-pattern>
     <url-pattern>/upload</url-pattern>
     <url-pattern>/extension/*</url-pattern>
+    <url-pattern>/service/extension/*</url-pattern>
   </filter-mapping>
 
   <servlet>
