@@ -18,9 +18,10 @@ package com.zimbra.cs.service.account;
 
 import java.util.Arrays;
 import java.util.Map;
+
+import com.zimbra.cs.service.WebClientLogoffUrlRegistry;
 import org.apache.commons.lang.StringUtils;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -62,7 +63,7 @@ public class ClientInfo extends AccountDocumentHandler {
             ToXML.encodeAttr(parent, Provisioning.A_zimbraClassicWebClientDisabled, String.valueOf(domain.isClassicWebClientDisabled()));
             // TODO: ZCS-11319 update this line to read from LDAP property once this is moved out of LC.
             // e.g. change the `split(LC.web_client_logoff_..)` -> `domain.getWebClientLogoffURLs()`
-            encodeAttrSkipLogoff(parent, webClientLogoutURL, StringUtils.split(LC.zimbra_web_client_logoff_urls.value()));
+            encodeAttrSkipLogoff(parent, webClientLogoutURL, StringUtils.split(WebClientLogoffUrlRegistry.build(webClientLogoutURL)));
         }
         return parent;
     }

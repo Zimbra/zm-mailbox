@@ -22,12 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.cs.service.WebClientLogoffUrlRegistry;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -162,7 +162,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
                 }
                 if (entry instanceof Domain) {
                     Domain d = (Domain)entry;
-                    addAttrSkipLogoff(domain, d.getWebClientLogoutURL(), StringUtils.split(LC.zimbra_web_client_logoff_urls.value()));
+                    addAttrSkipLogoff(domain, d.getWebClientLogoutURL(), StringUtils.split(WebClientLogoffUrlRegistry.build(d.getWebClientLogoutURL())));
                 }
             }
             return;
@@ -191,7 +191,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
             } else if (value instanceof String)
                 domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }
-        addAttrSkipLogoff(domain, webClientLogoutURL, StringUtils.split(LC.zimbra_web_client_logoff_urls.value()));
+        addAttrSkipLogoff(domain, webClientLogoutURL, StringUtils.split(WebClientLogoffUrlRegistry.build(webClientLogoutURL)));
     }
 
     private static Domain findDomain(Provisioning prov, String value) throws ServiceException {
