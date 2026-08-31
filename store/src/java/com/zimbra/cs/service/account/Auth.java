@@ -21,19 +21,15 @@
 package com.zimbra.cs.service.account;
 
 import io.jsonwebtoken.Claims;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang.StringUtils;
-
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
@@ -42,6 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.OAuthConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
@@ -79,6 +76,7 @@ import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
+import static com.zimbra.cs.account.AuthTokenUtil.getOrigAuthData;
 
 /**
  * @author schemers
@@ -118,6 +116,17 @@ public class Auth extends AccountDocumentHandler {
                 }
             }
             acct = prov.get(acctBy, acctValue);
+        }
+
+        Element refreshTokenEl = request.getOptionalElement("refreshToken");
+        if (refreshTokenEl != null && isOAuthRequested(request, context, acct)) {
+            OAuthProvider provider = OAuthRegistry.getProvider();
+            if (provider != null) {
+                return provider.handleRefresh(acct, request, context);
+            } else {
+                ZimbraLog.account.warn("NativeAuth: Refresh requested but NativeOAuthProvider is not registered");
+                throw ServiceException.FAILURE("Native OAuth provider is not available", null);
+            }
         }
 
         ZimbraExtensionNotification.notifyExtension("com.zimbra.cs.service.account.Auth:validate", request, context);
@@ -180,7 +189,7 @@ public class Auth extends AccountDocumentHandler {
                 // so the account will show in log context
                 if (!checkPasswordSecurity(context))
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
-                AuthToken.Usage usage = at.getUsage();
+                Usage usage = at.getUsage();
                 if (usage != Usage.AUTH && usage != Usage.TWO_FACTOR_AUTH) {
                     AuthFailedServiceException e = AuthFailedServiceException
                         .AUTH_FAILED("invalid auth token");
@@ -391,9 +400,13 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
+        OAuthProvider provider = OAuthRegistry.getProvider();
+        boolean isOAuth = isOAuthRequested(request, context, acct) && provider != null;
         AuthToken at = null;
         if (recoveryCode != null) {
             at = AuthProvider.getAuthToken(acct, Usage.RESET_PASSWORD, tokenType);
+        } else if (isOAuth) {
+            at = provider.issueToken(acct, Usage.AUTH, request, null, context);
         } else {
             at = expires == 0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
         }
@@ -416,7 +429,30 @@ public class Auth extends AccountDocumentHandler {
         }
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
         AuthListener.invokeOnSuccess(acct);
-        return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
+        Element response = doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
+        if (isOAuthRequested(request, context, acct)) {
+            boolean isTfaPending = response.getOptionalElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED) != null;
+            boolean isPassChangePending = response.getOptionalElement("passwordChangeRequired") != null
+                    || acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
+            boolean isRecovery = request.getOptionalElement("recoveryCode") != null
+                    || request.getOptionalElement("passwordRecoveryCode") != null
+                    || "true".equalsIgnoreCase(request.getAttribute("recovery", "false"));
+
+            if (!isTfaPending && !isPassChangePending && !isRecovery) {
+                if (provider != null) {
+                    provider.issueToken(acct, Usage.REFRESH, request, response, context);
+                    ZimbraLog.account.info("OAuth: Issued Native OAuth refresh credentials for account: %s",
+                            acct.getName());
+                } else {
+                    ZimbraLog.account.warn("OAuth: %s requested but NativeOAuthProvider is not registered",
+                            OAuthConstants.AUTH_TYPE_ZM_OAUTH2);
+                }
+            } else {
+                ZimbraLog.account.info("OAuth: Restricted authentication state for account %s;" +
+                        " omitting persistent credentials", acct.getName());
+            }
+        }
+        return response;
     }
 
     private Map<String, Object> getTrustedDeviceAttrs(ZimbraSoapContext zsc, String deviceId) {
@@ -530,8 +566,12 @@ public class Auth extends AccountDocumentHandler {
             Map<String, Object> context, Account acct, boolean csrfSupport, TrustedDeviceToken td, String deviceId)
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-        at.encodeAuthResp(response, false);
-
+        boolean isOAuthRequested = isOAuthRequested(request, context, acct);
+        if (isOAuthRequested) {
+            response.addNonUniqueElement(OAuthConstants.OAUTH_ACCESS_TOKEN).setText(getOrigAuthData(at));
+        } else {
+            at.encodeAuthResp(response, false);
+        }
         /*
          * bug 67078
          * also return auth token cookie in http header
@@ -625,5 +665,29 @@ public class Auth extends AccountDocumentHandler {
         String aid = at.getAdminAccountId();
         if (aid != null && !aid.equals(id))
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
+    }
+
+    public boolean isOAuthRequested(Element request, Map<String, Object> context, Account acc) {
+
+        if (acc == null || !acc.isNativeOAuthPersistentSessionEnabled()
+                || acc.getNativeOAuthRefreshTokenLifetime() <= 0) {
+            return false;
+        }
+        HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        if (httpRequest != null) {
+            String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
+            if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
+                return true;
+            }
+            if ("true".equalsIgnoreCase(httpRequest.getHeader(OAuthConstants.AUTH_TYPE_ZM_OAUTH2))) {
+                return true;
+            }
+        }
+
+        String authTypeAttr = request.getAttribute("authType", null);
+        if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(authTypeAttr)) {
+            return true;
+        }
+        return false;
     }
 }
