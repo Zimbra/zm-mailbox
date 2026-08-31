@@ -269,7 +269,7 @@ public abstract class AuthToken {
     public abstract Usage getUsage();
 
     public static enum Usage {
-        AUTH("a"), ENABLE_TWO_FACTOR_AUTH("etfa"), TWO_FACTOR_AUTH("tfa"), RESET_PASSWORD("rp");
+        AUTH("a"), ENABLE_TWO_FACTOR_AUTH("etfa"), TWO_FACTOR_AUTH("tfa"), RESET_PASSWORD("rp"), REFRESH("r");
 
         private String code;
 
