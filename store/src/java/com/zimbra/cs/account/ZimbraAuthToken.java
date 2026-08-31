@@ -24,7 +24,6 @@ import java.util.Random;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.CookieSpecs;
@@ -189,6 +188,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
                 break;
             case TWO_FACTOR_AUTH:
                 lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME * 1000);
+                break;
+            case REFRESH:
+                lifetime = acct.getNativeOAuthRefreshTokenLifetime();
                 break;
             case AUTH:
             default:
