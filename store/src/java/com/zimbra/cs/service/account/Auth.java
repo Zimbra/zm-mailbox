@@ -61,6 +61,7 @@ import com.zimbra.cs.account.Provisioning.AuthMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
+import com.zimbra.cs.account.ZimbraJWToken;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.twofactor.AppSpecificPasswords;
 import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
@@ -215,6 +216,62 @@ public class Auth extends AccountDocumentHandler {
         }
         if (!checkPasswordSecurity(context)) {
             throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
+        }
+
+        // ZCS-20285: refresh using a native Usage.REFRESH ZimbraJWToken instead of a password.
+        // The token is self-describing (signed JWT), so decoding it and checking its account id
+        // against the caller-supplied <account> element is what actually enforces the binding -
+        // unlike the old Keycloak-backed flow, nothing here has to *trust* the <account> element
+        // on its own (see §1.5 in the ZCS-20285 feasibility notes). Not rotated - the same
+        // token+salt pair is reused for its full lifetime; revocation happens only at logout
+        // (EndSession), not here. No LDAP-side fallback exists for refresh, so anything invalid
+        // means the client must do a full password AuthRequest instead of retrying this one.
+        Element refreshTokenEl = request.getOptionalElement(AccountConstants.E_REFRESH_TOKEN);
+        if (refreshTokenEl != null) {
+            if (acct == null) {
+                throw ServiceException.INVALID_REQUEST("missing required element: " + AccountConstants.E_ACCOUNT, null);
+            }
+            String refreshToken = refreshTokenEl.getText();
+            Element refreshTokenSaltEl = request.getOptionalElement(AccountConstants.E_REFRESH_TOKEN_SALT);
+            String refreshTokenSalt = refreshTokenSaltEl == null ? null : refreshTokenSaltEl.getText();
+
+            AuthToken refreshAt;
+            try {
+                refreshAt = ZimbraJWToken.getJWToken(refreshToken, refreshTokenSalt);
+            } catch (AuthTokenException e) {
+                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+                        "refresh token invalid or expired");
+                AuthListener.invokeOnException(afe);
+                throw afe;
+            }
+            if (refreshAt.isExpired() || refreshAt.getUsage() != Usage.REFRESH
+                    || !refreshAt.getAccountId().equalsIgnoreCase(acct.getId())) {
+                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+                        "refresh token rejected");
+                AuthListener.invokeOnException(afe);
+                throw afe;
+            }
+            // ZCS-20285: refresh deliberately bypasses prov.authAccount(), so it never gets the
+            // account-status check that a normal password login gets for free
+            // (LdapProvisioning.checkAccountStatus) - enforce it explicitly here.
+            String acctStatus = acct.getAccountStatus(prov);
+            if (acctStatus == null || !(acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE)
+                    || acctStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT))) {
+                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+                        "account status is " + acctStatus);
+                AuthListener.invokeOnException(afe);
+                throw afe;
+            }
+
+            AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+            AuthToken at = AuthProvider.getAuthToken(acct, tokenType);
+            ServletRequest refreshHttpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            if (csrfSupport && !at.isCsrfTokenEnabled()) {
+                at.setCsrfTokenEnabled(csrfSupport);
+            }
+            refreshHttpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+            AuthListener.invokeOnSuccess(acct);
+            return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
         }
 
         Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
@@ -416,7 +473,24 @@ public class Auth extends AccountDocumentHandler {
         }
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
         AuthListener.invokeOnSuccess(acct);
-        return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
+        Element response = doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
+        // ZCS-20285: mint a native Usage.REFRESH token alongside every normal login, so the
+        // mobile app can renew its session without re-entering a password. Not issued on the
+        // recovery-code path - that's a restricted reset-password token, not a normal login.
+        // Always a ZimbraJWToken (TokenType.JWT) regardless of the access token's own type, so
+        // it carries a verifiable account-id claim and supports revocation at logout - unlike
+        // ZimbraJWToken, the signing key isn't self-contained, so its salt has to travel
+        // alongside it (E_REFRESH_TOKEN_SALT), sent once here and never reissued (no rotation).
+        if (recoveryCode == null) {
+            try {
+                ZimbraJWToken refreshToken = (ZimbraJWToken) AuthProvider.getAuthToken(acct, Usage.REFRESH, TokenType.JWT);
+                response.addNonUniqueElement(AccountConstants.E_REFRESH_TOKEN).setText(refreshToken.getEncoded());
+                response.addNonUniqueElement(AccountConstants.E_REFRESH_TOKEN_SALT).setText(refreshToken.getSalt());
+            } catch (AuthTokenException e) {
+                throw ServiceException.FAILURE("failed to mint refresh token", e);
+            }
+        }
+        return response;
     }
 
     private Map<String, Object> getTrustedDeviceAttrs(ZimbraSoapContext zsc, String deviceId) {
