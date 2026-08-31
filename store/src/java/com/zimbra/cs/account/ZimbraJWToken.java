@@ -74,7 +74,11 @@ public class ZimbraJWToken extends AuthToken {
             AuthMech authMech, Usage usage) {
         long expireTime = expires;
         if(expireTime == 0) {
-            long lifetime = acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
+            // ZCS-20285: mirror ZimbraAuthToken's lifetime switch so Usage.REFRESH behaves the
+            // same regardless of which TokenType (opaque vs JWT) the client requested.
+            long lifetime = Usage.REFRESH.equals(usage)
+                    ? LC.zimbra_native_refresh_token_lifetime.intValue() * 1000L
+                    : acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
             issuedAt = System.currentTimeMillis();
             expireTime = issuedAt + lifetime;
         }
@@ -190,6 +194,12 @@ public class ZimbraJWToken extends AuthToken {
     @Override
     public boolean isRegistered() {
         return true;
+    }
+
+    // ZCS-20285: only populated for a freshly-minted token (set inside getEncoded()); a token
+    // rehydrated from Claims via getJWToken() never has this - callers must not need it there.
+    public String getSalt() {
+        return salt;
     }
 
     @Override

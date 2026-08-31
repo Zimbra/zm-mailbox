@@ -18,6 +18,7 @@
 package com.zimbra.soap.account.message;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
@@ -60,6 +61,40 @@ public class EndSessionRequest {
      */
     @XmlAttribute(name=AccountConstants.A_SESSION_ID /* sessionId */, required=false)
     private String sessionId;
+
+    /**
+     * @zm-api-field-tag refresh-token
+     * @zm-api-field-description ZCS-20285: native refresh token to revoke at logout, so it
+     *     cannot be used to mint a new access token after this point. Optional - if omitted,
+     *     logout proceeds as before and the refresh token (if any) remains valid until its
+     *     own natural expiry.
+     */
+    @XmlElement(name=AccountConstants.E_REFRESH_TOKEN, required=false)
+    private String refreshToken;
+
+    /**
+     * @zm-api-field-tag refresh-token-salt
+     * @zm-api-field-description ZCS-20285: salt for refreshToken - required alongside it for
+     *     revocation to be possible.
+     */
+    @XmlElement(name=AccountConstants.E_REFRESH_TOKEN_SALT, required=false)
+    private String refreshTokenSalt;
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public String getRefreshTokenSalt() {
+        return refreshTokenSalt;
+    }
+
+    public void setRefreshTokenSalt(String refreshTokenSalt) {
+        this.refreshTokenSalt = refreshTokenSalt;
+    }
 
     public void setLogOff (boolean logoff) {
         this.logoff = ZmBoolean.fromBool(logoff);

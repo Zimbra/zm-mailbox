@@ -888,6 +888,12 @@ public final class LC {
     public static final KnownKey zimbra_csv_mapping_file = KnownKey.newKey("${zimbra_home}/conf/zimbra-contact-fields.xml");
 
     public static final KnownKey zimbra_auth_provider = KnownKey.newKey("");
+
+    // ZCS-20285: lifetime of a native Usage.REFRESH ZimbraAuthToken (mobile app refresh
+    // flow), in seconds. Mirrors the DEFAULT_AUTH_LIFETIME convention in AuthToken.java -
+    // stored as seconds, multiplied by 1000 at the call site in ZimbraAuthToken.
+    public static final KnownKey zimbra_native_refresh_token_lifetime = KnownKey.newKey(60 * 60 * 24 * 30); // 30 days
+
     public static final KnownKey zimbra_authtoken_cache_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_deregistered_authtoken_queue_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_jwt_cookie_size_limit = KnownKey.newKey(4096);

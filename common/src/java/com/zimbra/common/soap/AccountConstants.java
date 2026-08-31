@@ -342,6 +342,14 @@ public class AccountConstants {
     public static final String E_ALIAS = "alias";
     public static final String E_ADMIN_DELEGATED = "adminDelegated";
     public static final String E_AUTH_TOKEN = "authToken";
+    // ZCS-20285: native (Usage.REFRESH) ZimbraJWToken, round-tripped through
+    // AuthRequest/AuthResponse so mailstore can mint a fresh access token without the mobile app
+    // ever holding a password.
+    public static final String E_REFRESH_TOKEN = "refreshToken";
+    // ZCS-20285: per-token salt for E_REFRESH_TOKEN - ZimbraJWToken's signing key is not
+    // self-contained (see ZimbraJWToken.getEncoded()), so this must travel alongside the JWT.
+    // Sent once at login; never reissued since refresh tokens are not rotated.
+    public static final String E_REFRESH_TOKEN_SALT = "refreshTokenSalt";
     public static final String E_TRUSTED_TOKEN = "trustedToken";
     public static final String E_CRUMB = "crumb";
     public static final String E_REFERRAL = "refer";

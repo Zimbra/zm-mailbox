@@ -29,9 +29,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.ZimbraJWToken;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -56,6 +58,20 @@ public class EndSession extends AccountDocumentHandler {
         boolean clearAllSessions = req.isClearAllSoapSessions();
         boolean excludeCurrrentSession = req.isExcludeCurrentSession();
         Account account = getAuthenticatedAccount(zsc);
+
+        // ZCS-20285: revoke the mobile app's native refresh token at logout, since it is not
+        // rotated and would otherwise stay valid until its own 30-day expiry. Best-effort - an
+        // already-invalid/expired refresh token is not a reason to fail the rest of logout.
+        String logoutRefreshToken = req.getRefreshToken();
+        String logoutRefreshTokenSalt = req.getRefreshTokenSalt();
+        if (!StringUtil.isNullOrEmpty(logoutRefreshToken) && !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt)) {
+            try {
+                AuthToken refreshAt = ZimbraJWToken.getJWToken(logoutRefreshToken, logoutRefreshTokenSalt);
+                refreshAt.deRegister();
+            } catch (AuthTokenException e) {
+                ZimbraLog.account.debug("failed to de-register refresh token at logout", e);
+            }
+        }
 
         if (clearAllSessions) {
             String currentSessionId = null;
