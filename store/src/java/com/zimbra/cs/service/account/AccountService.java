@@ -46,6 +46,7 @@ public class AccountService implements DocumentService {
 
         // auth
         dispatcher.registerHandler(AccountConstants.AUTH_REQUEST, new Auth());
+        dispatcher.registerHandler(AccountConstants.PRE_AUTH_TWO_FACTOR_SETUP_REQUEST, new PreAuthTwoFactorSetup());
         dispatcher.registerHandler(AccountConstants.CHANGE_PASSWORD_REQUEST, new ChangePassword());
         dispatcher.registerHandler(AccountConstants.END_SESSION_REQUEST, new EndSession());
 

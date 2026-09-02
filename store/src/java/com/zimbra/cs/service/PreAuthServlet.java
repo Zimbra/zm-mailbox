@@ -46,15 +46,18 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.AccountUtil;
 
 public class PreAuthServlet extends ZimbraServlet {
 
@@ -67,6 +70,18 @@ public class PreAuthServlet extends ZimbraServlet {
     public static final String PARAM_REDIRECT_URL = "redirectURL";
     public static final String PARAM_TIMESTAMP = "timestamp";
     public static final String PARAM_EXPIRES = "expires";
+
+    // Handed to the web client when preauth succeeds but a second factor is still required.
+    public static final String PARAM_TFA = "tfa";
+    public static final String PARAM_TFA_EMAIL = "tfaEmail";
+    // Set when 2FA is required but has never been set up: tells the client to open enrolment.
+    public static final String PARAM_TFA_ENROLL = "tfaEnroll";
+
+    // Path of the client that renders the 2FA challenge, relative to zimbraMailURL.
+    private static final String TWO_FACTOR_CHALLENGE_PATH = "modern/";
+    // Standalone enrolment page. Deliberately not the SPA: the SPA's auth guards all assume an
+    // unauthenticated user belongs on the login screen, which fights this flow.
+    private static final String TWO_FACTOR_ENROLL_PATH = "modern/tfa-enroll.html";
 
     private static final HashSet<String> sPreAuthParams = new HashSet<String>();
 
@@ -114,6 +129,7 @@ public class PreAuthServlet extends ZimbraServlet {
         ZimbraLog.clearContext();
         try {
             Provisioning prov = Provisioning.getInstance();
+
             Server server = prov.getLocalServer();
             String referMode = server.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
             boolean isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0").equals("1");
@@ -247,6 +263,24 @@ public class PreAuthServlet extends ZimbraServlet {
                         prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth, admin, authCtxt);
                     }
 
+                    // The preauth signature has been verified at this point, but that only proves the
+                    // upstream system vouched for the user.  If the account additionally requires a
+                    // second factor, do NOT mint a usable auth token here -- mint a limited-usage
+                    // token instead and hand the browser off to the challenge (or to enrolment,
+                    // when 2FA is required but has never been set up).
+                    if (!admin) {
+                        switch (twoFactorState(acct)) {
+                            case CHALLENGE:
+                                redirectToTwoFactorChallenge(req, resp, acct);
+                                return;
+                            case SETUP:
+                                redirectToTwoFactorEnrolment(req, resp, acct);
+                                return;
+                            default:
+                                break;
+                        }
+                    }
+
                     AuthToken at;
 
                     if (admin)
@@ -279,6 +313,124 @@ public class PreAuthServlet extends ZimbraServlet {
 
         return (Provisioning.MAIL_REFER_MODE_ALWAYS.equals(referMode) ||
                 (Provisioning.MAIL_REFER_MODE_WRONGHOST.equals(referMode) && !Provisioning.onLocalServer(acct)));
+    }
+
+    /** What this account needs before it can be given a usable auth token. */
+    private enum TwoFactorState {
+        /** No second factor required -- mint the auth token as normal. */
+        NONE,
+        /** 2FA is set up: challenge for a code. */
+        CHALLENGE,
+        /** 2FA is required but has never been set up: send the user to enrolment. */
+        SETUP
+    }
+
+    private TwoFactorState twoFactorState(Account acct) throws ServiceException {
+        TwoFactorAuth mgr = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
+
+        // Already enrolled -> challenge for a code before issuing a session.
+        if (mgr.twoFactorAuthEnabled()) {
+            return TwoFactorState.CHALLENGE;
+        }
+
+        // Not enrolled. Offer enrolment whenever the feature is available to the account -- not
+        // only when it is mandatory. Note the extension's twoFactorAuthRequired() is
+        // "available && (required || enabled)", so an account with the feature merely available
+        // reports required == false; keying off availability is what makes the prompt appear for
+        // accounts that are allowed to use 2FA but have not set it up yet. Enrolment is skippable,
+        // and the prompt returns on the next preauth login until they enrol.
+        if (acct.isFeatureTwoFactorAuthAvailable()) {
+            return TwoFactorState.SETUP;
+        }
+
+        return TwoFactorState.NONE;
+    }
+
+    /**
+     * Send a user whose account requires two-factor auth but has never set it up to enrolment.
+     * <p>
+     * Unlike the challenge path, this issues a normal session cookie before enrolment. That is
+     * deliberate: skipping enrolment is permitted (the user has already been vouched for by the
+     * preauth signature), so withholding the session would gain nothing a skip would not give
+     * back. Issuing it up front lets the stock two-factor setup dialog run, which authenticates
+     * EnableTwoFactorAuthRequest by session rather than by password -- the password the preauth
+     * flow never sees.
+     * <p>
+     * The account is left un-enrolled if the user dismisses the dialog, and is prompted again on
+     * the next preauth login.
+     */
+    private void redirectToTwoFactorEnrolment(HttpServletRequest req, HttpServletResponse resp, Account acct)
+    throws ServiceException, IOException {
+        AuthToken at = AuthProvider.getAuthToken(acct);
+        at.setCsrfTokenEnabled(true);
+        at.encode(resp, false, req.getScheme().equals("https"));
+
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {
+                "cmd", "PreAuth", "account", acct.getName(),
+                "info", "two-factor auth enrolment required" }));
+
+        String base = Provisioning.getInstance().getServer(acct)
+                .getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
+        if (!base.endsWith("/")) {
+            base = base + "/";
+        }
+
+        // The enrolment page cannot authenticate with the session: SOAP here rejects cookie-only
+        // auth and the cookie is HttpOnly. Give it a token scoped to enrolment only -- strictly
+        // less than the session cookie the browser already holds at this point.
+        AuthToken setupToken = AuthProvider.getAuthToken(acct, Usage.ENABLE_TWO_FACTOR_AUTH, null);
+        String url;
+        try {
+            url = base + TWO_FACTOR_ENROLL_PATH + "?t="
+                    + URLEncoder.encode(setupToken.getEncoded(), "utf-8");
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to encode enrolment token", e);
+        }
+        resp.sendRedirect(url);
+    }
+
+    /** Base URL of the client that renders the 2FA challenge/enrolment, with a trailing '?' or '&'. */
+    private String twoFactorChallengeBaseUrl(Account acct) throws ServiceException {
+        Server server = Provisioning.getInstance().getServer(acct);
+        String baseUrl = server.getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
+        if (!baseUrl.endsWith("/")) {
+            baseUrl = baseUrl + "/";
+        }
+        baseUrl = baseUrl + TWO_FACTOR_CHALLENGE_PATH;
+        return baseUrl + (baseUrl.indexOf('?') < 0 ? '?' : '&');
+    }
+
+    /**
+     * Mint a limited-usage {@link Usage#TWO_FACTOR_AUTH} token and send the browser to the web
+     * client, which renders the existing 2FA challenge and completes the login with
+     * AuthRequest{authToken, twoFactorCode}. Possession of this token alone grants nothing --
+     * the second factor is still required to exchange it for a real auth token.
+     */
+    private void redirectToTwoFactorChallenge(HttpServletRequest req, HttpServletResponse resp, Account acct)
+    throws ServiceException, IOException {
+        AuthToken tfaToken = AuthProvider.getAuthToken(acct, Usage.TWO_FACTOR_AUTH, null);
+
+        StringBuilder sb = new StringBuilder(twoFactorChallengeBaseUrl(acct));
+        try {
+            sb.append(PARAM_TFA).append('=').append(URLEncoder.encode(tfaToken.getEncoded(), "utf-8"));
+            sb.append('&').append(PARAM_ACCOUNT).append('=').append(URLEncoder.encode(acct.getName(), "utf-8"));
+
+            // Masked, exactly as AccountUtil.addTwoFactorAttributes() already exposes it in the SOAP
+            // AuthResponse at this same pre-2FA trust level -- lets the challenge page say where the
+            // code was sent without revealing the full address.
+            String recoveryAddress = acct.getPrefPasswordRecoveryAddress();
+            if (!StringUtil.isNullOrEmpty(recoveryAddress)) {
+                sb.append('&').append(PARAM_TFA_EMAIL).append('=')
+                  .append(URLEncoder.encode(StringUtil.maskEmail(recoveryAddress), "utf-8"));
+            }
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to encode two-factor auth token", e);
+        }
+
+        ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {
+                "cmd", "PreAuth", "account", acct.getName(), "info", "two-factor auth required" }));
+
+        resp.sendRedirect(sb.toString());
     }
 
     private void addQueryParams(HttpServletRequest req, StringBuilder sb, boolean first, boolean nonPreAuthParamsOnly) {

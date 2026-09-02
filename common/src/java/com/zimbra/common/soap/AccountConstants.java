@@ -57,6 +57,9 @@ public class AccountConstants {
     public static final String E_REVOKE_TRUSTED_DEVICE_RESPONSE = "RevokeTrustedDeviceResponse";
     public static final String E_REVOKE_OTHER_TRUSTED_DEVICES_REQUEST = "RevokeOtherTrustedDevicesRequest";
     public static final String E_REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE = "RevokeOtherTrustedDevicesResponse";
+    // One-off: password-free 2FA enrolment for users arriving via PreAuth/SSO.
+    public static final String E_PRE_AUTH_TWO_FACTOR_SETUP_REQUEST = "PreAuthTwoFactorSetupRequest";
+    public static final String E_PRE_AUTH_TWO_FACTOR_SETUP_RESPONSE = "PreAuthTwoFactorSetupResponse";
     public static final String E_SEND_TWO_FACTOR_AUTH_CODE_REQUEST = "SendTwoFactorAuthCodeRequest";
     public static final String E_SEND_TWO_FACTOR_AUTH_CODE_RESPONSE = "SendTwoFactorAuthCodeResponse";
     public static final String E_GET_PREFS_REQUEST = "GetPrefsRequest";
@@ -187,6 +190,9 @@ public class AccountConstants {
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
+    public static final QName PRE_AUTH_TWO_FACTOR_SETUP_REQUEST = QName.get(E_PRE_AUTH_TWO_FACTOR_SETUP_REQUEST, NAMESPACE);
+    public static final QName PRE_AUTH_TWO_FACTOR_SETUP_RESPONSE = QName.get(E_PRE_AUTH_TWO_FACTOR_SETUP_RESPONSE, NAMESPACE);
+
     public static final QName AUTH_RESPONSE = QName.get(E_AUTH_RESPONSE, NAMESPACE);
     public static final QName CHANGE_PASSWORD_REQUEST = QName.get(E_CHANGE_PASSWORD_REQUEST, NAMESPACE);
     public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
@@ -339,6 +345,7 @@ public class AccountConstants {
     public static final QName GET_ADDRESS_LIST_MEMBERS_RESPONSE = QName.get(E_GET_ADDRESS_LIST_MEMBERS_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
+    public static final String E_STATUS = "status";
     public static final String E_ALIAS = "alias";
     public static final String E_ADMIN_DELEGATED = "adminDelegated";
     public static final String E_AUTH_TOKEN = "authToken";
