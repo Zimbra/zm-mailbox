@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Set up two-step verification</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#fff; --ink:#1b2233; --dim:#66718a; --line:#dde3ee;
+    --accent:#2563eb; --accent-ink:#fff; --err:#b91c1c; --ok:#047857;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1420; --card:#171d2c; --ink:#e8ecf6; --dim:#93a0bb; --line:#2a3348; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:var(--bg);color:var(--ink);
+    font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 8px 30px rgba(16,24,40,.08);width:100%;max-width:430px;padding:30px 30px 26px}
+  h1{font-size:21px;margin:0 0 6px;letter-spacing:-.01em}
+  p.sub{color:var(--dim);margin:0 0 22px;font-size:14px}
+  label{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+  input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;
+    background:transparent;color:var(--ink);font-size:15px;font-family:inherit}
+  input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  .row{margin-bottom:16px}
+  .actions{display:flex;gap:10px;align-items:center;margin-top:22px}
+  button{font:inherit;font-weight:600;border-radius:9px;padding:11px 18px;cursor:pointer;border:1px solid transparent}
+  button.primary{background:var(--accent);color:var(--accent-ink)}
+  button.primary:disabled{opacity:.5;cursor:default}
+  button.ghost{background:transparent;color:var(--dim);border-color:var(--line)}
+  .msg{margin-top:16px;font-size:13.5px;min-height:20px}
+  .msg.err{color:var(--err)} .msg.ok{color:var(--ok)}
+  .step{display:none} .step.on{display:block}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+  .hint{color:var(--dim);font-size:12.5px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Set up two-step verification</h1>
+  <p class="sub">Add a recovery email address. We'll send a code there whenever you sign in.</p>
+
+  <div id="step1" class="step on">
+    <div class="row">
+      <label for="email">Recovery email address</label>
+      <input id="email" type="email" autocomplete="email" placeholder="you@example.com" autofocus>
+      <div class="hint">Must be different from your own mailbox address.</div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="sendBtn">Send code</button>
+      <button class="ghost" id="skipBtn1">Skip for now</button>
+    </div>
+  </div>
+
+  <div id="step2" class="step">
+    <div class="row">
+      <label for="code">Verification code</label>
+      <input id="code" type="text" inputmode="text" autocomplete="one-time-code" placeholder="Enter the code we emailed">
+      <div class="hint">Sent to <span id="sentTo"></span>.</div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="verifyBtn">Verify &amp; enable</button>
+      <button class="ghost" id="backBtn">Use a different address</button>
+    </div>
+  </div>
+
+  <div id="msg" class="msg"></div>
+</div>
+
+<script>
+(function () {
+  var SOAP = '/service/soap/';
+  var $ = function (id) { return document.getElementById(id); };
+  var msg = $('msg');
+
+  function say(text, kind) {
+    msg.className = 'msg' + (kind ? ' ' + kind : '');
+    msg.textContent = text || '';
+  }
+  function show(step) {
+    $('step1').className = 'step' + (step === 1 ? ' on' : '');
+    $('step2').className = 'step' + (step === 2 ? ' on' : '');
+  }
+  function esc(s) {
+    return String(s).replace(/[<>&"]/g, function (c) {
+      return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c];
+    });
+  }
+
+  // Enrolment token handed over by PreAuthServlet. SOAP here rejects cookie-only auth and the
+  // session cookie is HttpOnly, so the token travels in the request instead.
+  var TOKEN = (function () {
+    var m = /[?&]t=([^&]+)/.exec(window.location.search);
+    return m ? decodeURIComponent(m[1]) : '';
+  })();
+
+  function soap(attrs) {
+    var body = '<PreAuthTwoFactorSetupRequest xmlns="urn:zimbraAccount" ' + attrs +
+               ' authToken="' + esc(TOKEN) + '"/>';
+    var env =
+      '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">' +
+      '<soap:Header><context xmlns="urn:zimbra"/></soap:Header>' +
+      '<soap:Body>' + body + '</soap:Body></soap:Envelope>';
+    return fetch(SOAP, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/soap+xml' },
+      body: env
+    }).then(function (r) { return r.text(); }).then(function (t) {
+      var st = /<status>([^<]*)<\/status>/.exec(t);
+      if (st) return st[1];
+      var reason = /<soap:Text>([^<]*)<\/soap:Text>/.exec(t);
+      throw new Error(reason ? reason[1] : 'Unexpected server response');
+    });
+  }
+
+  function busy(btn, on, label) {
+    btn.disabled = on;
+    btn.textContent = on ? 'Please wait…' : label;
+  }
+
+  $('sendBtn').addEventListener('click', function () {
+    var email = $('email').value.trim();
+    if (!email || email.indexOf('@') < 1) { say('Enter a valid email address.', 'err'); return; }
+    say('');
+    busy(this, true);
+    var self = this;
+    soap('action="sendCode" email="' + esc(email) + '"')
+      .then(function () {
+        $('sentTo').textContent = email;
+        show(2);
+        say('Code sent. Check that inbox.', 'ok');
+        $('code').focus();
+      })
+      .catch(function (e) { say(e.message, 'err'); })
+      .then(function () { busy(self, false, 'Send code'); });
+  });
+
+  $('verifyBtn').addEventListener('click', function () {
+    var code = $('code').value.trim();
+    if (!code) { say('Enter the code from the email.', 'err'); return; }
+    say('');
+    busy(this, true);
+    var self = this;
+    soap('action="validateCode" twoFactorCode="' + esc(code) + '"')
+      .then(function () {
+        say('Two-step verification is on. Taking you to your mailbox…', 'ok');
+        setTimeout(function () { window.location.href = '/modern/'; }, 1200);
+      })
+      .catch(function (e) { say(e.message, 'err'); })
+      .then(function () { busy(self, false, 'Verify & enable'); });
+  });
+
+  $('backBtn').addEventListener('click', function () { show(1); say(''); $('email').focus(); });
+
+  // Skip: the session is already valid, so simply continue. The account stays un-enrolled
+  // and is prompted again on the next preauth sign-in.
+  $('skipBtn1').addEventListener('click', function () { window.location.href = '/modern/'; });
+
+  if (!TOKEN) {
+    say('This enrolment link is missing its token. Sign in again to retry.', 'err');
+    $('sendBtn').disabled = true;
+  } else if (window.history && history.replaceState) {
+    history.replaceState(null, '', window.location.pathname);
+  }
+})();
+</script>
+</body>
+</html>
