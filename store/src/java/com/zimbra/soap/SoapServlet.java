@@ -36,6 +36,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ZimbraServletOutputStream;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -355,10 +356,38 @@ public class SoapServlet extends ZimbraServlet {
             return LC.soap_response_buffer_size.intValue();
     }
 
+    // ZCS-20285: path to the error-code element within an already-built Fault, mirroring the
+    // existing ZIMBRA_ERROR_ELEMENT precedent (SoapProtocol.updateArgumentsForRemoteFault) -
+    // Fault/Detail/Error/Code, walked from the Fault element itself.
+    private static final String[] FAULT_CODE_PATH = new String[] { "Detail", "Error", "Code" };
+
+    /**
+     * Auth-related faults (expired/missing/invalid credentials) should be distinguishable by
+     * HTTP status alone for callers that check the transport status code rather than parsing
+     * the SOAP fault body - everything else keeps the existing 500 behavior, unchanged. Reads
+     * the code back out of the already-built fault Element rather than threading the original
+     * exception through dispatchRequest's many fault-generating branches, since by the time
+     * sendResponse runs, only the Element survives (see SoapEngine.dispatchRequest).
+     */
+    private boolean isAuthFault(SoapProtocol soapProto, Element envelope) {
+        Element fault = soapProto.getBodyElement(envelope);
+        Element codeEl = fault == null ? null : fault.getPathElement(FAULT_CODE_PATH);
+        if (codeEl == null) {
+            return false;
+        }
+        String code = codeEl.getTextTrim();
+        return ServiceException.AUTH_EXPIRED.equals(code)
+                || ServiceException.AUTH_REQUIRED.equals(code)
+                || AccountServiceException.AUTH_FAILED.equals(code);
+    }
+
     private void sendResponse(HttpServletRequest req, HttpServletResponse resp, Element envelope) throws IOException {
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
-        int statusCode = soapProto.hasFault(envelope) ?
-                HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
+        int statusCode = HttpServletResponse.SC_OK;
+        if (soapProto.hasFault(envelope)) {
+            statusCode = isAuthFault(soapProto, envelope) ?
+                    HttpServletResponse.SC_UNAUTHORIZED : HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+        }
 
         boolean chunkingEnabled = LC.soap_response_chunked_transfer_encoding_enabled.booleanValue();
 
