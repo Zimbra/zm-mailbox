@@ -91,16 +91,20 @@ public class ZimbraJWToken extends AuthToken {
         if (body.getExpiration() != null) {
             map.put(AuthTokenProperties.C_EXP, String.valueOf(body.getExpiration().getTime()));
         }
-        if ((boolean) body.get(AuthTokenProperties.C_ADMIN)) {
+        // ZCS-20285: Boolean.TRUE.equals(...) rather than an unboxing (boolean) cast - a
+        // claim that's absent or not a Boolean (e.g. a token decoded from a source that
+        // never set it) must be treated as false, not throw a NullPointerException/
+        // ClassCastException out of this constructor.
+        if (Boolean.TRUE.equals(body.get(AuthTokenProperties.C_ADMIN))) {
             map.put(AuthTokenProperties.C_ADMIN, "1");
         }
-        if ((boolean) body.get(AuthTokenProperties.C_DOMAIN)) {
+        if (Boolean.TRUE.equals(body.get(AuthTokenProperties.C_DOMAIN))) {
             map.put(AuthTokenProperties.C_DOMAIN, "1");
         }
-        if ((boolean) body.get(AuthTokenProperties.C_DLGADMIN)) {
+        if (Boolean.TRUE.equals(body.get(AuthTokenProperties.C_DLGADMIN))) {
             map.put(AuthTokenProperties.C_DLGADMIN, "1");
         }
-        if ((boolean) body.get(AuthTokenProperties.C_CSRF)) {
+        if (Boolean.TRUE.equals(body.get(AuthTokenProperties.C_CSRF))) {
             map.put(AuthTokenProperties.C_CSRF, "1");
         }
         populateMap(map, body, AuthTokenProperties.C_AID);

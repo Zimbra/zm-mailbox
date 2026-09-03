@@ -181,7 +181,7 @@ public class Auth extends AccountDocumentHandler {
                 // so the account will show in log context
                 if (!checkPasswordSecurity(context))
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
-                AuthToken.Usage usage = at.getUsage();
+                Usage usage = at.getUsage();
                 if (usage != Usage.AUTH && usage != Usage.TWO_FACTOR_AUTH) {
                     AuthFailedServiceException e = AuthFailedServiceException
                         .AUTH_FAILED("invalid auth token");
@@ -264,7 +264,15 @@ public class Auth extends AccountDocumentHandler {
             }
 
             AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
-            AuthToken at = AuthProvider.getAuthToken(acct, tokenType);
+            AuthToken at;
+            try {
+                at = AuthProvider.getAuthToken(acct, tokenType);
+            } catch (ServiceException e) {
+                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+                        "failed to mint access token on refresh", e);
+                AuthListener.invokeOnException(afe);
+                throw afe;
+            }
             ServletRequest refreshHttpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (csrfSupport && !at.isCsrfTokenEnabled()) {
                 at.setCsrfTokenEnabled(csrfSupport);
