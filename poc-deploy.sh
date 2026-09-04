@@ -40,13 +40,65 @@ mkdir -p "$BACKUP"/{jars,conf,ldap,admin}
 say "Backing up to $BACKUP"
 
 # ---- 1. Server jars -------------------------------------------------------
-say "Installing jars into $ZIMBRA_HOME/lib/jars"
-for j in zimbracommon zimbrasoap zimbraclient zimbrastore; do
-    if [ -f "$ZIMBRA_HOME/lib/jars/$j.jar" ]; then
-        cp -p "$ZIMBRA_HOME/lib/jars/$j.jar" "$BACKUP/jars/"
+# A jar lives in more than one place. zm-build's own patch manifest
+# (rpmconf/Patch/conf/zmpatch.xml) replaces zimbrastore.jar in four locations and
+# zimbracommon.jar in two, because each webapp carries its own WEB-INF/lib copy.
+# Updating only lib/jars leaves mailboxd loading the old classes from the webapp,
+# which looks exactly like the feature not working.
+say "Installing jars"
+install_jar() {
+    local jar="$1"; shift
+    local n=0
+    for dest in "$@"; do
+        # Only replace copies this install actually has; skip layouts that differ.
+        if [ -f "$dest" ]; then
+            mkdir -p "$BACKUP/jars$(dirname "$dest")"
+            cp -p "$dest" "$BACKUP/jars$dest"
+            install -o zimbra -g zimbra -m 444 "$HERE/jars/$jar" "$dest"
+            echo "  $dest"
+            n=$((n+1))
+        fi
+    done
+    if [ "$n" -eq 0 ]; then
+        echo "  WARNING: found no existing copy of $jar in any expected location" >&2
     fi
-    install -o zimbra -g zimbra -m 444 "$HERE/jars/$j.jar" "$ZIMBRA_HOME/lib/jars/$j.jar"
-    echo "  $j.jar"
+}
+
+install_jar zimbracommon.jar \
+    "$ZIMBRA_HOME/lib/jars/zimbracommon.jar" \
+    "$ZIMBRA_HOME/jetty/common/lib/zimbracommon.jar" \
+    "$ZIMBRA_HOME/jetty_base/common/lib/zimbracommon.jar"
+
+install_jar zimbrastore.jar \
+    "$ZIMBRA_HOME/lib/jars/zimbrastore.jar" \
+    "$ZIMBRA_HOME/jetty/webapps/service/WEB-INF/lib/zimbrastore.jar" \
+    "$ZIMBRA_HOME/jetty/webapps/zimbra/WEB-INF/lib/zimbrastore.jar" \
+    "$ZIMBRA_HOME/jetty/webapps/zimbraAdmin/WEB-INF/lib/zimbrastore.jar" \
+    "$ZIMBRA_HOME/jetty_base/webapps/service/WEB-INF/lib/zimbrastore.jar" \
+    "$ZIMBRA_HOME/jetty_base/webapps/zimbra/WEB-INF/lib/zimbrastore.jar" \
+    "$ZIMBRA_HOME/jetty_base/webapps/zimbraAdmin/WEB-INF/lib/zimbrastore.jar"
+
+# soap and client are not in zmpatch.xml; lib/jars is the only known copy, but
+# sweep the webapps too in case this install carries one.
+install_jar zimbrasoap.jar \
+    "$ZIMBRA_HOME/lib/jars/zimbrasoap.jar" \
+    "$ZIMBRA_HOME/jetty/webapps/service/WEB-INF/lib/zimbrasoap.jar" \
+    "$ZIMBRA_HOME/jetty_base/webapps/service/WEB-INF/lib/zimbrasoap.jar"
+
+install_jar zimbraclient.jar \
+    "$ZIMBRA_HOME/lib/jars/zimbraclient.jar" \
+    "$ZIMBRA_HOME/jetty/webapps/service/WEB-INF/lib/zimbraclient.jar" \
+    "$ZIMBRA_HOME/jetty_base/webapps/service/WEB-INF/lib/zimbraclient.jar"
+
+say "Confirming no stale copies remain"
+for j in zimbracommon zimbrastore zimbrasoap zimbraclient; do
+    find "$ZIMBRA_HOME" -name "$j.jar" -not -path "$BACKUP/*" 2>/dev/null | while read -r f; do
+        if cmp -s "$HERE/jars/$j.jar" "$f"; then
+            echo "  ok    $f"
+        else
+            echo "  STALE $f  <-- not replaced, mailboxd may load old classes from here" >&2
+        fi
+    done
 done
 
 # ---- 2. Attribute metadata ------------------------------------------------
@@ -120,7 +172,7 @@ Admin console (unpacked): https://<host>:7071/zimbraAdmin/?dev=1
   Account-> Features -> General -> trusted device toggle
 
 To roll back:
-  cp -p $BACKUP/jars/*.jar $ZIMBRA_HOME/lib/jars/
+  cp -Rp $BACKUP/jars/opt/zimbra/. /opt/zimbra/   # restores every replaced copy
   cp -p $BACKUP/conf/zimbra-attrs.xml $ZIMBRA_HOME/conf/attrs/
   cp -p $BACKUP/ldap/zimbra.schema $ZIMBRA_HOME/common/etc/openldap/schema/
   su - zimbra -c "/opt/zimbra/libexec/zmldapschema; zmmailboxdctl restart"

@@ -65,7 +65,20 @@ this branch, so you do not need to do this to build.
 `deploy-poc/deploy.sh` (staged outside the repo, alongside the jars) does all of
 the below with backups and a rollback recipe. Manually, as root:
 
-1. `jars/*.jar` -> `/opt/zimbra/lib/jars/` as `zimbra{common,soap,client,store}.jar`
+1. `jars/*.jar` -> **every** copy the install carries, not just `/opt/zimbra/lib/jars/`.
+   `zm-build`'s own patch manifest (`rpmconf/Patch/conf/zmpatch.xml`) replaces
+   `zimbrastore.jar` in four locations and `zimbracommon.jar` in two, because each
+   webapp carries its own `WEB-INF/lib` copy:
+
+       /opt/zimbra/lib/jars/zimbrastore.jar
+       /opt/zimbra/jetty/webapps/service/WEB-INF/lib/zimbrastore.jar
+       /opt/zimbra/jetty/webapps/zimbra/WEB-INF/lib/zimbrastore.jar
+       /opt/zimbra/jetty/webapps/zimbraAdmin/WEB-INF/lib/zimbrastore.jar
+
+   Updating only `lib/jars` leaves mailboxd loading the old classes from a webapp,
+   which looks exactly like the feature silently not working. `poc-deploy.sh`
+   replaces every copy it finds and then re-scans `/opt/zimbra` with `cmp`,
+   printing `STALE` for anything it missed — check that output before testing.
 2. `zimbra-attrs.xml` -> `/opt/zimbra/conf/attrs/` — AttributeManager reads this at
    mailboxd startup for the new attribute's cardinality and to wire the CIDR validator
 3. `zimbra.schema` -> `/opt/zimbra/common/etc/openldap/schema/`, then
