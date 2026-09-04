@@ -39,10 +39,11 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
+import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GrantRights extends AccountDocumentHandler {
-    
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -51,7 +52,7 @@ public class GrantRights extends AccountDocumentHandler {
         if (!canAccessAccount(zsc, account)) {
             throw ServiceException.PERM_DENIED("can not access account");
         }
-        
+
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         for (Element eACE : request.listElements(AccountConstants.E_ACE)) {
             ZimbraACE ace = handleACE(eACE, zsc, true);
@@ -68,7 +69,7 @@ public class GrantRights extends AccountDocumentHandler {
 
         return response;
     }
-    
+
     /**
      * @param eACE
      * @param zsc
@@ -76,13 +77,14 @@ public class GrantRights extends AccountDocumentHandler {
      * @return
      * @throws ServiceException
      */
-    static ZimbraACE handleACE(Element eACE, ZimbraSoapContext zsc, boolean granting) 
+    static ZimbraACE handleACE(Element eACE, ZimbraSoapContext zsc, boolean granting)
     throws ServiceException {
         /*
-         * Interface and parameter checking style was modeled after FolderAction, 
+         * Interface and parameter checking style was modeled after FolderAction,
          * not admin Grant/RevokeRight
          */
         Right right = RightManager.getInstance().getUserRight(eACE.getAttribute(AccountConstants.A_RIGHT));
+        checkIfRightIsLoginAsRight(right.getName());
         GranteeType gtype = GranteeType.fromCode(eACE.getAttribute(AccountConstants.A_GRANT_TYPE));
         String zid = eACE.getAttribute(AccountConstants.A_ZIMBRA_ID, null);
         boolean deny = eACE.getAttributeBool(AccountConstants.A_DENY, false);
@@ -140,6 +142,12 @@ public class GrantRights extends AccountDocumentHandler {
             rightModifier = RightModifier.RM_DENY;
         return new ZimbraACE(zid, gtype, right, rightModifier, secret);
 
+    }
+
+    static void checkIfRightIsLoginAsRight(String right) throws ServiceException {
+        if (right.equals(RightConsts.RT_loginAs)) {
+            throw ServiceException.PERM_DENIED("loginAs Right cannot be granted or revoked from user namespace");
+        }
     }
 
     private static NamedEntry lookupEmailAddress(String name) throws ServiceException {
