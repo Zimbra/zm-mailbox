@@ -15,6 +15,6 @@
  * ***** END LICENSE BLOCK *****
  */
 /**
- * Functional JUnit tests for the {@code com.zimbra.cs.account} package.
+ * Admin SOAP service handlers for Zimbra administration operations.
  */
-package com.zimbra.cs.account;
+package com.zimbra.cs.service.admin;

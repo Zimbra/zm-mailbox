@@ -18,28 +18,6 @@
 
 package com.zimbra.soap;
 
-import java.io.ByteArrayInputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.namespace.QName;
-
-import org.dom4j.Document;
-import org.dom4j.Namespace;
-import org.dom4j.io.DocumentResult;
-import org.dom4j.io.DocumentSource;
-import org.w3c.dom.Attr;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -65,6 +43,25 @@ import com.zimbra.soap.mail.type.ModifyNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.util.JaxbInfo;
+import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.namespace.QName;
+import org.dom4j.Document;
+import org.dom4j.Namespace;
+import org.dom4j.io.DocumentResult;
+import org.dom4j.io.DocumentSource;
+import org.w3c.dom.Attr;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public final class JaxbUtil {
 
@@ -263,6 +260,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CheckDirectoryResponse.class,
             com.zimbra.soap.admin.message.CheckDomainMXRecordRequest.class,
             com.zimbra.soap.admin.message.CheckDomainMXRecordResponse.class,
+            com.zimbra.soap.admin.message.ParseSAMLMetadataRequest.class,
+            com.zimbra.soap.admin.message.ParseSAMLMetadataResponse.class,
             com.zimbra.soap.admin.message.CheckExchangeAuthRequest.class,
             com.zimbra.soap.admin.message.CheckExchangeAuthResponse.class,
             com.zimbra.soap.admin.message.CheckGalConfigRequest.class,
@@ -655,6 +654,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.MoveMailboxResponse.class,
             com.zimbra.soap.admin.message.NoOpRequest.class,
             com.zimbra.soap.admin.message.NoOpResponse.class,
+            com.zimbra.soap.admin.message.GenerateSamlTestRequest.class,
+            com.zimbra.soap.admin.message.GenerateSamlTestResponse.class,
             com.zimbra.soap.admin.message.PingRequest.class,
             com.zimbra.soap.admin.message.PingResponse.class,
             com.zimbra.soap.admin.message.PurgeAccountCalendarCacheRequest.class,

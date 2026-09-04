@@ -196,6 +196,10 @@ public final class AdminConstants {
     public static final String E_CHECK_DOMAIN_MX_RECORD_REQUEST = "CheckDomainMXRecordRequest";
     public static final String E_CHECK_DOMAIN_MX_RECORD_RESPONSE = "CheckDomainMXRecordResponse";
 
+    public static final String E_PARSE_SAML_METADATA_REQUEST = "ParseSAMLMetadataRequest";
+
+    public static final String E_PARSE_SAML_METADATA_RESPONSE = "ParseSAMLMetadataResponse";
+
     public static final String E_AUTO_COMPLETE_GAL_REQUEST = "AutoCompleteGalRequest";
     public static final String E_AUTO_COMPLETE_GAL_RESPONSE = "AutoCompleteGalResponse";
     public static final String E_SEARCH_GAL_REQUEST = "SearchGalRequest";
@@ -498,6 +502,10 @@ public final class AdminConstants {
     public static final String E_NO_OP_REQUEST = "NoOpRequest";
     public static final String E_NO_OP_RESPONSE = "NoOpResponse";
 
+    // SAML test flow
+    public static final String E_GENERATE_SAML_TEST_REQUEST = "GenerateSamlTestRequest";
+    public static final String E_GENERATE_SAML_TEST_RESPONSE = "GenerateSamlTestResponse";
+
     // cookie
     public static final String E_CLEAR_COOKIE_REQUEST = "ClearCookieRequest";
     public static final String E_CLEAR_COOKIE_RESPONSE = "ClearCookieResponse";
@@ -724,6 +732,10 @@ public final class AdminConstants {
     public static final QName CHECK_EXCHANGE_AUTH_RESPONSE = QName.get(E_CHECK_EXCHANGE_AUTH_RESPONSE, NAMESPACE);
     public static final QName CHECK_DOMAIN_MX_RECORD_REQUEST = QName.get(E_CHECK_DOMAIN_MX_RECORD_REQUEST, NAMESPACE);
     public static final QName CHECK_DOMAIN_MX_RECORD_RESPONSE = QName.get(E_CHECK_DOMAIN_MX_RECORD_RESPONSE, NAMESPACE);
+
+    public static final QName PARSE_SAML_METADATA_REQUEST = QName.get(E_PARSE_SAML_METADATA_REQUEST, NAMESPACE);
+
+    public static final QName PARSE_SAML_METADATA_RESPONSE = QName.get(E_PARSE_SAML_METADATA_RESPONSE, NAMESPACE);
 
     public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get(E_AUTO_COMPLETE_GAL_REQUEST, NAMESPACE);
     public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get(E_AUTO_COMPLETE_GAL_RESPONSE, NAMESPACE);
@@ -1028,6 +1040,10 @@ public final class AdminConstants {
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get(E_NO_OP_RESPONSE, NAMESPACE);
+
+    // SAML test flow
+    public static final QName GENERATE_SAML_TEST_REQUEST = QName.get(E_GENERATE_SAML_TEST_REQUEST, NAMESPACE);
+    public static final QName GENERATE_SAML_TEST_RESPONSE = QName.get(E_GENERATE_SAML_TEST_RESPONSE, NAMESPACE);
 
     // cookie
     public static final QName CLEAR_COOKIE_REQUEST = QName.get(E_CLEAR_COOKIE_REQUEST, NAMESPACE);
@@ -1518,6 +1534,8 @@ public final class AdminConstants {
     // CheckExchangeAuth
     public static final String E_AUTH = "auth";
     public static final String A_URL = "url";
+    public static final String A_FORCE = "force";
+    public static final String A_RELAY_STATE = "relayState";
     public static final String A_USER = "user";
     public static final String A_PASS = "pass";
     public static final String A_SCHEME = "scheme";
@@ -1572,6 +1590,30 @@ public final class AdminConstants {
     public static final String A_RELEASE = "release";
     public static final String A_PLATFORM = "platform";
     public static final String A_BUILDTYPE = "buildtype";
+
+    // ZCS-19567 Multi-domain SAML - IdP metadata parsing (Admin SOAP)
+    // Note: A_URL ("url") and E_CONTENT ("content") are reused for the request input.
+    public static final String E_SAML_ENTITY_ID = "entityID";
+
+    public static final String E_SAML_SSO_URL = "ssoURL";
+
+    public static final String E_SAML_SLO_URL = "sloURL";
+
+    public static final String E_SAML_NAME_ID_FORMAT = "nameIdFormat";
+
+    public static final String E_SAML_CERTIFICATE = "certificate";
+
+    public static final String A_SAML_CERT_USE = "use";
+
+    public static final String A_SAML_THUMBPRINT = "thumbprint";
+
+    public static final String A_SAML_NOT_BEFORE = "notBefore";
+
+    public static final String A_SAML_NOT_AFTER = "notAfter";
+
+    public static final String A_SAML_SUBJECT_DN = "subjectDN";
+
+    public static final String A_SAML_ISSUER_DN = "issuerDN";
 
     // ZimbraLicenseExtenstion LicenseService and LicenseAdminService
     public static final String E_CONTENT = "content";
