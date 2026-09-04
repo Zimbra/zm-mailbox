@@ -187,6 +187,9 @@ public final class LC {
     public static final KnownKey zimbra_reindex_threads = KnownKey.newKey(10);
 
     @Supported
+    public static final KnownKey zimbra_resturl_export_threshold = KnownKey.newKey(100);
+
+    @Supported
     public static final KnownKey zimbra_index_max_readers = KnownKey.newKey(35);
 
     @Supported

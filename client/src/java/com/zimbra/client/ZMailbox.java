@@ -18,8 +18,9 @@
 package com.zimbra.client;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,7 +49,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
-
+import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
@@ -3494,10 +3495,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     private InputStream getResource(URI uri, int msecTimeout)
-    throws ServiceException {
+            throws ServiceException {
         HttpGet get = null;
         try {
-
             get = new HttpGet(uri.toString());
             HttpClientBuilder clientBuilder = getHttpClientBuilder(uri);
             if (msecTimeout > -1) {
@@ -3508,28 +3508,67 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             HttpResponse response = HttpClientUtil.executeMethod(client, get);
             int statusCode = response.getStatusLine().getStatusCode();
 
-            // parse the response
             if (statusCode == HttpServletResponse.SC_OK) {
-                // copy the response content to a ByteArrayInputStream to allow multiple reads even after the connection is released
+                int memoryThreshold = 1024 * 1024 * LC.zimbra_resturl_export_threshold.intValue(); // 100mb as threshold
                 try (InputStream inputStream = new GetMethodInputStream(response.getEntity().getContent())) {
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[1024];
+                    DeferredFileOutputStream dfos = new DeferredFileOutputStream(memoryThreshold,
+                            "zmail-resource-", ".tmp", new File("/opt/zimbra/tmp/"));
+                    byte[] buffer = new byte[8192];
                     int bytesRead;
                     while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        byteArrayOutputStream.write(buffer, 0, bytesRead);
+                        dfos.write(buffer, 0, bytesRead);
                     }
-                    return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+                    dfos.close();
+
+                    InputStream result;
+                    if (dfos.isInMemory()) {
+                        result = new ByteArrayInputStream(dfos.getData());
+                    } else {
+                        // large response - spooled to disk, delete file on stream close
+                        File tmp = dfos.getFile();
+                        tmp.deleteOnExit(); // best-effort safety net
+                        result = new DeletingFileInputStream(tmp);
+                    }
+                    return result;
                 }
             } else {
-                String msg = String.format("GET from %s failed, status=%d.  %s", uri, statusCode, response.getStatusLine().getReasonPhrase());
+                String msg = String.format("GET from %s failed, status=%d.  %s", uri, statusCode,
+                        response.getStatusLine().getReasonPhrase());
                 throw ServiceException.FAILURE(msg, null);
             }
         } catch (IOException | HttpException e) {
             String msg = String.format("Unable to get resource from '%s' : %s", uri, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
+        } catch (OutOfMemoryError e) {
+            String msg = String.format("zimbra_resturl_export_threshold localconfig is greater than mailbox " +
+                    "size to be exported", uri, e.getMessage());
+            throw ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED(msg, e);
         } finally {
-            // release the connection to the connection manager
+            // connection is already fully drained by the time we get here (success or failure),
+            // so it is always safe to release it here regardless of outcome
             Optional.ofNullable(get).ifPresent(HttpGet::releaseConnection);
+        }
+    }
+
+    /**
+      * FileInputStream that deletes its backing file when closed.
+      * Falls back to deleteOnExit() (registered by the caller) if close() is never called.
+      */
+    private static class DeletingFileInputStream extends FileInputStream {
+        private final File file;
+
+        DeletingFileInputStream(File file) throws FileNotFoundException {
+            super(file);
+            this.file = file;
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                file.delete();
+            }
         }
     }
 
