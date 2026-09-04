@@ -10777,4 +10777,17 @@ TODO: delete them permanently from here
     <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
 </attr>
 
+<attr id="4170" name="zimbraMFAbyPassIP" type="string" cardinality="multi"
+      optionalIn="domain,cos" flags="domainAdminModifiable" since="10.1.22" callback="MFABypassIPCallback">
+    <desc>
+    IPv4 or IPv6 CIDR ranges from which the two-factor authentication challenge is
+    bypassed. When two-factor auth is required for an account and the account
+    authenticates from an address inside one of these ranges, the MFA challenge is
+    skipped; the password is still validated. A bare address without a prefix length
+    is treated as a single host. A value set on the COS takes precedence over the
+    value set on the domain. Unset means no bypass, which preserves existing
+    behavior. e.g. 10.0.0.0/8, 192.168.1.0/24
+    </desc>
+</attr>
+
 </attrs>

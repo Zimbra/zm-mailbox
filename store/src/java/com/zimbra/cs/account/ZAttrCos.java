@@ -21745,6 +21745,203 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @return zimbraMFAbyPassIP, or empty array if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public String[] getMFAbyPassIP() {
+        return getMultiAttr(Provisioning.A_zimbraMFAbyPassIP, true, true);
+    }
+
+    /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @param zimbraMFAbyPassIP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void setMFAbyPassIP(String[] zimbraMFAbyPassIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMFAbyPassIP, zimbraMFAbyPassIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @param zimbraMFAbyPassIP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> setMFAbyPassIP(String[] zimbraMFAbyPassIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMFAbyPassIP, zimbraMFAbyPassIP);
+        return attrs;
+    }
+
+    /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @param zimbraMFAbyPassIP new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void addMFAbyPassIP(String zimbraMFAbyPassIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMFAbyPassIP, zimbraMFAbyPassIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @param zimbraMFAbyPassIP new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> addMFAbyPassIP(String zimbraMFAbyPassIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMFAbyPassIP, zimbraMFAbyPassIP);
+        return attrs;
+    }
+
+    /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @param zimbraMFAbyPassIP existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void removeMFAbyPassIP(String zimbraMFAbyPassIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMFAbyPassIP, zimbraMFAbyPassIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @param zimbraMFAbyPassIP existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> removeMFAbyPassIP(String zimbraMFAbyPassIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMFAbyPassIP, zimbraMFAbyPassIP);
+        return attrs;
+    }
+
+    /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void unsetMFAbyPassIP() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMFAbyPassIP, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> unsetMFAbyPassIP(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMFAbyPassIP, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraAdminOutgoingSieveScriptAfter. Orig desc: outgoing sieve script
      * defined by admin (not able to edit and view from the end user) applied

@@ -10820,6 +10820,21 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageIdDedupeCacheTimeout = "zimbraMessageIdDedupeCacheTimeout";
 
     /**
+     * IPv4 or IPv6 CIDR ranges from which the two-factor authentication
+     * challenge is bypassed. When two-factor auth is required for an account
+     * and the account authenticates from an address inside one of these
+     * ranges, the MFA challenge is skipped; the password is still validated.
+     * A bare address without a prefix length is treated as a single host. A
+     * value set on the COS takes precedence over the value set on the
+     * domain. Unset means no bypass, which preserves existing behavior. e.g.
+     * 10.0.0.0/8, 192.168.1.0/24
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public static final String A_zimbraMFAbyPassIP = "zimbraMFAbyPassIP";
+
+    /**
      * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *

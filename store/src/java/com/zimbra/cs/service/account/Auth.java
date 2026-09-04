@@ -63,6 +63,7 @@ import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.twofactor.AppSpecificPasswords;
+import com.zimbra.cs.account.auth.twofactor.MFABypassIP;
 import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Principal;
@@ -310,7 +311,11 @@ public class Auth extends AccountDocumentHandler {
                     }
                 }
             }
-            boolean usingTwoFactorAuth = acct != null && twoFactorManager.twoFactorAuthRequired() && !trustedDeviceOverride;
+            // A whitelisted source IP skips the second factor the same way a verified trusted
+            // device does. Evaluated last so the lookup only runs for accounts that would
+            // otherwise be challenged.
+            boolean usingTwoFactorAuth = acct != null && twoFactorManager.twoFactorAuthRequired()
+                    && !trustedDeviceOverride && !MFABypassIP.isBypassed(acct, authCtxt);
             boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
             if (password != null || recoveryCode != null || twoFactorAuthWithToken) {
                 // authentication logic can be reached with either a password, or a 2FA auth token
