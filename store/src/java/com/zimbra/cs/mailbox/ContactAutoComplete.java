@@ -830,7 +830,7 @@ public class ContactAutoComplete {
                 if (folder instanceof Mountpoint) {
                     Mountpoint mp = (Mountpoint) folder;
                     mountpoints.put(mp.getTarget(), mp);
-                    if (mIncludeSharedFolders) {
+                    if (mIncludeSharedFolders && mp.getDefaultView() == MailItem.Type.CONTACT) {
                         folders.add(folder);
                     }
                 } else if (folder.getDefaultView() != MailItem.Type.CONTACT || folder.inTrash()) {
