@@ -10777,4 +10777,21 @@ TODO: delete them permanently from here
     <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
 </attr>
 
+<attr id="4170" name="zimbraMobileAppFCMServerJson" type="string" cardinality="single"
+      optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="FcmConfigRestriction">
+    <desc>
+        Encrypted JSON wrapper containing FCM server credentials and bundle metadata for
+        the Firebase Admin SDK. Payload fields (after decryption): ProjectId, ServerDetails
+        (Firebase service-account JSON), BundleVersion, BundleInstalledAt.
+    </desc>
+</attr>
+
+<attr id="4171" name="zimbraMobileAppFCMDeviceJson" type="string" cardinality="single"
+      optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="FcmConfigRestriction">
+    <desc>
+        Encrypted JSON wrapper containing FCM mobile client configuration and bundle metadata
+        for the Zimbra mobile app. Payload fields (after decryption): ProjectId, DeviceDetails
+        (Firebase google-services.json client config), BundleVersion, BundleInstalledAt.
+    </desc>
+</attr>
 </attrs>
