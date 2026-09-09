@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """Generate a Zimbra preauth URL.  Usage: python3 /tmp/pa.py <account> [host]"""
-import hmac, hashlib, time, sys, urllib.parse
+import hmac, hashlib, time, sys, os, urllib.parse
 
-KEY  = "80cf431190dc6bea72be7f5ba1a5c2a2763f6dbf68024b4a72f893d25e75d923"
-HOST = "rakeshdev-machine1.zimbradev.com"
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "saml-mfa"))
+import ssoenv  # noqa: E402  -- reads saml-mfa/local.env (untracked)
 
-acct = sys.argv[1] if len(sys.argv) > 1 else "rm5@" + HOST
+# The domain PreAuth key is a CREDENTIAL: it mints a login for any account in the domain, with no
+# password. It is never hardcoded here -- zm-mailbox is a public repository. Get it with
+# `zmprov gdpak <domain>` and put it in saml-mfa/local.env.
+KEY  = ssoenv.need("PREAUTH_KEY")
+HOST = ssoenv.need("ZIMBRA_HOST")
+DOMAIN = ssoenv.get("ZIMBRA_DOMAIN", HOST)
+
+acct = sys.argv[1] if len(sys.argv) > 1 else ssoenv.get("TEST_USER", "rm1")
 if "@" not in acct:
-    acct = acct + "@" + HOST
+    acct = acct + "@" + DOMAIN
 host = sys.argv[2] if len(sys.argv) > 2 else HOST
 
 ts = str(int(time.time() * 1000))

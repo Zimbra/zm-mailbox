@@ -15,10 +15,19 @@
 # ---------------------------------------------------------------------------
 set -u
 
-DOMAIN="rakeshdev-machine1.zimbradev.com"
-PREAUTH_KEY="80cf431190dc6bea72be7f5ba1a5c2a2763f6dbf68024b4a72f893d25e75d923"
-RECOVERY_DEFAULT="rm1@${DOMAIN}"
-DEFAULT_PASSWORD="TestPass123!"
+# Config comes from saml-mfa/local.env (untracked) or the environment -- never from this file.
+# zm-mailbox is a public repository, and the domain PreAuth key can mint a login for ANY account
+# in the domain. Get it with `zmprov gdpak <domain>`.
+_ENV_FILE="$(cd "$(dirname "$0")/../saml-mfa" 2>/dev/null && pwd)/local.env"
+# shellcheck disable=SC1090
+[ -f "$_ENV_FILE" ] && . "$_ENV_FILE"
+
+: "${ZIMBRA_DOMAIN:?set ZIMBRA_DOMAIN (see saml-mfa/local.env.example)}"
+: "${PREAUTH_KEY:?set PREAUTH_KEY -- zmprov gdpak $ZIMBRA_DOMAIN (see saml-mfa/local.env.example)}"
+
+DOMAIN="${ZIMBRA_DOMAIN}"
+RECOVERY_DEFAULT="${TEST_RECOVERY:-rm1@${DOMAIN}}"
+DEFAULT_PASSWORD="${TEST_ACCOUNT_PASSWORD:-TestPass123!}"
 
 zp() { sudo su - zimbra -c "zmprov $*" 2>&1; }
 

@@ -19,3 +19,5 @@ lib/
 context/
 localfiles
 .claude/
+# SSO 2FA test kit -- local host/credentials, never commit (ZCS-20575 / ZCS-20807)
+**/local.env
