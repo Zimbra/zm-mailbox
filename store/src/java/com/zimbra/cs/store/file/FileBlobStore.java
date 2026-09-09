@@ -19,6 +19,8 @@ package com.zimbra.cs.store.file;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
+import java.util.Optional;
 
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -84,7 +86,12 @@ public final class FileBlobStore extends StoreManager {
     }
 
     private Blob getUniqueIncomingBlob() throws IOException, ServiceException {
-        Volume volume = MANAGER.getCurrentMessageVolume();
+        return getUniqueIncomingBlob(null);
+    }
+
+    private Blob getUniqueIncomingBlob(Volume volume) throws IOException, ServiceException {
+        volume = Optional.ofNullable(volume)
+                .orElseGet(MANAGER::getCurrentMessageVolume);
         IncomingDirectory incdir = volume.getIncomingDirectory();
         if (incdir == null) {
             throw ServiceException.FAILURE("storing blob to volume without incoming directory: " + volume.getName(), null);
@@ -96,17 +103,27 @@ public final class FileBlobStore extends StoreManager {
 
     @Override
     public BlobBuilder getBlobBuilder() throws IOException, ServiceException {
-        Blob blob = getUniqueIncomingBlob();
+        return getBlobBuilder(null);
+    }
+
+    @Override
+    public BlobBuilder getBlobBuilder(Volume volume) throws IOException, ServiceException {
+        Blob blob = (Objects.isNull(volume)) ? getUniqueIncomingBlob() : getUniqueIncomingBlob(volume);
         return new VolumeBlobBuilder(blob);
     }
 
     @Override
     public Blob storeIncoming(InputStream in, boolean storeAsIs)
     throws IOException, ServiceException {
-        BlobBuilder builder = getBlobBuilder();
+        return storeIncoming(in, storeAsIs, null);
+    }
+
+    @Override
+    public Blob storeIncoming(InputStream in, boolean storeAsIs, Volume volume)
+            throws IOException, ServiceException {
+        BlobBuilder builder = (Objects.isNull(volume)) ? getBlobBuilder() : getBlobBuilder(volume);
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
         builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
-
         return builder.init().append(in).finish();
     }
 
@@ -114,14 +131,14 @@ public final class FileBlobStore extends StoreManager {
     public VolumeStagedBlob stage(InputStream in, long actualSize, Mailbox mbox)
     throws IOException, ServiceException {
         // mailbox store is on the same volume as incoming directory, so just storeIncoming() and wrap it
-        Blob blob = storeIncoming(in);
-        return new VolumeStagedBlob(mbox, (VolumeBlob) blob).markStagedDirectly();
+        return new VolumeStagedBlob(mbox, (VolumeBlob) storeIncoming(in))
+                .markStagedDirectly();
     }
 
     @Override
     public StagedBlob stage(InputStream data, long actualSize, Mailbox mbox, Volume volume) throws IOException, ServiceException {
-        // mailbox store is on the same volume as incoming directory, so no need to stage the blob
-        throw ServiceException.FAILURE("Operation can not be completed because the required StoreManager is not available", null);
+        return new VolumeStagedBlob(mbox, (VolumeBlob) storeIncoming(data, volume))
+                .markStagedDirectly();
     }
 
     @Override
@@ -284,7 +301,14 @@ public final class FileBlobStore extends StoreManager {
     @Override
     public VolumeMailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision)
     throws IOException, ServiceException {
-        Volume volume = MANAGER.getCurrentMessageVolume();
+        return renameTo(src, destMbox, destItemId, destRevision, null);
+    }
+
+    @Override
+    public VolumeMailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision, Volume volume)
+            throws IOException, ServiceException {
+        volume = Optional.ofNullable(volume)
+                .orElseGet(MANAGER::getCurrentMessageVolume);
         VolumeBlob blob = ((VolumeStagedBlob) src).getLocalBlob();
         File srcFile = blob.getFile();
         String srcPath = srcFile.getAbsolutePath();
@@ -301,22 +325,23 @@ public final class FileBlobStore extends StoreManager {
             long srcSize = srcFile.length();
             long srcRawSize = blob.getRawSize();
             ZimbraLog.store.debug("Renaming %s (size=%d, raw size=%d) to %s for mailbox %d, id %d.",
-                srcPath, srcSize, srcRawSize, destPath, destMbox.getId(), destItemId);
+                    srcPath, srcSize, srcRawSize, destPath, destMbox.getId(), destItemId);
         }
 
         short srcVolumeId = blob.getVolumeId();
         if (srcVolumeId == volume.getId()) {
             boolean renamed = srcFile.renameTo(destFile);
             if (SystemUtil.ON_WINDOWS) {
-                // On Windows renameTo fails if the dest already exists.  So delete
+                // on Windows renameTo fails if the dest already exists.  So delete
                 // the destination and try the rename again
                 if (!renamed && destFile.exists()) {
                     destFile.delete();
                     renamed = srcFile.renameTo(destFile);
                 }
             }
-            if (!renamed)
+            if (!renamed) {
                 throw new IOException("Unable to rename " + srcPath + " to " + destPath);
+            }
         } else {
             // Can't rename across volumes.  Copy then delete instead.
             FileUtil.copy(srcFile, destFile, !DebugConfig.disableMessageStoreFsync);

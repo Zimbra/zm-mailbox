@@ -263,6 +263,18 @@ public abstract class StoreManager {
     public abstract BlobBuilder getBlobBuilder() throws IOException, ServiceException;
 
     /**
+     * Returns a 'BlobBuilder' which can be used to store a blob in incoming
+     * directory asynchronously one chunk at a time. Blob will be compressed
+     * if volume supports compression and blob size is over the compression
+     * threshold.
+     * @param volume
+     * @return the BlobBuilder to use to construct the Blob
+     * @throws IOException if an I/O error occurred
+     * @throws ServiceException if a service exception occurred
+     */
+    public abstract BlobBuilder getBlobBuilder(Volume volume) throws IOException, ServiceException;
+
+    /**
      * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
      * and blob size is over the compression threshold.
      * @param data
@@ -278,6 +290,20 @@ public abstract class StoreManager {
     }
 
     /**
+     * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
+     * and blob size is over the compression threshold.
+     * @param data
+     * @param vol
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public Blob storeIncoming(InputStream data, Volume vol)
+            throws IOException, ServiceException {
+        return storeIncoming(data, false, vol);
+    }
+
+    /**
      * Store a blob in incoming directory.
      * @param data
      * @param callback
@@ -288,6 +314,18 @@ public abstract class StoreManager {
      */
     public abstract Blob storeIncoming(InputStream data, boolean storeAsIs)
     throws IOException, ServiceException;
+
+    /**
+     * Store a blob in incoming directory.
+     * @param data
+     * @param storeAsIs if true, store the blob as is even if volume supports compression
+     * @param volume
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract Blob storeIncoming(InputStream data, boolean storeAsIs, Volume volume)
+            throws IOException, ServiceException;
 
     /**
      * Stage an incoming <code>InputStream</code> to an
@@ -401,6 +439,21 @@ public abstract class StoreManager {
      */
     public abstract MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException;
+
+    /**
+     * Rename a blob to a blob in mailbox directory.
+     * This effectively makes the StagedBlob permanent, implementations may not need to do anything if the stage operation creates permanent items
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @param volume volume info
+     * @return MailboxBlob object representing the renamed blob
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision,
+                                         Volume volume) throws IOException, ServiceException;
 
     /**
      * Deletes a blob from incoming directory.  If blob doesn't exist, no exception is
