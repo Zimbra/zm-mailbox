@@ -76,9 +76,9 @@ public class AccountACEInfo {
     private final GranteeType granteeType;
 
     /**
-     * @zm-api-field-description Right.
+     * @zm-api-field-description Value is of the form : {right-name}
      * <br />
-     * Valid values: <b>viewFreeBusy</b> | <b>invite</b>
+     * {right-name} = a system defined right name
      */
     @XmlAttribute(name=AccountConstants.A_RIGHT /* right */, required=true)
     private final String right;
