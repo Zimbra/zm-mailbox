@@ -10794,4 +10794,14 @@ TODO: delete them permanently from here
         (Firebase device JSON), bundleVersion, bundleInstalledAt.
     </desc>
 </attr>
+
+<attr id="4172" name="zimbraPushNotificationPayloadMode" type="enum" value="OPAQUE,CONFIGURABLE,E2EE" cardinality="single"
+      optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="FcmConfigRestriction">
+  <desc>Specifies the payload mode for FCM push notifications (OPAQUE, CONFIGURABLE, E2EE)</desc>
+</attr>
+
+<attr id="4173" name="zimbraPushNotificationDisclosureLevel" type="enum" value="SKELETAL,SUBJECT_ONLY,FULL_PREVIEW" cardinality="single"
+      optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="FcmConfigRestriction">
+  <desc>Specifies the disclosure level for configurable push notification payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW: sender, subject, timestamp)</desc>
+</attr>
 </attrs>
