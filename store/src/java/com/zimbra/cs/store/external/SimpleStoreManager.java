@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.io.filefilter.FileFileFilter;
@@ -99,6 +100,11 @@ public class SimpleStoreManager extends ExternalStoreManager {
     public boolean deleteFromStore(String locator, Mailbox mbox) throws IOException {
         File deleteFile = new File(locator);
         return deleteFile.delete();
+    }
+
+    @Override
+    public void deleteFromStoreInBulk(Collection<String> locators, Mailbox mbox) {
+
     }
 
     @Override

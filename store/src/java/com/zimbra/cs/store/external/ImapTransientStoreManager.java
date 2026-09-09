@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -73,6 +74,10 @@ public class ImapTransientStoreManager extends ExternalStoreManager {
     public boolean deleteFromStore(String locator, Mailbox mbox) throws IOException {
         File deleteFile = new File(locator);
         return deleteFile.delete();
+    }
+
+    @Override
+    public void deleteFromStoreInBulk(Collection<String> locators, Mailbox mbox) {
     }
 
     @Override

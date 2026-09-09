@@ -18,6 +18,7 @@ package com.zimbra.cs.store.external;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -70,4 +71,6 @@ public interface ExternalBlobIO {
      * @throws IOException
      */
     boolean deleteFromStore(String locator, Mailbox mbox) throws IOException;
+
+    void deleteFromStoreInBulk(Collection<String> locators, Mailbox mbox);
 }
