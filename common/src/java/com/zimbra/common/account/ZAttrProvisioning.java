@@ -10953,26 +10953,26 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileAllowedIPs = "zimbraMobileAllowedIPs";
 
     /**
-     * Encrypted JSON wrapper containing FCM mobile client configuration and
-     * bundle metadata for the Zimbra mobile app. Payload fields (after
-     * decryption): ProjectId, DeviceDetails (Firebase google-services.json
-     * client config), BundleVersion, BundleInstalledAt.
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * deviceJSON(encrypted) (Firebase device JSON), bundleVersion,
+     * bundleInstalledAt.
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4171)
-    public static final String A_zimbraMobileAppFCMDeviceJson = "zimbraMobileAppFCMDeviceJson";
+    public static final String A_zimbraMobileAppFCMDeviceDetails = "zimbraMobileAppFCMDeviceDetails";
 
     /**
-     * Encrypted JSON wrapper containing FCM server credentials and bundle
-     * metadata for the Firebase Admin SDK. Payload fields (after
-     * decryption): ProjectId, ServerDetails (Firebase service-account JSON),
-     * BundleVersion, BundleInstalledAt.
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * serverJSON(encrypted) (Firebase service-account JSON), bundleVersion,
+     * bundleInstalledAt.
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4170)
-    public static final String A_zimbraMobileAppFCMServerJson = "zimbraMobileAppFCMServerJson";
+    public static final String A_zimbraMobileAppFCMServerDetails = "zimbraMobileAppFCMServerDetails";
 
     /**
      * whether mobile sync should zip the skipped item and attach it to the
