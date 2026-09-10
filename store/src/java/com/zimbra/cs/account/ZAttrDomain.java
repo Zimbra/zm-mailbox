@@ -19620,6 +19620,180 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * deviceJSON(encrypted) (Firebase device JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @return zimbraMobileAppFCMDeviceDetails, or null if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public String getMobileAppFCMDeviceDetails() {
+        return getAttr(Provisioning.A_zimbraMobileAppFCMDeviceDetails, null, true);
+    }
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * deviceJSON(encrypted) (Firebase device JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @param zimbraMobileAppFCMDeviceDetails new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void setMobileAppFCMDeviceDetails(String zimbraMobileAppFCMDeviceDetails) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAppFCMDeviceDetails, zimbraMobileAppFCMDeviceDetails);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * deviceJSON(encrypted) (Firebase device JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @param zimbraMobileAppFCMDeviceDetails new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> setMobileAppFCMDeviceDetails(String zimbraMobileAppFCMDeviceDetails, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAppFCMDeviceDetails, zimbraMobileAppFCMDeviceDetails);
+        return attrs;
+    }
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * deviceJSON(encrypted) (Firebase device JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void unsetMobileAppFCMDeviceDetails() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAppFCMDeviceDetails, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * deviceJSON(encrypted) (Firebase device JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> unsetMobileAppFCMDeviceDetails(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAppFCMDeviceDetails, "");
+        return attrs;
+    }
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * serverJSON(encrypted) (Firebase service-account JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @return zimbraMobileAppFCMServerDetails, or null if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public String getMobileAppFCMServerDetails() {
+        return getAttr(Provisioning.A_zimbraMobileAppFCMServerDetails, null, true);
+    }
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * serverJSON(encrypted) (Firebase service-account JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @param zimbraMobileAppFCMServerDetails new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void setMobileAppFCMServerDetails(String zimbraMobileAppFCMServerDetails) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAppFCMServerDetails, zimbraMobileAppFCMServerDetails);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * serverJSON(encrypted) (Firebase service-account JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @param zimbraMobileAppFCMServerDetails new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> setMobileAppFCMServerDetails(String zimbraMobileAppFCMServerDetails, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAppFCMServerDetails, zimbraMobileAppFCMServerDetails);
+        return attrs;
+    }
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * serverJSON(encrypted) (Firebase service-account JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void unsetMobileAppFCMServerDetails() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAppFCMServerDetails, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * serverJSON(encrypted) (Firebase service-account JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> unsetMobileAppFCMServerDetails(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAppFCMServerDetails, "");
+        return attrs;
+    }
+
+    /**
      * Blocked mobile device list for ActiveSync/ABQ
      *
      * @return zimbraMobileBlockedDevices, or empty array if unset
