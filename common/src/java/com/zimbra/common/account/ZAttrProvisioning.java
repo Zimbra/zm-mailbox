@@ -2244,6 +2244,42 @@ public class ZAttrProvisioning {
         public boolean isZCS() { return this == ZCS;}
     }
 
+    public static enum PushNotificationDisclosureLevel {
+        SKELETAL("SKELETAL"),
+        SUBJECT_ONLY("SUBJECT_ONLY"),
+        FULL_PREVIEW("FULL_PREVIEW");
+        private String mValue;
+        private PushNotificationDisclosureLevel(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PushNotificationDisclosureLevel fromString(String s) throws ServiceException {
+            for (PushNotificationDisclosureLevel value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSKELETAL() { return this == SKELETAL;}
+        public boolean isSUBJECT_ONLY() { return this == SUBJECT_ONLY;}
+        public boolean isFULL_PREVIEW() { return this == FULL_PREVIEW;}
+    }
+
+    public static enum PushNotificationPayloadMode {
+        OPAQUE("OPAQUE"),
+        CONFIGURABLE("CONFIGURABLE"),
+        E2EE("E2EE");
+        private String mValue;
+        private PushNotificationPayloadMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PushNotificationPayloadMode fromString(String s) throws ServiceException {
+            for (PushNotificationPayloadMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOPAQUE() { return this == OPAQUE;}
+        public boolean isCONFIGURABLE() { return this == CONFIGURABLE;}
+        public boolean isE2EE() { return this == E2EE;}
+    }
+
     public static enum ReverseProxyAcceptMutex {
         on("on"),
         off("off");
@@ -10917,6 +10953,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileAllowedIPs = "zimbraMobileAllowedIPs";
 
     /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * deviceJSON(encrypted) (Firebase device JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public static final String A_zimbraMobileAppFCMDeviceDetails = "zimbraMobileAppFCMDeviceDetails";
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * serverJSON(encrypted) (Firebase service-account JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public static final String A_zimbraMobileAppFCMServerDetails = "zimbraMobileAppFCMServerDetails";
+
+    /**
      * whether mobile sync should zip the skipped item and attach it to the
      * notification mail
      *
@@ -15664,6 +15722,25 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2017)
     public static final String A_zimbraPurgedConversationsQueueSize = "zimbraPurgedConversationsQueueSize";
+
+    /**
+     * Specifies the disclosure level for configurable push notification
+     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * sender, subject, timestamp)
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public static final String A_zimbraPushNotificationDisclosureLevel = "zimbraPushNotificationDisclosureLevel";
+
+    /**
+     * Specifies the payload mode for FCM push notifications (OPAQUE,
+     * CONFIGURABLE, E2EE)
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public static final String A_zimbraPushNotificationPayloadMode = "zimbraPushNotificationPayloadMode";
 
     /**
      * Last time a quota warning was sent.
