@@ -37,12 +37,11 @@ public class GenerateSecretKeyCallback extends AttributeCallback {
     public void preModify(CallbackContext context, String attrName, Object value,
             Map attrsToModify, Entry entry) throws ServiceException {
         // block domain-level and global config level enablement
-        if (ProvisioningConstants.TRUE.equals(String.valueOf(value))
-                && (entry instanceof Domain || entry instanceof Config)) {
-            String level = entry instanceof Domain ? "domain" : "global config";
+        if (isTrueValue(String.valueOf(value))
+                && (isDomainOrConfigEntry(entry)) || isDomainCreateContext(context)) {
             throw ServiceException.PERM_DENIED(
-                    String.format("zimbraFeatureMailRecallEnabled cannot be configured at the %s level. "
-                            + "Please use account or COS instead.", level));
+                    "zimbraFeatureMailRecallEnabled cannot be configured at the domain or global config level. "
+                            + "Please use account or COS instead.");
         }
 
         try {
@@ -54,6 +53,18 @@ public class GenerateSecretKeyCallback extends AttributeCallback {
         } catch (RuntimeException e) {
             throw ServiceException.FAILURE("Unable to initialize SecureRandom for mail recall", e);
         }
+    }
+
+    private boolean isTrueValue(Object value) {
+        return ProvisioningConstants.TRUE.equals(String.valueOf(value));
+    }
+
+    private boolean isDomainOrConfigEntry(Entry entry) {
+        return (entry instanceof Domain || entry instanceof Config);
+    }
+
+    private boolean isDomainCreateContext(CallbackContext context) {
+        return (context.isCreate() && Domain.class.equals(context.getCreatingEntryType()));
     }
 
     private void generateMailRecallSecretKey(String value) {

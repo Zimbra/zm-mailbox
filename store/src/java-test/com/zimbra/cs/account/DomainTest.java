@@ -22,6 +22,7 @@ import com.zimbra.common.account.ZAttrProvisioning.DomainStatus;
 import com.zimbra.common.account.ZAttrProvisioning.DomainType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Entry.EntryType;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -257,6 +259,34 @@ public class DomainTest {
             fail("getGalSearchBase is unsupported on the base Domain");
         } catch (ServiceException e) {
             assertTrue("message states it is unsupported", e.getMessage().contains("unsupported"));
+        }
+    }
+
+    @Test
+    public void createDomainServiceExceptionPermDeniedIsRethrown() {
+        ServiceException permDenied = ServiceException.PERM_DENIED("permission denied");
+        ServiceException caught = null;
+
+        try {
+            LdapProvisioning.mapCreateDomainServiceException("example.com", permDenied);
+        } catch (ServiceException e) {
+            caught = e;
+        }
+
+        assertEquals(ServiceException.PERM_DENIED, caught.getCode());
+        assertSame(permDenied, caught);
+    }
+
+    @Test
+    public void createDomainServiceExceptionOtherServiceExceptionIsWrapped() {
+        ServiceException invalid = ServiceException.INVALID_REQUEST("bad input", null);
+
+        try {
+            throw LdapProvisioning.mapCreateDomainServiceException("example.com", invalid);
+        } catch (ServiceException e) {
+            assertEquals(ServiceException.FAILURE, e.getCode());
+            assertTrue(e.getMessage().contains("unable to create domain: example.com"));
+            assertSame(invalid, e.getCause());
         }
     }
 }

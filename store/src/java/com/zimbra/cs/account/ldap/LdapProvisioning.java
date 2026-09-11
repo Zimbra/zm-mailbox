@@ -1311,6 +1311,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 mDIT.handleSpecialAttrs(attrs), null, true, origAttrs);
     }
 
+    @SuppressWarnings("checkstyle:methodname")
     private Account createAccount(String emailAddress, String password,
             Map<String, Object> acctAttrs, SpecialAttrs specialAttrs,
             String[] additionalObjectClasses,
@@ -1349,6 +1350,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
         callbackContext.setCreatingEntryName(emailAddress);
+        callbackContext.setCreatingEntryType(Account.class);
         AttributeManager.getInstance().preModify(acctAttrs, null, callbackContext, true);
         Account acct = null;
         String dn = null;
@@ -2782,6 +2784,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
 
             CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+            callbackContext.setCreatingEntryType(Domain.class);
+
             AttributeManager.getInstance().preModify(domainAttrs, null, callbackContext, true);
 
             // Add back attrs we circumvented from attribute checking
@@ -2862,10 +2866,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } catch (AccountServiceException e) {
             throw e;
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to create domain: "+name, e);
+            throw mapCreateDomainServiceException(name, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
+
+    public static ServiceException mapCreateDomainServiceException(String name, ServiceException e)
+            throws ServiceException {
+        if (ServiceException.PERM_DENIED.equals(e.getCode())) {
+            throw e;
+        }
+        return ServiceException.FAILURE("unable to create domain: " + name, e);
     }
 
     private LdapDomain getDomainByQuery(ZLdapFilter filter, ZLdapContext initZlc)
@@ -3217,7 +3229,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
-
+        callbackContext.setCreatingEntryType(Cos.class);
         //get rid of deprecated attrs
         Map<String, Object> allNewAttrs = new HashMap<String, Object>(allAttrs);
         for (String attr : allAttrs.keySet()) {
