@@ -22,7 +22,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.cs.account.AttributeCallback;
-
+import com.zimbra.cs.account.Entry;
 
 public class CallbackContext {
 
@@ -46,6 +46,9 @@ public class CallbackContext {
     // named of the entry being created
     private String creatingEntryName;
 
+    // type of entry being created; set in limited scopes (account, cos, domain)
+    private Class<? extends Entry> creatingEntryType;
+
     // set of AttributeCallback marked themselves done
     private Set<Class<? extends AttributeCallback>> done = Sets.newHashSet();
 
@@ -67,6 +70,15 @@ public class CallbackContext {
     // name of the entry being creating
     public String getCreatingEntryName() {
         return creatingEntryName;
+    }
+
+    public void setCreatingEntryType(Class<? extends Entry> creatingEntryType) {
+        this.creatingEntryType = creatingEntryType;
+    }
+
+    // type of entry being created; limited scopes (account, cos, domain)
+    public Class<? extends Entry> getCreatingEntryType() {
+        return creatingEntryType;
     }
 
     private void setDone(Class<? extends AttributeCallback> callback) {

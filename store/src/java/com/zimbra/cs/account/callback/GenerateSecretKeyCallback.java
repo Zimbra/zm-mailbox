@@ -38,11 +38,11 @@ public class GenerateSecretKeyCallback extends AttributeCallback {
             Map attrsToModify, Entry entry) throws ServiceException {
         // block domain-level and global config level enablement
         if (ProvisioningConstants.TRUE.equals(String.valueOf(value))
-                && (entry instanceof Domain || entry instanceof Config)) {
-            String level = entry instanceof Domain ? "domain" : "global config";
+                && ((entry instanceof Domain || entry instanceof Config))
+                    || (context.isCreate() && Domain.class.equals(context.getCreatingEntryType()))) {
             throw ServiceException.PERM_DENIED(
-                    String.format("zimbraFeatureMailRecallEnabled cannot be configured at the %s level. "
-                            + "Please use account or COS instead.", level));
+                    "zimbraFeatureMailRecallEnabled cannot be configured at the domain or global config level. "
+                            + "Please use account or COS instead.");
         }
 
         try {
