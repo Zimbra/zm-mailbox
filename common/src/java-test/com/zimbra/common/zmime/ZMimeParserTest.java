@@ -278,7 +278,8 @@ public class ZMimeParserTest {
     // =========================================================================
 
     /**
-     * QA TC1 (P1): Verify LMTP delivery of email with line starting with =0D and missing Content-Transfer-Encoding header
+     * QA TC1 (P1): Verify LMTP delivery of email with line
+     * starting with =0D and missing Content-Transfer-Encoding header
      */
     @Test
     public void testZBUG5493_TC1_NoCTEHeader() throws Exception {
@@ -295,7 +296,8 @@ public class ZMimeParserTest {
     }
 
     /**
-     * QA TC2 (P1): Verify LMTP delivery when message parts list is empty (currentPart() is null)
+     * QA TC2 (P1): Verify LMTP delivery when
+     * message parts list is empty (currentPart() is null)
      */
     @Test
     public void testZBUG5493_TC2_EmptyMultipart() throws Exception {
@@ -312,7 +314,8 @@ public class ZMimeParserTest {
     }
 
     /**
-     * QA TC3 (P1): Verify LMTP delivery with valid Content-Transfer-Encoding: quoted-printable and line starting with =0D
+     * QA TC3 (P1): Verify LMTP delivery with valid Content-Transfer-Encoding:
+     * quoted-printable and line starting with =0D
      */
     @Test
     public void testZBUG5493_TC3_QuotedPrintable() throws Exception {
@@ -330,7 +333,8 @@ public class ZMimeParserTest {
     }
 
     /**
-     * QA TC4 (P1): Verify LMTP delivery with other Content-Transfer-Encoding values (7bit)
+     * QA TC4 (P1): Verify LMTP delivery with
+     * other Content-Transfer-Encoding values (7bit)
      */
     @Test
     public void testZBUG5493_TC4_7bitEncoding() throws Exception {
@@ -348,7 +352,8 @@ public class ZMimeParserTest {
     }
 
     /**
-     * QA TC9 (P3): Verify that Correctly formed Emails with CTE as Base64 continue to deliver correctly
+     * QA TC9 (P3): Verify that Correctly formed Emails with
+     * CTE as Base64 continue to deliver correctly
      */
     @Test
     public void testZBUG5493_TC9_Base64EncodedMessage() throws Exception {
@@ -370,7 +375,8 @@ public class ZMimeParserTest {
     }
 
     /**
-     * QA TC10 (P3): Verify that Correctly formed Emails with CTE as 7bit continue to deliver correctly
+     * QA TC10 (P3): Verify that Correctly formed Emails with
+     * CTE as 7bit continue to deliver correctly
      */
     @Test
     public void testZBUG5493_TC10_7bitEncodedMessage() throws Exception {
