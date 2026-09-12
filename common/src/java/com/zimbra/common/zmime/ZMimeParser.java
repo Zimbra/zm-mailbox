@@ -16,28 +16,22 @@
  */
 package com.zimbra.common.zmime;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import com.sun.mail.util.ASCIIUtility;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CharsetUtil;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimePartDataSource;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
-
-import com.sun.mail.util.ASCIIUtility;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.CharsetUtil;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.*;
 
 class ZMimeParser {
     private static final Charset DEFAULT_CHARSET = CharsetUtil.normalizeCharset(CharsetUtil.ISO_8859_1);
@@ -102,24 +96,30 @@ class ZMimeParser {
         TERMINATED, SKIP
     }
 
-    private enum LineEnding { CR, LF, CRLF }
+    private enum LineEnding {CR, LF, CRLF}
 
     private static class BoundaryChecker {
-        /** A {@code Map} mapping active boundary strings which have matched
-         *  all checked bytes in the line thus far to the number of trailing
-         *  dashes after the end of the boundary.  {@code null} value means
-         *  that we have not yet checked the last byte in the boundary;
-         *  <tt>0</tt> means that the boundary matched completely without
-         *  trailing dashes, <tt>2</tt> means that the boundary has matched
-         *  and there are 2 trailing dashes (i.e. an end boundary). */
+        /**
+         * A {@code Map} mapping active boundary strings which have matched
+         * all checked bytes in the line thus far to the number of trailing
+         * dashes after the end of the boundary.  {@code null} value means
+         * that we have not yet checked the last byte in the boundary;
+         * <tt>0</tt> means that the boundary matched completely without
+         * trailing dashes, <tt>2</tt> means that the boundary has matched
+         * and there are 2 trailing dashes (i.e. an end boundary).
+         */
         private final Map<String, Integer> boundaryCandidates;
 
-        /** The byte position of the end of the current part if this line
-         *  matches an active boundary. */
+        /**
+         * The byte position of the end of the current part if this line
+         * matches an active boundary.
+         */
         private final long partEnd;
 
-        /** If there is a blank boundary in the list, we keep a copy of the
-         *  content of the line for use in matching subsequent boundaries. */
+        /**
+         * If there is a blank boundary in the list, we keep a copy of the
+         * content of the line for use in matching subsequent boundaries.
+         */
         private StringBuilder boundary;
 
         BoundaryChecker(List<String> boundaries, long lineStart, LineEnding lastEnding) {
@@ -142,17 +142,20 @@ class ZMimeParser {
             partEnd = lineStart - (lastEnding == LineEnding.CRLF ? 2 : 1);
         }
 
-        /** Checks a byte against all of the currently active boundaries that
-         *  haven't failed a byte check yet this line.  If a boundary doesn't
-         *  match the appropriate character, it is removed from the set.<p>
+        /**
+         * Checks a byte against all of the currently active boundaries that
+         * haven't failed a byte check yet this line.  If a boundary doesn't
+         * match the appropriate character, it is removed from the set.<p>
          *
-         *  <i>Should really switch to having {@code index} be an
-         *  auto-incremented counter managed by the BoundaryChecker rather than
-         *  a parameter to this method.</i>
-         * @param b      The byte being checked.
-         * @param index  The position in the boundary strings to check against
-         *               <tt>b</tt>.
-         * @return whether any potential matches remain for this line. */
+         * <i>Should really switch to having {@code index} be an
+         * auto-incremented counter managed by the BoundaryChecker rather than
+         * a parameter to this method.</i>
+         *
+         * @param b     The byte being checked.
+         * @param index The position in the boundary strings to check against
+         *              <tt>b</tt>.
+         * @return whether any potential matches remain for this line.
+         */
         boolean checkByte(byte b, int index) {
             char c = (char) (b & 0xFF);
             for (Iterator<Map.Entry<String, Integer>> it = boundaryCandidates.entrySet().iterator(); it.hasNext(); ) {
@@ -187,11 +190,14 @@ class ZMimeParser {
             return !boundaryCandidates.isEmpty();
         }
 
-        /** Returns info on the boundary that matched the current line, or
-         *  <tt>null</tt> if there was no match.
+        /**
+         * Returns info on the boundary that matched the current line, or
+         * <tt>null</tt> if there was no match.
+         *
          * @return a {@code Map.Entry} whose <tt>key</tt> is the boundary
-         *         that was matched and whose <tt>value</tt> is the number of
-         *         trailing dashes (either 0 or 2). */
+         * that was matched and whose <tt>value</tt> is the number of
+         * trailing dashes (either 0 or 2).
+         */
         Map.Entry<String, Integer> getMatch() {
             Map.Entry<String, Integer> match = null;
             // want the *last* match, since we add to the end of the hash
@@ -229,7 +235,7 @@ class ZMimeParser {
         }
     }
 
-    enum PartLocation { PREAMBLE, CONTENT, EPILOGUE }
+    enum PartLocation {PREAMBLE, CONTENT, EPILOGUE}
 
     private class PartInfo {
         ZMimePart part;
@@ -276,69 +282,96 @@ class ZMimeParser {
     private final SharedInputStream sis;
     private final Charset charset;
 
-    /** The current state of the parser.  Generally, a combination of which
-     *  type of parsing is going on (HEADER vs. BODY) and where in the line
-     *  we are (LINESTART, after CR, etc.). */
+    /**
+     * The current state of the parser.  Generally, a combination of which
+     * type of parsing is going on (HEADER vs. BODY) and where in the line
+     * we are (LINESTART, after CR, etc.).
+     */
     protected ParserState state = ParserState.HEADER_LINESTART;
 
-    /** whether to check boundaries on this line */
+    /**
+     * whether to check boundaries on this line
+     */
     private boolean checkBoundary = false;
 
-    /** The stack of active message parts, outermost to innermost. */
+    /**
+     * The stack of active message parts, outermost to innermost.
+     */
     private final List<PartInfo> parts = new ArrayList<PartInfo>(5);
 
-    /** The parser's current position in the message (in bytes). */
+    /**
+     * The parser's current position in the message (in bytes).
+     */
     private long position;
 
-    /** The position in the message of the first character of the current
-     *  line.
-     * @see #position */
+    /**
+     * The position in the message of the first character of the current
+     * line.
+     *
+     * @see #position
+     */
     private long lineStart;
 
-    /** The current (0-based) line number in the message. */
+    /**
+     * The current (0-based) line number in the message.
+     */
     private int lineNumber;
 
-    /** The set of characters (CR, LF, or CRLF) that terminated the previous
-     *  line. */
+    /**
+     * The set of characters (CR, LF, or CRLF) that terminated the previous
+     * line.
+     */
     protected LineEnding lastEnding;
 
-    /** The set of active MIME boundaries.  Any line consisting of two
-     *  '<tt>-</tt>' characters, a member of this list, and a newline is
-     *  considered a boundary line which terminates the current part. */
+    /**
+     * The set of active MIME boundaries.  Any line consisting of two
+     * '<tt>-</tt>' characters, a member of this list, and a newline is
+     * considered a boundary line which terminates the current part.
+     */
     private List<String> boundaries;
 
-    /** The number of leading '<tt>-</tt>' characters on a line, used only
-     *  when there are MIME boundaries active.  When this counter reaches
-     *  <tt>2</tt>, we start matching input bytes against active
-     *  boundaries.*/
+    /**
+     * The number of leading '<tt>-</tt>' characters on a line, used only
+     * when there are MIME boundaries active.  When this counter reaches
+     * <tt>2</tt>, we start matching input bytes against active
+     * boundaries.
+     */
     private int dashes;
 
-    /** The set of active MIME boundaries that match the current line thus
-     *  far.  This object is instantiated to contain all the strings in {@link
-     *  #boundaries} when {@link #dashes} reaches <tt>2</tt>.  Candidates are
-     *  removed from the set when subsequent bytes in the line fail to match.
-     *  When the set is empty, {@link #boundaryChecker} is reset back to
-     *  <tt>null</tt>. */
+    /**
+     * The set of active MIME boundaries that match the current line thus
+     * far.  This object is instantiated to contain all the strings in {@link
+     * #boundaries} when {@link #dashes} reaches <tt>2</tt>.  Candidates are
+     * removed from the set when subsequent bytes in the line fail to match.
+     * When the set is empty, {@link #boundaryChecker} is reset back to
+     * <tt>null</tt>.
+     */
     private BoundaryChecker boundaryChecker;
 
     private static final int MAXIMUM_HEADER_LENGTH = 65536;
 
-    /** The entire content of the current header.  This includes the name,
-     *  the colon, the raw header value, any folding, and the trailing CRLF. */
+    /**
+     * The entire content of the current header.  This includes the name,
+     * the colon, the raw header value, any folding, and the trailing CRLF.
+     */
     private final ZMimeUtility.ByteBuilder header;
 
 
-    /** Terminates message parsing and returns the {@code ZMimeMessage}
-     *  resulting from the parse.  <b>Do not call this method until the entire
-     *  message has been passed through the parser</b>, otherwise incorrect
-     *  lengths may be recorded. */
+    /**
+     * Terminates message parsing and returns the {@code ZMimeMessage}
+     * resulting from the parse.  <b>Do not call this method until the entire
+     * message has been passed through the parser</b>, otherwise incorrect
+     * lengths may be recorded.
+     */
     ZMimePart getPart() {
         endParse();
         return toplevel;
     }
 
-    /** Returns the structure representing the "currently active" part being
-     *  handled by the parser. */
+    /**
+     * Returns the structure representing the "currently active" part being
+     * handled by the parser.
+     */
     protected PartInfo currentPart() {
         return parts.isEmpty() ? null : parts.get(parts.size() - 1);
     }
@@ -366,8 +399,11 @@ class ZMimeParser {
         return endParse();
     }
 
-    /** Hands the appropriate range of bytes to the parser, one at a time.
-     * @see #handleByte(byte) */
+    /**
+     * Hands the appropriate range of bytes to the parser, one at a time.
+     *
+     * @see #handleByte(byte)
+     */
     void handleBytes(byte[] b, int off, int len) {
         if (len > 0) {
             for (int pos = off, max = Math.min(b.length, off + len); pos < max; pos++) {
@@ -376,12 +412,14 @@ class ZMimeParser {
         }
     }
 
-    /** Handles a single byte of the message.  This small state machine tracks
-     *  line starts and the transitions between message/MIME headers and part
-     *  bodies.<p>
-     *
-     *  Recursive calls to this function will get you in trouble.  Yes, I know,
-     *  we call it recursively.  <i>sigh</i> */
+    /**
+     * Handles a single byte of the message.  This small state machine tracks
+     * line starts and the transitions between message/MIME headers and part
+     * bodies.<p>
+     * <p>
+     * Recursive calls to this function will get you in trouble.  Yes, I know,
+     * we call it recursively.  <i>sigh</i>
+     */
     boolean handleByte(byte b) {
         switch (state) {
             case SKIP:
@@ -399,7 +437,7 @@ class ZMimeParser {
                 addHeaderByte((byte) '\n');
                 //$FALL-THROUGH$
 
-            // at the beginning of a header line, after a CR/LF/CRLF
+                // at the beginning of a header line, after a CR/LF/CRLF
             case HEADER_LINESTART:
                 if (processBoundary()) {
                     // found a part boundary, which may transition us to body parsing
@@ -435,7 +473,7 @@ class ZMimeParser {
 
                 //$FALL-THROUGH$
 
-            // in a header line, after reading at least one byte
+                // in a header line, after reading at least one byte
             case HEADER:
                 addHeaderByte(b);
                 if (b == '\n') {
@@ -460,7 +498,7 @@ class ZMimeParser {
                 lastEnding = LineEnding.CR;
                 //$FALL-THROUGH$
 
-            // at the beginning of a body line, after a CR/LF/CRLF
+                // at the beginning of a body line, after a CR/LF/CRLF
             case BODY_LINESTART:
                 if (processBoundary()) {
                     // found a part boundary, which may transition us to header parsing
@@ -480,7 +518,7 @@ class ZMimeParser {
                 }
                 //$FALL-THROUGH$
 
-            // somewhere within a body line
+                // somewhere within a body line
             case BODY:
                 if (b == '\n') {
                     lastEnding = LineEnding.LF;
@@ -505,21 +543,28 @@ class ZMimeParser {
         return true;
     }
 
-    /** Registers a newline by updating the parser's line-oriented counters. */
+    /**
+     * Registers a newline by updating the parser's line-oriented counters.
+     */
     private boolean newline() {
         if (lineStart != position) {
-            lineNumber++;  lineStart = position;  dashes = 0;  boundaryChecker = null;
+            lineNumber++;
+            lineStart = position;
+            dashes = 0;
+            boundaryChecker = null;
             return true;
         } else {
             return false;
         }
     }
 
-    /** Incrementally checks whether the current byte matches a MIME boundary.
-     *  A MIME boundary is defined as a line consisting of two dashes
-     *  ("<tt>--</tt>"), followed by the "boundary" parameter to an enclosing
-     *  "multipart/*" part, optionally followed by two more dashes, optionally
-     *  followed by whitespace, followed by a newline. */
+    /**
+     * Incrementally checks whether the current byte matches a MIME boundary.
+     * A MIME boundary is defined as a line consisting of two dashes
+     * ("<tt>--</tt>"), followed by the "boundary" parameter to an enclosing
+     * "multipart/*" part, optionally followed by two more dashes, optionally
+     * followed by whitespace, followed by a newline.
+     */
     private boolean checkBoundary(byte b) {
         if (b == '-' && dashes == position - lineStart && dashes < 2) {
             // 2 leading dashes may mean a MIME boundary
@@ -539,9 +584,12 @@ class ZMimeParser {
         return false;
     }
 
-    /** Checks whether a boundary was matched and, if so, handles it.  As a
-     *  side effect, resets the boundary checking state for a new line.
-     * @return Whether a boundary was matched. */
+    /**
+     * Checks whether a boundary was matched and, if so, handles it.  As a
+     * side effect, resets the boundary checking state for a new line.
+     *
+     * @return Whether a boundary was matched.
+     */
     private boolean processBoundary() {
         String bnd = null;
         boolean isEnd = false;
@@ -560,7 +608,8 @@ class ZMimeParser {
             }
         }
 
-        dashes = 0;  boundaryChecker = null;
+        dashes = 0;
+        boundaryChecker = null;
 
         if (bnd != null) {
             boundary(bnd, isEnd, partEnd);
@@ -570,13 +619,16 @@ class ZMimeParser {
         }
     }
 
-    /** Handles a MIME boundary.  Closes parts up to the multipart that matches
-     *  the boundary.  Starts a new part, either a new content part (if it was
-     *  a start boundary) or a multipart epilogue (if it was an end boundary).
-     * @param bnd      The matched boundary string.
-     * @param isEnd    Whether it was an end boundary.
-     * @param partEnd  The byte position of the end of the part(s) being closed
-     *                 as a result of this boundary. */
+    /**
+     * Handles a MIME boundary.  Closes parts up to the multipart that matches
+     * the boundary.  Starts a new part, either a new content part (if it was
+     * a start boundary) or a multipart epilogue (if it was an end boundary).
+     *
+     * @param bnd     The matched boundary string.
+     * @param isEnd   Whether it was an end boundary.
+     * @param partEnd The byte position of the end of the part(s) being closed
+     *                as a result of this boundary.
+     */
     private void boundary(String bnd, boolean isEnd, long partEnd) {
         clearHeader();
 
@@ -625,9 +677,11 @@ class ZMimeParser {
         recalculateBoundaries();
     }
 
-    /** Regenerates the list of valid MIME boundaries from the set of active
-     *  enclosing parts.  Sets {@link #boundaries} appropriately, or to
-     *  {@code null} if there are no valid boundaries. */
+    /**
+     * Regenerates the list of valid MIME boundaries from the set of active
+     * enclosing parts.  Sets {@link #boundaries} appropriately, or to
+     * {@code null} if there are no valid boundaries.
+     */
     void recalculateBoundaries() {
         boundaries = new ArrayList<String>(parts.size());
         for (PartInfo pinfo : parts) {
@@ -641,10 +695,12 @@ class ZMimeParser {
         }
     }
 
-    /** Records the endpoint of a MIME part.  Stores both the byte offset of
-     *  the end of the part as well as the line count of the part body.  If
-     *  the part being ended was a multipart preamble and was of nonzero
-     *  length, associates the part with its parent appropriately. */
+    /**
+     * Records the endpoint of a MIME part.  Stores both the byte offset of
+     * the end of the part as well as the line count of the part body.  If
+     * the part being ended was a multipart preamble and was of nonzero
+     * length, associates the part with its parent appropriately.
+     */
     private PartInfo endPart(long end, boolean clean, long lineStart) {
         PartInfo pinfo = parts.remove(parts.size() - 1);
         ZMimePart mp = pinfo.part;
@@ -698,18 +754,31 @@ class ZMimeParser {
         }
     }
 
-    /** Resets all header-related members after processing a header line. */
+    /**
+     * Resets all header-related members after processing a header line.
+     */
     private void clearHeader() {
         header.reset();
     }
 
     boolean misencodedCRLF() {
-        return header.size() == 5 && header.byteAt(0) == '=' && header.byteAt(1) == '0' && header.byteAt(2) == 'D' && currentPart().part.getEncoding().equals("quoted-printable");
+        PartInfo current = currentPart();
+        if (current == null) {
+            return false;
+        }
+        String encoding = current.part.getEncoding();
+        return header.size() == 5
+                && header.byteAt(0) == '='
+                && header.byteAt(1) == '0'
+                && header.byteAt(2) == 'D'
+                && "quoted-printable".equals(encoding);
     }
 
-    /** Adds the current header to the active part's header block.  If the
-     *  header is "<tt>Content-Type</tt>" and it's a <tt>multipart/*</tt>,
-     *  updates the set of active MIME boundaries. */
+    /**
+     * Adds the current header to the active part's header block.  If the
+     * header is "<tt>Content-Type</tt>" and it's a <tt>multipart/*</tt>,
+     * updates the set of active MIME boundaries.
+     */
     protected void saveHeader() {
         if (header.isEmpty())
             return;
@@ -732,13 +801,16 @@ class ZMimeParser {
         return inDigest && !isPreamble ? ZContentType.MESSAGE_RFC822 : ZContentType.TEXT_PLAIN;
     }
 
-    /** Marks the transition from parsing MIME/message headers to skimming the
-     *  part body.  Creates the corresponding {@code MimePart} object for the
-     *  current active part and clears the {@code ZInternetHeaders} that was
-     *  accumulating part headers.
-     * @param pos  The byte offset of the beginning of the part body.
+    /**
+     * Marks the transition from parsing MIME/message headers to skimming the
+     * part body.  Creates the corresponding {@code MimePart} object for the
+     * current active part and clears the {@code ZInternetHeaders} that was
+     * accumulating part headers.
+     *
+     * @param pos The byte offset of the beginning of the part body.
      * @return Whether the part was a <tt>message/rfc822</tt>, which requires
-     *         a parser state transition back to header reading. */
+     * a parser state transition back to header reading.
+     */
     private boolean bodyStart(long pos) {
         PartInfo pcurrent = currentPart();
 
@@ -767,9 +839,11 @@ class ZMimeParser {
         return false;
     }
 
-    /** Ends parsing of the message and marks all currently-active MIME parts
-     *  as ended.  Do <u>not</u> call this method until all message bytes have
-     *  been passed through {@link #handleByte(byte)}. */
+    /**
+     * Ends parsing of the message and marks all currently-active MIME parts
+     * as ended.  Do <u>not</u> call this method until all message bytes have
+     * been passed through {@link #handleByte(byte)}.
+     */
     ZMimeParser endParse() {
         if (state == ParserState.TERMINATED) {
             // if we've already ended the parse, don't rerun this method
