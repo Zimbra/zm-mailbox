@@ -16,22 +16,23 @@
  */
 package com.zimbra.common.zmime;
 
-import com.sun.mail.util.ASCIIUtility;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.CharsetUtil;
-
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimePartDataSource;
-import javax.mail.internet.SharedInputStream;
-import javax.mail.util.SharedByteArrayInputStream;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.*;
+
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.MimePartDataSource;
+import javax.mail.internet.SharedInputStream;
+import javax.mail.util.SharedByteArrayInputStream;
+
+import com.sun.mail.util.ASCIIUtility;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CharsetUtil;
 
 class ZMimeParser {
     private static final Charset DEFAULT_CHARSET = CharsetUtil.normalizeCharset(CharsetUtil.ISO_8859_1);
@@ -96,7 +97,7 @@ class ZMimeParser {
         TERMINATED, SKIP
     }
 
-    private enum LineEnding {CR, LF, CRLF}
+    private enum LineEnding { CR, LF, CRLF }
 
     private static class BoundaryChecker {
         /**
@@ -145,9 +146,9 @@ class ZMimeParser {
         /**
          * Checks a byte against all of the currently active boundaries that
          * haven't failed a byte check yet this line.  If a boundary doesn't
-         * match the appropriate character, it is removed from the set.<p>
+         * match the appropriate character, it is removed from the set.
          *
-         * <i>Should really switch to having {@code index} be an
+         * <p><i>Should really switch to having {@code index} be an
          * auto-incremented counter managed by the BoundaryChecker rather than
          * a parameter to this method.</i>
          *
@@ -235,7 +236,7 @@ class ZMimeParser {
         }
     }
 
-    enum PartLocation {PREAMBLE, CONTENT, EPILOGUE}
+    enum PartLocation { PREAMBLE, CONTENT, EPILOGUE }
 
     private class PartInfo {
         ZMimePart part;
@@ -290,7 +291,7 @@ class ZMimeParser {
     protected ParserState state = ParserState.HEADER_LINESTART;
 
     /**
-     * whether to check boundaries on this line
+     * Whether to check boundaries on this line.
      */
     private boolean checkBoundary = false;
 
@@ -415,9 +416,9 @@ class ZMimeParser {
     /**
      * Handles a single byte of the message.  This small state machine tracks
      * line starts and the transitions between message/MIME headers and part
-     * bodies.<p>
-     * <p>
-     * Recursive calls to this function will get you in trouble.  Yes, I know,
+     * bodies.
+     *
+     * <p>Recursive calls to this function will get you in trouble.  Yes, I know,
      * we call it recursively.  <i>sigh</i>
      */
     boolean handleByte(byte b) {
