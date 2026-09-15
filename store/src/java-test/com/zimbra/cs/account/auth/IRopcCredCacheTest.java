@@ -44,7 +44,7 @@ import static org.mockito.Matchers.anyString;
  * the IP Bridge logic for device ID changes, and MFA rejection tracking.
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({LC.class, KnownKey.class, IRopcCredCache.class, PasswordUtil.class, PasswordUtil.SSHA512.class})
+@PrepareForTest({LC.class, KnownKey.class, PasswordUtil.class, PasswordUtil.SSHA512.class})
 @SuppressStaticInitializationFor({"com.zimbra.common.localconfig.LC", "com.zimbra.cs.account.auth.ropc.IRopcCredCache"})
 public class IRopcCredCacheTest {
 

@@ -80,6 +80,10 @@ public final class IRopcCredCache {
             Math.max(LC.mfa_idp_max_rejection_cache_timeout_in_minutes.intValue(),
                     CACHE_EXPIRY_MIN_DURATION)).toMillis();
 
+    private static final long SUPPRESSION_CACHE_TIMEOUT = Duration.ofDays(
+            Math.max(LC.mfa_idp_max_suppression_cache_timeout_in_days.intValue(),
+                    CACHE_EXPIRY_MIN_DURATION)).toMillis();
+
     /**
      * Credential cache: device key or IP key to {@link CacheEntry}.
      * No size limit — entries are bounded naturally by TTL expiry.
@@ -98,6 +102,13 @@ public final class IRopcCredCache {
      */
     private static final Cache<String, Integer> REJECTION_CACHE = CacheBuilder.newBuilder()
             .expireAfterWrite((REJECTION_CACHE_TIMEOUT), TimeUnit.MILLISECONDS)
+            .build();
+
+    /**
+     * Suppression counter cache.
+     */
+    private static final Cache<String, String> SUPPRESSION_CACHE = CacheBuilder.newBuilder()
+            .expireAfterWrite(SUPPRESSION_CACHE_TIMEOUT, TimeUnit.MILLISECONDS)
             .build();
 
     public static final IRopcTokenStore STORE = LC.mfa_idp_enable_inmemory_store.booleanValue() ?
@@ -188,8 +199,20 @@ public final class IRopcCredCache {
             return new CacheResponse(false);
         }
         String effectivePassword = getEffectivePassword(password);
-        String deviceKey = buildKey(email, userAgent, protocol, provider, ip, deviceId);
 
+        String suppressedBadPassword = SUPPRESSION_CACHE.getIfPresent(email);
+        if (suppressedBadPassword != null &&
+                PasswordUtil.SSHA512.verifySSHA512(suppressedBadPassword, effectivePassword)) {
+            ZimbraLog.account.debug(
+                    "Authentication failed : Invalid credentials provided, rejecting from " +
+                            "suppression cache for %s", email);
+            // do not make change to the error msg, as it is being used in the IRopcCustomAuth
+            // for re throwing the error out of caching catch block
+            throw AuthFailedServiceException.AUTH_FAILED(email,
+                    "Authentication failed : Invalid credentials provided");
+        }
+
+        String deviceKey = buildKey(email, userAgent, protocol, provider, ip, deviceId);
         // 1. Direct hit — device key (Outlook) or IP key (native)
         CacheEntry entry = CRED_CACHE.getIfPresent(deviceKey);
         if (entry != null) {
@@ -387,7 +410,7 @@ public final class IRopcCredCache {
             ZimbraLog.account.warn(
                     "IRopcCredCache: auth blocked for %s;"
                             + " auth rejection limit reached (%d)", email, count);
-            throw ServiceException.FORBIDDEN("MFA auth rejection limit reached");
+            throw AuthFailedServiceException.FORBIDDEN("MFA auth rejection limit reached");
         }
     }
 
@@ -397,6 +420,29 @@ public final class IRopcCredCache {
     public static void clearAll() {
         CRED_CACHE.invalidateAll();
         REJECTION_CACHE.invalidateAll();
+        SUPPRESSION_CACHE.invalidateAll();
+    }
+
+    public static void recordBadPassword(String email, String password) {
+        if (email != null && password != null) {
+            String passwordHash = PasswordUtil.SSHA512.generateSSHA512(password, null);
+            SUPPRESSION_CACHE.put(email, passwordHash);
+        }
+    }
+
+    public static void clearSessionFromCacheAndDB(Account account, String email) throws ServiceException {
+        if (email != null && account != null) {
+            SUPPRESSION_CACHE.invalidate(email);
+            List<IRopcSessionRecord> sessionRecords = STORE.findByUsername(account);
+            if (sessionRecords != null && !sessionRecords.isEmpty()) {
+                for (IRopcSessionRecord record : sessionRecords) {
+                    invalidate(email, record.getUserAgent(), record.getProtocol(), record.getProvider(),
+                            record.getIp(), record.getDeviceId());
+                }
+            }
+
+            STORE.deleteByUsername(account);
+        }
     }
 
     // Internal Helpers

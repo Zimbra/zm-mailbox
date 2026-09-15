@@ -73,6 +73,10 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
             }
 
         } catch (Exception e) {
+            if (e.getMessage().contains("Invalid credentials provided")) {
+                throw AuthFailedServiceException.AUTH_FAILED(
+                        "Authentication failed : Invalid credentials provided");
+            }
             ZimbraLog.account.error("Error while caching operation for %s ", user, e);
             cacheResponse = new CacheResponse(false);
         }
@@ -99,6 +103,7 @@ public class IRopcCustomAuth extends ZimbraCustomAuth {
                         "Authentication failed : Challenge denied by user");
             case INVALID:
                 IRopcCredCache.storeRejection(user);
+                IRopcCredCache.recordBadPassword(user, password);
                 throw AuthFailedServiceException.AUTH_FAILED(user,
                         "Authentication failed : Invalid credentials provided");
             case POLICY_DENIED:

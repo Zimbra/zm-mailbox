@@ -549,6 +549,17 @@
     <load-on-startup>13</load-on-startup>
   </servlet>
 
+  <servlet>
+    <servlet-name>IRopcWebhook</servlet-name>
+    <servlet-class>com.zimbra.cs.account.auth.ropc.webhook.IRopcWebhookServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>IRopcWebhook</servlet-name>
+    <url-pattern>/iropc-webhook</url-pattern>
+    <url-pattern>/iropc-webhook/*</url-pattern>
+  </servlet-mapping>
+
   <servlet-mapping>
     <servlet-name>ExtensionDispatcherServlet</servlet-name>
     <url-pattern>/extension/*</url-pattern>

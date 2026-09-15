@@ -35,6 +35,8 @@ public interface IRopcTokenStore {
 
     IRopcSessionRecord findLatestPasswordByUsername(Account account, String username) throws ServiceException;
 
+    List<IRopcSessionRecord> findByUsername(Account account) throws ServiceException;
+
     void upsert(Account account, IRopcSessionRecord session) throws ServiceException;
 
     void updateDeviceId(Account account, IRopcSessionRecord session) throws ServiceException;
@@ -43,4 +45,6 @@ public interface IRopcTokenStore {
                 String deviceId) throws ServiceException;
 
     void deleteByDeviceIdAndUsername(Account account, String deviceId) throws ServiceException;
+
+    void deleteByUsername(Account account) throws ServiceException;
 }

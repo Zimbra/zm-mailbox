@@ -1594,6 +1594,14 @@ public final class LC {
 
     public static final KnownKey mfa_idp_auth_fail_count = KnownKey.newKey(10);
 
+    public static final KnownKey mfa_idp_max_suppression_cache_timeout_in_days = KnownKey.newKey(30);
+
+    public static final KnownKey mfa_idp_max_webhook_secret_cache_timeout_in_hours = KnownKey.newKey(24);
+
+    public static final KnownKey mfa_idp_webhook_payload_max_size_limit = KnownKey.newKey(50);
+
+    public static final KnownKey mfa_idp_webhook_secret_key = KnownKey.newKey("Authorization");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

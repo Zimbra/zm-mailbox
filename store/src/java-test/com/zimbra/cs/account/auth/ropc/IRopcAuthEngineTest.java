@@ -22,14 +22,19 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.ropc.store.IRopcTokenStore;
 import com.zimbra.cs.account.auth.ropc.util.IRopcUtil;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -37,8 +42,9 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"javax.management.*", "org.apache.logging.log4j.*", "javax.crypto.*"})
 @PrepareForTest({IROPCHandlerRegistry.class, IRopcAuthRequest.class, ZimbraLog.class,
-        IRopcAuthResult.class, IRopcTokenStore.class, IRopcAuthEngine.class, IRopcUtil.class})
+        IRopcAuthResult.class, IRopcTokenStore.class, IRopcUtil.class})
 public class IRopcAuthEngineTest {
 
     private Map<String, String> validConfig;
@@ -46,7 +52,7 @@ public class IRopcAuthEngineTest {
     private IRopcHandler mockHandler;
 
     @Before
-    public void setUp() throws ServiceException {
+    public void setUp() throws ServiceException, IllegalAccessException, NoSuchFieldException {
         validConfig = new HashMap<>();
         validConfig.put("token_endpoint", "https://okta.test/token");
         validConfig.put("client_id", "daljncvdalnc");
@@ -55,11 +61,20 @@ public class IRopcAuthEngineTest {
         mockHandler = PowerMockito.mock(IRopcHandler.class);
         PowerMockito.mockStatic(IROPCHandlerRegistry.class);
         PowerMockito.when(IROPCHandlerRegistry.get(anyString())).thenReturn(mockHandler);
-        PowerMockito.suppress(PowerMockito.method(IRopcAuthEngine.class, "persist"));
 
         PowerMockito.mockStatic(IRopcUtil.class);
         PowerMockito.when(IRopcUtil.findInStore(any(), any(), any(), any(), any(), any(),
                 any(), any(), any())).thenReturn(null);
+
+        IRopcTokenStore mockStore = PowerMockito.mock(IRopcTokenStore.class);
+        PowerMockito.doNothing().when(mockStore).upsert(any(), any());
+        Field storeField = IRopcAuthEngine.class.getDeclaredField("STORE");
+        storeField.setAccessible(true);
+
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(storeField, storeField.getModifiers() & ~Modifier.FINAL);
+        storeField.set(null, mockStore);
     }
 
     @Test

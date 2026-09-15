@@ -223,6 +223,48 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
     }
 
     @Override
+    public List<IRopcSessionRecord> findByUsername(Account account)
+            throws ServiceException {
+        if (account == null) {
+            return null;
+        }
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<IRopcSessionRecord> results = new ArrayList<>();
+        try {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            conn = DbPool.getConnection(mbox);
+            stmt = conn.prepareStatement(
+                    "SELECT username, device_id, user_agent, ip, provider, protocol"
+                            + " FROM " + getTableName(mbox) + " WHERE username = ?");
+            stmt.setString(1, account.getName());
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                IRopcSessionRecord record = new IRopcSessionRecord.Builder()
+                        .username(rs.getString(1))
+                        .deviceId(rs.getString(2))
+                        .userAgent(rs.getString(3))
+                        .ip(rs.getString(4))
+                        .provider(rs.getString(5))
+                        .protocol(rs.getString(6))
+                        .build();
+                results.add(record);
+
+            }
+
+            return results.isEmpty() ? null : results;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("ROPC token lookup failed for " + account.getName(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    @Override
     public void upsert(Account account, IRopcSessionRecord session) throws ServiceException {
         if (session == null) {
             return;
@@ -428,6 +470,33 @@ public final class DbRopcTokenStore implements IRopcTokenStore {
                     "DELETE FROM " + getTableName(mbox) + " " + "WHERE device_id = ? AND username = ?");
             stmt.setString(1, deviceId);
             stmt.setString(2, account.getName());
+            stmt.executeUpdate();
+            conn.commit();
+
+        } catch (SQLException e) {
+            DbPool.quietRollback(conn);
+            throw ServiceException.FAILURE("Failed to delete ROPC session for " + account.getName(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    @Override
+    public void deleteByUsername(Account account) throws ServiceException {
+        if (account == null) {
+            return;
+        }
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            conn = DbPool.getConnection(mbox);
+
+            stmt = conn.prepareStatement(
+                    "DELETE FROM " + getTableName(mbox) + " " + "WHERE username = ?");
+            stmt.setString(1, account.getName());
             stmt.executeUpdate();
             conn.commit();
 

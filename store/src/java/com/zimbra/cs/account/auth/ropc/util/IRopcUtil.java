@@ -156,4 +156,18 @@ public class IRopcUtil {
         }
         return userAgent;
     }
+
+    public static void clearCacheSession(Account account, String email) {
+        if (email == null) {
+            ZimbraLog.account.error("Error while flushing auth data from Cache and DB for user." +
+                    "As provided email is null");
+            return;
+        }
+
+        try {
+            IRopcCredCache.clearSessionFromCacheAndDB(account, email);
+        } catch (Exception e) {
+            ZimbraLog.account.error("Error while flushing auth data from Cache and DB for user %s", email, e);
+        }
+    }
 }

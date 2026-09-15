@@ -23,6 +23,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -101,6 +102,11 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
         }
 
         return new IRopcSessionRecord.Builder().passwordHash(passwordHash).build();
+    }
+
+    @Override
+    public List<IRopcSessionRecord> findByUsername(Account account) throws ServiceException {
+        return Collections.emptyList();
     }
 
     @Override
@@ -230,5 +236,10 @@ public final class CacheRopcTokenStore implements IRopcTokenStore {
         }
 
         latestSessionCache.invalidate(username);
+    }
+
+    @Override
+    public void deleteByUsername(Account account) throws ServiceException {
+
     }
 }
