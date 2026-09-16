@@ -25,5 +25,17 @@
   <dependency org="zimbra" name="zm-common" rev="latest.integration" />
   <dependency org="zimbra" name="zm-soap" rev="latest.integration" />
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
+  <dependency org="org.powermock" name="powermock-api-mockito2" rev="2.0.9" />
+  <dependency org="org.powermock" name="powermock-module-junit4" rev="2.0.9" />
+  <dependency org="org.powermock" name="powermock-core" rev="2.0.9" />
+  <dependency org="org.powermock" name="powermock-module-junit4-common" rev="2.0.9" />
+  <dependency org="org.mockito" name="mockito-core" rev="2.28.2" />
+  <dependency org="org.powermock" name="powermock-api-support" rev="2.0.9" />
+  <dependency org="org.javassist" name="javassist" rev="3.27.0-GA" />
+  <dependency org="org.powermock" name="powermock-reflect" rev="2.0.9" />
+  <dependency org="org.objenesis" name="objenesis" rev="3.2" />
+  <dependency org="net.bytebuddy" name="byte-buddy" rev="1.9.10" />
+  <dependency org="net.bytebuddy" name="byte-buddy-agent" rev="1.9.10" />
+  <dependency org="commons-codec" name="commons-codec" rev="1.15" />
  </dependencies>
 </ivy-module>
