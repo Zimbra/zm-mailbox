@@ -17,7 +17,11 @@
 
 package com.zimbra.cs.account.callback;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.callback.CallbackContext.DataKey;
 import com.zimbra.cs.account.callback.CallbackContext.Op;
 import org.junit.Test;
@@ -32,6 +36,10 @@ import static org.junit.Assert.assertTrue;
  * enum values through realistic create/modify workflows and assert the resulting state.
  */
 public class CallbackContextTest {
+
+    private Class<? extends Entry> asEntryType(Class<?> entryType) {
+        return entryType.asSubclass(Entry.class);
+    }
 
     @Test
     public void isCreateCreateOpReturnsTrue() {
@@ -89,6 +97,54 @@ public class CallbackContextTest {
 
         // Assert
         assertEquals("second@example.com", ctx.getCreatingEntryName());
+    }
+
+    @Test
+    public void getCreatingEntryTypeNotSetReturnsNull() {
+        // Arrange
+        CallbackContext ctx = new CallbackContext(Op.CREATE);
+
+        // Act + Assert -- unset type defaults to null
+        assertNull("creating entry type defaults to null", ctx.getCreatingEntryType());
+    }
+
+    @Test
+    public void setCreatingEntryTypeForAccountCreationThenGetReturnsAccountClass() {
+        // Arrange
+        CallbackContext ctx = new CallbackContext(Op.CREATE);
+        Class<? extends Entry> accountType = asEntryType(Account.class);
+
+        // Act
+        ctx.setCreatingEntryType(accountType);
+
+        // Assert
+        assertEquals(accountType, ctx.getCreatingEntryType());
+    }
+
+    @Test
+    public void setCreatingEntryTypeForCosCreationThenGetReturnsCosClass() {
+        // Arrange
+        CallbackContext ctx = new CallbackContext(Op.CREATE);
+        Class<? extends Entry> cosType = asEntryType(Cos.class);
+
+        // Act
+        ctx.setCreatingEntryType(cosType);
+
+        // Assert
+        assertEquals(cosType, ctx.getCreatingEntryType());
+    }
+
+    @Test
+    public void setCreatingEntryTypeForDomainCreationThenGetReturnsDomainClass() {
+        // Arrange
+        CallbackContext ctx = new CallbackContext(Op.CREATE);
+        Class<? extends Entry> domainType = asEntryType(Domain.class);
+
+        // Act
+        ctx.setCreatingEntryType(domainType);
+
+        // Assert
+        assertEquals(domainType, ctx.getCreatingEntryType());
     }
 
     @Test
