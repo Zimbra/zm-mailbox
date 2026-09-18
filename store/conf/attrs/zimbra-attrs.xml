@@ -10800,8 +10800,8 @@ TODO: delete them permanently from here
   <desc>Specifies the payload mode for FCM push notifications (OPAQUE, CONFIGURABLE, E2EE)</desc>
 </attr>
 
-<attr id="4173" name="zimbraPushNotificationDisclosureLevel" type="enum" value="SKELETAL,SUBJECT_ONLY,FULL_PREVIEW" cardinality="single"
+<attr id="4173" name="zimbraPushNotificationDisclosureLevel" type="enum" value="SKELETAL,SENDER_ONLY,FULL_PREVIEW" cardinality="single"
       optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="FcmConfigRestriction">
-  <desc>Specifies the disclosure level for configurable push notification payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW: sender, subject, timestamp)</desc>
+  <desc>Specifies the disclosure level for configurable push notification payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW: sender, subject, timestamp)</desc>
 </attr>
 </attrs>

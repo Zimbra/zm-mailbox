@@ -62129,10 +62129,10 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Specifies the disclosure level for configurable push notification
-     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW:
      * sender, subject, timestamp)
      *
-     * <p>Valid values: [SKELETAL, SUBJECT_ONLY, FULL_PREVIEW]
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
      * @return zimbraPushNotificationDisclosureLevel, or null if unset and/or has invalid value
      *
@@ -62145,10 +62145,10 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Specifies the disclosure level for configurable push notification
-     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW:
      * sender, subject, timestamp)
      *
-     * <p>Valid values: [SKELETAL, SUBJECT_ONLY, FULL_PREVIEW]
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
      * @return zimbraPushNotificationDisclosureLevel, or null if unset
      *
@@ -62161,10 +62161,10 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Specifies the disclosure level for configurable push notification
-     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW:
      * sender, subject, timestamp)
      *
-     * <p>Valid values: [SKELETAL, SUBJECT_ONLY, FULL_PREVIEW]
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
      * @param zimbraPushNotificationDisclosureLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -62180,10 +62180,10 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Specifies the disclosure level for configurable push notification
-     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW:
      * sender, subject, timestamp)
      *
-     * <p>Valid values: [SKELETAL, SUBJECT_ONLY, FULL_PREVIEW]
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
      * @param zimbraPushNotificationDisclosureLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -62200,10 +62200,10 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Specifies the disclosure level for configurable push notification
-     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW:
      * sender, subject, timestamp)
      *
-     * <p>Valid values: [SKELETAL, SUBJECT_ONLY, FULL_PREVIEW]
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
      * @param zimbraPushNotificationDisclosureLevel new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -62219,10 +62219,10 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Specifies the disclosure level for configurable push notification
-     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW:
      * sender, subject, timestamp)
      *
-     * <p>Valid values: [SKELETAL, SUBJECT_ONLY, FULL_PREVIEW]
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
      * @param zimbraPushNotificationDisclosureLevel new value
      * @param attrs existing map to populate, or null to create a new map
@@ -62239,10 +62239,10 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Specifies the disclosure level for configurable push notification
-     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW:
      * sender, subject, timestamp)
      *
-     * <p>Valid values: [SKELETAL, SUBJECT_ONLY, FULL_PREVIEW]
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -62257,10 +62257,10 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * Specifies the disclosure level for configurable push notification
-     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW:
      * sender, subject, timestamp)
      *
-     * <p>Valid values: [SKELETAL, SUBJECT_ONLY, FULL_PREVIEW]
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

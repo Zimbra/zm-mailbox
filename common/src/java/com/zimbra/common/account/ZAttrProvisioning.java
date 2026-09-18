@@ -2246,7 +2246,7 @@ public class ZAttrProvisioning {
 
     public static enum PushNotificationDisclosureLevel {
         SKELETAL("SKELETAL"),
-        SUBJECT_ONLY("SUBJECT_ONLY"),
+        SENDER_ONLY("SENDER_ONLY"),
         FULL_PREVIEW("FULL_PREVIEW");
         private String mValue;
         private PushNotificationDisclosureLevel(String value) { mValue = value; }
@@ -2258,7 +2258,7 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isSKELETAL() { return this == SKELETAL;}
-        public boolean isSUBJECT_ONLY() { return this == SUBJECT_ONLY;}
+        public boolean isSENDER_ONLY() { return this == SENDER_ONLY;}
         public boolean isFULL_PREVIEW() { return this == FULL_PREVIEW;}
     }
 
@@ -15725,7 +15725,7 @@ public class ZAttrProvisioning {
 
     /**
      * Specifies the disclosure level for configurable push notification
-     * payloads (SKELETAL: type only, SUBJECT_ONLY: subject, FULL_PREVIEW:
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender only, FULL_PREVIEW:
      * sender, subject, timestamp)
      *
      * @since ZCS 10.1.22
