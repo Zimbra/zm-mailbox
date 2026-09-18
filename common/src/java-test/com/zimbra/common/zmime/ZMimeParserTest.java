@@ -180,7 +180,7 @@ public class ZMimeParserTest {
         bb.append("\r\n");
         bb.append("foo!  bar!  loud noises\r\n\r\n");
         bb.append("--").append(boundary).append("\r\n");
-        addChildren(bb, depth+1);
+        addChildren(bb, depth + 1);
         bb.append("--").append(boundary).append("--\r\n");
     }
 
@@ -275,4 +275,124 @@ public class ZMimeParserTest {
 //            }
 //        }
 //    }
+    // =========================================================================
+    // ZBUG-5493 AUTOMATED UNIT TESTS (Directly from Sudha's QA Document)
+    // =========================================================================
+
+    /**
+     * Verify LMTP delivery of email with line starting with =0D and missing Content-Transfer-Encoding header.
+     */
+    @Test
+    public void testZbug5493Tc1NoCteHeader() throws Exception {
+        ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
+        bb.append("From: sender@example.com\r\n");
+        bb.append("To: recipient@example.com\r\n");
+        bb.append("Subject: Test ZBUG-5493 - No CTE Header\r\n");
+        bb.append("Content-Type: text/plain; charset=utf-8\r\n\r\n");
+        bb.append("=0D This line starts with equals 0D without CTE header.\r\n");
+
+        MimeMessage mm = ZMimeParser.parse(getSession(), new SharedByteArrayInputStream(bb.toByteArray()));
+        Assert.assertNotNull("Parsed message should not be null", mm);
+        Assert.assertEquals("Subject should match QA Test Data", "Test ZBUG-5493 - No CTE Header", mm.getSubject());
+    }
+
+    /**
+     * Verify LMTP delivery when message parts list is empty and currentPart is null.
+     */
+    @Test
+    public void testZbug5493Tc2EmptyMultipart() throws Exception {
+        ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
+        bb.append("From: sender@example.com\r\n");
+        bb.append("To: recipient@example.com\r\n");
+        bb.append("Subject: Test ZBUG-5493 - Empty Multipart\r\n");
+        bb.append("Content-Type: multipart/mixed; boundary=\"boundary_test\"\r\n\r\n");
+        bb.append("--boundary_test--\r\n");
+
+        MimeMessage mm = ZMimeParser.parse(getSession(), new SharedByteArrayInputStream(bb.toByteArray()));
+        Assert.assertNotNull("Parsed message should not be null", mm);
+        Assert.assertEquals("Subject should match QA Test Data", "Test ZBUG-5493 - Empty Multipart", mm.getSubject());
+    }
+
+    /**
+     * Verify LMTP delivery with valid quoted-printable encoding and line starting with =0D.
+     */
+    @Test
+    public void testZbug5493Tc3QuotedPrintable() throws Exception {
+        ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
+        bb.append("From: sender@example.com\r\n");
+        bb.append("To: recipient@example.com\r\n");
+        bb.append("Subject: Test ZBUG-5493 - Quoted Printable\r\n");
+        bb.append("Content-Type: text/plain; charset=utf-8\r\n");
+        bb.append("Content-Transfer-Encoding: quoted-printable\r\n\r\n");
+        bb.append("=0D This line starts with =3D0D in quoted-printable encoding.\r\n");
+
+        MimeMessage mm = ZMimeParser.parse(getSession(), new SharedByteArrayInputStream(bb.toByteArray()));
+        Assert.assertNotNull("Parsed message should not be null", mm);
+        Assert.assertEquals("Subject should match QA Test Data", "Test ZBUG-5493 - Quoted Printable", mm.getSubject());
+    }
+
+    /**
+     * Verify LMTP delivery with seven-bit Content-Transfer-Encoding values.
+     */
+    @Test
+    public void testZbug5493Tc4SevenBitEncoding() throws Exception {
+        ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
+        bb.append("From: sender@example.com\r\n");
+        bb.append("To: recipient@example.com\r\n");
+        bb.append("Subject: Test ZBUG-5493 - 7bit Encoding\r\n");
+        bb.append("Content-Type: text/plain; charset=utf-8\r\n");
+        bb.append("Content-Transfer-Encoding: 7bit\r\n\r\n");
+        bb.append("=0D Sample line with 7bit encoding.\r\n");
+
+        MimeMessage mm = ZMimeParser.parse(getSession(), new SharedByteArrayInputStream(bb.toByteArray()));
+        Assert.assertNotNull("Parsed message should not be null", mm);
+        Assert.assertEquals("Subject should match QA Test Data", "Test ZBUG-5493 - 7bit Encoding", mm.getSubject());
+    }
+
+    /**
+     * Verify that correctly formed emails with Base64 encoding continue to deliver correctly.
+     */
+    @Test
+    public void testZbug5493Tc9Base64EncodedMessage() throws Exception {
+        ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
+        bb.append("From: sender@example.com\r\n");
+        bb.append("To: recipient@zimbra.com\r\n");
+        bb.append("Subject: Test Base64 Encoded Message\r\n");
+        bb.append("MIME-Version: 1.0\r\n");
+        bb.append("Content-Type: text/plain; charset=UTF-8\r\n");
+        bb.append("Content-Transfer-Encoding: base64\r\n\r\n");
+        bb.append("SGVsbG8sCgpUaGlzIGlzIGEgdGVzdCBlbWFpbCBtZXNzYWdlIGVuY29kZWQgdXNpbmc\r\n");
+        bb.append("QmFzZTY0IENvbnRlbnQtVHJhbnNmZXItRW5jb2RpbmcuCgpUaGlzIGlzIHVzZWZ1bCBm\r\n");
+        bb.append("b3IgdHJhbnNtaXR0aW5nIGJpbmFyeSBvciBub24tQVNDSUkgY29udGVudCBvdmVyIFNN\r\n");
+        bb.append("VFAuCgpSZWdhcmRzLApTZW5kZXI=\r\n");
+
+        MimeMessage mm = ZMimeParser.parse(getSession(), new SharedByteArrayInputStream(bb.toByteArray()));
+        Assert.assertNotNull("Parsed message should not be null", mm);
+        Assert.assertEquals("Subject should match QA Test Data", "Test Base64 Encoded Message", mm.getSubject());
+    }
+
+    /**
+     * Verify that correctly formed emails with seven-bit encoding continue to deliver correctly.
+     */
+    @Test
+    public void testZbug5493Tc10SevenBitEncodedMessage() throws Exception {
+        ByteBuilder bb = new ByteBuilder(CharsetUtil.UTF_8);
+        bb.append("From: sender@example.com\r\n");
+        bb.append("To: recipient@zimbra.com\r\n");
+        bb.append("Subject: Test 7bit Encoded Message\r\n");
+        bb.append("MIME-Version: 1.0\r\n");
+        bb.append("Content-Type: text/plain; charset=US-ASCII\r\n");
+        bb.append("Content-Transfer-Encoding: 7bit\r\n\r\n");
+        bb.append("Hello,\r\n");
+        bb.append("This is a test email message using 7bit Content-Transfer-Encoding.\r\n");
+        bb.append("7bit means the content contains only standard ASCII characters (0-127),\r\n");
+        bb.append("no special characters, no accented letters, no binary data.\r\n");
+        bb.append("Each line must not exceed 998 characters as per RFC 2822.\r\n");
+        bb.append("Regards,\r\n");
+        bb.append("Sender\r\n");
+
+        MimeMessage mm = ZMimeParser.parse(getSession(), new SharedByteArrayInputStream(bb.toByteArray()));
+        Assert.assertNotNull("Parsed message should not be null", mm);
+        Assert.assertEquals("Subject should match QA Test Data", "Test 7bit Encoded Message", mm.getSubject());
+    }
 }
