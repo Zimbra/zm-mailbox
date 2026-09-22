@@ -40,6 +40,7 @@ import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
@@ -116,6 +117,12 @@ public class SendDeliveryReport extends MailDocumentHandler {
             report.setSentDate(new Date());
             report.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));
             report.addRecipients(javax.mail.Message.RecipientType.TO, recipients);
+            String origMessageID = mm.getMessageID();
+            if (!StringUtil.isNullOrEmpty(origMessageID)) {
+                report.setHeader("In-Reply-To", origMessageID.trim());
+                report.setHeader("References", getRefHeader(mm.getHeader("References"), mm.getMessageID()));
+            }
+
             report.setHeader("Auto-Submitted", "auto-replied (zimbra; read-receipt)");
             report.setHeader("Precedence", "bulk");
 
@@ -158,6 +165,15 @@ public class SendDeliveryReport extends MailDocumentHandler {
         } catch (MessagingException me) {
             throw ServiceException.FAILURE("error while sending read receipt", me);
         }
+    }
+
+    private static String getRefHeader(String[] incomingRefs, String origMessageID) {
+        StringBuilder refs = new StringBuilder();
+        if (incomingRefs != null && incomingRefs.length > 0) {
+            refs.append(incomingRefs[0].trim()).append(" ");
+        }
+        refs.append(origMessageID.trim());
+        return refs.toString();
     }
 
     public static String generateTextPart(Account owner, MimeMessage mm, Locale lc) throws MessagingException {

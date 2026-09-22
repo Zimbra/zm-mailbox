@@ -15,3 +15,7 @@ store/.ruleset
 eclipse-ivysettings.xml
 store/tmp/
 common-passwords.txt
+lib/
+context/
+localfiles
+.claude/

@@ -431,6 +431,10 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract  ZLdapFilter accountsByCosAndFeatureCheck(String cosId, String ldapAttribute);
     public abstract  ZLdapFilter accountsWithLdapFeatureCheck(String ldapAttribute, String ldapValue);
 
+    public abstract ZLdapFilter accountsOrphanInDomain(String ldapAttribute);
+
+    public abstract ZLdapFilter accountsOrphanNoCosAndFeatureCheck(String ldapAttribute);
+
     /*
      * alias
      */

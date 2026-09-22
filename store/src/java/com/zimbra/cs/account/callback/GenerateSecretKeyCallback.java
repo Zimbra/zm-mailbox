@@ -1,0 +1,89 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2025 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
+
+package com.zimbra.cs.account.callback;
+
+import com.google.common.base.Strings;
+import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.soap.admin.message.GenerateSecretKeyRequest;
+import java.util.Map;
+import java.util.Optional;
+
+public class GenerateSecretKeyCallback extends AttributeCallback {
+
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) throws ServiceException {
+        // block domain-level and global config level enablement
+        if (isMailRecallEnablementBlocked(context, value, entry)) {
+            throw ServiceException.PERM_DENIED(
+                    "zimbraFeatureMailRecallEnabled cannot be configured at the domain or global config level. "
+                            + "Please use account or COS instead.");
+        }
+
+        try {
+            Optional.ofNullable(value)
+                    .map(Object::toString)
+                    .map(String::trim)
+                    .filter("TRUE"::equals)
+                    .ifPresent(this::generateMailRecallSecretKey);
+        } catch (RuntimeException e) {
+            throw ServiceException.FAILURE("Unable to initialize SecureRandom for mail recall", e);
+        }
+    }
+
+    private boolean isMailRecallEnablementBlocked(CallbackContext context, Object value, Entry entry) {
+        return isTrueValue(value) && (isDomainOrConfigEntry(entry) || isDomainCreateContext(context));
+    }
+
+    private boolean isTrueValue(Object value) {
+        return ProvisioningConstants.TRUE.equals(String.valueOf(value));
+    }
+
+    private boolean isDomainOrConfigEntry(Entry entry) {
+        return entry instanceof Domain || entry instanceof Config;
+    }
+
+    private boolean isDomainCreateContext(CallbackContext context) {
+        return context != null && context.isCreate() && Domain.class.equals(context.getCreatingEntryType());
+    }
+
+    private void generateMailRecallSecretKey(String value) {
+        try {
+            String secretKey = Provisioning.getInstance()
+                    .getConfig()
+                    .getFeatureMailRecallSecretKey();
+
+            if (Strings.isNullOrEmpty(secretKey)) {
+                SoapProvisioning sp = SoapProvisioning.getAdminInstance();
+                sp.invokeJaxb(new GenerateSecretKeyRequest());
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.misc.error("Error generating mail recall secret key", e);
+            throw new RuntimeException("Error generating mail recall secret key", e);
+        }
+    }
+
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
+    }
+
+}

@@ -1311,6 +1311,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 mDIT.handleSpecialAttrs(attrs), null, true, origAttrs);
     }
 
+    @SuppressWarnings("checkstyle:methodname")
     private Account createAccount(String emailAddress, String password,
             Map<String, Object> acctAttrs, SpecialAttrs specialAttrs,
             String[] additionalObjectClasses,
@@ -1349,6 +1350,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
         callbackContext.setCreatingEntryName(emailAddress);
+        callbackContext.setCreatingEntryType(Account.class);
         AttributeManager.getInstance().preModify(acctAttrs, null, callbackContext, true);
         Account acct = null;
         String dn = null;
@@ -2782,6 +2784,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
 
             CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+            callbackContext.setCreatingEntryType(Domain.class);
+
             AttributeManager.getInstance().preModify(domainAttrs, null, callbackContext, true);
 
             // Add back attrs we circumvented from attribute checking
@@ -2862,9 +2866,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } catch (AccountServiceException e) {
             throw e;
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to create domain: "+name, e);
+            if (ServiceException.PERM_DENIED.equals(e.getCode())) {
+                throw e;
+            }
+            throw  ServiceException.FAILURE("unable to create domain: " + name, e);
         } finally {
             LdapClient.closeContext(zlc);
+
         }
     }
 
@@ -3217,7 +3225,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
-
+        callbackContext.setCreatingEntryType(Cos.class);
         //get rid of deprecated attrs
         Map<String, Object> allNewAttrs = new HashMap<String, Object>(allAttrs);
         for (String attr : allAttrs.keySet()) {
@@ -9477,6 +9485,38 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 ldapAttribute = (String) args[1];
                 types.add(ObjectType.accounts);
                 filter = filterFactory.accountsByCosAndFeatureCheck(cosId, ldapAttribute);
+                break;
+            case internalUserAccountsOrphanInDomain:
+                boolean isOrphanInDomain =
+                        argsLength == 2 &&
+                                args[0] instanceof Domain &&
+                                args[1] instanceof String;
+                if (!isOrphanInDomain) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting orphan accounts in domain failed : Invalid Arguments");
+                }
+                Domain domain = (Domain) args[0];
+                ldapAttribute = (String) args[1];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsOrphanInDomain(ldapAttribute);
+                // Domain-scoped: use domain as search base instead of global bases
+                String[] domainBases = getSearchBases(domain, types);
+                long domainCount = 0;
+                for (String base : domainBases) {
+                    domainCount += countObjects(base, filter);
+                }
+                return domainCount;
+            case internalUserAccountsOrphanNoCos:
+                boolean isOrphanNoCos =
+                        argsLength == 1 &&
+                                args[0] instanceof String;
+                if (!isOrphanNoCos) {
+                    throw ServiceException.OPERATION_DENIED(
+                            "Counting orphan accounts (no cos) failed : Invalid Arguments");
+                }
+                ldapAttribute = (String) args[0];
+                types.add(ObjectType.accounts);
+                filter = filterFactory.accountsOrphanNoCosAndFeatureCheck(ldapAttribute);
                 break;
             case internalUserAccountsWithLdapFeatureCheck: // accounts with a feature enabled or disabled
                 boolean isAccountsWithLdapFeatureCheck =

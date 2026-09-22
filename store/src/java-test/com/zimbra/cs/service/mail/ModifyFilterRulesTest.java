@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -42,6 +43,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.SoapToSieve;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -65,6 +67,11 @@ public class ModifyFilterRulesTest {
 
         attrs = Maps.newHashMap();
         prov.createAccount("test@zimbra.com", "secret", attrs);
+
+        attrs = Maps.newHashMap();
+        attrs.put("zimbraFeatureMailForwardingInFiltersEnabled", ProvisioningConstants.FALSE);
+
+        prov.createAccount("test2@zimbra.com", "secret", attrs);
     }
 
     @Before
@@ -859,5 +866,286 @@ public class ModifyFilterRulesTest {
             Assert.assertTrue(e instanceof ServiceException);
             Assert.assertEquals("feature MailForwardingInFilters is not enabled", e.getMessage());
         }
+    }
+
+    @Test
+    public void testAddNotifyFilterActionIsNotAllowedWhenMailForwardingFeatureIsDisabled() throws ServiceException {
+        Account account = Provisioning.getInstance().getAccount("test2@zimbra.com");
+        RuleManager.clearCachedRules(account);
+
+        ModifyFilterRulesRequest modifyFilterRulesRequest = new ModifyFilterRulesRequest();
+        List<FilterRule> filterRuleList = new ArrayList<>();
+        FilterRule filterRule = new FilterRule("filterWithNotifyAction", true);
+
+        FilterAction.NotifyAction filterAction = new FilterAction.NotifyAction();
+        filterAction.setIndex(0);
+        filterAction.setAddress("toAddress@zimbra.com");
+        filterAction.setContent("testContent");
+        filterAction.setSubject("testSubject");
+
+        FilterTest.HeaderTest test = new FilterTest.HeaderTest();
+        test.setStringComparison("matches");
+        test.setHeaders("subject");
+        test.setValue("*");
+        test.setIndex(0);
+
+        FilterTests filterTests = new FilterTests("allof");
+        filterTests.addTest(test);
+
+        List<FilterAction> filterActions = new ArrayList<>();
+        filterActions.add(filterAction);
+
+        filterRule.setFilterTests(filterTests);
+        filterRule.setFilterActions(filterActions);
+
+        filterRuleList.add(filterRule);
+        modifyFilterRulesRequest.setFilterRules(filterRuleList);
+
+        boolean isAllowed = new ModifyFilterRules().checkForwardFilterAttr(account,
+                modifyFilterRulesRequest.getFilterRules(), "incomingFilterRule");
+        Assert.assertFalse(isAllowed);
+    }
+
+    @Test
+    public void testAddRfcCompliantNotifyActionIsNotAllowedWhenMailForwardingFeatureIsDisabled()
+            throws ServiceException {
+        Account account = Provisioning.getInstance().getAccount("test2@zimbra.com");
+        RuleManager.clearCachedRules(account);
+
+        ModifyFilterRulesRequest modifyFilterRulesRequest = new ModifyFilterRulesRequest();
+        List<FilterRule> filterRuleList = new ArrayList<>();
+        FilterRule filterRule = new FilterRule("filterWithRfcCompliantNotifyAction", true);
+
+        FilterAction.RFCCompliantNotifyAction filterAction = new FilterAction.RFCCompliantNotifyAction();
+        filterAction.setIndex(0);
+        filterAction.setMethod("mailto:toAddress@zimbra.com");
+        filterAction.setMessage("testMessage");
+
+        FilterTest.HeaderTest test = new FilterTest.HeaderTest();
+        test.setStringComparison("matches");
+        test.setHeaders("subject");
+        test.setValue("*");
+        test.setIndex(0);
+
+        FilterTests filterTests = new FilterTests("allof");
+        filterTests.addTest(test);
+
+        List<FilterAction> filterActions = new ArrayList<>();
+        filterActions.add(filterAction);
+
+        filterRule.setFilterTests(filterTests);
+        filterRule.setFilterActions(filterActions);
+
+        filterRuleList.add(filterRule);
+        modifyFilterRulesRequest.setFilterRules(filterRuleList);
+
+        boolean isAllowed = new ModifyFilterRules().checkForwardFilterAttr(account,
+                modifyFilterRulesRequest.getFilterRules(), "incomingFilterRule");
+        Assert.assertFalse(isAllowed);
+    }
+
+    @Test
+    public void testModifyExistingNotifyActionIsNotAllowedWhenMailForwardingFeatureIsDisabled()
+            throws ServiceException {
+        try {
+            Account account = Provisioning.getInstance().getAccount("test2@zimbra.com");
+            RuleManager.clearCachedRules(account);
+
+            ModifyFilterRulesRequest modifyFilterRulesRequest = new ModifyFilterRulesRequest();
+            List<FilterRule> filterRuleList = new ArrayList<>();
+            FilterRule filterRule = new FilterRule("filterWithNotifyAction", true);
+
+            FilterAction.NotifyAction filterAction = new FilterAction.NotifyAction();
+            filterAction.setIndex(0);
+            filterAction.setAddress("toAddress@zimbra.com");
+            filterAction.setContent("testContent");
+            filterAction.setSubject("testSubject");
+
+            FilterTest.HeaderTest test = new FilterTest.HeaderTest();
+            test.setStringComparison("matches");
+            test.setHeaders("subject");
+            test.setValue("*");
+            test.setIndex(0);
+
+            FilterTests filterTests = new FilterTests("allof");
+            filterTests.addTest(test);
+
+            List<FilterAction> filterActions = new ArrayList<>();
+            filterActions.add(filterAction);
+
+            filterRule.setFilterTests(filterTests);
+            filterRule.setFilterActions(filterActions);
+
+            filterRuleList.add(filterRule);
+            modifyFilterRulesRequest.setFilterRules(filterRuleList);
+            RuleManager.setIncomingXMLRules(account, filterRuleList);
+
+            String sieveScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", " +
+                    "\"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", " +
+                    "\"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\r\n" +
+                    "\r\n" +
+                    "# filterWithNotifyAction\r\n" +
+                    "if allof (header :matches [\"subject\"] \"*\") {\r\n" +
+                    "    notify \"toAddress@zimbra.com\" \"testSubject\" text:\r\n" +
+                    "testContent\r\n" +
+                    ".\r\n" +
+                    ";\r\n" +
+                    "}";
+            Map<String, Object> map = account.getAttrs();
+            map.put(Provisioning.A_zimbraMailSieveScript, sieveScript);
+            account.setAttrs(map);
+
+            //modify address in existing action
+            ((FilterAction.NotifyAction) modifyFilterRulesRequest.getFilterRules().get(0).getFilterActions().get(0))
+                    .setAddress("modifiedAddress@zimbra.com");
+
+            boolean isAllowed = new ModifyFilterRules().checkForwardFilterAttr(account,
+                    modifyFilterRulesRequest.getFilterRules(), "incomingFilterRule");
+            Assert.assertFalse(isAllowed);
+        } finally {
+            //remove zimbraMailSieveScript attribute after test completion as it might impact other tests
+            Account account = Provisioning.getInstance().getAccount("test2@zimbra.com");
+            Map<String, Object> map = account.getAttrs();
+            map.remove(Provisioning.A_zimbraMailSieveScript);
+            account.setAttrs(map);
+        }
+    }
+
+    @Test
+    public void testModifyExistingRfcCompliantNotifyActionIsNotAllowedWhenMailForwardingFeatureIsDisabled()
+            throws ServiceException {
+        try {
+            Account account = Provisioning.getInstance().getAccount("test2@zimbra.com");
+            RuleManager.clearCachedRules(account);
+
+            ModifyFilterRulesRequest modifyFilterRulesRequest = new ModifyFilterRulesRequest();
+            List<FilterRule> filterRuleList = new ArrayList<>();
+            FilterRule filterRule = new FilterRule("filterWithRfcCompliantNotifyAction", true);
+
+            FilterAction.RFCCompliantNotifyAction filterAction = new FilterAction.RFCCompliantNotifyAction();
+            filterAction.setIndex(0);
+            filterAction.setMethod("mailto:toAddress@zimbra.com");
+            filterAction.setMessage("testMessage");
+
+            FilterTest.HeaderTest test = new FilterTest.HeaderTest();
+            test.setStringComparison("matches");
+            test.setHeaders("subject");
+            test.setValue("*");
+            test.setIndex(0);
+
+            FilterTests filterTests = new FilterTests("allof");
+            filterTests.addTest(test);
+
+            List<FilterAction> filterActions = new ArrayList<>();
+            filterActions.add(filterAction);
+
+            filterRule.setFilterTests(filterTests);
+            filterRule.setFilterActions(filterActions);
+
+            filterRuleList.add(filterRule);
+            modifyFilterRulesRequest.setFilterRules(filterRuleList);
+            RuleManager.setIncomingXMLRules(account, filterRuleList);
+
+            String sieveScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", " +
+                    "\"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", " +
+                    "\"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\r\n" +
+                    "\r\n" +
+                    "# filterWithRfcCompliantNotifyAction\r\n" +
+                    "if allof (header :matches [\"subject\"] \"*\") {\r\n" +
+                    "    notify :message \"testMessage\" \"mailto:toAddress@zimbra.com\";\r\n" +
+                    "}";
+            Map<String, Object> map = account.getAttrs();
+            map.put(Provisioning.A_zimbraMailSieveScript, sieveScript);
+            account.setAttrs(map);
+
+            //modify mailto in existing action
+            ((FilterAction.RFCCompliantNotifyAction) modifyFilterRulesRequest.getFilterRules()
+                    .get(0).getFilterActions().get(0)).setMethod("mailto:modifiedAddress@zimbra.com");
+
+            boolean isAllowed = new ModifyFilterRules().checkForwardFilterAttr(account,
+                    modifyFilterRulesRequest.getFilterRules(), "incomingFilterRule");
+            Assert.assertFalse(isAllowed);
+        } finally {
+            //remove zimbraMailSieveScript attribute after test completion as it might impact other tests
+            Account account = Provisioning.getInstance().getAccount("test2@zimbra.com");
+            Map<String, Object> map = account.getAttrs();
+            map.remove(Provisioning.A_zimbraMailSieveScript);
+            account.setAttrs(map);
+        }
+    }
+
+    @Test
+    public void testAddNotifyActionIsAllowedWhenMailForwardingFeatureIsEnabled() throws ServiceException {
+        Account account = Provisioning.getInstance().getAccount("test@zimbra.com");
+        RuleManager.clearCachedRules(account);
+
+        ModifyFilterRulesRequest modifyFilterRulesRequest = new ModifyFilterRulesRequest();
+        List<FilterRule> filterRuleList = new ArrayList<>();
+        FilterRule filterRule = new FilterRule("filterWithNotifyAction", true);
+
+        FilterAction.NotifyAction filterAction = new FilterAction.NotifyAction();
+        filterAction.setIndex(0);
+        filterAction.setAddress("toAddress@zimbra.com");
+        filterAction.setContent("testContent");
+        filterAction.setSubject("testSubject");
+
+        FilterTest.HeaderTest test = new FilterTest.HeaderTest();
+        test.setStringComparison("matches");
+        test.setHeaders("subject");
+        test.setValue("*");
+        test.setIndex(0);
+
+        FilterTests filterTests = new FilterTests("allof");
+        filterTests.addTest(test);
+
+        List<FilterAction> filterActions = new ArrayList<>();
+        filterActions.add(filterAction);
+
+        filterRule.setFilterTests(filterTests);
+        filterRule.setFilterActions(filterActions);
+
+        filterRuleList.add(filterRule);
+        modifyFilterRulesRequest.setFilterRules(filterRuleList);
+
+        boolean isAllowed = new ModifyFilterRules().checkForwardFilterAttr(account,
+                modifyFilterRulesRequest.getFilterRules(), "incomingFilterRule");
+        Assert.assertTrue(isAllowed);
+    }
+
+    @Test
+    public void testAddRfcCompliantNotifyActionIsAllowedWhenMailForwardingFeatureIsEnabled() throws ServiceException {
+        Account account = Provisioning.getInstance().getAccount("test@zimbra.com");
+        RuleManager.clearCachedRules(account);
+
+        ModifyFilterRulesRequest modifyFilterRulesRequest = new ModifyFilterRulesRequest();
+        List<FilterRule> filterRuleList = new ArrayList<>();
+        FilterRule filterRule = new FilterRule("filterWithRfcCompliantNotifyAction", true);
+
+        FilterAction.RFCCompliantNotifyAction filterAction = new FilterAction.RFCCompliantNotifyAction();
+        filterAction.setIndex(0);
+        filterAction.setMethod("mailto:toAddress@zimbra.com");
+        filterAction.setMessage("testMessage");
+
+        FilterTest.HeaderTest test = new FilterTest.HeaderTest();
+        test.setStringComparison("matches");
+        test.setHeaders("subject");
+        test.setValue("*");
+        test.setIndex(0);
+
+        FilterTests filterTests = new FilterTests("allof");
+        filterTests.addTest(test);
+
+        List<FilterAction> filterActions = new ArrayList<>();
+        filterActions.add(filterAction);
+
+        filterRule.setFilterTests(filterTests);
+        filterRule.setFilterActions(filterActions);
+
+        filterRuleList.add(filterRule);
+        modifyFilterRulesRequest.setFilterRules(filterRuleList);
+
+        boolean isAllowed = new ModifyFilterRules().checkForwardFilterAttr(account,
+                modifyFilterRulesRequest.getFilterRules(), "incomingFilterRule");
+        Assert.assertTrue(isAllowed);
     }
 }

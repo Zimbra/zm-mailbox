@@ -619,7 +619,7 @@ public final class SoapToSieve {
             }
 
             StringBuilder filter = new StringBuilder("notify ");
-            if (!from.isEmpty()) {
+            if (!StringUtil.isNullOrEmpty(from)) {
                 filter.append(":from ").append(StringUtil.enclose(FilterUtil.escape(from), '"')).append(' ');
             }
             if (!importance.isEmpty()) {

@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.filter;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import org.apache.jsieve.parser.generated.Node;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -55,6 +56,7 @@ public class FilterUtilTest {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         Account acct1 = prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("testNotify@zimbra.com", "secret", new HashMap<String, Object>());
         Server server = Provisioning.getInstance().getServer(acct1);
     }
 
@@ -1077,6 +1079,283 @@ public class FilterUtilTest {
         Message msg = mailbox.getMessageById(null, result.get(0).getId());
         Assert.assertNotNull(msg);
         Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, msg.getFolderId());
+    }
+
+    @Test
+    public void testNotifyActionFeatureFlagEnabled() throws Exception {
+        try {
+            // setup - enable the feature flag
+            Account account = Provisioning.getInstance().getAccount("testNotify@zimbra.com");
+
+            // set filter rules with notify action and enable zimbraFeatureMailForwardingInFiltersEnabled
+            Map<String, Object> attrs = account.getAttrs();
+            attrs.put(Provisioning.A_zimbraMailSieveScript,
+                    "require [\"enotify\"];\n" + "if header :contains \"Subject\" "
+                            + "\"Test\" {\n" + "    notify \"notify@example.com\" \"testSubject\" text:\r\n"
+                            + "testContent\r\n" + ".\r\n" + ";\n"
+                            + "}");
+            attrs.put(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled, ProvisioningConstants.TRUE);
+            account.setAttrs(attrs);
+
+            RuleManager.clearCachedRules(account);
+
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            // create a test message
+            String content = "From: sender@example.com\r\n" + "To: test@zimbra.com\r\n" + "Subject: Test Message\r\n"
+                    + "Content-Type: text/plain\r\n\r\n" + "This is a test message.";
+
+            ParsedMessage parsedMessage = new ParsedMessage(content.getBytes(), false);
+
+            // create IncomingMessageHandler
+            IncomingMessageHandler handler = new IncomingMessageHandler(new OperationContext(mailbox),
+                    new DeliveryContext(), mailbox, "test@zimbra.com", parsedMessage, content.length(),
+                    Mailbox.ID_FOLDER_INBOX, false);
+
+            // create ZimbraMailAdapter
+            ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
+
+            String script = RuleManager.getIncomingRules(account);
+            if (script != null && !script.isEmpty()) {
+                Node node = RuleManager.parse(script);
+                mailAdapter.setUserScriptExecuting(true);
+                boolean proceed = invokeEvaluateScript(mailAdapter, node);
+                if (proceed && !mailAdapter.isStop()) {
+                    mailAdapter.executeAllActions();
+                }
+            }
+
+            // get the added message IDs
+            List<ItemId> result = mailAdapter.getAddedMessageIds();
+            if (result == null || result.isEmpty()) {
+                // Implicit keep
+                mailAdapter.keep(ZimbraMailAdapter.KeepType.IMPLICIT_KEEP);
+                result = mailAdapter.getAddedMessageIds();
+            }
+
+            // verify results - message should be processed (notify should work since feature flag is enabled)
+            Assert.assertNotNull(result);
+            Assert.assertFalse(result.isEmpty());
+        } finally {
+            //reset account
+            Account account = Provisioning.getInstance().getAccount("testNotify@zimbra.com");
+            Map<String, Object> attrs = account.getAttrs();
+            attrs.remove(Provisioning.A_zimbraMailSieveScript);
+            attrs.remove(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled);
+            account.setAttrs(attrs);
+        }
+    }
+
+    @Test
+    public void testNotifyActionFeatureFlagDisabled() throws Exception {
+        try {
+            Account account = Provisioning.getInstance().getAccount("testNotify@zimbra.com");
+
+            // set filter rules with notify action
+            Map<String, Object> attrs = account.getAttrs();
+            attrs.put(Provisioning.A_zimbraMailSieveScript,
+                    "require [\"enotify\"];\n" + "if header :contains \"Subject\" "
+                            + "\"Test\" {\n" + "    notify \"notify@example.com\" \"testSubject\" text:\r\n"
+                            + "testContent\r\n" + ".\r\n" + ";\n"
+                            + "}");
+
+            //disable zimbraFeatureMailForwardingInFiltersEnabled
+            attrs.put(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled, ProvisioningConstants.FALSE);
+            account.setAttrs(attrs);
+
+            RuleManager.clearCachedRules(account);
+
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            // create a test message
+            String content = "From: sender@example.com\r\n" + "To: test@zimbra.com\r\n" + "Subject: Test Message\r\n"
+                    + "Content-Type: text/plain\r\n\r\n" + "This is a test message.";
+
+            ParsedMessage parsedMessage = new ParsedMessage(content.getBytes(), false);
+
+            // create IncomingMessageHandler
+            IncomingMessageHandler handler = new IncomingMessageHandler(new OperationContext(mailbox),
+                    new DeliveryContext(), mailbox, "test@zimbra.com", parsedMessage, content.length(),
+                    Mailbox.ID_FOLDER_INBOX, false);
+
+            // create ZimbraMailAdapter
+            ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
+
+            String script = RuleManager.getIncomingRules(account);
+            if (script != null && !script.isEmpty()) {
+                Node node = RuleManager.parse(script);
+                mailAdapter.setUserScriptExecuting(true);
+                boolean proceed = invokeEvaluateScript(mailAdapter, node);
+                if (proceed && !mailAdapter.isStop()) {
+                    mailAdapter.executeAllActions();
+                }
+            }
+
+            // get the added message IDs
+            List<ItemId> result = mailAdapter.getAddedMessageIds();
+            if (result == null || result.isEmpty()) {
+                // Implicit keep
+                mailAdapter.keep(ZimbraMailAdapter.KeepType.IMPLICIT_KEEP);
+                result = mailAdapter.getAddedMessageIds();
+            }
+
+            // verify results - message should be processed (notify should work since feature flag is enabled)
+            Assert.assertNotNull(result);
+            Assert.assertFalse(result.isEmpty());
+        } finally {
+            //reset account
+            Account account = Provisioning.getInstance().getAccount("testNotify@zimbra.com");
+            Map<String, Object> attrs = account.getAttrs();
+            attrs.remove(Provisioning.A_zimbraMailSieveScript);
+            attrs.remove(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled);
+            account.setAttrs(attrs);
+        }
+    }
+
+    @Test
+    public void testNotifyMailToActionFeatureFlagEnabled() throws Exception {
+        try {
+            Account account = Provisioning.getInstance().getAccount("testNotify@zimbra.com");
+
+            // set filter rules with notify action
+            Map<String, Object> attrs = account.getAttrs();
+            attrs.put(Provisioning.A_zimbraMailSieveScript,
+                    "require [\"enotify\"];\n" + "if header :contains \"Subject\" "
+                            + "\"Test\" {\n" + "    notify :message \"testMessage\" \"mailto:notify@example.com\";\n"
+                            + "}");
+
+            // enable zimbraFeatureMailForwardingInFiltersEnabled and zimbraSieveNotifyActionRFCCompliant
+            attrs.put(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled, ProvisioningConstants.TRUE);
+            attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, ProvisioningConstants.TRUE);
+            account.setAttrs(attrs);
+
+            RuleManager.clearCachedRules(account);
+
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            // create a test message
+            String content = "From: sender@example.com\r\n" + "To: test@zimbra.com\r\n" + "Subject: Test Message\r\n"
+                    + "Content-Type: text/plain\r\n\r\n" + "This is a test message.";
+
+            ParsedMessage parsedMessage = new ParsedMessage(content.getBytes(), false);
+
+            // create IncomingMessageHandler
+            IncomingMessageHandler handler = new IncomingMessageHandler(new OperationContext(mailbox),
+                    new DeliveryContext(), mailbox, "test@zimbra.com", parsedMessage, content.length(),
+                    Mailbox.ID_FOLDER_INBOX, false);
+
+            // create ZimbraMailAdapter
+            ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
+
+            String script = RuleManager.getIncomingRules(account);
+            if (script != null && !script.isEmpty()) {
+                Node node = RuleManager.parse(script);
+                mailAdapter.setUserScriptExecuting(true);
+                boolean proceed = invokeEvaluateScript(mailAdapter, node);
+                if (proceed && !mailAdapter.isStop()) {
+                    mailAdapter.executeAllActions();
+                }
+            }
+
+            // get the added message IDs
+            List<ItemId> result = mailAdapter.getAddedMessageIds();
+            if (result == null || result.isEmpty()) {
+                // Implicit keep
+                mailAdapter.keep(ZimbraMailAdapter.KeepType.IMPLICIT_KEEP);
+                result = mailAdapter.getAddedMessageIds();
+            }
+
+            // verify results - message should be processed (notify should work since feature flag is enabled)
+            Assert.assertNotNull(result);
+            Assert.assertFalse(result.isEmpty());
+        } finally {
+            //reset account
+            Account account = Provisioning.getInstance().getAccount("testNotify@zimbra.com");
+            Map<String, Object> attrs = account.getAttrs();
+            attrs.remove(Provisioning.A_zimbraMailSieveScript);
+            attrs.remove(Provisioning.A_zimbraSieveNotifyActionRFCCompliant);
+            attrs.remove(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled);
+            account.setAttrs(attrs);
+        }
+    }
+
+    @Test
+    public void testNotifyMailToActionFeatureFlagDisabled() throws Exception {
+        try {
+            Account account = Provisioning.getInstance().getAccount("testNotify@zimbra.com");
+
+            // set filter rules with notify action
+            Map<String, Object> attrs = account.getAttrs();
+            attrs.put(Provisioning.A_zimbraMailSieveScript,
+                    "require [\"enotify\"];\n" + "if header :contains \"Subject\" "
+                            + "\"Test\" {\n" + "    notify :message \"testMessage\" \"mailto:notify@example.com\";\n"
+                            + "}");
+
+            // disable zimbraFeatureMailForwardingInFiltersEnabled
+            attrs.put(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled, ProvisioningConstants.FALSE);
+
+            // enable zimbraSieveNotifyActionRFCCompliant
+            attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, ProvisioningConstants.TRUE);
+            account.setAttrs(attrs);
+
+            RuleManager.clearCachedRules(account);
+
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            // create a test message
+            String content = "From: sender@example.com\r\n" + "To: test@zimbra.com\r\n" + "Subject: Test Message\r\n"
+                    + "Content-Type: text/plain\r\n\r\n" + "This is a test message.";
+
+            ParsedMessage parsedMessage = new ParsedMessage(content.getBytes(), false);
+
+            // create IncomingMessageHandler
+            IncomingMessageHandler handler = new IncomingMessageHandler(new OperationContext(mailbox),
+                    new DeliveryContext(), mailbox, "test@zimbra.com", parsedMessage, content.length(),
+                    Mailbox.ID_FOLDER_INBOX, false);
+
+            // create ZimbraMailAdapter
+            ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
+
+            String script = RuleManager.getIncomingRules(account);
+            if (script != null && !script.isEmpty()) {
+                Node node = RuleManager.parse(script);
+                mailAdapter.setUserScriptExecuting(true);
+                boolean proceed = invokeEvaluateScript(mailAdapter, node);
+                if (proceed && !mailAdapter.isStop()) {
+                    mailAdapter.executeAllActions();
+                }
+            }
+
+            // get the added message IDs
+            List<ItemId> result = mailAdapter.getAddedMessageIds();
+            if (result == null || result.isEmpty()) {
+                // Implicit keep
+                mailAdapter.keep(ZimbraMailAdapter.KeepType.IMPLICIT_KEEP);
+                result = mailAdapter.getAddedMessageIds();
+            }
+
+            // verify results - message should be processed (notify should work since feature flag is enabled)
+            Assert.assertNotNull(result);
+            Assert.assertFalse(result.isEmpty());
+        } finally {
+            //reset account
+            Account account = Provisioning.getInstance().getAccount("testNotify@zimbra.com");
+            Map<String, Object> attrs = account.getAttrs();
+            attrs.remove(Provisioning.A_zimbraMailSieveScript);
+            attrs.remove(Provisioning.A_zimbraSieveNotifyActionRFCCompliant);
+            attrs.remove(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled);
+            account.setAttrs(attrs);
+        }
+    }
+
+    private boolean invokeEvaluateScript(ZimbraMailAdapter mailAdapter, Node node) throws Exception {
+        // get the private method from RuleManager class
+        Method evaluateScriptMethod = RuleManager.class.getDeclaredMethod("evaluateScript",
+                ZimbraMailAdapter.class, Node.class);
+        evaluateScriptMethod.setAccessible(true);
+
+        // invoke the static method (null as first parameter since it's static)
+        return (boolean) evaluateScriptMethod.invoke(null, mailAdapter, node);
     }
 
     // helper method to invoke private evaluateScript method using reflection

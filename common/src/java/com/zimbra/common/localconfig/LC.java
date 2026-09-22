@@ -1588,6 +1588,15 @@ public final class LC {
     @Reloadable
     public static final KnownKey zimbra_forward_servlet_allowed_paths = KnownKey.newKey("");
 
+    // Explicit CsrfFilter domainAllowedRefHosts cache max size
+    // Falls back to ldap_cache_domain_maxsize on parsing error
+    public static final KnownKey csrf_filter_domain_allowed_ref_hosts_max_size = KnownKey.newKey(1000);
+
+    // TTL for CsrfFilter domainAllowedRefHosts cache entries (in minutes)
+    // After this duration, a stale entry is evicted and reloaded from LDAP on next access
+    // Falls back to 60 minutes if parsing fails
+    public static final KnownKey csrf_filter_domain_allowed_ref_hosts_cache_expiry_mins = KnownKey.newKey(60);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

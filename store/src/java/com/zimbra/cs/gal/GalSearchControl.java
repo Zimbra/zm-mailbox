@@ -508,6 +508,16 @@ public class GalSearchControl {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
             SearchParams searchParams = mParams.getSearchParams();
+            HashSet<Integer> externalFolderIds = new HashSet<>();
+            List<DataSource> sources = galAcct.getAllDataSources();
+            for (DataSource ds : sources) {
+                if (ds.getType() != DataSourceType.gal) {
+                    continue;
+                }
+                if (ds.getAttr(Provisioning.A_zimbraGalType).compareTo("ldap") == 0) {
+                    externalFolderIds.add(ds.getFolderId());
+                }
+            }
             try (ZimbraQueryResults zqr = mbox.index.search(SoapProtocol.Soap12,
                 new OperationContext(mbox), searchParams)) {
                 ResultsPager pager = ResultsPager.create(zqr, searchParams);
@@ -516,8 +526,13 @@ public class GalSearchControl {
                 while (pager.hasNext()) {
                     ZimbraHit hit = pager.getNextHit();
                     if (hit instanceof ContactHit) {
+                        ContactHit contactHit = (ContactHit) hit;
+                        int folderId = contactHit.getContact().getFolderId();
+                        if (null != externalFolderIds) {
+                            contactHit.getContact().setExternalContactForGAL(externalFolderIds.contains(folderId));
+                        }
                         Element contactElem = callback
-                            .handleContact(((ContactHit) hit).getContact());
+                                .handleContact((contactHit).getContact());
                         if (contactElem != null)
                             contactElem.addAttribute(MailConstants.A_SORT_FIELD,
                                 hit.getSortField(pager.getSortOrder()).toString());

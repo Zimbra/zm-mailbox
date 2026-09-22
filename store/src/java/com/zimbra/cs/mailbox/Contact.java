@@ -203,6 +203,16 @@ public class Contact extends MailItem {
     private Map<String, String> fields;
     private List<Attachment> attachments;
 
+    private boolean isExternalContactForGAL;
+
+    public boolean isExternalContactForGAL() {
+        return isExternalContactForGAL;
+    }
+
+    public void setExternalContactForGAL(boolean externalContactForGAL) {
+        isExternalContactForGAL = externalContactForGAL;
+    }
+
     // The list of all *simple* "email" fields in the contact's map
     // IMPORTANT NOTE - does not include the Contact Group 'dlist' entry, which is a multi-value entry (comma-separated)
     private static final String[] EMAIL_FIELDS = new String[] {
