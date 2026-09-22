@@ -102,8 +102,7 @@ public class ZMailboxTest {
 
     @Test
     public void testDeletingFileInputStreamDeletesFileOnClose() throws Exception {
-        File dir = new File("/Users/gopal.moolchandani/");
-        File temp = File.createTempFile("zmailbox-test-", ".tmp", dir);
+        File temp = File.createTempFile("zmailbox-test-", ".tmp");
         Files.write(temp.toPath(), "temp-data".getBytes(StandardCharsets.UTF_8));
         assertTrue(temp.exists());
 
