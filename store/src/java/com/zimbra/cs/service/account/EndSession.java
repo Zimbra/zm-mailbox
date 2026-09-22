@@ -84,6 +84,8 @@ public class EndSession extends AccountDocumentHandler {
             if (zsc.hasSession()) {
                 Session s = getSession(zsc);
                 endSession(s);
+                // If the Zimbra context has a session, clear its cookies as well.
+                clearCookies = true;
             }
             if (clearCookies || account.isForceClearCookies()) {
                 context.put(SoapServlet.INVALIDATE_COOKIES, true);
