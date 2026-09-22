@@ -8241,7 +8241,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1630" name="zimbraCsrfAllowedRefererHosts" type="string"
-  cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0" flags="domainAdminModifiable">
+  cardinality="multi" optionalIn="globalConfig,domain" since="8.5.0">
   <desc>A list of hosts like www.abc.com, www.xyz.com. These are used while doing CSRF referer check.</desc>
 </attr>
 
@@ -10339,7 +10339,7 @@ TODO: delete them permanently from here
 <attr id="4093" name="zimbraTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="9.0.0">
   <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
-<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" callback="GenerateSecretKeyCallback" since="10.1.0">
+<attr id="4094" name="zimbraFeatureMailRecallEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInherited,accountCosDomainInherited" since="10.1.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enables the mail recall functionality</desc>
@@ -10754,6 +10754,11 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="4164" name="zimbraFeatureNativeMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.21">
+    <defaultCOSValue>FALSE</defaultCOSValue>
+    <desc>Flag to check whether Zimbra native mobile app is enabled</desc>
+</attr>
+
 <attr id="4165" name="zimbraSamlSpSigningKey" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
     <desc>Key used to sign SP-generated SAML requests. SAML requests are unsigned if empty</desc>
 </attr>
@@ -10775,6 +10780,53 @@ TODO: delete them permanently from here
 <attr id="4169" name="zimbraSamlTestNonce" type="astring" cardinality="single"
       optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21" callback="SamlTestCacheFlush">
     <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
+</attr>
+
+<attr id="4170" name="zimbraMobileAppFCMServerDetails" type="string" cardinality="single"
+      optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="FcmConfigRestriction">
+    <desc>
+        JSON wrapper containing FCM server credentials and bundle metadata for
+        the Firebase Admin SDK. Payload fields : projectId, projectNumber, serverJSON(encrypted)
+        (Firebase service-account JSON), bundleVersion, bundleInstalledAt.
+    </desc>
+</attr>
+
+<attr id="4171" name="zimbraMobileAppFCMDeviceDetails" type="string" cardinality="single"
+      optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="FcmConfigRestriction">
+    <desc>
+        JSON wrapper containing FCM server credentials and bundle metadata for
+        the Firebase Admin SDK. Payload fields : projectId, projectNumber, deviceJSON(encrypted)
+        (Firebase device JSON), bundleVersion, bundleInstalledAt.
+    </desc>
+</attr>
+
+<attr id="4172" name="zimbraPushNotificationPayloadMode" type="enum" value="OPAQUE,CONFIGURABLE,E2EE" cardinality="single"
+      optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="MobileNotificationPayload">
+  <desc>Specifies the payload mode for FCM push notifications (OPAQUE, CONFIGURABLE, E2EE)</desc>
+git  <globalConfigValue>CONFIGURABLE</globalConfigValue>
+</attr>
+
+<attr id="4173" name="zimbraPushNotificationDisclosureLevel" type="enum" value="SKELETAL,SENDER_ONLY,FULL_PREVIEW" cardinality="single"
+      optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="MobileNotificationPayload">
+  <desc>Specifies the disclosure level for configurable push notification payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW: sender, subject, timestamp)</desc>
+  <globalConfigValue>FULL_PREVIEW</globalConfigValue>
+</attr>
+
+<attr id="7174" name="zimbraNativeMobileAppLocalDataRetentionDays" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
+  <globalConfigValue>30</globalConfigValue>
+  <defaultCOSValue>30</defaultCOSValue>
+  <desc>Number of days for which data should be retained in mobile device.</desc>
+</attr>
+
+<attr id="7175" name="zimbraNativeMobileAppMaxLocalDataSize" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
+  <globalConfigValue>10240</globalConfigValue>
+  <defaultCOSValue>10240</defaultCOSValue>
+  <desc>Maximum stored data in mobile device.</desc>
+</attr>
+
+<attr id="7176" name="zimbraNativeMobileAppMinVersionSupported" type="string" cardinality="single" optionalIn="globalConfig" flags="accountInfo" since="10.1.22">
+  <globalConfigValue>10.1.22</globalConfigValue>
+  <desc>Minimum mobile app version required.</desc>
 </attr>
 
 </attrs>
