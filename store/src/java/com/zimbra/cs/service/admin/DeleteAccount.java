@@ -114,7 +114,9 @@ public class DeleteAccount extends AdminDocumentHandler {
             if (mbox != null) {
                 mbox.deleteMailbox();
             }
-            prov.deleteAccount(id);
+            if (Provisioning.onLocalServer(account)) {
+                prov.deleteAccount(id);
+            }
         } catch (ServiceException se) {
             if (rollbackOnFailure) {
                 ZimbraLog.account.warn("Account deletion failed, restoring account status back to \"%s\" from maintenance.", accountStatus);

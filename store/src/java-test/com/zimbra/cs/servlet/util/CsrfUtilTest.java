@@ -23,10 +23,14 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -394,4 +398,164 @@ public class CsrfUtilTest {
         }
     }
 
+    @Test
+    public final void testIsCsrfRequestBasedOnReferrerWithSetsRefererInGlobalSet() {
+        Set<String> globalHosts = new HashSet<>(Arrays.asList("www.trusted.com"));
+        Set<String> domainHosts = Collections.emptySet();
+
+        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
+        EasyMock.expect(request.getServerName()).andReturn("example.com");
+        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
+        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn("http://www.trusted.com/page");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
+
+        try {
+            EasyMock.replay(request);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, globalHosts, domainHosts);
+            assertEquals(false, csrfReq);
+        } catch (IOException e) {
+            fail("Should not throw exception.");
+        }
+    }
+
+    @Test
+    public final void testIsCsrfRequestBasedOnReferrerWithSetsRefererInDomainSet() {
+        Set<String> globalHosts = Collections.emptySet();
+        Set<String> domainHosts = new HashSet<>(Arrays.asList("www.domaintrusted.com"));
+
+        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
+        EasyMock.expect(request.getServerName()).andReturn("example.com");
+        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
+        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn("http://www.domaintrusted.com/page");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
+
+        try {
+            EasyMock.replay(request);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, globalHosts, domainHosts);
+            assertEquals(false, csrfReq);
+        } catch (IOException e) {
+            fail("Should not throw exception.");
+        }
+    }
+
+    @Test
+    public final void testIsCsrfRequestBasedOnReferrerWithSetsRefererInNeitherSet() {
+        Set<String> globalHosts = new HashSet<>(Arrays.asList("www.trusted.com"));
+        Set<String> domainHosts = new HashSet<>(Arrays.asList("www.domaintrusted.com"));
+
+        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
+        EasyMock.expect(request.getServerName()).andReturn("example.com");
+        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
+        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn("http://www.malicious.com/attack");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
+
+        try {
+            EasyMock.replay(request);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, globalHosts, domainHosts);
+            assertEquals(true, csrfReq);
+        } catch (IOException e) {
+            fail("Should not throw exception.");
+        }
+    }
+
+    @Test
+    public final void testIsCsrfRequestBasedOnReferrerWithSetsNonPostRequest() {
+        Set<String> globalHosts = Collections.emptySet();
+        Set<String> domainHosts = Collections.emptySet();
+
+        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getMethod()).andReturn("GET");
+
+        try {
+            EasyMock.replay(request);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, globalHosts, domainHosts);
+            assertEquals(false, csrfReq);
+        } catch (IOException e) {
+            fail("Should not throw exception.");
+        }
+    }
+
+    @Test
+    public final void testIsCsrfRequestBasedOnReferrerWithSetsNullReferer() {
+        Set<String> globalHosts = new HashSet<>(Arrays.asList("www.trusted.com"));
+        Set<String> domainHosts = Collections.emptySet();
+
+        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
+        EasyMock.expect(request.getServerName()).andReturn("example.com");
+        EasyMock.expect(request.getServerName()).andReturn("example.com");
+        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
+        EasyMock.expect(request.getMethod()).andReturn("POST");
+        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn(null);
+
+        try {
+            EasyMock.replay(request);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, globalHosts, domainHosts);
+            assertEquals(false, csrfReq);
+        } catch (IOException e) {
+            fail("Should not throw exception.");
+        }
+    }
+
+    @Test
+    public final void testIsCsrfRequestBasedOnReferrerWithSetsSameHost() {
+        Set<String> globalHosts = Collections.emptySet();
+        Set<String> domainHosts = Collections.emptySet();
+
+        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("www.example.com");
+        EasyMock.expect(request.getServerName()).andReturn("www.example.com");
+        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
+        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn("http://www.example.com/page");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
+
+        try {
+            EasyMock.replay(request);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, globalHosts, domainHosts);
+            assertEquals(false, csrfReq);
+        } catch (IOException e) {
+            fail("Should not throw exception.");
+        }
+    }
+
+    @Test
+    public final void testIsCsrfRequestBasedOnReferrerWithSetsBothSetsEmptyNonMatchingHost() {
+        Set<String> globalHosts = Collections.emptySet();
+        Set<String> domainHosts = Collections.emptySet();
+
+        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader(HttpHeaders.HOST)).andReturn("example.com");
+        EasyMock.expect(request.getServerName()).andReturn("example.com");
+        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn(null);
+        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn("http://www.attacker.com");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
+
+        try {
+            EasyMock.replay(request);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, globalHosts, domainHosts);
+            assertEquals(true, csrfReq);
+        } catch (IOException e) {
+            fail("Should not throw exception.");
+        }
+    }
+
+    @Test
+    public final void testIsCsrfRequestBasedOnReferrerWithSetsXForwardedHost() {
+        Set<String> globalHosts = Collections.emptySet();
+        Set<String> domainHosts = Collections.emptySet();
+        HttpServletRequest request = EasyMock.createMock(HttpServletRequest.class);
+        EasyMock.expect(request.getHeader("X-Forwarded-Host")).andReturn("mail.zimbra.com");
+        EasyMock.expect(request.getHeader(HttpHeaders.REFERER)).andReturn("https://mail.zimbra.com/zimbra/");
+        EasyMock.expect(request.getMethod()).andReturn("POST");
+        try {
+            EasyMock.replay(request);
+            boolean csrfReq = CsrfUtil.isCsrfRequestBasedOnReferrer(request, globalHosts, domainHosts);
+            assertEquals(false, csrfReq);
+        } catch (IOException e) {
+            fail("Should not throw exception.");
+        }
+    }
 }

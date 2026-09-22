@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2013, 2014, 2016, 2026 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -23,6 +23,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.MailForwardingUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.callback.CallbackContext.DataKey;
 
@@ -85,16 +86,16 @@ public class PrefMailForwardingAddress extends AttributeCallback {
         
         if (maxAddrs == -1)
             maxAddrs = account.getMailForwardingAddressMaxNumAddrs();
-        
+
         String newValue = mod.value();
-        
+        String[] addrs = newValue.split(",");
+        MailForwardingUtil.validateSelfForwarding(account, newValue);
         if (newValue.length() > maxLen) {
             throw ServiceException.INVALID_REQUEST("value is too long, the limit(" + 
                     Provisioning.A_zimbraMailForwardingAddressMaxLength + ") is " + 
                     maxLen, null);
         }
-        
-        String[] addrs = newValue.split(",");
+
         if (addrs.length > maxAddrs) {
             throw ServiceException.INVALID_REQUEST("value is too long, the limit(" + 
                     Provisioning.A_zimbraMailForwardingAddressMaxNumAddrs + ") is " + 

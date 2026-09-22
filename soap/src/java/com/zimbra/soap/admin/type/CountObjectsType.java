@@ -56,6 +56,8 @@ public enum CountObjectsType {
     internalUserAccountsByCosesWithLdapFeature(false, false),
     internalUserAccountsByOrphanCosWithLdapFeature(false, false),
     internalUserAccountsByCosWithLdapFeature(false, false),
+    internalUserAccountsOrphanInDomain(false, false),
+    internalUserAccountsOrphanNoCos(false, false),
     internalUserAccountsWithLdapFeatureCheck(false, false);
 
     private boolean allowsDomain;

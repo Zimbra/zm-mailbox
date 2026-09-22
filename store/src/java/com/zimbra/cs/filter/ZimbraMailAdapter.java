@@ -443,15 +443,23 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         } else {
             ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
         }
-        try {
-            handler.notify(notify.getEmailAddr(),
-                    notify.getSubjectTemplate(),
-                    notify.getBodyTemplate(),
-                    notify.getMaxBodyBytes(),
-                    notify.getOrigHeaders());
-        } catch (Exception e) {
-            ZimbraLog.filter.warn("Unable to notify.", e);
+        if (userScriptActions.contains(notify) && !account.isFeatureMailForwardingInFiltersEnabled()) {
+            ZimbraLog.filter.warn("Notification to %s is rejected as " +
+                            "attribute mailForwarding is disabled. Filing message to %s.",
+                    notify.getEmailAddr(), handler.getDefaultFolderPath());
             keep(KeepType.EXPLICIT_KEEP);
+        }
+        else {
+            try {
+                handler.notify(notify.getEmailAddr(),
+                        notify.getSubjectTemplate(),
+                        notify.getBodyTemplate(),
+                        notify.getMaxBodyBytes(),
+                        notify.getOrigHeaders());
+            } catch (Exception e) {
+                ZimbraLog.filter.warn("Unable to notify.", e);
+                keep(KeepType.EXPLICIT_KEEP);
+            }
         }
     }
 
@@ -499,17 +507,25 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         } else {
             ZimbraLog.filter.debug("Sending RFC 5435/5436 compliant notification message to %s.", notifyMailto.getMailto());
         }
-        try {
-            handler.notifyMailto(envelope,
-                                 notifyMailto.getFrom(),
-                                 notifyMailto.getImportance(),
-                                 notifyMailto.getOptions(),
-                                 notifyMailto.getMessage(),
-                                 notifyMailto.getMailto(),
-                                 notifyMailto.getMailtoParams());
-        } catch (Exception e) {
-            ZimbraLog.filter.warn("Unable to notify (mailto).", e);
+        if (userScriptActions.contains(notifyMailto) && !account.isFeatureMailForwardingInFiltersEnabled()) {
+            ZimbraLog.filter.warn("RFC 5435/5436 compliant notification to %s is rejected as " +
+                            "attribute mailForwarding is disabled. Filing message to %s.",
+                    notifyMailto.getMailto(), handler.getDefaultFolderPath());
             keep(KeepType.EXPLICIT_KEEP);
+        }
+        else {
+            try {
+                handler.notifyMailto(envelope,
+                        notifyMailto.getFrom(),
+                        notifyMailto.getImportance(),
+                        notifyMailto.getOptions(),
+                        notifyMailto.getMessage(),
+                        notifyMailto.getMailto(),
+                        notifyMailto.getMailtoParams());
+            } catch (Exception e) {
+                ZimbraLog.filter.warn("Unable to notify (mailto).", e);
+                keep(KeepType.EXPLICIT_KEEP);
+            }
         }
     }
 

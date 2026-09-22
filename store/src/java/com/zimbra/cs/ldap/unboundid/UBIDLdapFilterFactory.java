@@ -889,15 +889,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         List<Filter> filters = cosIds.stream()
                 .map(cosId -> Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId))
                 .collect(Collectors.toList());
-        String defaultCosId = "";
-        try {
-            defaultCosId = Provisioning.getInstance().get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME).getId();
-        } catch (ServiceException e) {
-            ZimbraLog.system.warn(String.format("unable to fetch cos Id of %s", Provisioning.DEFAULT_COS_NAME));
-        }
-        if (cosIds.contains(defaultCosId)) {
-            filters.add(Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)));
-        }
+
         return new UBIDLdapFilter(
                 FilterId.ACCOUNTS_BY_COSES_AND_LDAP_FEATURE_CHECK,
                 Filter.createANDFilter(
@@ -963,6 +955,33 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_NON_SYSTEM_ACCOUNTS,
                         Filter.createEqualityFilter(ldapAttribute, ldapValue)
                 ));
+    }
+
+    @Override
+    public ZLdapFilter accountsOrphanInDomain(String ldapAttribute) {
+        return new com.zimbra.cs.ldap.unboundid.UBIDLdapFilter(
+                FilterId.ACCOUNTS_BY_COSES_AND_LDAP_FEATURE_CHECK,
+                Filter.createANDFilter(
+                        FILTER_ALL_NON_SYSTEM_ACCOUNTS,
+                        Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)),
+                        Filter.createNOTFilter(
+                                Filter.createORFilter(
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_TRUE),
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_FALSE)))));
+    }
+
+    @Override
+    public ZLdapFilter accountsOrphanNoCosAndFeatureCheck(String ldapAttribute) {
+        return new com.zimbra.cs.ldap.unboundid.UBIDLdapFilter(
+                FilterId.ACCOUNTS_BY_COSES_AND_LDAP_FEATURE_CHECK,
+                Filter.createANDFilter(
+                        FILTER_ALL_NON_SYSTEM_ACCOUNTS,
+                        Filter.createNOTFilter(
+                                Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)),
+                        Filter.createNOTFilter(
+                                Filter.createORFilter(
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_TRUE),
+                                        Filter.createEqualityFilter(ldapAttribute, LdapConstants.LDAP_FALSE)))));
     }
 
     /*
