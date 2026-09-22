@@ -24,7 +24,6 @@ package com.zimbra.cs.account;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -98,5 +97,4 @@ public class Config extends ZAttrConfig {
             return null;
         }
     }
-
 }
