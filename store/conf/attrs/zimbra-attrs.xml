@@ -10782,6 +10782,7 @@ TODO: delete them permanently from here
     <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
 </attr>
 
+
 <attr id="4170" name="zimbraMobileAppFCMServerDetails" type="string" cardinality="single"
       optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="FcmConfigRestriction">
     <desc>
@@ -10798,6 +10799,18 @@ TODO: delete them permanently from here
         the Firebase Admin SDK. Payload fields : projectId, projectNumber, deviceJSON(encrypted)
         (Firebase device JSON), bundleVersion, bundleInstalledAt.
     </desc>
+</attr>
+
+<attr id="4172" name="zimbraPushNotificationPayloadMode" type="enum" value="OPAQUE,CONFIGURABLE,E2EE" cardinality="single"
+      optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="MobileNotificationPayload">
+    <desc>Specifies the payload mode for FCM push notifications (OPAQUE, CONFIGURABLE, E2EE)</desc>
+    git  <globalConfigValue>CONFIGURABLE</globalConfigValue>
+</attr>
+
+<attr id="4173" name="zimbraPushNotificationDisclosureLevel" type="enum" value="SKELETAL,SENDER_ONLY,FULL_PREVIEW" cardinality="single"
+      optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="MobileNotificationPayload">
+    <desc>Specifies the disclosure level for configurable push notification payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW: sender, subject, timestamp)</desc>
+    <globalConfigValue>FULL_PREVIEW</globalConfigValue>
 </attr>
 
 <attr id="7170" name="zimbraNativeMobileAppLocalDataRetentionDays" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
