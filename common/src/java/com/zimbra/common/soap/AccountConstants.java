@@ -185,6 +185,14 @@ public class AccountConstants {
     public static final String E_ADDRESS_LIST_MEMBER = "member";
     public static final String A_COUNT_ONLY = "countOnly";
 
+    // mobile push notification device tokens
+    public static final String E_ADD_DEVICE_TOKEN_REQUEST = "AddDeviceTokenRequest";
+    public static final String E_ADD_DEVICE_TOKEN_RESPONSE = "AddDeviceTokenResponse";
+    public static final String E_REMOVE_DEVICE_TOKEN_REQUEST = "RemoveDeviceTokenRequest";
+    public static final String E_REMOVE_DEVICE_TOKEN_RESPONSE = "RemoveDeviceTokenResponse";
+    public static final String E_GET_FCM_DETAILS_REQUEST = "GetFCMDetailsRequest";
+    public static final String E_GET_FCM_DETAILS_RESPONSE = "GetFCMDetailsResponse";
+
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
     public static final QName AUTH_RESPONSE = QName.get(E_AUTH_RESPONSE, NAMESPACE);
@@ -216,6 +224,14 @@ public class AccountConstants {
     public static final QName REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE = QName.get(E_REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE, NAMESPACE);
     public static final QName SEND_TWO_FACTOR_AUTH_CODE_REQUEST = QName.get(E_SEND_TWO_FACTOR_AUTH_CODE_REQUEST, NAMESPACE);
     public static final QName SEND_TWO_FACTOR_AUTH_CODE_RESPONSE = QName.get(E_SEND_TWO_FACTOR_AUTH_CODE_RESPONSE, NAMESPACE);
+
+    // mobile push notification device tokens
+    public static final QName ADD_DEVICE_TOKEN_REQUEST = QName.get(E_ADD_DEVICE_TOKEN_REQUEST, NAMESPACE);
+    public static final QName ADD_DEVICE_TOKEN_RESPONSE = QName.get(E_ADD_DEVICE_TOKEN_RESPONSE, NAMESPACE);
+    public static final QName REMOVE_DEVICE_TOKEN_REQUEST = QName.get(E_REMOVE_DEVICE_TOKEN_REQUEST, NAMESPACE);
+    public static final QName REMOVE_DEVICE_TOKEN_RESPONSE = QName.get(E_REMOVE_DEVICE_TOKEN_RESPONSE, NAMESPACE);
+    public static final QName GET_FCM_DETAILS_REQUEST = QName.get(E_GET_FCM_DETAILS_REQUEST, NAMESPACE);
+    public static final QName GET_FCM_DETAILS_RESPONSE = QName.get(E_GET_FCM_DETAILS_RESPONSE, NAMESPACE);
 
     // prefs
     public static final QName GET_PREFS_REQUEST = QName.get(E_GET_PREFS_REQUEST, NAMESPACE);
