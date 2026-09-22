@@ -10755,8 +10755,8 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="4164" name="zimbraFeatureNativeMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.21">
-    <defaultCOSValue>FALSE</defaultCOSValue>
-    <desc>Flag to check whether Zimbra native mobile app is enabled</desc>
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Flag to check whether Zimbra native mobile app is enabled</desc>
 </attr>
 
 <attr id="4165" name="zimbraSamlSpSigningKey" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
