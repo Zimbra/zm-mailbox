@@ -76,6 +76,8 @@ public final class JaxbUtil {
 
     static {
         MESSAGE_CLASSES = new Class<?>[] {
+            com.zimbra.soap.account.message.AddDeviceTokenRequest.class,
+            com.zimbra.soap.account.message.AddDeviceTokenResponse.class,
             com.zimbra.soap.account.message.AuthRequest.class,
             com.zimbra.soap.account.message.AuthResponse.class,
             com.zimbra.soap.account.message.AutoCompleteGalRequest.class,
@@ -132,6 +134,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetDistributionListResponse.class,
             com.zimbra.soap.account.message.GetGcmSenderIdRequest.class,
             com.zimbra.soap.account.message.GetGcmSenderIdResponse.class,
+            com.zimbra.soap.account.message.GetFCMDetailsRequest.class,
+            com.zimbra.soap.account.message.GetFCMDetailsResponse.class,
             com.zimbra.soap.account.message.GetIdentitiesRequest.class,
             com.zimbra.soap.account.message.GetIdentitiesResponse.class,
             com.zimbra.soap.account.message.GetInfoRequest.class,
@@ -182,6 +186,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.RevokeOAuthConsumerResponse.class,
             com.zimbra.soap.account.message.RevokeOtherTrustedDevicesRequest.class,
             com.zimbra.soap.account.message.RevokeOtherTrustedDevicesResponse.class,
+            com.zimbra.soap.account.message.RemoveDeviceTokenRequest.class,
+            com.zimbra.soap.account.message.RemoveDeviceTokenResponse.class,
             com.zimbra.soap.account.message.RevokeRightsRequest.class,
             com.zimbra.soap.account.message.RevokeRightsResponse.class,
             com.zimbra.soap.account.message.RevokeTrustedDeviceRequest.class,
