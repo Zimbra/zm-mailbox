@@ -10754,6 +10754,11 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="4164" name="zimbraFeatureNativeMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" since="10.1.21">
+    <defaultCOSValue>FALSE</defaultCOSValue>
+    <desc>Flag to check whether Zimbra native mobile app is enabled</desc>
+</attr>
+
 <attr id="4165" name="zimbraSamlSpSigningKey" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.21" callback="SamlTestReset">
     <desc>Key used to sign SP-generated SAML requests. SAML requests are unsigned if empty</desc>
 </attr>
@@ -10804,5 +10809,22 @@ git  <globalConfigValue>CONFIGURABLE</globalConfigValue>
       optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="MobileNotificationPayload">
   <desc>Specifies the disclosure level for configurable push notification payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW: sender, subject, timestamp)</desc>
   <globalConfigValue>FULL_PREVIEW</globalConfigValue>
+</attr>
+
+<attr id="7174" name="zimbraNativeMobileAppLocalDataRetentionDays" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
+    <globalConfigValue>30</globalConfigValue>
+    <defaultCOSValue>30</defaultCOSValue>
+<desc>Number of days for which data should be retained in mobile device.</desc>
+</attr>
+
+<attr id="7175" name="zimbraNativeMobileAppMaxLocalDataSize" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
+    <globalConfigValue>10240</globalConfigValue>
+    <defaultCOSValue>10240</defaultCOSValue>
+<desc>Maximum stored data in mobile device.</desc>
+</attr>
+
+<attr id="7176" name="zimbraNativeMobileAppMinVersionSupported" type="string" cardinality="single" optionalIn="globalConfig" flags="accountInfo" since="10.1.22">
+    <globalConfigValue>10.1.22</globalConfigValue>
+    <desc>Minimum mobile app version required.</desc>
 </attr>
 </attrs>
