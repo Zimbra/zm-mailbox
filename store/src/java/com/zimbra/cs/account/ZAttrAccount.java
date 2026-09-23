@@ -38472,7 +38472,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public int getNativeMobileAppLocalDataRetentionDays() {
         return getIntAttr(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, 30, true);
     }
@@ -38485,7 +38485,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public void setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
@@ -38501,7 +38501,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public Map<String,Object> setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
@@ -38515,7 +38515,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public void unsetNativeMobileAppLocalDataRetentionDays() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
@@ -38530,7 +38530,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public Map<String,Object> unsetNativeMobileAppLocalDataRetentionDays(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
@@ -38544,7 +38544,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public int getNativeMobileAppMaxLocalDataSize() {
         return getIntAttr(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, 10240, true);
     }
@@ -38557,7 +38557,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public void setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -38573,7 +38573,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public Map<String,Object> setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -38587,7 +38587,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public void unsetNativeMobileAppMaxLocalDataSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
@@ -38602,7 +38602,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public Map<String,Object> unsetNativeMobileAppMaxLocalDataSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");

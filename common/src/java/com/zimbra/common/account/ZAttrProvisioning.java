@@ -13037,7 +13037,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public static final String A_zimbraNativeMobileAppLocalDataRetentionDays = "zimbraNativeMobileAppLocalDataRetentionDays";
 
     /**
@@ -13045,7 +13045,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public static final String A_zimbraNativeMobileAppMaxLocalDataSize = "zimbraNativeMobileAppMaxLocalDataSize";
 
     /**
@@ -13053,7 +13053,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7176)
+    @ZAttr(id=7172)
     public static final String A_zimbraNativeMobileAppMinVersionSupported = "zimbraNativeMobileAppMinVersionSupported";
 
     /**

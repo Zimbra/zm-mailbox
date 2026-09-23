@@ -54420,7 +54420,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public int getNativeMobileAppLocalDataRetentionDays() {
         return getIntAttr(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, 30, true);
     }
@@ -54433,7 +54433,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public void setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
@@ -54449,7 +54449,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public Map<String,Object> setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
@@ -54463,7 +54463,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public void unsetNativeMobileAppLocalDataRetentionDays() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
@@ -54478,7 +54478,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7174)
+    @ZAttr(id=7170)
     public Map<String,Object> unsetNativeMobileAppLocalDataRetentionDays(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
@@ -54492,7 +54492,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public int getNativeMobileAppMaxLocalDataSize() {
         return getIntAttr(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, 10240, true);
     }
@@ -54505,7 +54505,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public void setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -54521,7 +54521,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public Map<String,Object> setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -54535,7 +54535,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public void unsetNativeMobileAppMaxLocalDataSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
@@ -54550,7 +54550,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7175)
+    @ZAttr(id=7171)
     public Map<String,Object> unsetNativeMobileAppMaxLocalDataSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
@@ -54564,7 +54564,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7176)
+    @ZAttr(id=7172)
     public String getNativeMobileAppMinVersionSupported() {
         return getAttr(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, "10.1.22", true);
     }
@@ -54577,7 +54577,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7176)
+    @ZAttr(id=7172)
     public void setNativeMobileAppMinVersionSupported(String zimbraNativeMobileAppMinVersionSupported) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, zimbraNativeMobileAppMinVersionSupported);
@@ -54593,7 +54593,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7176)
+    @ZAttr(id=7172)
     public Map<String,Object> setNativeMobileAppMinVersionSupported(String zimbraNativeMobileAppMinVersionSupported, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, zimbraNativeMobileAppMinVersionSupported);
@@ -54607,7 +54607,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7176)
+    @ZAttr(id=7172)
     public void unsetNativeMobileAppMinVersionSupported() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, "");
@@ -54622,7 +54622,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=7176)
+    @ZAttr(id=7172)
     public Map<String,Object> unsetNativeMobileAppMinVersionSupported(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, "");
@@ -58775,13 +58775,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
-     * @return zimbraPushNotificationDisclosureLevel, or null if unset and/or has invalid value
+     * @return zimbraPushNotificationDisclosureLevel, or ZAttrProvisioning.PushNotificationDisclosureLevel.FULL_PREVIEW if unset and/or has invalid value
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4173)
     public ZAttrProvisioning.PushNotificationDisclosureLevel getPushNotificationDisclosureLevel() {
-        try { String v = getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, true, true); return v == null ? null : ZAttrProvisioning.PushNotificationDisclosureLevel.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, true, true); return v == null ? ZAttrProvisioning.PushNotificationDisclosureLevel.FULL_PREVIEW : ZAttrProvisioning.PushNotificationDisclosureLevel.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PushNotificationDisclosureLevel.FULL_PREVIEW; }
     }
 
     /**
@@ -58791,13 +58791,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
-     * @return zimbraPushNotificationDisclosureLevel, or null if unset
+     * @return zimbraPushNotificationDisclosureLevel, or "FULL_PREVIEW" if unset
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4173)
     public String getPushNotificationDisclosureLevelAsString() {
-        return getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, null, true);
+        return getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, "FULL_PREVIEW", true);
     }
 
     /**
@@ -58921,13 +58921,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
      *
-     * @return zimbraPushNotificationPayloadMode, or null if unset and/or has invalid value
+     * @return zimbraPushNotificationPayloadMode, or ZAttrProvisioning.PushNotificationPayloadMode.CONFIGURABLE if unset and/or has invalid value
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
     public ZAttrProvisioning.PushNotificationPayloadMode getPushNotificationPayloadMode() {
-        try { String v = getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, true, true); return v == null ? null : ZAttrProvisioning.PushNotificationPayloadMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, true, true); return v == null ? ZAttrProvisioning.PushNotificationPayloadMode.CONFIGURABLE : ZAttrProvisioning.PushNotificationPayloadMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PushNotificationPayloadMode.CONFIGURABLE; }
     }
 
     /**
@@ -58936,13 +58936,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
      *
-     * @return zimbraPushNotificationPayloadMode, or null if unset
+     * @return zimbraPushNotificationPayloadMode, or "CONFIGURABLE" if unset
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
     public String getPushNotificationPayloadModeAsString() {
-        return getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, null, true);
+        return getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, "CONFIGURABLE", true);
     }
 
     /**

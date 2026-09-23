@@ -22320,13 +22320,13 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
-     * @return zimbraPushNotificationDisclosureLevel, or null if unset and/or has invalid value
+     * @return zimbraPushNotificationDisclosureLevel, or ZAttrProvisioning.PushNotificationDisclosureLevel.FULL_PREVIEW if unset and/or has invalid value
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4173)
     public ZAttrProvisioning.PushNotificationDisclosureLevel getPushNotificationDisclosureLevel() {
-        try { String v = getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, true, true); return v == null ? null : ZAttrProvisioning.PushNotificationDisclosureLevel.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, true, true); return v == null ? ZAttrProvisioning.PushNotificationDisclosureLevel.FULL_PREVIEW : ZAttrProvisioning.PushNotificationDisclosureLevel.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PushNotificationDisclosureLevel.FULL_PREVIEW; }
     }
 
     /**
@@ -22336,13 +22336,13 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
      *
-     * @return zimbraPushNotificationDisclosureLevel, or null if unset
+     * @return zimbraPushNotificationDisclosureLevel, or "FULL_PREVIEW" if unset
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4173)
     public String getPushNotificationDisclosureLevelAsString() {
-        return getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, null, true);
+        return getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, "FULL_PREVIEW", true);
     }
 
     /**
@@ -22466,13 +22466,13 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
      *
-     * @return zimbraPushNotificationPayloadMode, or null if unset and/or has invalid value
+     * @return zimbraPushNotificationPayloadMode, or ZAttrProvisioning.PushNotificationPayloadMode.CONFIGURABLE if unset and/or has invalid value
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
     public ZAttrProvisioning.PushNotificationPayloadMode getPushNotificationPayloadMode() {
-        try { String v = getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, true, true); return v == null ? null : ZAttrProvisioning.PushNotificationPayloadMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, true, true); return v == null ? ZAttrProvisioning.PushNotificationPayloadMode.CONFIGURABLE : ZAttrProvisioning.PushNotificationPayloadMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PushNotificationPayloadMode.CONFIGURABLE; }
     }
 
     /**
@@ -22481,13 +22481,13 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
      *
-     * @return zimbraPushNotificationPayloadMode, or null if unset
+     * @return zimbraPushNotificationPayloadMode, or "CONFIGURABLE" if unset
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
     public String getPushNotificationPayloadModeAsString() {
-        return getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, null, true);
+        return getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, "CONFIGURABLE", true);
     }
 
     /**
