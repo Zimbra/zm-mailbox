@@ -10917,6 +10917,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileAllowedIPs = "zimbraMobileAllowedIPs";
 
     /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * deviceJSON(encrypted) (Firebase device JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public static final String A_zimbraMobileAppFCMDeviceDetails = "zimbraMobileAppFCMDeviceDetails";
+
+    /**
+     * JSON wrapper containing FCM server credentials and bundle metadata for
+     * the Firebase Admin SDK. Payload fields : projectId, projectNumber,
+     * serverJSON(encrypted) (Firebase service-account JSON), bundleVersion,
+     * bundleInstalledAt.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public static final String A_zimbraMobileAppFCMServerDetails = "zimbraMobileAppFCMServerDetails";
+
+    /**
      * whether mobile sync should zip the skipped item and attach it to the
      * notification mail
      *
