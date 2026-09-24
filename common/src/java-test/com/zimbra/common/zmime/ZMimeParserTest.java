@@ -275,9 +275,6 @@ public class ZMimeParserTest {
 //            }
 //        }
 //    }
-    // =========================================================================
-    // ZBUG-5493 AUTOMATED UNIT TESTS (Directly from Sudha's QA Document)
-    // =========================================================================
 
     /**
      * Verify LMTP delivery of email with line starting with =0D and missing Content-Transfer-Encoding header.
