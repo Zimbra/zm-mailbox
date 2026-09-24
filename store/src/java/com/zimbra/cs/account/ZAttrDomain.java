@@ -20306,17 +20306,17 @@ public abstract class ZAttrDomain extends NamedEntry {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * <p>Use getNativeMobileAccessTokenLifetimeAsString to access value as a string.
+     * <p>Use getNativeOAuthAccessTokenLifetimeAsString to access value as a string.
      *
-     * @see #getNativeMobileAccessTokenLifetimeAsString()
+     * @see #getNativeOAuthAccessTokenLifetimeAsString()
      *
-     * @return zimbraNativeMobileAccessTokenLifetime in millseconds, or 3600000 (1h)  if unset
+     * @return zimbraNativeOAuthAccessTokenLifetime in millseconds, or 3600000 (1h)  if unset
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
-    public long getNativeMobileAccessTokenLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraNativeMobileAccessTokenLifetime, 3600000L, true);
+    public long getNativeOAuthAccessTokenLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraNativeOAuthAccessTokenLifetime, 3600000L, true);
     }
 
     /**
@@ -20326,13 +20326,13 @@ public abstract class ZAttrDomain extends NamedEntry {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @return zimbraNativeMobileAccessTokenLifetime, or "1h" if unset
+     * @return zimbraNativeOAuthAccessTokenLifetime, or "1h" if unset
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
-    public String getNativeMobileAccessTokenLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraNativeMobileAccessTokenLifetime, "1h", true);
+    public String getNativeOAuthAccessTokenLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraNativeOAuthAccessTokenLifetime, "1h", true);
     }
 
     /**
@@ -20342,15 +20342,15 @@ public abstract class ZAttrDomain extends NamedEntry {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @param zimbraNativeMobileAccessTokenLifetime new value
+     * @param zimbraNativeOAuthAccessTokenLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
-    public void setNativeMobileAccessTokenLifetime(String zimbraNativeMobileAccessTokenLifetime) throws com.zimbra.common.service.ServiceException {
+    public void setNativeOAuthAccessTokenLifetime(String zimbraNativeOAuthAccessTokenLifetime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobileAccessTokenLifetime, zimbraNativeMobileAccessTokenLifetime);
+        attrs.put(Provisioning.A_zimbraNativeOAuthAccessTokenLifetime, zimbraNativeOAuthAccessTokenLifetime);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -20361,16 +20361,16 @@ public abstract class ZAttrDomain extends NamedEntry {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @param zimbraNativeMobileAccessTokenLifetime new value
+     * @param zimbraNativeOAuthAccessTokenLifetime new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
-    public Map<String,Object> setNativeMobileAccessTokenLifetime(String zimbraNativeMobileAccessTokenLifetime, Map<String,Object> attrs) {
+    public Map<String,Object> setNativeOAuthAccessTokenLifetime(String zimbraNativeOAuthAccessTokenLifetime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobileAccessTokenLifetime, zimbraNativeMobileAccessTokenLifetime);
+        attrs.put(Provisioning.A_zimbraNativeOAuthAccessTokenLifetime, zimbraNativeOAuthAccessTokenLifetime);
         return attrs;
     }
 
@@ -20386,9 +20386,9 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
-    public void unsetNativeMobileAccessTokenLifetime() throws com.zimbra.common.service.ServiceException {
+    public void unsetNativeOAuthAccessTokenLifetime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobileAccessTokenLifetime, "");
+        attrs.put(Provisioning.A_zimbraNativeOAuthAccessTokenLifetime, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -20405,9 +20405,9 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
-    public Map<String,Object> unsetNativeMobileAccessTokenLifetime(Map<String,Object> attrs) {
+    public Map<String,Object> unsetNativeOAuthAccessTokenLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobileAccessTokenLifetime, "");
+        attrs.put(Provisioning.A_zimbraNativeOAuthAccessTokenLifetime, "");
         return attrs;
     }
 
@@ -20415,28 +20415,28 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Controls whether persistent sessions are enabled for native mobile
      * clients.
      *
-     * @return zimbraNativeMobilePersistentSessionEnabled, or false if unset
+     * @return zimbraNativeOAuthPersistentSessionEnabled, or false if unset
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4170)
-    public boolean isNativeMobilePersistentSessionEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraNativeMobilePersistentSessionEnabled, false, true);
+    public boolean isNativeOAuthPersistentSessionEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraNativeOAuthPersistentSessionEnabled, false, true);
     }
 
     /**
      * Controls whether persistent sessions are enabled for native mobile
      * clients.
      *
-     * @param zimbraNativeMobilePersistentSessionEnabled new value
+     * @param zimbraNativeOAuthPersistentSessionEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4170)
-    public void setNativeMobilePersistentSessionEnabled(boolean zimbraNativeMobilePersistentSessionEnabled) throws com.zimbra.common.service.ServiceException {
+    public void setNativeOAuthPersistentSessionEnabled(boolean zimbraNativeOAuthPersistentSessionEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobilePersistentSessionEnabled, zimbraNativeMobilePersistentSessionEnabled ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraNativeOAuthPersistentSessionEnabled, zimbraNativeOAuthPersistentSessionEnabled ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -20444,16 +20444,16 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Controls whether persistent sessions are enabled for native mobile
      * clients.
      *
-     * @param zimbraNativeMobilePersistentSessionEnabled new value
+     * @param zimbraNativeOAuthPersistentSessionEnabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4170)
-    public Map<String,Object> setNativeMobilePersistentSessionEnabled(boolean zimbraNativeMobilePersistentSessionEnabled, Map<String,Object> attrs) {
+    public Map<String,Object> setNativeOAuthPersistentSessionEnabled(boolean zimbraNativeOAuthPersistentSessionEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobilePersistentSessionEnabled, zimbraNativeMobilePersistentSessionEnabled ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraNativeOAuthPersistentSessionEnabled, zimbraNativeOAuthPersistentSessionEnabled ? TRUE : FALSE);
         return attrs;
     }
 
@@ -20466,9 +20466,9 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4170)
-    public void unsetNativeMobilePersistentSessionEnabled() throws com.zimbra.common.service.ServiceException {
+    public void unsetNativeOAuthPersistentSessionEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobilePersistentSessionEnabled, "");
+        attrs.put(Provisioning.A_zimbraNativeOAuthPersistentSessionEnabled, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -20482,88 +20482,9 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4170)
-    public Map<String,Object> unsetNativeMobilePersistentSessionEnabled(Map<String,Object> attrs) {
+    public Map<String,Object> unsetNativeOAuthPersistentSessionEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobilePersistentSessionEnabled, "");
-        return attrs;
-    }
-
-    /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * <p>Use getNativeMobileRefreshTokenLifetimeAsString to access value as a string.
-     *
-     * @see #getNativeMobileRefreshTokenLifetimeAsString()
-     *
-     * @return zimbraNativeMobileRefreshTokenLifetime in millseconds, or 2592000000 (30d)  if unset
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public long getNativeMobileRefreshTokenLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraNativeMobileRefreshTokenLifetime, 2592000000L, true);
-    }
-
-    /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @return zimbraNativeMobileRefreshTokenLifetime, or "30d" if unset
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public String getNativeMobileRefreshTokenLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraNativeMobileRefreshTokenLifetime, "30d", true);
-    }
-
-    /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @param zimbraNativeMobileRefreshTokenLifetime new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public void setNativeMobileRefreshTokenLifetime(String zimbraNativeMobileRefreshTokenLifetime) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobileRefreshTokenLifetime, zimbraNativeMobileRefreshTokenLifetime);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @param zimbraNativeMobileRefreshTokenLifetime new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public Map<String,Object> setNativeMobileRefreshTokenLifetime(String zimbraNativeMobileRefreshTokenLifetime, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobileRefreshTokenLifetime, zimbraNativeMobileRefreshTokenLifetime);
+        attrs.put(Provisioning.A_zimbraNativeOAuthPersistentSessionEnabled, "");
         return attrs;
     }
 
@@ -20575,14 +20496,93 @@ public abstract class ZAttrDomain extends NamedEntry {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
+     * <p>Use getNativeOAuthRefreshTokenLifetimeAsString to access value as a string.
+     *
+     * @see #getNativeOAuthRefreshTokenLifetimeAsString()
+     *
+     * @return zimbraNativeOAuthRefreshTokenLifetime in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public long getNativeOAuthRefreshTokenLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraNativeOAuthRefreshTokenLifetime, 2592000000L, true);
+    }
+
+    /**
+     * Lifetime of the native mobile refresh token. Values normally range
+     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
+     * the applicable scope. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraNativeOAuthRefreshTokenLifetime, or "30d" if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public String getNativeOAuthRefreshTokenLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraNativeOAuthRefreshTokenLifetime, "30d", true);
+    }
+
+    /**
+     * Lifetime of the native mobile refresh token. Values normally range
+     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
+     * the applicable scope. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraNativeOAuthRefreshTokenLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4171)
-    public void unsetNativeMobileRefreshTokenLifetime() throws com.zimbra.common.service.ServiceException {
+    public void setNativeOAuthRefreshTokenLifetime(String zimbraNativeOAuthRefreshTokenLifetime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobileRefreshTokenLifetime, "");
+        attrs.put(Provisioning.A_zimbraNativeOAuthRefreshTokenLifetime, zimbraNativeOAuthRefreshTokenLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Lifetime of the native mobile refresh token. Values normally range
+     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
+     * the applicable scope. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraNativeOAuthRefreshTokenLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> setNativeOAuthRefreshTokenLifetime(String zimbraNativeOAuthRefreshTokenLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeOAuthRefreshTokenLifetime, zimbraNativeOAuthRefreshTokenLifetime);
+        return attrs;
+    }
+
+    /**
+     * Lifetime of the native mobile refresh token. Values normally range
+     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
+     * the applicable scope. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void unsetNativeOAuthRefreshTokenLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeOAuthRefreshTokenLifetime, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -20600,9 +20600,9 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4171)
-    public Map<String,Object> unsetNativeMobileRefreshTokenLifetime(Map<String,Object> attrs) {
+    public Map<String,Object> unsetNativeOAuthRefreshTokenLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraNativeMobileRefreshTokenLifetime, "");
+        attrs.put(Provisioning.A_zimbraNativeOAuthRefreshTokenLifetime, "");
         return attrs;
     }
 

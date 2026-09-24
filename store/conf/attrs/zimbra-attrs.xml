@@ -10776,13 +10776,14 @@ TODO: delete them permanently from here
       optionalIn="globalConfig,domain" flags="domainAdminModifiable" immutable="1" since="10.1.21" callback="SamlTestCacheFlush">
     <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
 </attr>
-<attr id="4170" name="zimbraNativeMobilePersistentSessionEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
+
+<attr id="4170" name="zimbraNativeOAuthPersistentSessionEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
         <globalConfigValue>FALSE</globalConfigValue>
         <defaultCOSValue>FALSE</defaultCOSValue>
         <desc>Controls whether persistent sessions are enabled for native mobile clients.</desc>
     </attr>
 
-    <attr id="4171" name="zimbraNativeMobileRefreshTokenLifetime" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
+    <attr id="4171" name="zimbraNativeOAuthRefreshTokenLifetime" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
         <globalConfigValue>30d</globalConfigValue>
         <defaultCOSValue>30d</defaultCOSValue>
         <desc>
@@ -10792,7 +10793,7 @@ TODO: delete them permanently from here
         </desc>
     </attr>
 
-    <attr id="4172" name="zimbraNativeMobileAccessTokenLifetime" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
+    <attr id="4172" name="zimbraNativeOAuthAccessTokenLifetime" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
         <globalConfigValue>1h</globalConfigValue>
         <defaultCOSValue>1h</defaultCOSValue>
         <desc>
@@ -10800,6 +10801,5 @@ TODO: delete them permanently from here
             native mobile OAuth2 sessions.
         </desc>
     </attr>
-
 
 </attrs>

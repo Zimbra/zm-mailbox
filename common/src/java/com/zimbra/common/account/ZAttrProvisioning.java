@@ -12976,7 +12976,7 @@ public class ZAttrProvisioning {
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4172)
-    public static final String A_zimbraNativeMobileAccessTokenLifetime = "zimbraNativeMobileAccessTokenLifetime";
+    public static final String A_zimbraNativeOAuthAccessTokenLifetime = "zimbraNativeOAuthAccessTokenLifetime";
 
     /**
      * Controls whether persistent sessions are enabled for native mobile
@@ -12985,7 +12985,7 @@ public class ZAttrProvisioning {
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4170)
-    public static final String A_zimbraNativeMobilePersistentSessionEnabled = "zimbraNativeMobilePersistentSessionEnabled";
+    public static final String A_zimbraNativeOAuthPersistentSessionEnabled = "zimbraNativeOAuthPersistentSessionEnabled";
 
     /**
      * Lifetime of the native mobile refresh token. Values normally range
@@ -12998,7 +12998,7 @@ public class ZAttrProvisioning {
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4171)
-    public static final String A_zimbraNativeMobileRefreshTokenLifetime = "zimbraNativeMobileRefreshTokenLifetime";
+    public static final String A_zimbraNativeOAuthRefreshTokenLifetime = "zimbraNativeOAuthRefreshTokenLifetime";
 
     /**
      * Deprecated since: 10.1.0. deprecated in favor for new realtime license
