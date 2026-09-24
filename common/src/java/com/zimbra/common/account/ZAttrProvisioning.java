@@ -12967,6 +12967,40 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMyoneloginSamlSigningCert = "zimbraMyoneloginSamlSigningCert";
 
     /**
+     * Lifetime of the native mobile access/authentication token issued for
+     * native mobile OAuth2 sessions. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public static final String A_zimbraNativeMobileAccessTokenLifetime = "zimbraNativeMobileAccessTokenLifetime";
+
+    /**
+     * Controls whether persistent sessions are enabled for native mobile
+     * clients.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public static final String A_zimbraNativeMobilePersistentSessionEnabled = "zimbraNativeMobilePersistentSessionEnabled";
+
+    /**
+     * Lifetime of the native mobile refresh token. Values normally range
+     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
+     * the applicable scope. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public static final String A_zimbraNativeMobileRefreshTokenLifetime = "zimbraNativeMobileRefreshTokenLifetime";
+
+    /**
      * Deprecated since: 10.1.0. deprecated in favor for new realtime license
      * attributes. Orig desc: A signed activation key that authorizes this
      * installation.
