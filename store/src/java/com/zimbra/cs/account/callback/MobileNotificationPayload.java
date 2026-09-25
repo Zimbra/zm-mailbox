@@ -18,14 +18,13 @@
 package com.zimbra.cs.account.callback;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.soap.admin.type.CacheEntryType;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Callback for the zimbraPushNotificationPayloadMode attribute.
@@ -35,7 +34,6 @@ public class MobileNotificationPayload extends AttributeCallback {
 
     private static final String ATTR_NAME = "zimbraPushNotificationPayloadMode";
 
-    private final Set<CallbackContext> flushedContexts = new HashSet<>();
 
     /**
      * Validates that zimbraPushNotificationPayloadMode can only be modified at global config level.
@@ -65,7 +63,8 @@ public class MobileNotificationPayload extends AttributeCallback {
     }
 
     /**
-     * Flushes the config cache after modification to ensure changes are propagated.
+     * Flushes the config, account, and domain caches after successful modification
+     * to ensure changes are propagated to all servers.
      *
      * @param context the callback context
      * @param attrName the attribute name
@@ -78,28 +77,26 @@ public class MobileNotificationPayload extends AttributeCallback {
             return;
         }
 
-        // Only flush once per context to avoid redundant operations
-        if (flushedContexts.contains(context)) {
+        // Only flush once per modify batch to avoid redundant operations
+        if (context.isDoneAndSetIfNot(MobileNotificationPayload.class)) {
             return;
         }
 
-        flushedContexts.add(context);
         try {
-            flushCache(CacheEntryType.config, null);
+            SoapProvisioning sp = SoapProvisioning.getAdminInstance();
+            // Flush config cache so global config updates are visible
+            sp.flushCache(CacheEntryType.config.name(), null, true /* allServers */,
+                    false /* imapDaemons */);
+            // Flush account cache so accounts pick up new global config values
+            sp.flushCache(CacheEntryType.account.name(), null, true /* allServers */,
+                    false /* imapDaemons */);
+            // Flush domain cache so domains pick up new global config values
+            sp.flushCache(CacheEntryType.domain.name(), null, true /* allServers */,
+                    false /* imapDaemons */);
         } catch (ServiceException e) {
-            // Log error but don't throw - postModify should not throw exceptions
+            ZimbraLog.account.warn(
+                    "Failed to flush %s cache across servers after zimbraPushNotificationPayloadMode modification",
+                    ATTR_NAME, e);
         }
-    }
-
-    /**
-     * Flushes the cache entry. This method can be overridden for testing.
-     *
-     * @param type the cache entry type
-     * @param entries the cache entries to flush (null for all)
-     * @throws ServiceException if cache flush fails
-     */
-    protected void flushCache(CacheEntryType type, Provisioning.CacheEntry[] entries)
-            throws ServiceException {
-        Provisioning.getInstance().flushCache(type, entries);
     }
 }
