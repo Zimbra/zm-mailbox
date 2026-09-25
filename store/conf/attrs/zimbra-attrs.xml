@@ -10798,7 +10798,7 @@ TODO: delete them permanently from here
 <attr id="4172" name="zimbraPushNotificationPayloadMode" type="enum" value="OPAQUE,CONFIGURABLE,E2EE" cardinality="single"
       optionalIn="globalConfig,domain,cos,account" flags="domainInherited,accountCosDomainInherited" since="10.1.22" callback="MobileNotificationPayload">
   <desc>Specifies the payload mode for FCM push notifications (OPAQUE, CONFIGURABLE, E2EE)</desc>
-git  <globalConfigValue>CONFIGURABLE</globalConfigValue>
+  <globalConfigValue>CONFIGURABLE</globalConfigValue>
 </attr>
 
 <attr id="4173" name="zimbraPushNotificationDisclosureLevel" type="enum" value="SKELETAL,SENDER_ONLY,FULL_PREVIEW" cardinality="single"
