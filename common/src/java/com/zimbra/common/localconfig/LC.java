@@ -1588,6 +1588,10 @@ public final class LC {
     @Reloadable
     public static final KnownKey zimbra_forward_servlet_allowed_paths = KnownKey.newKey("");
 
+    public static final KnownKey zimbra_archive_formatter_maintenance_retry_sleep_ms = KnownKey.newKey("1000");
+
+    public static final KnownKey zimbra_archive_formatter_max_maintenance_retries = KnownKey.newKey("30");
+
     // Explicit CsrfFilter domainAllowedRefHosts cache max size
     // Falls back to ldap_cache_domain_maxsize on parsing error
     public static final KnownKey csrf_filter_domain_allowed_ref_hosts_max_size = KnownKey.newKey(1000);

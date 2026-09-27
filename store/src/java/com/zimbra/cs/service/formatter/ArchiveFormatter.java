@@ -957,7 +957,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     } else if (aie.getName().endsWith(".meta")) {
                         meta = true;
                         if (id != null) {
-                            addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
+                            addItemWithRetry(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
                         }
                         try {
                             id = new ItemData(readArchiveEntry(ais, aie));
@@ -979,12 +979,12 @@ public abstract class ArchiveFormatter extends Formatter {
                     } else if ((aie.getType() != 0 && id.ud.type != aie.getType()) || (id.ud.getBlobDigest() != null && aie.getSize() != -1 && id.ud.size != aie.getSize())) {
                         addError(errs, FormatterServiceException.MISMATCHED_META(aie.getName()));
                     } else {
-                        addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, aie, errs);
+                        addItemWithRetry(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, aie, errs);
                     }
                     id = null;
                 }
                 if (id != null) {
-                    addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
+                    addItemWithRetry(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
                 }
             } catch (Exception e) {
                 if (id == null) {
@@ -1096,11 +1096,50 @@ public abstract class ArchiveFormatter extends Formatter {
         }
     }
 
+    private void addItemWithRetry(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
+                                  FolderDigestInfo digestInfo, Map<Integer, Integer> idMap, int[] ids,
+                                  Set<MailItem.Type> types, Resolve r, ItemData id,
+                                  ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs) {
+
+        int attempt = 0;
+        int maxRetries = LC.zimbra_archive_formatter_max_maintenance_retries.intValue();
+        long retrySleepMs = LC.zimbra_archive_formatter_maintenance_retry_sleep_ms.intValue();
+
+        while (attempt <= maxRetries) {
+            try {
+                addItem(context, fldr, fmap, digestInfo, idMap, ids, types, r, id, ais, aie, errs);
+                return; // Success
+            } catch (MailServiceException.MailboxInMaintenanceException e) {
+                if (attempt < maxRetries) {
+                    attempt++;
+                    ZimbraLog.misc.info("Mailbox in maintenance, retrying item %s (attempt %d/%d)",
+                            id.path, attempt, maxRetries);
+                    try {
+                        Thread.sleep(retrySleepMs);
+                        retrySleepMs = Math.min(retrySleepMs * 2, 30000); // cap at 30 seconds
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        addError(errs, e);
+                        return;
+                    }
+                } else {
+                    ZimbraLog.misc.warn("Max retries exceeded for item %s after maintenance lock", id.path);
+                    addError(errs, e);
+                    return;
+                }
+            } catch (ServiceException e) {
+                // Delegate all other exceptions to addItem error handling
+                return;
+            }
+        }
+    }
+
     private void addItem(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
             FolderDigestInfo digestInfo,
             Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData id,
             ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
     throws ServiceException {
+        int attempt = 0;
         try {
             Mailbox mbox = fldr.getMailbox();
             MailItem mi = MailItem.constructItem(mbox, id.ud);
@@ -1525,11 +1564,12 @@ public abstract class ArchiveFormatter extends Formatter {
                             getTagNames(id), null);
                 }
             }
+        } catch (MailServiceException.MailboxInMaintenanceException e) {
+            throw e;
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.QUOTA_EXCEEDED) {
                 throw e;
-            } else if (r != Resolve.Skip ||
-                e.getCode() != MailServiceException.ALREADY_EXISTS) {
+            } else if (r != Resolve.Skip || e.getCode() != MailServiceException.ALREADY_EXISTS) {
                 addError(errs, e);
             }
         } catch (Exception e) {
