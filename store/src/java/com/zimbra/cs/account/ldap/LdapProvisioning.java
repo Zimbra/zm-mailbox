@@ -257,6 +257,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private final INamedEntryCache<LdapZimlet> zimletCache;
 
     private final UnmodifiableBloomFilter<String> commonPasswordFilter;
+    // Bloom filter false-positive tolerance for the common-password check (see zimbraPasswordBlockCommonEnabled).
+    private static final double COMMON_PASSWORD_FILTER_TOLERANCE = 0.0001;
 
     private LdapConfig cachedGlobalConfig = null;
     private GlobalGrant cachedGlobalGrant = null;
@@ -309,8 +311,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         zimletCache = cache.zimletCache();
         alwaysOnClusterCache = cache.alwaysOnClusterCache();
 
+        // Use a much stricter false-positive tolerance than the bloom filter's default (3%).
+        // At the default tolerance, roughly 1 in 33 arbitrary/random passwords are incorrectly
+        // flagged as "too common" even though they do not appear in the common-passwords list.
         commonPasswordFilter = UnmodifiableBloomFilter
-            .createLazyFilterFromFile(LC.common_passwords_txt.value());
+            .createLazyFilterFromFile(LC.common_passwords_txt.value(), COMMON_PASSWORD_FILTER_TOLERANCE);
 
         setDIT();
         setHelper(new ZLdapHelper(this));
