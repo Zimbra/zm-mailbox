@@ -32,12 +32,16 @@ public class NativeMobileAppCallback extends AttributeCallback {
     @Override
     public void preModify(CallbackContext context, String attrName, Object value,
             Map attrsToModify, Entry entry) throws ServiceException {
-        // preventing domain level enablement
+        // preventing domain level enablement on modification as well as domain creation
         if (ProvisioningConstants.TRUE.equals(String.valueOf(value))
-                && (entry instanceof Domain)) {
+                && (entry instanceof Domain || isDomainCreateContext(context))) {
             throw ServiceException.PERM_DENIED("zimbraFeatureNativeMobileAppEnabled cannot be configured at "
                     + "domain level. Please use Account or COS level instead.");
         }
+    }
+
+    private boolean isDomainCreateContext(CallbackContext context) {
+        return context != null && context.isCreate() && Domain.class.equals(context.getCreatingEntryType());
     }
 
     @Override
