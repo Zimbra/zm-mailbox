@@ -50,6 +50,22 @@ named "ZsMsg_<locale name>.properties" to this directory and restart Tomcat.
 Whether you're adding a new localized message file or editing one, Tomcat must
 be restarted for changes to take effect.
 
+Translation automation is registered in .agents/translation/config.yml.  It
+tracks ZsMsg (server messages) and ZsMsgRights (admin right descriptions) as
+separate units with context files under .agents/translation/context/.  Context
+paths resolve from .agents/translation/; bundle paths resolve from the repository
+root.  Context is added as each key is investigated; a blank user_context is
+reserved for human input and must not be overwritten by automation.  Generated
+reports belong outside .agents/translation/.
+
+The English ZsMsgRights.properties is generated from rights XML definitions;
+do not edit it by hand.  Regional message files may override just a few keys,
+with Java's ResourceBundle supplying the remainder from the parent bundles.
+When adding either kind of locale file, add it to stage_zimbra_common_mbox_conf_msgs
+in pkg-builder.pl so it is included in the server package.  L10nMsg.properties
+supplies locale display names, but it does not make a locale available on its
+own; the available-locale list depends on installed client resources.
+
 Examples of locale name are "en_US", "en_GB", and "ja".  In other words, what
 you get by calling Locale object's toString() method.
 

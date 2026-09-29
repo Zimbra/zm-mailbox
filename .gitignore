@@ -17,5 +17,6 @@ store/tmp/
 common-passwords.txt
 lib/
 context/
+!.agents/translation/context/
 localfiles
 .claude/
