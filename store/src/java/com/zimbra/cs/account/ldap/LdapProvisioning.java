@@ -256,7 +256,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private final INamedEntryCache<XMPPComponent> xmppComponentCache;
     private final INamedEntryCache<LdapZimlet> zimletCache;
 
-    /** Bloom filter false-positive tolerance for the common-password check (see zimbraPasswordBlockCommonEnabled). */
+    /** bloom filter false-positive tolerance for the common-password check (see zimbraPasswordBlockCommonEnabled). */
     private static final double COMMON_PASSWORD_FILTER_TOLERANCE = 0.0001;
 
     private final UnmodifiableBloomFilter<String> commonPasswordFilter;
