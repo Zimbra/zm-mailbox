@@ -1,0 +1,72 @@
+# Application paths resolve from the repository root; context paths resolve from
+# .agents/translation/. Existing locale identifiers are preserved as filenames.
+schema_version: 1
+repository: Zimbra/zm-mailbox
+default_locale: en_US
+encoding: UTF-8
+
+context_files:
+  - id: server-messages
+    path: context/zs-msg.csv
+    format: csv
+    columns: [key_path, source_file, english_value, key_type, inferred_context, confidence, context_status, user_context]
+    key_column: key_path
+  - id: rights-descriptions
+    path: context/zs-msg-rights.csv
+    format: csv
+    columns: [key_path, source_file, english_value, key_type, inferred_context, confidence, context_status, user_context]
+    key_column: key_path
+
+translation_units:
+  - id: server-messages
+    description: Server-generated mail, notifications, calendar replies, and errors.
+    format: properties
+    source_locale: en_US
+    source_files: [store-conf/conf/msgs/ZsMsg.properties]
+    key_format: flat_properties_key
+    locale_files:
+      pattern: store-conf/conf/msgs/ZsMsg_{locale}.properties
+      locales: [ar, ca, da, de, en_AU, en_GB, es, eu, fr, fr_CA, fr_FR, hi, hr, hu, in, it, iw, ja, ko, lo, ms, nl, "no", pl, pt, pt_BR, ro, ru, sl, sv, ta, th, tr, uk, vi, zh_CN, zh_HK, zh_TW]
+    # The empty ZsMsg_en.properties is a fallback marker, not a translated unit.
+    # Regional bundles such as fr_FR intentionally override only some parent keys.
+    exclusions: [store-conf/conf/msgs/ZsMsg_en.properties]
+    placeholders:
+      style: java_message_format
+      examples: ["{0}", "{1}"]
+    properties:
+      escape_non_ascii: true
+    context_file: server-messages
+
+  - id: rights-descriptions
+    description: Descriptions of permissions returned to the administration interface.
+    format: properties
+    source_locale: en_US
+    # The English source is generated from store-conf/conf/rights XML definitions.
+    source_files: [store-conf/conf/msgs/ZsMsgRights.properties]
+    key_format: flat_properties_key
+    locale_files:
+      pattern: store-conf/conf/msgs/ZsMsgRights_{locale}.properties
+      locales: [ar, ca, da, de, en_AU, en_GB, es, eu, fr, fr_CA, hi, hr, hu, in, it, iw, ja, ko, lo, ms, nl, "no", pl, pt, pt_BR, ro, ru, sl, sv, ta, th, tr, uk, vi, zh_CN, zh_HK, zh_TW]
+    placeholders:
+      style: java_message_format
+      examples: ["{0}"]
+    properties:
+      escape_non_ascii: true
+    context_file: rights-descriptions
+
+locale_registration:
+  required: true
+  touchpoints:
+    - id: server-bundle-packaging
+      description: Each new server message and rights bundle must be copied into the package.
+      file: pkg-builder.pl
+      symbol: stage_zimbra_common_mbox_conf_msgs
+      kind: manifest
+      applies_to_units: [server-messages, rights-descriptions]
+      follow_existing_locale: true
+    - id: locale-display-name
+      description: Add a native locale display name when absent; Java display names provide a fallback.
+      file: store-conf/conf/msgs/L10nMsg.properties
+      kind: list_entry
+      optional: true
+      follow_existing_locale: true
