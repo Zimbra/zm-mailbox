@@ -17,6 +17,30 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang.StringUtils;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -199,29 +223,6 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedValue;
 import com.zimbra.soap.type.TargetBy;
-import org.apache.commons.lang.StringUtils;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collectors;
 
 
 /**
@@ -256,9 +257,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private final INamedEntryCache<XMPPComponent> xmppComponentCache;
     private final INamedEntryCache<LdapZimlet> zimletCache;
 
-    private final UnmodifiableBloomFilter<String> commonPasswordFilter;
-    // Bloom filter false-positive tolerance for the common-password check (see zimbraPasswordBlockCommonEnabled).
+    /** Bloom filter false-positive tolerance for the common-password check (see zimbraPasswordBlockCommonEnabled). */
     private static final double COMMON_PASSWORD_FILTER_TOLERANCE = 0.0001;
+
+    private final UnmodifiableBloomFilter<String> commonPasswordFilter;
 
     private LdapConfig cachedGlobalConfig = null;
     private GlobalGrant cachedGlobalGrant = null;
