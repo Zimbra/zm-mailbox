@@ -38,7 +38,6 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
-
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Strings;

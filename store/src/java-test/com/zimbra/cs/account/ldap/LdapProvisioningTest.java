@@ -25,23 +25,8 @@
  * ChangePassword) are owned by the QA automation suite and are
  * intentionally NOT present here.
  */
+
 package com.zimbra.cs.account.ldap;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -49,6 +34,19 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class LdapProvisioningTest {
 
@@ -56,9 +54,11 @@ public class LdapProvisioningTest {
 
     private static final String DICT_PATH =
             System.getProperty("java.io.tmpdir") + "/zbug5664_common_passwords.txt";
+
     private static final String DOMAIN_NAME = "zbug5664.local";
 
     private static Provisioning prov;
+
     private static int seq = 0;
 
     static {
@@ -137,31 +137,41 @@ public class LdapProvisioningTest {
 
     /* ==================== test cases ==================== */
 
-    /** QA TC1 - JIRA regression: 25-char password containing "]]" must be accepted. */
+    /**
+     * QA TC1 - JIRA regression: 25-char password containing "]]" must be accepted.
+     */
     @Test
     public void testTicketPasswordLongWithBracketsAccepted() throws Exception {
         assertAccepted("q8W]]PR?Diy`}5#Y,ArhjUl9H");
     }
 
-    /** QA TC2 - 21 chars: above the guard threshold, bloom check skipped. */
+    /**
+     * QA TC2 - 21 chars: above the guard threshold, bloom check skipped.
+     */
     @Test
     public void testLength21BypassesCommonCheck() throws Exception {
         assertAccepted("aB3#kL9]]mN5@pQ7$rT1!");
     }
 
-    /** QA TC3 - exactly 20 chars: still evaluated by filter; non-common accepted. */
+    /**
+     * QA TC3 - exactly 20 chars: still evaluated by filter; non-common accepted.
+     */
     @Test
     public void testLength20NonCommonAccepted() throws Exception {
         assertAccepted("aB3#kL9]]mN5@pQ7$rT1");
     }
 
-    /** QA TC4 - 19 chars, non-common, contains "]]": accepted. */
+    /**
+     * QA TC4 - 19 chars, non-common, contains "]]": accepted.
+     */
     @Test
     public void testLength19NonCommonAccepted() throws Exception {
         assertAccepted("P@ss]]w0rd!2026_XyZ");
     }
 
-    /** QA TC5 - security: real common passwords (<=20) must STILL be blocked. */
+    /**
+     * QA TC5 - security: real common passwords (<=20) must STILL be blocked.
+     */
     @Test
     public void testCommonPasswordsBlockedWhenEnabled() throws Exception {
         assertTooCommon("password123");
@@ -170,7 +180,9 @@ public class LdapProvisioningTest {
         assertTooCommon("1234567890");
     }
 
-    /** QA TC6 - feature disabled at account level: common password accepted. */
+    /**
+     * QA TC6 - feature disabled at account level: common password accepted.
+     */
     @Test
     public void testCommonAcceptedWhenFeatureDisabled() throws Exception {
         Map<String, Object> attrs = new HashMap<>();
@@ -178,23 +190,29 @@ public class LdapProvisioningTest {
         prov.createAccount(uniqueName(), "Password123!", attrs);
     }
 
-    /** QA TC12 - long passphrase made of common words accepted (>20 bypass). */
+    /**
+     * QA TC12 - long passphrase made of common words accepted (>20 bypass).
+     */
     @Test
     public void testLongPassphraseOfCommonWordsAccepted() throws Exception {
         assertAccepted("correcthorsebatterystaple123!]]");
     }
 
-    /** QA TC13 - max-length boundaries (64 and 128 chars) accepted. */
+    /**
+     * QA TC13 - max-length boundaries (64 and 128 chars) accepted.
+     */
     @Test
     public void testMaxLengthPasswordsAccepted() throws Exception {
         String unit = "aB3#kL9]]mN5@pQ7$rT1!";                                        // 21 chars
-        String p64  = String.join("", java.util.Collections.nCopies(3, unit)) + "X";  // 64
+        String p64 = String.join("", java.util.Collections.nCopies(3, unit)) + "X";  // 64
         String p128 = String.join("", java.util.Collections.nCopies(6, unit)) + "Xy"; // 128
         assertAccepted(p64);
         assertAccepted(p128);
     }
 
-    /** QA TC14 - other password policies still enforced on >20-char passwords. */
+    /**
+     * QA TC14 - other password policies still enforced on >20-char passwords.
+     */
     @Test
     public void testOtherPoliciesStillEnforcedOnLongPasswords() throws Exception {
         Map<String, Object> dAttrs = new HashMap<>();
@@ -218,7 +236,9 @@ public class LdapProvisioningTest {
         }
     }
 
-    /** QA TC15 - domain-level override of zimbraPasswordBlockCommonEnabled. */
+    /**
+     * QA TC15 - domain-level override of zimbraPasswordBlockCommonEnabled.
+     */
     @Test
     public void testDomainLevelOverride() throws Exception {
         Map<String, Object> off = new HashMap<>();
