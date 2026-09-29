@@ -11648,6 +11648,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyUnapprovedInROMApplication = "zimbraMobilePolicyUnapprovedInROMApplication";
 
     /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public static final String A_zimbraMobilePushNotificationEnabled = "zimbraMobilePushNotificationEnabled";
+
+    /**
      * Specifies whether MIME body parts are supported in search responses or
      * not. Some devices, like Samsung S5 with Lollipop OS, specify a body
      * preference for either MIME or HTML in search requests. However they do

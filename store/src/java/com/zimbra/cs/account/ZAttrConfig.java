@@ -39427,6 +39427,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @return zimbraMobilePushNotificationEnabled, or false if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public boolean isMobilePushNotificationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobilePushNotificationEnabled, false, true);
+    }
+
+    /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @param zimbraMobilePushNotificationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public void setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @param zimbraMobilePushNotificationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public Map<String,Object> setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public void unsetMobilePushNotificationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public Map<String,Object> unsetMobilePushNotificationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable/disable the modern web client option on the login
      * screen. Default value is FALSE, which makes the modern client option
      * available.
