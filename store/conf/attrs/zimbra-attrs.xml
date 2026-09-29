@@ -10778,7 +10778,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="4170" name="zimbraMobileAppFCMServerDetails" type="string" cardinality="single"
-      optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="FcmConfigRestriction">
+      optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" immutable="1" since="10.1.22" callback="FcmConfigRestriction">
     <desc>
         JSON wrapper containing FCM server credentials and bundle metadata for
         the Firebase Admin SDK. Payload fields : projectId, projectNumber, serverJSON(encrypted)
@@ -10787,11 +10787,18 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="4171" name="zimbraMobileAppFCMDeviceDetails" type="string" cardinality="single"
-      optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="FcmConfigRestriction">
+      optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" immutable="1" since="10.1.22" callback="FcmConfigRestriction">
     <desc>
         JSON wrapper containing FCM server credentials and bundle metadata for
         the Firebase Admin SDK. Payload fields : projectId, projectNumber, deviceJSON(encrypted)
         (Firebase device JSON), bundleVersion, bundleInstalledAt.
     </desc>
+</attr>
+
+<attr id="4174" name="zimbraMobilePushNotificationEnabled" type="boolean" cardinality="single"
+      optionalIn="globalConfig,account,cos,domain" flags="accountInfo,domainInfo,domainInherited,domainAdminModifiable,accountCosDomainInherited"
+      since="10.1.22">
+    <globalConfigValue>FALSE</globalConfigValue>
+    <desc>Flag to check whether push notification is enabled for a particular user.</desc>
 </attr>
 </attrs>
