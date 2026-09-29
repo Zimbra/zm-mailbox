@@ -190,6 +190,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             case TWO_FACTOR_AUTH:
                 lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME * 1000);
                 break;
+            case ZCO_AUTH:
+                lifetime = DEFAULT_ZCO_AUTH_LIFETIME * 1000;
+                break;
             case AUTH:
             default:
                 lifetime = isAdmin ?

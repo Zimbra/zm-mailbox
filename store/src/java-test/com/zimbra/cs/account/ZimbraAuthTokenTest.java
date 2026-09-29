@@ -187,6 +187,58 @@ public class ZimbraAuthTokenTest {
     }
 
     @Test
+    public void constructorWithUsageZcoComputesFiveMinuteLifetime() throws Exception {
+        // Arrange / Act — ZCO exchange token gets the fixed 5-minute lifetime
+        Account a = account();
+        long before = System.currentTimeMillis();
+        ZimbraAuthToken at = new ZimbraAuthToken(a, Usage.ZCO_AUTH);
+        long after = System.currentTimeMillis();
+
+        // Assert — usage preserved and lifetime is ~5 minutes (allow scheduling slack)
+        Assert.assertEquals(Usage.ZCO_AUTH, at.getUsage());
+        long lifetime = at.getExpires() - before;
+        Assert.assertTrue("ZCO token lifetime must be > 4 minutes", lifetime > 4L * 60 * 1000);
+        Assert.assertTrue("ZCO token lifetime must be <= 5 minutes",
+                at.getExpires() - after <= AuthToken.DEFAULT_ZCO_AUTH_LIFETIME * 1000);
+    }
+
+    @Test
+    public void zcoUsageCodeRoundTrips() throws Exception {
+        // The persisted usage code must be stable and uniquely decodable.
+        Assert.assertEquals("zco", Usage.ZCO_AUTH.getCode());
+        Assert.assertEquals(Usage.ZCO_AUTH, Usage.fromCode("zco"));
+    }
+
+    @Test
+    public void zcoUsageSurvivesEncodeDecode() throws Exception {
+        // Arrange — mint a ZCO token and round-trip it through the encoded form
+        Account a = account();
+        ZimbraAuthToken at = new ZimbraAuthToken(a, Usage.ZCO_AUTH);
+
+        // Act
+        ZimbraAuthToken decoded = new ZimbraAuthToken(at.getEncoded());
+
+        // Assert — usage is preserved so validation can enforce ZCO_AUTH-only redemption
+        Assert.assertEquals(Usage.ZCO_AUTH, decoded.getUsage());
+    }
+
+    @Test
+    public void zcoTokenDeRegisterIsCallableForSingleUse() throws Exception {
+        // Redemption destroys the exchange token via deRegister(); a freshly minted ZCO token
+        // is registered (redeemable) and de-registering it must not throw. The subsequent
+        // rejection of a replayed token is enforced by validateAuthToken()'s isRegistered()
+        // check, which is exercised by the shared auth-token machinery.
+        Account a = account();
+        ZimbraAuthToken at = new ZimbraAuthToken(a, Usage.ZCO_AUTH);
+        Assert.assertTrue("freshly minted ZCO token must be registered", at.isRegistered());
+
+        at.deRegister();
+
+        // token remains encodable/inspectable after the destroy step
+        Assert.assertEquals(Usage.ZCO_AUTH, at.getUsage());
+    }
+
+    @Test
     public void externalAccountConstructorExposesExternalEmailAndDigest() throws Exception {
         // Arrange — external (non-zimbra) token built from raw fields
         long expires = System.currentTimeMillis() + 60000L;

@@ -31,6 +31,8 @@ public class AccountConstants {
     // auth
     public static final String E_AUTH_REQUEST = "AuthRequest";
     public static final String E_AUTH_RESPONSE = "AuthResponse";
+    public static final String E_IDP_AUTH_REQUEST = "IdPAuthRequest";
+    public static final String E_IDP_AUTH_RESPONSE = "IdPAuthResponse";
     public static final String E_CHANGE_PASSWORD_REQUEST = "ChangePasswordRequest";
     public static final String E_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
     public static final String E_CLIENT_INFO_REQUEST = "ClientInfoRequest";
@@ -188,6 +190,8 @@ public class AccountConstants {
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
     public static final QName AUTH_RESPONSE = QName.get(E_AUTH_RESPONSE, NAMESPACE);
+    public static final QName IDP_AUTH_REQUEST = QName.get(E_IDP_AUTH_REQUEST, NAMESPACE);
+    public static final QName IDP_AUTH_RESPONSE = QName.get(E_IDP_AUTH_RESPONSE, NAMESPACE);
     public static final QName CHANGE_PASSWORD_REQUEST = QName.get(E_CHANGE_PASSWORD_REQUEST, NAMESPACE);
     public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName CLIENT_INFO_REQUEST = QName.get(E_CLIENT_INFO_REQUEST, NAMESPACE);

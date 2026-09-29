@@ -47,6 +47,7 @@ public abstract class AuthToken {
     public static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
     public static final long DEFAULT_TWO_FACTOR_AUTH_LIFETIME = 60*60;
     public static final long DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME = 60*60;
+    public static final long DEFAULT_ZCO_AUTH_LIFETIME = 60*5;
     private boolean ignoreSameSite;
 
     public static String generateDigest(String a, String b) {
@@ -269,7 +270,7 @@ public abstract class AuthToken {
     public abstract Usage getUsage();
 
     public static enum Usage {
-        AUTH("a"), ENABLE_TWO_FACTOR_AUTH("etfa"), TWO_FACTOR_AUTH("tfa"), RESET_PASSWORD("rp");
+        AUTH("a"), ENABLE_TWO_FACTOR_AUTH("etfa"), TWO_FACTOR_AUTH("tfa"), RESET_PASSWORD("rp"), ZCO_AUTH("zco");
 
         private String code;
 
