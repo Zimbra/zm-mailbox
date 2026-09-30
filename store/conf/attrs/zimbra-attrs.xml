@@ -10777,12 +10777,30 @@ TODO: delete them permanently from here
     <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
 </attr>
 
-  <attr id="4170" name="zimbraSamlSpSigningAlgorithm" type="enum" value="SHA1,SHA256,SHA512"
-        cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="SamlTestReset">
-    <desc>
-      Algorithm used to sign SP-generated SAML requests. Inherits the global configuration when unset on the domain. Defaults to SHA256 when no value is configured.
-    </desc>
-    <globalConfigValue>SHA256</globalConfigValue>
-  </attr>
+<attr id="4170" name="zimbraSamlSpSigningAlgorithm" type="enum" value="SHA1,SHA256,SHA512"
+      cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="SamlTestReset">
+  <desc>
+    Algorithm used to sign SP-generated SAML requests. Inherits the global configuration when unset on the domain. Defaults to SHA256 when no value is configured.
+  </desc>
+  <globalConfigValue>SHA256</globalConfigValue>
+</attr>
+
+<attr id="4171" name="zimbraReverseProxyModernCSP" type="enum" value="off,report-only,enforce" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" requiresRestart="nginxproxy" since="10.1.22">
+  <globalConfigValue>enforce</globalConfigValue>
+  <desc>
+    Controls Content Security Policy for the Modern UI path (/modern and its subpaths).
+    off disables CSP, report-only reports violations in the browser console without blocking, and enforce blocks violations.
+  </desc>
+</attr>
+
+<attr id="4172" name="zimbraReverseProxyModernCSPPolicy" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" requiresRestart="nginxproxy" since="10.1.22">
+  <globalConfigValue>manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';</globalConfigValue>
+  <desc>
+    Content Security Policy directives applied to the Modern UI by the reverse proxy.
+    Used when zimbraReverseProxyModernCSP is report-only or enforce; do not include a header name.
+    The token {{nonce}} is replaced with a per-response nonce, and the proxy also writes that nonce into
+    the Modern UI HTML. Place it inside quotes, e.g. 'nonce-{{nonce}}', followed by a non-word character.
+  </desc>
+</attr>
 
 </attrs>
