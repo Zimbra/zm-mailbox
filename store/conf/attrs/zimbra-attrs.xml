@@ -8893,8 +8893,26 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="4170" name="zimbraReverseProxyModernCSP" type="enum" value="off,report-only,enforce" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" requiresRestart="nginxproxy" since="10.1.22">
+  <globalConfigValue>enforce</globalConfigValue>
+  <globalConfigValueUpgrade>enforce</globalConfigValueUpgrade>
+  <desc>
+    Controls Content Security Policy for the Modern UI path (/modern and its subpaths).
+    off disables CSP, report-only reports violations in the browser console without blocking, and enforce blocks violations.
+  </desc>
+</attr>
+
 <attr id="1975" name="zimbraAPNSCertificate" type="binary" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">
   <desc>Certificate for Apple Push Notification Service</desc>
+</attr>
+
+<attr id="4171" name="zimbraReverseProxyModernCSPPolicy" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" requiresRestart="nginxproxy" since="10.1.22">
+  <globalConfigValue>manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';</globalConfigValue>
+  <globalConfigValueUpgrade>manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';</globalConfigValueUpgrade>
+  <desc>
+    Content Security Policy directives applied to the Modern UI by the reverse proxy.
+    Used when zimbraReverseProxyModernCSP is report-only or enforce; do not include a header name.
+  </desc>
 </attr>
 
 <attr id="1976" name="zimbraAPNSCertificatePassword" type="ostring" cardinality="single" optionalIn="globalConfig" since="8.7.0,9.0.0">

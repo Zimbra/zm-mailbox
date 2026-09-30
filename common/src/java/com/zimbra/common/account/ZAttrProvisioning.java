@@ -16532,6 +16532,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyResponseHeaders = "zimbraReverseProxyResponseHeaders";
 
     /**
+     * Controls whether the reverse proxy reports or enforces CSP for the Modern UI.
+      *
+      * @since ZCS 10.1.22
+     */
+     @ZAttr(id=4170)
+    public static final String A_zimbraReverseProxyModernCSP = "zimbraReverseProxyModernCSP";
+
+    /**
+     * CSP directives applied to the Modern UI by the reverse proxy.
+      *
+      * @since ZCS 10.1.22
+     */
+     @ZAttr(id=4171)
+    public static final String A_zimbraReverseProxyModernCSPPolicy = "zimbraReverseProxyModernCSPPolicy";
+
+    /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
      * request within this time. Must be in valid duration format:

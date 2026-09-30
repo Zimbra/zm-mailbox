@@ -1289,6 +1289,69 @@ class AddHeadersVar extends ProxyConfVar {
     }
 }
 
+class ModernCSPHeaderVar extends ProxyConfVar {
+    private final boolean domainValues;
+    private final String domainMode;
+    private final String domainPolicy;
+
+    public ModernCSPHeaderVar() {
+        super("web.modern.csp.header", Provisioning.A_zimbraReverseProxyModernCSP, "off",
+                ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,
+                "Content Security Policy header for the Modern UI path");
+        domainValues = false;
+        domainMode = null;
+        domainPolicy = null;
+    }
+
+    public ModernCSPHeaderVar(String mode, String policy) {
+        super("web.modern.csp.header", null, "",
+                ProxyConfValueType.STRING, ProxyConfOverride.NONE,
+                "Content Security Policy header for the Modern UI path");
+        domainValues = true;
+        domainMode = mode;
+        domainPolicy = policy;
+    }
+
+    @Override
+    public void update() throws ServiceException, ProxyConfException {
+        String mode = domainValues ? domainMode : configSource.getAttr(mAttribute, "off");
+        String policy = domainValues ? domainPolicy :
+                configSource.getAttr(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "");
+        if (mode == null) {
+            mode = "off";
+        }
+        if (policy == null) {
+            policy = "";
+        }
+        if ("off".equals(mode) || policy.trim().isEmpty()) {
+            mValue = "";
+            return;
+        }
+        if (!"report-only".equals(mode) && !"enforce".equals(mode)) {
+            throw new ProxyConfException("Unsupported Modern UI CSP mode: " + mode);
+        }
+        if (policy.contains("\r") || policy.contains("\n")) {
+            throw new ProxyConfException("Modern UI CSP must not contain line breaks");
+        }
+        String headerName = "report-only".equals(mode)
+                ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
+        mValue = "set $zimbra_modern_csp \"\";\n" +
+                "if ($uri ~ ^/modern(?:/|$)) {\n" +
+                "    set $zimbra_modern_csp \"" + escapeNginxString(policy) + "\";\n" +
+                "}\n" +
+                "add_header " + headerName + " $zimbra_modern_csp always;";
+    }
+
+    private String escapeNginxString(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("$", "\\$");
+    }
+
+    @Override
+    public String format(Object o) {
+        return (String) o;
+    }
+}
+
 class ImapCapaVar extends ProxyConfVar {
 
     public ImapCapaVar() {
@@ -2004,9 +2067,11 @@ class DomainAttrItem {
     public String clientCertMode;
     public String clientCertCa;
     public String[] rspHeaders;
+        public String modernCSPMode;
+        public String modernCSPPolicy;
 
     public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk,
-            String ccm, String cca, String[] rhdr) {
+            String ccm, String cca, String[] rhdr, String cspMode, String cspPolicy) {
         this.domainName = dn;
         this.virtualHostname = vhn;
         this.virtualIPAddress = vip;
@@ -2015,6 +2080,8 @@ class DomainAttrItem {
         this.clientCertMode = ccm;
         this.clientCertCa = cca;
         this.rspHeaders = rhdr;
+        this.modernCSPMode = cspMode;
+        this.modernCSPPolicy = cspPolicy;
     }
 }
 
@@ -2025,7 +2092,7 @@ class DomainAttrItem {
  */
 class DomainAttrExceptionItem extends DomainAttrItem {
     public DomainAttrExceptionItem(ProxyConfException e) {
-        super(null, null, null, null, null, null, null, null);
+        super(null, null, null, null, null, null, null, null, null, null);
         this.exception = e;
     }
 
@@ -2338,6 +2405,8 @@ public class ProxyConfGen
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertCA);
         attrsNeeded.add(Provisioning.A_zimbraWebClientLoginURL);
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyResponseHeaders);
+        attrsNeeded.add(Provisioning.A_zimbraReverseProxyModernCSP);
+        attrsNeeded.add(Provisioning.A_zimbraReverseProxyModernCSPPolicy);
 
         final List<DomainAttrItem> result = new ArrayList<DomainAttrItem>();
 
@@ -2361,11 +2430,15 @@ public class ProxyConfGen
                     .getAttr(Provisioning.A_zimbraReverseProxyClientCertCA);
                 String[] rspHeaders = entry
                     .getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
+                String cspMode = entry.getAttr(Provisioning.A_zimbraReverseProxyModernCSP);
+                String cspPolicy = entry.getAttr(Provisioning.A_zimbraReverseProxyModernCSPPolicy);
 
                 // no need to check whether clientCertMode or clientCertCA == null,
 
                 if (virtualHostnames.length == 0 || ( certificate == null &&
-                                privateKey == null && clientCertMode == null && clientCertCA == null ) ) {
+                                privateKey == null && clientCertMode == null && clientCertCA == null &&
+                                ("off".equals(cspMode) || ProxyConfUtil.isEmptyString(cspMode)) &&
+                                ProxyConfUtil.isEmptyString(cspPolicy) ) ) {
 
                     return; // ignore the items that don't have virtual host
                             // name, cert or key. Those domains will use the
@@ -2400,7 +2473,7 @@ public class ProxyConfGen
                     }
                     result.add(new DomainAttrItem(domainName,
                             virtualHostnames[i], vip, certificate, privateKey,
-                            clientCertMode, clientCertCA, rspHeaders));
+                            clientCertMode, clientCertCA, rspHeaders, cspMode, cspPolicy));
                 }
             }
         };
@@ -2809,6 +2882,8 @@ public class ProxyConfGen
         }
         mDomainConfVars.put("web.add.headers.vhost", new AddHeadersVar("web.add.headers.vhost", rhdr,
                 "add_header directive for vhost web proxy"));
+        mDomainConfVars.put("web.modern.csp.header",
+            new ModernCSPHeaderVar(item.modernCSPMode, item.modernCSPPolicy));
 
         mLog.debug("Updating Default Domain Variable Map");
         try {
@@ -3118,6 +3193,7 @@ public class ProxyConfGen
         }
         mConfVars.put("web.add.headers.default", new AddHeadersVar("web.add.headers.default", rhdr,
                 "add_header directive for default web proxy"));
+        mConfVars.put("web.modern.csp.header", new ModernCSPHeaderVar());
     }
 
     /* update the default variable map from the active configuration */

@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Implementation report for Modern UI Content Security Policy support in Zimbra.">
+  <title>Modern UI CSP | Implementation Report</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172a36;
+      --muted: #526975;
+      --paper: #f5f7f3;
+      --surface: #ffffff;
+      --line: #d5dfdc;
+      --teal: #087e78;
+      --teal-dark: #075e5c;
+      --lime: #c5e469;
+      --amber: #a95b00;
+      --amber-bg: #fff4df;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    a { color: var(--teal-dark); text-underline-offset: 3px; }
+
+    a:hover { color: #034542; }
+
+    .masthead {
+      color: #f4fbf8;
+      background: #123a43;
+      border-bottom: 7px solid var(--lime);
+    }
+
+    .masthead-inner,
+    main,
+    footer {
+      width: min(1080px, calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    .masthead-inner { padding: 46px 0 42px; }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      color: #a9dfd1;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 760px;
+      margin-bottom: 12px;
+      font-family: var(--serif);
+      font-size: clamp(38px, 7vw, 68px);
+      font-weight: 400;
+      line-height: 1.04;
+    }
+
+    .dek {
+      max-width: 720px;
+      margin-bottom: 25px;
+      color: #d7e8e4;
+      font-size: 18px;
+    }
+
+    .status-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 11px;
+      border: 1px solid #54827d;
+      color: #f6fbe8;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .status-line::before {
+      width: 8px;
+      height: 8px;
+      content: "";
+      background: var(--lime);
+      border-radius: 50%;
+    }
+
+    main { padding: 34px 0 72px; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .summary-item { padding: 18px 22px 18px 0; }
+
+    .summary-item + .summary-item {
+      padding-left: 22px;
+      border-left: 1px solid var(--line);
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--teal-dark);
+      font-size: 12px;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+    }
+
+    .summary-item span { font-size: 14px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 210px minmax(0, 1fr);
+      gap: 54px;
+      margin-top: 42px;
+    }
+
+    nav {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      padding: 4px 0;
+    }
+
+    nav h2 {
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    nav ol {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    nav li { margin: 8px 0; }
+
+    nav a { text-decoration: none; }
+
+    article { min-width: 0; }
+
+    section {
+      padding: 0 0 34px;
+      margin-bottom: 34px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 22px;
+    }
+
+    section:last-child { border-bottom: 0; }
+
+    h2 {
+      margin-bottom: 15px;
+      font-family: var(--serif);
+      font-size: 31px;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 24px 0 7px;
+      font-size: 17px;
+      line-height: 1.3;
+    }
+
+    p { margin-bottom: 13px; }
+
+    .lead {
+      color: #314b57;
+      font-size: 18px;
+    }
+
+    .decision {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 13px;
+      margin: 18px 0;
+      padding: 15px 16px;
+      background: #e6f1ed;
+      border-left: 4px solid var(--teal);
+    }
+
+    .decision-number {
+      color: var(--teal-dark);
+      font-family: var(--serif);
+      font-size: 24px;
+    }
+
+    .decision p { margin: 0; }
+
+    .table-wrap { overflow-x: auto; margin: 19px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #f4fbf8;
+      background: #234e55;
+      font-size: 12px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    code, pre { font-family: var(--mono); }
+
+    code { font-size: .9em; }
+
+    pre {
+      overflow-x: auto;
+      padding: 15px 17px;
+      color: #e6f4f0;
+      background: #172f38;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .callout {
+      padding: 14px 16px;
+      background: var(--amber-bg);
+      border-left: 4px solid #d18a25;
+    }
+
+    .callout strong { color: var(--amber); }
+
+    .file-list { padding-left: 20px; }
+
+    .file-list li { margin: 7px 0; }
+
+    .check-list { list-style: none; padding: 0; }
+
+    .check-list li {
+      position: relative;
+      padding-left: 25px;
+      margin: 9px 0;
+    }
+
+    .check-list li::before {
+      position: absolute;
+      left: 0;
+      color: var(--teal);
+      content: "OK";
+      font-weight: 800;
+      font-size: 10px;
+    }
+
+    footer {
+      padding: 19px 0 34px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      .masthead-inner, main, footer { width: min(100% - 32px, 620px); }
+      .masthead-inner { padding: 34px 0 31px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .summary-item, .summary-item + .summary-item {
+        padding: 12px 0;
+        border-left: 0;
+      }
+      .summary-item + .summary-item { border-top: 1px solid var(--line); }
+      .layout { display: block; margin-top: 28px; }
+      nav { position: static; margin-bottom: 34px; }
+      nav ol { columns: 2; }
+    }
+
+    @media print {
+      body { background: #fff; font-size: 11pt; }
+      .masthead { color: #111; background: #fff; border-bottom: 2px solid #111; }
+      .masthead-inner { padding: 24px 0; }
+      .eyebrow, .dek, .status-line { color: #333; }
+      .layout { display: block; }
+      nav { display: none; }
+      main { padding-top: 20px; }
+      section { break-inside: avoid; }
+      pre { color: #111; background: #f1f1f1; }
+      th { color: #111; background: #e8e8e8; }
+      a { color: #111; }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <p class="eyebrow">Zimbra Mailbox + Reverse Proxy</p>
+      <h1>Modern UI Content Security Policy</h1>
+      <p class="dek">Implementation report: review history, architecture choice, LDAP controls, nginx generation, and current verification status.</p>
+      <span class="status-line">Initial implementation present; runtime validation remains</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="summary-grid" aria-label="Report summary">
+      <div class="summary-item"><strong>Scope</strong><span>Modern UI responses under <code>/modern</code></span></div>
+      <div class="summary-item"><strong>Enforcement point</strong><span>Zimbra-managed nginx configuration</span></div>
+      <div class="summary-item"><strong>Default mode</strong><span><code>enforce</code> on fresh installs and upgrades</span></div>
+    </div>
+
+    <div class="layout">
+      <nav aria-label="Contents">
+        <h2>In this report</h2>
+        <ol>
+          <li><a href="#summary">Summary</a></li>
+          <li><a href="#history">PR review</a></li>
+          <li><a href="#architecture">Why nginx</a></li>
+          <li><a href="#configuration">LDAP design</a></li>
+          <li><a href="#behavior">Request behavior</a></li>
+          <li><a href="#changes">Changed files</a></li>
+          <li><a href="#verification">Verification</a></li>
+          <li><a href="#next">Remaining work</a></li>
+        </ol>
+      </nav>
+
+      <article>
+        <section id="summary">
+          <h2>Summary</h2>
+          <p class="lead">CSP is attached at the reverse proxy because normal users reach Zimbra through nginx, and the policy is specifically for a browser-facing URL path.</p>
+          <p>The implementation adds a global/domain-inheritable CSP mode and policy, then has <code>ProxyConfGen</code> emit the appropriate response header into generated nginx virtual-host configuration. Jetty is not changed; users are not expected to access mailboxd directly.</p>
+          <div class="decision">
+            <span class="decision-number">01</span>
+            <p><strong>Current default:</strong> both new-install and upgrade defaults select <code>enforce</code> and use the policy proposed in PR #1646. Domain values inherit from global config unless a global admin overrides them.</p>
+          </div>
+        </section>
+
+        <section id="history">
+          <h2>PR Review</h2>
+          <p>PR <a href="https://github.com/Zimbra/zm-mailbox/pull/1646">Zimbra/zm-mailbox#1646</a>, "Support CSP in Modern UI," proposed a mailbox servlet-filter change in <code>SetHeaderFilter</code>. It added a CSP response header when request URIs matched a comma-separated localconfig setting.</p>
+          <h3>Useful parts of that approach</h3>
+          <ul>
+            <li>Uses a servlet filter that already covers mailbox HTTP responses.</li>
+            <li>Allows a configurable policy and path selection.</li>
+          </ul>
+          <h3>Reasons not to use it as the primary implementation</h3>
+          <ul>
+            <li><strong>Wrong ownership boundary for this deployment:</strong> policy applies to a public UI route, and normal clients pass through nginx.</li>
+            <li><strong>Node-local configuration:</strong> the proposal uses localconfig, requiring consistent settings across mailbox nodes and a mailbox restart.</li>
+            <li><strong>Loose URI prefix matching:</strong> <code>startsWith("/modern")</code> also matches paths such as <code>/modernized</code>.</li>
+            <li><strong>Existing CSP interaction:</strong> emitting a second CSP does not combine policies permissively; browsers enforce every policy, so effective restrictions can become unexpectedly tighter.</li>
+          </ul>
+          <p>The PR was closed without merging. Its sample policy was retained as the initial default policy, but it has not been validated here against all Modern UI behavior.</p>
+        </section>
+
+        <section id="architecture">
+          <h2>Why nginx</h2>
+          <p>Zimbra already generates and manages nginx configuration. <code>ProxyConfGen</code> has established global and per-vhost header hooks, and the nginx templates include generated variables in their HTTP and HTTPS server blocks. This keeps policy configuration in LDAP and delivery in the layer users actually access.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Consideration</th><th>Jetty filter proposal</th><th>Chosen nginx path</th></tr></thead>
+              <tbody>
+                <tr><td>Configuration</td><td>Mailbox-node localconfig</td><td>LDAP global config with inheritable domain overrides</td></tr>
+                <tr><td>Deployment</td><td>Mailbox restart</td><td>Regenerate and reload managed proxy config</td></tr>
+                <tr><td>Path scope</td><td>Java prefix comparison</td><td>Generated directive checks <code>/modern</code> at a path boundary</td></tr>
+                <tr><td>Request coverage</td><td>Mailbox servlet responses</td><td>Responses passing through Zimbra's nginx proxy</td></tr>
+                <tr><td>Direct mailboxd access</td><td>Could cover it</td><td>Not covered; direct access is out of scope by decision</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>This choice avoids hand-editing generated nginx files. It also makes the reverse proxy the single intended delivery point, rather than setting both Jetty and nginx headers and risking duplicate CSP policies.</p>
+        </section>
+
+        <section id="configuration">
+          <h2>LDAP Design</h2>
+          <p>Two attributes separate the operational switch from the policy contents:</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Attribute</th><th>Purpose</th><th>Values/default</th></tr></thead>
+              <tbody>
+                <tr><td><code>zimbraReverseProxyModernCSP</code></td><td>Controls whether CSP is off, report-only, or enforced.</td><td><code>off</code>, <code>report-only</code>, <code>enforce</code>; defaults to <code>enforce</code>.</td></tr>
+                <tr><td><code>zimbraReverseProxyModernCSPPolicy</code></td><td>Stores CSP directives only, without a response-header name.</td><td>Defaults to the policy from PR #1646.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Both are declared for <code>globalConfig,domain</code> with <code>domainInherited</code>. No <code>domainAdminModifiable</code> flag is present, so domain delegated admins are not granted modification rights by this schema. A global admin can configure global values and domain overrides.</p>
+          <p>The schema includes <code>since="10.1.22"</code>, <code>requiresRestart="nginxproxy"</code>, and both <code>globalConfigValue</code> and <code>globalConfigValueUpgrade</code>. The latter seeds the defaults for existing installations during upgrade; it does not intentionally overwrite an already-configured value.</p>
+          <h3>Administrative examples</h3>
+          <pre><code># Use the global policy in report-only mode
+zmprov mcf zimbraReverseProxyModernCSP report-only
+
+# Override the mode for one domain (global admin)
+zmprov md example.com zimbraReverseProxyModernCSP enforce
+
+# Set a domain-specific policy
+zmprov md example.com zimbraReverseProxyModernCSPPolicy "default-src 'self'; object-src 'none'"</code></pre>
+          <p>Regenerate and reload the nginx proxy configuration after changes. Exact operational commands should follow the target Zimbra release's proxy administration procedures.</p>
+          <div class="callout"><strong>Domain routing limit:</strong> per-domain policy is meaningful only when Zimbra generates per-virtual-host config and requests arrive with distinct virtual hostnames. Domains sharing the same public hostname cannot be distinguished by nginx using the LDAP domain alone.</div>
+        </section>
+
+        <section id="behavior">
+          <h2>Request Behavior</h2>
+          <ol>
+            <li><code>ProxyConfGen</code> reads the global mode/policy or each domain entry's effective inherited values.</li>
+            <li>Generated server configuration initializes the CSP variable, then assigns the configured policy only when <code>$uri</code> is exactly <code>/modern</code> or begins with <code>/modern/</code>.</li>
+            <li><code>off</code>, or an empty policy, emits no CSP directive.</li>
+            <li><code>report-only</code> emits <code>Content-Security-Policy-Report-Only</code>; browsers report violations to developer tools without blocking resources.</li>
+            <li><code>enforce</code> emits <code>Content-Security-Policy</code>; browsers enforce the policy.</li>
+          </ol>
+          <p>The report-only behavior currently has no reporting endpoint: "report" means browser-side violation reporting/console output only.</p>
+        </section>
+
+        <section id="changes">
+          <h2>Changed Files</h2>
+          <ul class="file-list">
+            <li><code>zm-mailbox/store/conf/attrs/zimbra-attrs.xml</code> - LDAP schema, enum values, inheritance, version metadata, and fresh/upgrade defaults.</li>
+            <li><code>zm-mailbox/common/src/java/com/zimbra/common/account/ZAttrProvisioning.java</code> - provisioning attribute constants and IDs.</li>
+            <li><code>zm-mailbox/store/src/java/com/zimbra/cs/util/ProxyConfGen.java</code> - loads CSP attributes, carries domain values into vhost generation, validates policy line breaks, escapes nginx string content, and selects the response header by mode.</li>
+            <li><code>zm-nginx-conf/conf/nginx/nginx.conf.web.http.template</code> and <code>nginx.conf.web.http.default.template</code> - CSP variable insertion for HTTP server blocks.</li>
+            <li><code>zm-nginx-conf/conf/nginx/nginx.conf.web.https.template</code> and <code>nginx.conf.web.https.default.template</code> - CSP variable insertion for HTTPS server blocks.</li>
+          </ul>
+        </section>
+
+        <section id="verification">
+          <h2>Verification</h2>
+          <ul class="check-list">
+            <li>LDAP schema parses with <code>xmllint</code>.</li>
+            <li>Java language diagnostics report no errors in the touched Java files.</li>
+            <li>Duplicate LDAP attribute IDs were checked; the new IDs are <code>4170</code> and <code>4171</code>.</li>
+            <li><code>git diff --check</code> passed in both repositories.</li>
+            <li>All four HTTP/HTTPS default and vhost templates include the CSP placeholder.</li>
+          </ul>
+          <p class="callout"><strong>Not verified:</strong> the full Ant build and rendered nginx configuration were not tested because Ant and nginx were unavailable in the environment. The Java diagnostics are not a substitute for compiling the full project.</p>
+        </section>
+
+        <section id="next">
+          <h2>Remaining Work</h2>
+          <ul>
+            <li>Run the mailbox Ant build and generate proxy configuration with representative global and domain settings.</li>
+            <li>Run <code>nginx -t</code> on generated HTTP and HTTPS configs and inspect directive placement/inheritance.</li>
+            <li>Test response headers for <code>/modern</code>, <code>/modern/...</code>, <code>/modernized</code>, and unrelated paths.</li>
+            <li>Exercise Modern UI login, navigation, inline/runtime scripts, styles, workers, zimlets, and WebSocket connections with the default enforced policy.</li>
+            <li>Confirm upgrade behavior against a real pre-upgrade GlobalConfig with an explicit CSP mode value.</li>
+          </ul>
+          <p>Because enforcement is the default for new and upgraded installations, compatibility testing is a release gate, not just a follow-up hardening exercise. If the sample policy blocks required behavior, revise the policy before shipping the default.</p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    Prepared from the PR #1646 review and implementation changes in <code>zm-mailbox</code> and <code>zm-nginx-conf</code>. This report describes the current draft; it does not imply runtime or production validation.
+  </footer>
+</body>
+</html>
