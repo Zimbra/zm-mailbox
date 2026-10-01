@@ -315,6 +315,7 @@ public class AdminService implements DocumentService {
 
         // GetSecretKey API
         dispatcher.registerHandler(AdminConstants.GENERATE_SECRET_KEY_REQUEST, new GenerateSecretKey());
+
     }
 
     /**
