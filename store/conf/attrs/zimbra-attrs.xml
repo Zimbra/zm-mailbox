@@ -10777,4 +10777,8 @@ TODO: delete them permanently from here
     <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
 </attr>
 
+<attr id="4170" name="zimbraMtaSenderDependentRelayhostMaps" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="10.1.22">
+	<desc>Value for postconf sender_dependent_relayhost_maps</desc>
+</attr>
+
 </attrs>
