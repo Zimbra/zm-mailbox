@@ -12967,11 +12967,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMyoneloginSamlSigningCert = "zimbraMyoneloginSamlSigningCert";
 
     /**
-     * Lifetime of the native OAuth access/authentication token issued for
-     * native OAuth sessions. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Lifetime of the native OAuth access token issued for native OAuth
+     * sessions. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @since ZCS 10.1.22
      */
@@ -12988,8 +12988,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNativeOAuthPersistentSessionEnabled = "zimbraNativeOAuthPersistentSessionEnabled";
 
     /**
-     * Lifetime of the native OAuth refresh token. Values normally range from
-     * 1d to 365d. A value of 0 or 0d disables persistent sessions for the
+     * Lifetime of the native OAuth refresh token Values range from 1d to
+     * 365d. A value of 0 or 0d disables persistent sessions for the
      * applicable scope. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not

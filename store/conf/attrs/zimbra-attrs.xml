@@ -10787,7 +10787,7 @@ TODO: delete them permanently from here
         <globalConfigValue>30d</globalConfigValue>
         <defaultCOSValue>30d</defaultCOSValue>
         <desc>
-            Lifetime of the native OAuth refresh token. Values normally range from
+            Lifetime of the native OAuth refresh token Values range from
             1d to 365d. A value of 0 or 0d disables persistent sessions for the
             applicable scope.
         </desc>
@@ -10797,7 +10797,7 @@ TODO: delete them permanently from here
         <globalConfigValue>1h</globalConfigValue>
         <defaultCOSValue>1h</defaultCOSValue>
         <desc>
-            Lifetime of the native OAuth access/authentication token issued for
+            Lifetime of the native OAuth access token issued for
             native OAuth sessions.
         </desc>
     </attr>
