@@ -10783,7 +10783,7 @@ TODO: delete them permanently from here
         <desc>Controls whether persistent sessions are enabled for native mobile clients.</desc>
     </attr>
 
-    <attr id="4171" name="zimbraNativeOAuthRefreshTokenLifetime" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
+    <attr id="4171" name="zimbraNativeOAuthRefreshTokenLifetime" type="duration" callback="NativeOAuthRefreshTokenLifetime" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
         <globalConfigValue>30d</globalConfigValue>
         <defaultCOSValue>30d</defaultCOSValue>
         <desc>
@@ -10793,7 +10793,7 @@ TODO: delete them permanently from here
         </desc>
     </attr>
 
-    <attr id="4172" name="zimbraNativeOAuthAccessTokenLifetime" type="duration" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
+    <attr id="4172" name="zimbraNativeOAuthAccessTokenLifetime" type="duration" callback="NativeOAuthAccessTokenLifetime" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountInherited,domainInherited,accountCosDomainInherited,domainAdminModifiable" since="10.1.22">
         <globalConfigValue>1h</globalConfigValue>
         <defaultCOSValue>1h</defaultCOSValue>
         <desc>
