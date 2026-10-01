@@ -26,7 +26,7 @@ translation_units:
     key_format: flat_properties_key
     locale_files:
       pattern: store-conf/conf/msgs/ZsMsg_{locale}.properties
-      locales: [ar, ca, da, de, en_AU, en_GB, es, eu, fr, fr_CA, fr_FR, hi, hr, hu, in, it, iw, ja, ko, lo, ms, nl, "no", pl, pt, pt_BR, ro, ru, sl, sv, ta, th, tr, uk, vi, zh_CN, zh_HK, zh_TW]
+      locales: [ar, ca, da, de, en_AU, en_GB, es, eu, fr, fr_CA, fr_FR, hi, hr, hu, in, it, iw, ja, ko, lo, ms, nl, "no", pl, pt, pt_BR, ro, ru, sl, sv, sw, ta, th, tr, uk, vi, zh_CN, zh_HK, zh_TW]
     # The empty ZsMsg_en.properties is a fallback marker, not a translated unit.
     # Regional bundles such as fr_FR intentionally override only some parent keys.
     exclusions: [store-conf/conf/msgs/ZsMsg_en.properties]
@@ -46,7 +46,7 @@ translation_units:
     key_format: flat_properties_key
     locale_files:
       pattern: store-conf/conf/msgs/ZsMsgRights_{locale}.properties
-      locales: [ar, ca, da, de, en_AU, en_GB, es, eu, fr, fr_CA, hi, hr, hu, in, it, iw, ja, ko, lo, ms, nl, "no", pl, pt, pt_BR, ro, ru, sl, sv, ta, th, tr, uk, vi, zh_CN, zh_HK, zh_TW]
+      locales: [ar, ca, da, de, en_AU, en_GB, es, eu, fr, fr_CA, hi, hr, hu, in, it, iw, ja, ko, lo, ms, nl, "no", pl, pt, pt_BR, ro, ru, sl, sv, sw, ta, th, tr, uk, vi, zh_CN, zh_HK, zh_TW]
     placeholders:
       style: java_message_format
       examples: ["{0}"]
