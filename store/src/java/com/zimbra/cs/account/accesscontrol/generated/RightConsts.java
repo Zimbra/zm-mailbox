@@ -678,6 +678,11 @@ public class RightConsts {
     public static final String RT_clearMFARejectionCache = "clearMFARejectionCache";
 
     /**
+     *  clear the MFA/ROPC session for a specific domain.
+     */
+    public static final String RT_clearMFASessionForDomain = "clearMFASessionForDomain";
+
+    /**
      * configure admin UI components
      */
     public static final String RT_configureAdminUI = "configureAdminUI";
