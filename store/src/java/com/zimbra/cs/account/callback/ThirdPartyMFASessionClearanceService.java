@@ -99,7 +99,7 @@ public final class ThirdPartyMFASessionClearanceService {
                 return;
             }
 
-            ZimbraLog.account.info("Clearing MFA sessions for domain %s across %d mailbox servers " +
+            ZimbraLog.account.debug("Clearing MFA sessions for domain %s across %d mailbox servers " +
                             "(cutoff timestamp: %s)", domainName, servers.size(), changeTimestamp);
             for (Server server : servers) {
                 try {
@@ -193,7 +193,7 @@ public final class ThirdPartyMFASessionClearanceService {
         options.setLocalConfigAuth(true);
         SoapProvisioning soapProv = new SoapProvisioning(options);
         soapProv.clearMFASessionForDomain(domainName, changeTimestamp);
-        ZimbraLog.account.info("MFA session invalidation completed for " +
+        ZimbraLog.account.debug("MFA session invalidation completed for " +
                 "domain %s on server %s", domainName, server.getName());
     }
 }
