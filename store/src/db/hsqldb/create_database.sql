@@ -276,6 +276,7 @@ CREATE TABLE *{DATABASE_NAME}.watch (
    CREATE TABLE *${DATABASE_NAME}.ropc_token_store (
       id               BIGINT AUTO_INCREMENT NOT NULL,
       username         VARCHAR(255) NOT NULL,
+      domain_name      VARCHAR(255) DEFAULT NULL,
       device_id        VARCHAR(128) DEFAULT NULL,
       user_agent       VARCHAR(255) DEFAULT NULL,
       ip               VARCHAR(45) DEFAULT NULL,
@@ -290,6 +291,7 @@ CREATE TABLE *{DATABASE_NAME}.watch (
       PRIMARY KEY (id),
       UNIQUE KEY `uk_user_device_session` (`username`, `provider`, `protocol`, `device_id`, `user_agent`),
       INDEX `idx_options_ip_lookup` (`username`, `provider`, `protocol`, `ip`, `user_agent`),
+      INDEX `idx_domain_created_lookup` (`domain_name`, `created_at`),
       INDEX `idx_expiry_cleanup` (`created_at`),
       INDEX `idx_back_channel_logout` (`username`),
       INDEX `idx_device_lookup` (`device_id`, `username`),
