@@ -83,6 +83,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.cs.account.callback.ThirdPartyMFASessionClearanceService;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.MailMode;
@@ -883,7 +884,9 @@ public class ProvUtil implements HttpDebugListener {
         SEND_MDM_EMAIL("sendMdmEmail", "smdme", "{type | quarantined | blocked} {time interval in minutes}",
                 Category.MOBILE, 2, 2),
         CLEAR_MFA_REJECTION_CACHE("clearMFARejectionCache", "cmfarc",
-                "{name@domain|id} | --all", Category.MISC, 1, 1, Via.soap);
+                "{name@domain|id} | --all", Category.MISC, 1, 1, Via.soap),
+        CLEAR_MFA_SESSION_FOR_DOMAIN("clearMFASessionForDomain", "cmfasfd",
+                "{domain} {timestampInMillis}", Category.MISC, 1, 2, Via.soap);
 
         private String mName;
         private String mAlias;
@@ -1113,6 +1116,9 @@ public class ProvUtil implements HttpDebugListener {
                 break;
             case CLEAR_MFA_REJECTION_CACHE:
                 doClearMFARejectionCache(args);
+                break;
+            case CLEAR_MFA_SESSION_FOR_DOMAIN:
+                doClearMFASessionForDomain(args);
                 break;
             case COPY_COS:
                 console.println(prov.copyCos(lookupCos(args[1]).getId(), args[2]).getId());
@@ -1689,6 +1695,15 @@ public class ProvUtil implements HttpDebugListener {
         }
         console.println("Status: " + response.getAttribute(AdminConstants.A_STATUS, "unknown")
                 + ", entries cleared: " + response.getAttribute(AdminConstants.A_ENTRIES_CLEARED, "0"));
+    }
+
+    private void doClearMFASessionForDomain(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        String domainName = args[1];
+        String timeStamp = args.length > 2 ? args[2] : null;
+        ThirdPartyMFASessionClearanceService.clearSessionsForDomainSync(domainName, timeStamp);
     }
 
     private void doSendMdmEmail(String[] args)  throws ServiceException {

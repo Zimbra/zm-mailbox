@@ -1741,5 +1741,18 @@ public final class AdminConstants {
     public static final QName CLEAR_MFA_REJECTION_CACHE_RESPONSE =
             QName.get(E_CLEAR_MFA_REJECTION_CACHE_RESPONSE, NAMESPACE);
 
+    // ===== ClearMFASessionForDomain =====
+    public static final String E_CLEAR_MFA_SESSION_FOR_DOMAIN_REQUEST = "ClearMFASessionForDomainRequest";
+
+    public static final String E_CLEAR_MFA_SESSION_FOR_DOMAIN_RESPONSE = "ClearMFASessionForDomainResponse";
+
+    public static final String E_CREATED_BEFORE_TIMESTAMP = "createdBeforeTimestamp";
+
+    public static final QName CLEAR_MFA_SESSION_FOR_DOMAIN_REQUEST =
+            QName.get(E_CLEAR_MFA_SESSION_FOR_DOMAIN_REQUEST, NAMESPACE);
+
+    public static final QName CLEAR_MFA_SESSION_FOR_DOMAIN_RESPONSE =
+            QName.get(E_CLEAR_MFA_SESSION_FOR_DOMAIN_RESPONSE, NAMESPACE);
+
     public static final String A_ENTRIES_CLEARED = "entriesCleared";
 }

@@ -37,7 +37,11 @@ public class CallbackContext {
         MAIL_FORWARDING_ADDRESS_MAX_NUM_ADDRS,
         MAIL_WHITELIST_MAX_NUM_ENTRIES,
         MAIL_BLACKLIST_MAX_NUM_ENTRIES,
-        PREV_EPHEMERAL_BACKEND_URL;
+        PREV_EPHEMERAL_BACKEND_URL,
+        PREV_AUTH_MECH,
+        NEW_AUTH_MECH,
+        ROPC_AUTH_MECH_TRANSITION,
+        AUTH_MECH_CHANGE_TIMESTAMP;
     };
 
     // whether the entry is being created
