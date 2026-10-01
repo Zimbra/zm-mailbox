@@ -1,6 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * Zimbra Collaboration Suite Web Client
+ * Zimbra Collaboration Suite Server
  * Copyright (C) 2026 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -15,7 +15,12 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/**
- * Functional JUnit tests for the admin service handlers.
- */
-package com.zimbra.cs.service.admin;
+package com.zimbra.cs.account.auth.twofactor;
+
+public final class AuthMechConstants {
+
+    public static final String  IDP_ROPC = "idp-ropc";
+
+    public static final String  FALLBACK_PREFIX = "fallback:";
+
+}

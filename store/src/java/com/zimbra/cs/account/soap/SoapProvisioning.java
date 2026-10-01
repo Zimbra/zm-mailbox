@@ -3312,4 +3312,46 @@ public class SoapProvisioning extends Provisioning {
 
         return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailSuccess);
     }
+
+    /**
+     * Clears the MFA push rejection counter cache for a specific account or all accounts.
+     *
+     * @param accountValue the account name or id, or {@code null} to clear all
+     * @param byValue the lookup key type (e.g. "name" or "id"), ignored when {@code accountValue} is {@code null}
+     * @return the SOAP response element
+     * @throws ServiceException if a SOAP fault or communication error occurs
+     */
+    public Element clearMFARejectionCache(String accountValue, String byValue) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.CLEAR_MFA_REJECTION_CACHE_REQUEST);
+        if (accountValue != null) {
+            Element acct = req.addElement(AdminConstants.E_ACCOUNT);
+            acct.addAttribute(AccountConstants.A_BY, byValue);
+            acct.setText(accountValue);
+        }
+        return invoke(req);
+    }
+
+    /**
+     * Clears all ROPC MFA sessions for a specified domain.
+     * Only sessions created before the specified timestamp will be deleted.
+     *
+     * @param domainName the domain name (e.g. "example.com")
+     * @param createdBeforeTimestamp the cutoff timestamp (in milliseconds);
+     *                                only sessions created before this time will be deleted.
+     *                                If null or empty, current time is used as fallback
+     * @return the SOAP response element
+     * @throws ServiceException if a SOAP fault or communication error occurs
+     */
+    public Element clearMFASessionForDomain(String domainName, String createdBeforeTimestamp) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.CLEAR_MFA_SESSION_FOR_DOMAIN_REQUEST);
+        if (domainName != null) {
+            Element domain = req.addElement(AdminConstants.E_DOMAIN);
+            domain.setText(domainName);
+        }
+        if (createdBeforeTimestamp != null && !createdBeforeTimestamp.isEmpty()) {
+            Element timestamp = req.addElement(AdminConstants.E_CREATED_BEFORE_TIMESTAMP);
+            timestamp.setText(createdBeforeTimestamp);
+        }
+        return invoke(req);
+    }
 }
