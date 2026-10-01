@@ -20300,8 +20300,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile access/authentication token issued for
-     * native mobile OAuth2 sessions. . Must be in valid duration format:
+     * Lifetime of the native OAuth access/authentication token issued for
+     * native OAuth sessions. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20320,8 +20320,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile access/authentication token issued for
-     * native mobile OAuth2 sessions. . Must be in valid duration format:
+     * Lifetime of the native OAuth access/authentication token issued for
+     * native OAuth sessions. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20336,8 +20336,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile access/authentication token issued for
-     * native mobile OAuth2 sessions. . Must be in valid duration format:
+     * Lifetime of the native OAuth access/authentication token issued for
+     * native OAuth sessions. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20355,8 +20355,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile access/authentication token issued for
-     * native mobile OAuth2 sessions. . Must be in valid duration format:
+     * Lifetime of the native OAuth access/authentication token issued for
+     * native OAuth sessions. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20375,8 +20375,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile access/authentication token issued for
-     * native mobile OAuth2 sessions. . Must be in valid duration format:
+     * Lifetime of the native OAuth access/authentication token issued for
+     * native OAuth sessions. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20393,8 +20393,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile access/authentication token issued for
-     * native mobile OAuth2 sessions. . Must be in valid duration format:
+     * Lifetime of the native OAuth access/authentication token issued for
+     * native OAuth sessions. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20412,7 +20412,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Controls whether persistent sessions are enabled for native mobile
+     * Controls whether persistent sessions are enabled for native OAuth
      * clients.
      *
      * @return zimbraNativeOAuthPersistentSessionEnabled, or false if unset
@@ -20425,7 +20425,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Controls whether persistent sessions are enabled for native mobile
+     * Controls whether persistent sessions are enabled for native OAuth
      * clients.
      *
      * @param zimbraNativeOAuthPersistentSessionEnabled new value
@@ -20441,7 +20441,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Controls whether persistent sessions are enabled for native mobile
+     * Controls whether persistent sessions are enabled for native OAuth
      * clients.
      *
      * @param zimbraNativeOAuthPersistentSessionEnabled new value
@@ -20458,7 +20458,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Controls whether persistent sessions are enabled for native mobile
+     * Controls whether persistent sessions are enabled for native OAuth
      * clients.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20473,7 +20473,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Controls whether persistent sessions are enabled for native mobile
+     * Controls whether persistent sessions are enabled for native OAuth
      * clients.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -20489,9 +20489,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
+     * Lifetime of the native OAuth refresh token. Values normally range from
+     * 1d to 365d. A value of 0 or 0d disables persistent sessions for the
+     * applicable scope. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20510,9 +20510,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
+     * Lifetime of the native OAuth refresh token. Values normally range from
+     * 1d to 365d. A value of 0 or 0d disables persistent sessions for the
+     * applicable scope. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20527,9 +20527,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
+     * Lifetime of the native OAuth refresh token. Values normally range from
+     * 1d to 365d. A value of 0 or 0d disables persistent sessions for the
+     * applicable scope. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20547,9 +20547,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
+     * Lifetime of the native OAuth refresh token. Values normally range from
+     * 1d to 365d. A value of 0 or 0d disables persistent sessions for the
+     * applicable scope. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20568,9 +20568,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
+     * Lifetime of the native OAuth refresh token. Values normally range from
+     * 1d to 365d. A value of 0 or 0d disables persistent sessions for the
+     * applicable scope. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
@@ -20587,9 +20587,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Lifetime of the native mobile refresh token. Values normally range
-     * from 1d to 365d. A value of 0 or 0d disables persistent sessions for
-     * the applicable scope. . Must be in valid duration format:
+     * Lifetime of the native OAuth refresh token. Values normally range from
+     * 1d to 365d. A value of 0 or 0d disables persistent sessions for the
+     * applicable scope. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
