@@ -5,6 +5,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.account.auth.twofactor.AuthMechConstants;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +20,6 @@ import static org.junit.Assert.*;
  * while ensuring standard and non-ROPC custom mechanisms remain unaffected.
  */
 public class AuthMechanismFallbackRoutingTest {
-
-    private static final String IDP_ROPC_HANDLER_NAME = "idp-ropc";
 
     private Provisioning prov;
 
@@ -39,7 +38,7 @@ public class AuthMechanismFallbackRoutingTest {
      * registered, so this is safe to call from every test's @Before.
      */
     private void registerMockIdpRopcHandler() {
-        ZimbraCustomAuth.register(IDP_ROPC_HANDLER_NAME, new ZimbraCustomAuth() {
+        ZimbraCustomAuth.register(AuthMechConstants.IDP_ROPC, new ZimbraCustomAuth() {
             @Override
             public void authenticate(Account acct, String password, Map<String, Object> context,
                     List<String> args) throws Exception {
@@ -126,5 +125,15 @@ public class AuthMechanismFallbackRoutingTest {
         Account malformed = createAccountWithAuthMech("err-malformed.com", "fallback:ad");
         assertEquals("Malformed config must return default zimbra", AuthMech.zimbra,
                 AuthMechanism.newInstance(malformed, ctx).getMechanism());
+
+        // 4. Unknown fallback type -> resolveFallbackMech throws AUTH_FAILED
+        Account unknownFallback = createAccountWithAuthMech("err-unknownfb.com",
+                "fallback:notamech custom:idp-ropc");
+        try {
+            AuthMechanism.newInstance(unknownFallback, ctx);
+            fail("Unknown fallback type must throw");
+        } catch (ServiceException e) {
+            assertTrue(e.getMessage().contains("authentication failed"));
+        }
     }
 }

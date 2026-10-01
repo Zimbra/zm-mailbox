@@ -3330,4 +3330,29 @@ public class SoapProvisioning extends Provisioning {
         }
         return invoke(req);
     }
+
+    /**
+     * Clears all ROPC MFA sessions for a specified domain.
+     * Only sessions created before the specified timestamp will be deleted.
+     *
+     * @param domainName the domain name (e.g. "example.com")
+     * @param createdBeforeTimestamp the cutoff timestamp (in milliseconds);
+     *                                only sessions created before this time will be deleted.
+     *                                If null or empty, current time is used as fallback
+     * @return the SOAP response element
+     * @throws ServiceException if a SOAP fault or communication error occurs
+     */
+    public Element clearMFASessionForDomain(String domainName, String createdBeforeTimestamp) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.CLEAR_MFA_SESSION_FOR_DOMAIN_REQUEST);
+        if (domainName != null) {
+            Element domain = req.addElement(AdminConstants.E_DOMAIN);
+            domain.addAttribute(AdminConstants.A_BY, DomainBy.name.name());
+            domain.setText(domainName);
+        }
+        if (createdBeforeTimestamp != null && !createdBeforeTimestamp.isEmpty()) {
+            Element timestamp = req.addElement(AdminConstants.E_CREATED_BEFORE_TIMESTAMP);
+            timestamp.setText(createdBeforeTimestamp);
+        }
+        return invoke(req);
+    }
 }

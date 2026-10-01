@@ -40,6 +40,8 @@ import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.listeners.AuthListener;
+import static com.zimbra.cs.account.auth.twofactor.AuthMechConstants.FALLBACK_PREFIX;
+import static com.zimbra.cs.account.auth.twofactor.AuthMechConstants.IDP_ROPC;
 
 public abstract class AuthMechanism {
 
@@ -92,10 +94,6 @@ public abstract class AuthMechanism {
     }
 
     protected AuthMech authMech;
-
-    private static String IDP_ROPC = "idp-ropc";
-
-    private static final String FALLBACK_PREFIX = "fallback:";
 
     protected AuthMechanism(AuthMech authMech) {
         this.authMech = authMech;

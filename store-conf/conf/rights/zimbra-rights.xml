@@ -777,6 +777,10 @@
     <desc>clear the MFA rejection cache for a specific user or all users</desc>
 </right>
 
+<right name="clearMFASessionForDomain" type="preset" targetType="global">
+    <desc>clear the MFA session for a specific domain</desc>
+</right>
+
 <right name="uploadClientSoftware" type="preset" targetType="global">
     <desc>upload client software via Admin Console</desc>
 </right>
