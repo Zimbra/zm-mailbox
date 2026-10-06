@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Provisioning;
@@ -42,7 +43,12 @@ public class ObjectHandler {
 
     private static Log mLog = LogFactory.getLog(ObjectHandler.class);
 
+    // Cache lifetime for ObjectHandlers. Handlers are periodically reloaded from
+    // provisioning so zimlets deployed while the server is running are picked up
+    // without a restart; purgeHandlerCache() forces an immediate reload.
+    private static final long HANDLER_CACHE_TTL_MILLIS = 5 * Constants.MILLIS_PER_MINUTE;
     private static List<ObjectHandler> mHandlerList;
+    private static long mHandlerListRefreshedAt;
 
     private final Zimlet        mObjectType;
     private final ZimletHandler mHandlerObject;
@@ -62,24 +68,33 @@ public class ObjectHandler {
         }
     }
 
-    // TODO: this caches handlers for the duration of the VM, which is ok if the Indexer
-    // exits/restarts. Might need to add modified column and periodically refresh and/or
-    // provide a way to purge the cache
     public static synchronized List<ObjectHandler> getObjectHandlers() throws ServiceException {
-
-        if (mHandlerList != null)
+        long now = System.currentTimeMillis();
+        if (mHandlerList != null && (now - mHandlerListRefreshedAt) < HANDLER_CACHE_TTL_MILLIS) {
             return mHandlerList;
-
-        mHandlerList = new ArrayList<ObjectHandler>();
+        }
+        // Build into a local list first so a failure during reload cannot replace a
+        // previously loaded handler list with a partial or empty one.
+        List<ObjectHandler> handlerList = new ArrayList<ObjectHandler>();
         List<Zimlet> dots = Provisioning.getInstance().listAllZimlets();
-        for (Iterator<Zimlet> it=dots.iterator(); it.hasNext();) {
+        for (Iterator<Zimlet> it = dots.iterator(); it.hasNext();) {
             Zimlet dot = it.next();
             ObjectHandler handler = loadHandler(dot);
             if (handler != null) {
-                mHandlerList.add(handler);
+                handlerList.add(handler);
             }
         }
+        mHandlerList = handlerList;
+        mHandlerListRefreshedAt = now;
         return mHandlerList;
+    }
+
+    /**
+     * Purges the cached list of ObjectHandlers so that the next call to
+     * {@link #getObjectHandlers()} reloads them from provisioning.
+     */
+    public static synchronized void purgeHandlerCache() {
+        mHandlerList = null;
     }
 
     /**
