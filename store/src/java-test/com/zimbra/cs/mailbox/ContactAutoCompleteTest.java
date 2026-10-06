@@ -17,8 +17,11 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import javax.mail.internet.InternetAddress;
@@ -34,12 +37,14 @@ import org.junit.rules.TestName;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
 import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
 import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ZTestWatchman;
 /**
  * Unit test for {@link ContactAutoComplete}.
@@ -494,5 +499,59 @@ public final class ContactAutoCompleteTest {
         comp.addMatchedContacts("first last", attrs, ContactAutoComplete.FOLDER_ID_GAL, null, result,
                 false, true);
         Assert.assertEquals(1, result.entries.size());
+    }
+
+    @Test
+    public void testAutoCompleteExcludesNonContactMountpoints() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, ProvisioningConstants.TRUE);
+        prov.createAccount("owner@zimbra.com", "secret", attrs);
+        prov.createAccount("remote@zimbra.com", "secret", new HashMap<>());
+        Account owner = prov.getAccountByName("owner@zimbra.com");
+        Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccount(owner);
+        Account remote = prov.getAccountByName("remote@zimbra.com");
+
+        // calendar mountpoint
+        ownerMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT,
+                "SharedCalendar", remote.getId(), Mailbox.ID_FOLDER_CALENDAR,
+                null, MailItem.Type.APPOINTMENT, 0, (byte) 0, false);
+        // contact mountpoint
+        ownerMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT,
+                "SharedContacts", remote.getId(), Mailbox.ID_FOLDER_CONTACTS,
+                null, MailItem.Type.CONTACT, 0, (byte) 0, false);
+        // inbox mountpoint
+        ownerMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT,
+                "SharedInbox", remote.getId(), Mailbox.ID_FOLDER_INBOX,
+                null, MailItem.Type.MESSAGE, 0, (byte) 0, false);
+
+        ContactAutoComplete autocomplete = new ContactAutoComplete(owner, new OperationContext(ownerMbox));
+        // directly validate folder scope via reflection
+        Method method = ContactAutoComplete.class.getDeclaredMethod(
+                "getLocalRemoteContactFolders", Collection.class);
+        method.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Pair<List<Folder>, Map<ItemId, Mountpoint>> pair =
+                (Pair<List<Folder>, Map<ItemId, Mountpoint>>) method.invoke(autocomplete, (Collection<Integer>) null);
+        List<Folder> folderList = pair.getFirst();
+        boolean hasCalendarMount = false;
+        boolean hasInboxMount    = false;
+        boolean hasContactMount  = false;
+        for (Folder folder : folderList) {
+            if (folder instanceof Mountpoint) {
+                if (folder.getName().equals("SharedCalendar")) {
+                    hasCalendarMount = true;
+                }
+                if (folder.getName().equals("SharedInbox")) {
+                    hasInboxMount    = true;
+                }
+                if (folder.getName().equals("SharedContacts")) {
+                    hasContactMount  = true;
+                }
+            }
+        }
+        Assert.assertFalse("SharedCalendar mountpoint must not be in search scope", hasCalendarMount);
+        Assert.assertFalse("SharedInbox mountpoint must not be in search scope", hasInboxMount);
+        Assert.assertTrue("SharedContacts mountpoint must be in search scope", hasContactMount);
     }
 }
