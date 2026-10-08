@@ -17,6 +17,7 @@
 
 package com.zimbra.soap.account.message;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -32,6 +33,21 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(propOrder = {})
 public class GetFCMDetailsRequest {
 
+    @XmlElement(name = "platformType", required = true)
+    private String platformType;
+
     public GetFCMDetailsRequest() {
+    }
+
+    public GetFCMDetailsRequest(String platformType) {
+        this.platformType = platformType;
+    }
+
+    public String getPlatformType() {
+        return platformType;
+    }
+
+    public void setPlatformType(String platformType) {
+        this.platformType = platformType;
     }
 }
