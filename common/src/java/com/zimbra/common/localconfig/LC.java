@@ -40,6 +40,9 @@ import java.lang.reflect.Modifier;
  */
 public final class LC {
 
+    public static final KnownKey mobile_notification_cache_size_mb = KnownKey.newKey(100);
+
+    public static final KnownKey fcm_server_thread_count = KnownKey.newKey(10);
 
     public static final KnownKey zimbra_minimize_resources = KnownKey.newKey(false);
 

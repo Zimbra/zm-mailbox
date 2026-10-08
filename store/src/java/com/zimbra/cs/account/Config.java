@@ -77,4 +77,12 @@ public class Config extends ZAttrConfig {
         return mServerDefaults;
     }
 
+    public String getFCMDeviceJSON() {
+        return getAttr("zimbraFCMDeviceJSON", null);
+    }
+
+    public String getFCMServerJSON() {
+        return getAttr("zimbraFCMServerJSON", null);
+    }
+
 }
