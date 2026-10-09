@@ -26582,6 +26582,52 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Sets the XML Digital Signature algorithm URI used by the Service Provider (SP)
+     * to sign outgoing SAML requests (e.g., {@code http://www.w3.org/2001/04/xmldsig-more#rsa-sha256}).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @param value XML DSig algorithm URI to set
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> setZimbraSamlSigningAlgorithm(Map<String,Object> attrs, String value) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSigningAlgorithm, value);
+        return attrs;
+    }
+
+    /**
+     * Returns the XML Digital Signature algorithm URI used by the Service Provider (SP)
+     * to sign outgoing SAML requests.
+     *
+     * @return zimbraSamlSigningAlgorithm URI, or null if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public String getZimbraSamlSigningAlgorithm() {
+        return getAttr(Provisioning.A_zimbraSamlSigningAlgorithm, null, true);
+    }
+
+    /**
+     * Unsets the XML Digital Signature algorithm URI used by the Service Provider (SP)
+     * to sign outgoing SAML requests.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> unsetZimbraSamlSigningAlgorithm(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSigningAlgorithm, "");
+        return attrs;
+    }
+
+    /**
      * Error code for SAML test failure. Format: SSO:{message_key}. Empty
      * implies success
      *
