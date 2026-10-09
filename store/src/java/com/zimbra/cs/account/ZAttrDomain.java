@@ -26433,6 +26433,153 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Algorithm used to sign SP-generated SAML requests. Inherits the global
+     * configuration when unset on the domain. Defaults to SHA256 when no
+     * value is configured.
+     *
+     * <p>Valid values: [SHA1, SHA256, SHA512]
+     *
+     * @return zimbraSamlSpSigningAlgorithm, or ZAttrProvisioning.SamlSpSigningAlgorithm.SHA256 if unset and/or has invalid value
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public ZAttrProvisioning.SamlSpSigningAlgorithm getSamlSpSigningAlgorithm() {
+        try { String v = getAttr(Provisioning.A_zimbraSamlSpSigningAlgorithm, true, true); return v == null ? ZAttrProvisioning.SamlSpSigningAlgorithm.SHA256 : ZAttrProvisioning.SamlSpSigningAlgorithm.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.SamlSpSigningAlgorithm.SHA256; }
+    }
+
+    /**
+     * Algorithm used to sign SP-generated SAML requests. Inherits the global
+     * configuration when unset on the domain. Defaults to SHA256 when no
+     * value is configured.
+     *
+     * <p>Valid values: [SHA1, SHA256, SHA512]
+     *
+     * @return zimbraSamlSpSigningAlgorithm, or "SHA256" if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public String getSamlSpSigningAlgorithmAsString() {
+        return getAttr(Provisioning.A_zimbraSamlSpSigningAlgorithm, "SHA256", true);
+    }
+
+    /**
+     * Algorithm used to sign SP-generated SAML requests. Inherits the global
+     * configuration when unset on the domain. Defaults to SHA256 when no
+     * value is configured.
+     *
+     * <p>Valid values: [SHA1, SHA256, SHA512]
+     *
+     * @param zimbraSamlSpSigningAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void setSamlSpSigningAlgorithm(ZAttrProvisioning.SamlSpSigningAlgorithm zimbraSamlSpSigningAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, zimbraSamlSpSigningAlgorithm.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Algorithm used to sign SP-generated SAML requests. Inherits the global
+     * configuration when unset on the domain. Defaults to SHA256 when no
+     * value is configured.
+     *
+     * <p>Valid values: [SHA1, SHA256, SHA512]
+     *
+     * @param zimbraSamlSpSigningAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> setSamlSpSigningAlgorithm(ZAttrProvisioning.SamlSpSigningAlgorithm zimbraSamlSpSigningAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, zimbraSamlSpSigningAlgorithm.toString());
+        return attrs;
+    }
+
+    /**
+     * Algorithm used to sign SP-generated SAML requests. Inherits the global
+     * configuration when unset on the domain. Defaults to SHA256 when no
+     * value is configured.
+     *
+     * <p>Valid values: [SHA1, SHA256, SHA512]
+     *
+     * @param zimbraSamlSpSigningAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void setSamlSpSigningAlgorithmAsString(String zimbraSamlSpSigningAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, zimbraSamlSpSigningAlgorithm);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Algorithm used to sign SP-generated SAML requests. Inherits the global
+     * configuration when unset on the domain. Defaults to SHA256 when no
+     * value is configured.
+     *
+     * <p>Valid values: [SHA1, SHA256, SHA512]
+     *
+     * @param zimbraSamlSpSigningAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> setSamlSpSigningAlgorithmAsString(String zimbraSamlSpSigningAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, zimbraSamlSpSigningAlgorithm);
+        return attrs;
+    }
+
+    /**
+     * Algorithm used to sign SP-generated SAML requests. Inherits the global
+     * configuration when unset on the domain. Defaults to SHA256 when no
+     * value is configured.
+     *
+     * <p>Valid values: [SHA1, SHA256, SHA512]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void unsetSamlSpSigningAlgorithm() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Algorithm used to sign SP-generated SAML requests. Inherits the global
+     * configuration when unset on the domain. Defaults to SHA256 when no
+     * value is configured.
+     *
+     * <p>Valid values: [SHA1, SHA256, SHA512]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> unsetSamlSpSigningAlgorithm(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, "");
+        return attrs;
+    }
+
+    /**
      * Certificate used to verify signed SAML SP requests
      *
      * @return zimbraSamlSpSigningCertificate, or null if unset
