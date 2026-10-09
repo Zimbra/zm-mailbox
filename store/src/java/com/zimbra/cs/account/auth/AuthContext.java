@@ -88,6 +88,8 @@ public class AuthContext {
      */
     public static final String AC_DEVICE_ID = "did";
 
+
+    public static final String AC_DEVICE_TYPE = "DeviceType";
     /*
      * Sub protocol.
      */
