@@ -17042,6 +17042,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSamlSpSigningKey = "zimbraSamlSpSigningKey";
 
     /**
+     * XML Digital Signature algorithm URI used by the Service Provider (SP)
+     * to sign outgoing SAML requests (e.g., AuthnRequest, LogoutRequest).
+     * If empty or unset, it defaults to RSA-SHA256 ({@code http://www.w3.org/2001/04/xmldsig-more#rsa-sha256}).
+     * Signing is performed only when {@link #A_zimbraSamlSpSigningKey} is configured.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public static final String A_zimbraSamlSigningAlgorithm = "zimbraSamlSigningAlgorithm";
+
+    /**
      * SAML IdP Single Sign-On URL(s). Replaces
      * saml_redirect_login_destination and saml_post_login_destination from
      * saml-config.properties. Multi-valued to support multiple SAML
