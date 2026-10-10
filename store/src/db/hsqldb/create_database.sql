@@ -357,4 +357,5 @@ CREATE TABLE *${DATABASE_NAME}.cred_store (
    INDEX i_cred_revocation      (owner_type, revoked_at),
    INDEX i_cred_idp             (auth_provider, idp_id),
    INDEX i_cred_id_token_lookup (id_token)
+   INDEX i_cred_owner_created (owner_type, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
