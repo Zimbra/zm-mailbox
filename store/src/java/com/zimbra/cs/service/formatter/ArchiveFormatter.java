@@ -86,6 +86,7 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxLock;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodNotSpecifiedException;
 import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodTooLongException;
@@ -957,7 +958,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     } else if (aie.getName().endsWith(".meta")) {
                         meta = true;
                         if (id != null) {
-                            addItemWithRetry(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
+                            addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
                         }
                         try {
                             id = new ItemData(readArchiveEntry(ais, aie));
@@ -979,12 +980,12 @@ public abstract class ArchiveFormatter extends Formatter {
                     } else if ((aie.getType() != 0 && id.ud.type != aie.getType()) || (id.ud.getBlobDigest() != null && aie.getSize() != -1 && id.ud.size != aie.getSize())) {
                         addError(errs, FormatterServiceException.MISMATCHED_META(aie.getName()));
                     } else {
-                        addItemWithRetry(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, aie, errs);
+                        addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, aie, errs);
                     }
                     id = null;
                 }
                 if (id != null) {
-                    addItemWithRetry(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
+                    addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
                 }
             } catch (Exception e) {
                 if (id == null) {
@@ -1096,49 +1097,63 @@ public abstract class ArchiveFormatter extends Formatter {
         }
     }
 
-    private void addItemWithRetry(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
-                                  FolderDigestInfo digestInfo, Map<Integer, Integer> idMap, int[] ids,
-                                  Set<MailItem.Type> types, Resolve r, ItemData id,
-                                  ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs) {
-
-        int attempt = 0;
+    private void addItem(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
+                         FolderDigestInfo digestInfo, Map<Integer, Integer> idMap, int[] ids,
+                         Set<MailItem.Type> types, Resolve r, ItemData id,
+                         ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
+            throws ServiceException {
+        Mailbox mbox = fldr.getMailbox();
         int maxRetries = LC.zimbra_archive_formatter_max_maintenance_retries.intValue();
-        long retrySleepMs = LC.zimbra_archive_formatter_maintenance_retry_sleep_ms.intValue();
+        long sleepMs = LC.zimbra_archive_formatter_maintenance_retry_sleep_ms.longValue();
 
-        while (attempt <= maxRetries) {
+        for (int attempt = 0; ; attempt++) {
+            boolean locked = false;
+            boolean retry = false;
             try {
-                addItem(context, fldr, fmap, digestInfo, idMap, ids, types, r, id, ais, aie, errs);
-                return; // Success
-            } catch (MailServiceException.MailboxInMaintenanceException e) {
-                if (attempt < maxRetries) {
-                    attempt++;
-                    ZimbraLog.misc.info("Mailbox in maintenance, retrying item %s (attempt %d/%d)",
-                            id.path, attempt, maxRetries);
-                    try {
-                        Thread.sleep(retrySleepMs);
-                        retrySleepMs = Math.min(retrySleepMs * 2, 30000); // cap at 30 seconds
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        addError(errs, e);
-                        return;
-                    }
+                mbox.lock.lock(); // May wait up to zimbra_mailbox_lock_timeout.
+                locked = true;
+
+                if (mbox.getMaintenance() != null) {
+                    // No archive bytes have been consumed on this attempt.
+                    retry = true;
                 } else {
-                    ZimbraLog.misc.warn("Max retries exceeded for item %s after maintenance lock", id.path);
-                    addError(errs, e);
+                    // Keep the lock across the WHOLE operation, including stream reads.
+                    addItemLocked(context, fldr, fmap, digestInfo, idMap, ids,
+                            types, r, id, ais, aie, errs);
                     return;
                 }
-            } catch (ServiceException e) {
-                // Delegate all other exceptions to addItem error handling
-                return;
+            } catch (MailboxLock.LockFailedException e) {
+                // Only retry if acquisition failed. Do not retry an operation that
+                // started and may have consumed the archive entry.
+                if (locked) {
+                    throw e;
+                }
+                retry = true;
+            } finally {
+                if (locked) {
+                    mbox.lock.release();
+                }
+            }
+
+            if (!retry || attempt >= maxRetries) {
+                throw MailServiceException.MAINTENANCE(mbox.getId(),
+                        "archive import could not acquire an available mailbox");
+            }
+            try {
+                Thread.sleep(sleepMs); // Lock has been released.
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw ServiceException.FAILURE(
+                        "Interrupted waiting to import archive item " + id.path, e);
             }
         }
     }
 
-    private void addItem(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
-            FolderDigestInfo digestInfo,
-            Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData id,
-            ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
-    throws ServiceException {
+    private void addItemLocked(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
+                               FolderDigestInfo digestInfo,
+                               Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData id,
+                               ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
+            throws ServiceException {
         int attempt = 0;
         try {
             Mailbox mbox = fldr.getMailbox();
