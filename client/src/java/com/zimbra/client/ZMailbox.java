@@ -3512,7 +3512,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 int memoryThreshold = 1024 * 1024 * LC.zimbra_resturl_export_threshold.intValue(); // 100mb as threshold
                 try (InputStream inputStream = new GetMethodInputStream(response.getEntity().getContent())) {
                     DeferredFileOutputStream dfos = new DeferredFileOutputStream(memoryThreshold,
-                            "zmail-resource-", ".tmp", new File("/opt/zimbra/tmp/"));
+                            "zmail-resource-", ".tmp", new File(LC.zimbra_tmp_directory.value()));
                     byte[] buffer = new byte[8192];
                     int bytesRead;
                     while ((bytesRead = inputStream.read(buffer)) != -1) {
