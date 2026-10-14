@@ -305,7 +305,6 @@ CREATE TABLE *${DATABASE_NAME}.cred_store (
 
    -- ROPC owner
    ropc_token_id               BIGINT DEFAULT NULL,
-   client_instance_id          VARCHAR(64) DEFAULT NULL,
    client_label                VARCHAR(128) DEFAULT NULL,
 
    -- ZMG owner (utf8 to match zimbra.zmg_devices.reg_id)
@@ -321,7 +320,7 @@ CREATE TABLE *${DATABASE_NAME}.cred_store (
 
    -- refresh token material (latest issued only, per credential row)
    auth_provider               VARCHAR(16) NOT NULL DEFAULT 'ZIMBRA',   -- ZIMBRA | IDP
-   idp_id                      VARCHAR(64) DEFAULT NULL,
+   idp_id                      VARCHAR(255) DEFAULT NULL,
    refresh_token_hash          BINARY(32) DEFAULT NULL,
    refresh_token_enc           VARBINARY(2048) DEFAULT NULL,
    refresh_token_key_version   SMALLINT UNSIGNED DEFAULT NULL,
@@ -337,7 +336,6 @@ CREATE TABLE *${DATABASE_NAME}.cred_store (
 
    PRIMARY KEY (id),
 
-   UNIQUE KEY uk_cred_ropc_instance (ropc_token_id, client_instance_id),
    UNIQUE KEY uk_cred_zmg (reg_id),
    UNIQUE KEY uk_cred_rt_hash (refresh_token_hash),
 
@@ -356,6 +354,6 @@ CREATE TABLE *${DATABASE_NAME}.cred_store (
    INDEX i_cred_expiry_cleanup  (refresh_token_expires_at),
    INDEX i_cred_revocation      (owner_type, revoked_at),
    INDEX i_cred_idp             (auth_provider, idp_id),
-   INDEX i_cred_id_token_lookup (id_token)
+   INDEX i_cred_id_token_lookup (id_token(255)),
    INDEX i_cred_owner_created (owner_type, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
