@@ -356,18 +356,16 @@ public class SoapServlet extends ZimbraServlet {
             return LC.soap_response_buffer_size.intValue();
     }
 
-    // ZCS-20285: path to the error-code element within an already-built Fault, mirroring the
+    // Path to the error-code element within an already-built Fault, mirroring the
     // existing ZIMBRA_ERROR_ELEMENT precedent (SoapProtocol.updateArgumentsForRemoteFault) -
     // Fault/Detail/Error/Code, walked from the Fault element itself.
-    private static final String[] FAULT_CODE_PATH = new String[] { "Detail", "Error", "Code" };
+    private static final String[] FAULT_CODE_PATH = new String[] {"Detail", "Error", "Code"};
 
     /**
-     * Auth-related faults (expired/missing/invalid credentials) should be distinguishable by
-     * HTTP status alone for callers that check the transport status code rather than parsing
-     * the SOAP fault body - everything else keeps the existing 500 behavior, unchanged. Reads
-     * the code back out of the already-built fault Element rather than threading the original
-     * exception through dispatchRequest's many fault-generating branches, since by the time
-     * sendResponse runs, only the Element survives (see SoapEngine.dispatchRequest).
+     * Checks if the given SOAP envelope contains an authentication-related fault.
+     * @param soapProto
+     * @param envelope
+     * @return boolean value indicating whether the envelope contains an authentication fault
      */
     private boolean isAuthFault(SoapProtocol soapProto, Element envelope) {
         Element fault = soapProto.getBodyElement(envelope);

@@ -66,6 +66,10 @@ public class ZimbraJWToken extends AuthToken {
         this(acct, expires, false, null, null, Usage.AUTH);
     }
 
+    public ZimbraJWToken(Account acct, long expires, Usage usage) {
+        this(acct, expires, false, null, null, usage);
+    }
+
     public ZimbraJWToken(Account acct, Usage usage) {
         this(acct, 0, false, null, null, usage);
     }
@@ -74,10 +78,8 @@ public class ZimbraJWToken extends AuthToken {
             AuthMech authMech, Usage usage) {
         long expireTime = expires;
         if(expireTime == 0) {
-            // ZCS-20285: mirror ZimbraAuthToken's lifetime switch so Usage.REFRESH behaves the
-            // same regardless of which TokenType (opaque vs JWT) the client requested.
             long lifetime = Usage.REFRESH.equals(usage)
-                    ? LC.zimbra_native_refresh_token_lifetime.intValue() * 1000L
+                    ? acct.getNativeOAuthRefreshTokenLifetime()
                     : acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
             issuedAt = System.currentTimeMillis();
             expireTime = issuedAt + lifetime;
