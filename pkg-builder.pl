@@ -339,6 +339,7 @@ sub stage_zimbra_common_mbox_conf_msgs()
    cpy_file( "store-conf/conf/msgs/ZsMsgRights_tn_ZA.properties",   "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsgRights_tn_ZA.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsgRights_ts_ZA.properties",   "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsgRights_ts_ZA.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsgRights_tr.properties",    "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsgRights_tr.properties" );
+   cpy_file( "store-conf/conf/msgs/ZsMsgRights_tzm.properties",   "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsgRights_tzm.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsgRights_uk.properties",    "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsgRights_uk.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsgRights_ve_ZA.properties",   "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsgRights_ve_ZA.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsgRights_vi.properties",    "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsgRights_vi.properties" );
@@ -404,6 +405,7 @@ sub stage_zimbra_common_mbox_conf_msgs()
    cpy_file( "store-conf/conf/msgs/ZsMsg_tn_ZA.properties",         "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsg_tn_ZA.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsg_ts_ZA.properties",         "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsg_ts_ZA.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsg_tr.properties",          "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsg_tr.properties" );
+   cpy_file( "store-conf/conf/msgs/ZsMsg_tzm.properties",         "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsg_tzm.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsg_uk.properties",          "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsg_uk.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsg_ve_ZA.properties",         "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsg_ve_ZA.properties" );
    cpy_file( "store-conf/conf/msgs/ZsMsg_vi.properties",          "$stage_base_dir/opt/zimbra/conf/msgs/ZsMsg_vi.properties" );
