@@ -13893,6 +13893,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @return zimbraFeatureNativeMobileAppEnabled, or false if unset
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public boolean isFeatureNativeMobileAppEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, false, true);
+    }
+
+    /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @param zimbraFeatureNativeMobileAppEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public void setFeatureNativeMobileAppEnabled(boolean zimbraFeatureNativeMobileAppEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, zimbraFeatureNativeMobileAppEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @param zimbraFeatureNativeMobileAppEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public Map<String,Object> setFeatureNativeMobileAppEnabled(boolean zimbraFeatureNativeMobileAppEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, zimbraFeatureNativeMobileAppEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public void unsetFeatureNativeMobileAppEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to check whether Zimbra native mobile app is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.21
+     */
+    @ZAttr(id=4164)
+    public Map<String,Object> unsetFeatureNativeMobileAppEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureNativeMobileAppEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether user can create address books
      *
      * @return zimbraFeatureNewAddrBookEnabled, or true if unset
@@ -29665,6 +29737,83 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMobilePolicyUnapprovedInROMApplication(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyUnapprovedInROMApplication, "");
+        return attrs;
+    }
+
+    /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @return zimbraMobilePushNotificationEnabled, or false if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public boolean isMobilePushNotificationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobilePushNotificationEnabled, false, true);
+    }
+
+    /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @param zimbraMobilePushNotificationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public void setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @param zimbraMobilePushNotificationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public Map<String,Object> setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public void unsetMobilePushNotificationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Flag to check whether push notification is enabled for a particular
+     * user.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public Map<String,Object> unsetMobilePushNotificationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");
         return attrs;
     }
 
@@ -48556,6 +48705,292 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPublicSharingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPublicSharingEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Specifies the disclosure level for configurable push notification
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW:
+     * sender, subject, timestamp)
+     *
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
+     *
+     * @return zimbraPushNotificationDisclosureLevel, or null if unset and/or has invalid value
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public ZAttrProvisioning.PushNotificationDisclosureLevel getPushNotificationDisclosureLevel() {
+        try { String v = getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, true, true); return v == null ? null : ZAttrProvisioning.PushNotificationDisclosureLevel.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Specifies the disclosure level for configurable push notification
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW:
+     * sender, subject, timestamp)
+     *
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
+     *
+     * @return zimbraPushNotificationDisclosureLevel, or null if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public String getPushNotificationDisclosureLevelAsString() {
+        return getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, null, true);
+    }
+
+    /**
+     * Specifies the disclosure level for configurable push notification
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW:
+     * sender, subject, timestamp)
+     *
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
+     *
+     * @param zimbraPushNotificationDisclosureLevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public void setPushNotificationDisclosureLevel(ZAttrProvisioning.PushNotificationDisclosureLevel zimbraPushNotificationDisclosureLevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, zimbraPushNotificationDisclosureLevel.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the disclosure level for configurable push notification
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW:
+     * sender, subject, timestamp)
+     *
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
+     *
+     * @param zimbraPushNotificationDisclosureLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public Map<String,Object> setPushNotificationDisclosureLevel(ZAttrProvisioning.PushNotificationDisclosureLevel zimbraPushNotificationDisclosureLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, zimbraPushNotificationDisclosureLevel.toString());
+        return attrs;
+    }
+
+    /**
+     * Specifies the disclosure level for configurable push notification
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW:
+     * sender, subject, timestamp)
+     *
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
+     *
+     * @param zimbraPushNotificationDisclosureLevel new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public void setPushNotificationDisclosureLevelAsString(String zimbraPushNotificationDisclosureLevel) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, zimbraPushNotificationDisclosureLevel);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the disclosure level for configurable push notification
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW:
+     * sender, subject, timestamp)
+     *
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
+     *
+     * @param zimbraPushNotificationDisclosureLevel new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public Map<String,Object> setPushNotificationDisclosureLevelAsString(String zimbraPushNotificationDisclosureLevel, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, zimbraPushNotificationDisclosureLevel);
+        return attrs;
+    }
+
+    /**
+     * Specifies the disclosure level for configurable push notification
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW:
+     * sender, subject, timestamp)
+     *
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public void unsetPushNotificationDisclosureLevel() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the disclosure level for configurable push notification
+     * payloads (SKELETAL: type only, SENDER_ONLY: sender, FULL_PREVIEW:
+     * sender, subject, timestamp)
+     *
+     * <p>Valid values: [SKELETAL, SENDER_ONLY, FULL_PREVIEW]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public Map<String,Object> unsetPushNotificationDisclosureLevel(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, "");
+        return attrs;
+    }
+
+    /**
+     * Specifies the payload mode for FCM push notifications (OPAQUE,
+     * CONFIGURABLE, E2EE)
+     *
+     * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
+     *
+     * @return zimbraPushNotificationPayloadMode, or null if unset and/or has invalid value
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public ZAttrProvisioning.PushNotificationPayloadMode getPushNotificationPayloadMode() {
+        try { String v = getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, true, true); return v == null ? null : ZAttrProvisioning.PushNotificationPayloadMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Specifies the payload mode for FCM push notifications (OPAQUE,
+     * CONFIGURABLE, E2EE)
+     *
+     * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
+     *
+     * @return zimbraPushNotificationPayloadMode, or null if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public String getPushNotificationPayloadModeAsString() {
+        return getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, null, true);
+    }
+
+    /**
+     * Specifies the payload mode for FCM push notifications (OPAQUE,
+     * CONFIGURABLE, E2EE)
+     *
+     * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
+     *
+     * @param zimbraPushNotificationPayloadMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public void setPushNotificationPayloadMode(ZAttrProvisioning.PushNotificationPayloadMode zimbraPushNotificationPayloadMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, zimbraPushNotificationPayloadMode.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the payload mode for FCM push notifications (OPAQUE,
+     * CONFIGURABLE, E2EE)
+     *
+     * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
+     *
+     * @param zimbraPushNotificationPayloadMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public Map<String,Object> setPushNotificationPayloadMode(ZAttrProvisioning.PushNotificationPayloadMode zimbraPushNotificationPayloadMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, zimbraPushNotificationPayloadMode.toString());
+        return attrs;
+    }
+
+    /**
+     * Specifies the payload mode for FCM push notifications (OPAQUE,
+     * CONFIGURABLE, E2EE)
+     *
+     * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
+     *
+     * @param zimbraPushNotificationPayloadMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public void setPushNotificationPayloadModeAsString(String zimbraPushNotificationPayloadMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, zimbraPushNotificationPayloadMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the payload mode for FCM push notifications (OPAQUE,
+     * CONFIGURABLE, E2EE)
+     *
+     * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
+     *
+     * @param zimbraPushNotificationPayloadMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public Map<String,Object> setPushNotificationPayloadModeAsString(String zimbraPushNotificationPayloadMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, zimbraPushNotificationPayloadMode);
+        return attrs;
+    }
+
+    /**
+     * Specifies the payload mode for FCM push notifications (OPAQUE,
+     * CONFIGURABLE, E2EE)
+     *
+     * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public void unsetPushNotificationPayloadMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the payload mode for FCM push notifications (OPAQUE,
+     * CONFIGURABLE, E2EE)
+     *
+     * <p>Valid values: [OPAQUE, CONFIGURABLE, E2EE]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public Map<String,Object> unsetPushNotificationPayloadMode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, "");
         return attrs;
     }
 
