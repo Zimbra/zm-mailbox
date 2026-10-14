@@ -80,11 +80,43 @@ import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.SoapServlet;
+import com.zimbra.cs.service.account.NativeOAuthProvider;
+import com.zimbra.cs.service.account.NativeOAuthRegistry;
 
 /**
  * @author schemers
  */
 public class Auth extends AccountDocumentHandler {
+
+    public static final String AUTH_TYPE_ZM_OAUTH2 = "ZM_OAUTH2_1.0";
+    public static final String HEADER_AUTH_TYPE = "Auth-Type";
+    public static final String HEADER_X_ZIMBRA_AUTH_TYPE = "X-Zimbra-Auth-Type";
+
+    private boolean isNativeOAuthRequested(Element request, Map<String, Object> context) {
+        // 1. Check HTTP Header
+        HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        if (httpRequest != null) {
+            String headerVal = httpRequest.getHeader(HEADER_AUTH_TYPE);
+            if (headerVal == null) {
+                headerVal = httpRequest.getHeader(HEADER_X_ZIMBRA_AUTH_TYPE);
+            }
+            if (AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
+                return true;
+            }
+            if ("true".equalsIgnoreCase(httpRequest.getHeader(AUTH_TYPE_ZM_OAUTH2))) {
+                return true;
+            }
+        }
+
+        // 2. Check XML attribute on <AuthRequest authType="ZM_OAUTH2_1.0">
+        String authTypeAttr = request.getAttribute("authType", null);
+        if (AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(authTypeAttr)) {
+            return true;
+        }
+
+        return false;
+    }
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -119,6 +151,17 @@ public class Auth extends AccountDocumentHandler {
                 }
             }
             acct = prov.get(acctBy, acctValue);
+        }
+
+        Element refreshTokenEl = request.getOptionalElement("refreshToken");
+        if (refreshTokenEl != null) {
+            NativeOAuthProvider provider = NativeOAuthRegistry.getProvider();
+            if (provider != null) {
+                return provider.handleRefresh(acct, request, context);
+            } else {
+                ZimbraLog.account.warn("NativeAuth: Refresh requested but NativeOAuthProvider is not registered");
+                throw ServiceException.FAILURE("Native OAuth provider is not available", null);
+            }
         }
 
         ZimbraExtensionNotification.notifyExtension("com.zimbra.cs.service.account.Auth:validate", request, context);
@@ -226,61 +269,60 @@ public class Auth extends AccountDocumentHandler {
         // token+salt pair is reused for its full lifetime; revocation happens only at logout
         // (EndSession), not here. No LDAP-side fallback exists for refresh, so anything invalid
         // means the client must do a full password AuthRequest instead of retrying this one.
-        Element refreshTokenEl = request.getOptionalElement(AccountConstants.E_REFRESH_TOKEN);
-        if (refreshTokenEl != null) {
-            if (acct == null) {
-                throw ServiceException.INVALID_REQUEST("missing required element: " + AccountConstants.E_ACCOUNT, null);
-            }
-            String refreshToken = refreshTokenEl.getText();
-            Element refreshTokenSaltEl = request.getOptionalElement(AccountConstants.E_REFRESH_TOKEN_SALT);
-            String refreshTokenSalt = refreshTokenSaltEl == null ? null : refreshTokenSaltEl.getText();
-
-            AuthToken refreshAt;
-            try {
-                refreshAt = ZimbraJWToken.getJWToken(refreshToken, refreshTokenSalt);
-            } catch (AuthTokenException e) {
-                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
-                        "refresh token invalid or expired");
-                AuthListener.invokeOnException(afe);
-                throw afe;
-            }
-            if (refreshAt.isExpired() || refreshAt.getUsage() != Usage.REFRESH
-                    || !refreshAt.getAccountId().equalsIgnoreCase(acct.getId())) {
-                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
-                        "refresh token rejected");
-                AuthListener.invokeOnException(afe);
-                throw afe;
-            }
-            // ZCS-20285: refresh deliberately bypasses prov.authAccount(), so it never gets the
-            // account-status check that a normal password login gets for free
-            // (LdapProvisioning.checkAccountStatus) - enforce it explicitly here.
-            String acctStatus = acct.getAccountStatus(prov);
-            if (acctStatus == null || !(acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE)
-                    || acctStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT))) {
-                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
-                        "account status is " + acctStatus);
-                AuthListener.invokeOnException(afe);
-                throw afe;
-            }
-
-            AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
-            AuthToken at;
-            try {
-                at = AuthProvider.getAuthToken(acct, tokenType);
-            } catch (ServiceException e) {
-                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
-                        "failed to mint access token on refresh", e);
-                AuthListener.invokeOnException(afe);
-                throw afe;
-            }
-            ServletRequest refreshHttpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            if (csrfSupport && !at.isCsrfTokenEnabled()) {
-                at.setCsrfTokenEnabled(csrfSupport);
-            }
-            refreshHttpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
-            AuthListener.invokeOnSuccess(acct);
-            return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
-        }
+//        if (refreshTokenEl != null) {
+//            if (acct == null) {
+//                throw ServiceException.INVALID_REQUEST("missing required element: " + AccountConstants.E_ACCOUNT, null);
+//            }
+//            String refreshToken = refreshTokenEl.getText();
+//            Element refreshTokenSaltEl = request.getOptionalElement(AccountConstants.E_REFRESH_TOKEN_SALT);
+//            String refreshTokenSalt = refreshTokenSaltEl == null ? null : refreshTokenSaltEl.getText();
+//
+//            AuthToken refreshAt;
+//            try {
+//                refreshAt = ZimbraJWToken.getJWToken(refreshToken, refreshTokenSalt);
+//            } catch (AuthTokenException e) {
+//                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+//                        "refresh token invalid or expired");
+//                AuthListener.invokeOnException(afe);
+//                throw afe;
+//            }
+//            if (refreshAt.isExpired() || refreshAt.getUsage() != Usage.REFRESH
+//                    || !refreshAt.getAccountId().equalsIgnoreCase(acct.getId())) {
+//                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+//                        "refresh token rejected");
+//                AuthListener.invokeOnException(afe);
+//                throw afe;
+//            }
+//            // ZCS-20285: refresh deliberately bypasses prov.authAccount(), so it never gets the
+//            // account-status check that a normal password login gets for free
+//            // (LdapProvisioning.checkAccountStatus) - enforce it explicitly here.
+//            String acctStatus = acct.getAccountStatus(prov);
+//            if (acctStatus == null || !(acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE)
+//                    || acctStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT))) {
+//                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+//                        "account status is " + acctStatus);
+//                AuthListener.invokeOnException(afe);
+//                throw afe;
+//            }
+//
+//            AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+//            AuthToken at;
+//            try {
+//                at = AuthProvider.getAuthToken(acct, tokenType);
+//            } catch (ServiceException e) {
+//                AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(),
+//                        "failed to mint access token on refresh", e);
+//                AuthListener.invokeOnException(afe);
+//                throw afe;
+//            }
+//            ServletRequest refreshHttpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+//            if (csrfSupport && !at.isCsrfTokenEnabled()) {
+//                at.setCsrfTokenEnabled(csrfSupport);
+//            }
+//            refreshHttpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+//            AuthListener.invokeOnSuccess(acct);
+//            return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
+//        }
 
         Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
         String deviceId = request.getAttribute(AccountConstants.E_DEVICE_ID, null);
@@ -489,13 +531,36 @@ public class Auth extends AccountDocumentHandler {
         // it carries a verifiable account-id claim and supports revocation at logout - unlike
         // ZimbraJWToken, the signing key isn't self-contained, so its salt has to travel
         // alongside it (E_REFRESH_TOKEN_SALT), sent once here and never reissued (no rotation).
-        if (recoveryCode == null) {
-            try {
-                ZimbraJWToken refreshToken = (ZimbraJWToken) AuthProvider.getAuthToken(acct, Usage.REFRESH, TokenType.JWT);
-                response.addNonUniqueElement(AccountConstants.E_REFRESH_TOKEN).setText(refreshToken.getEncoded());
-                response.addNonUniqueElement(AccountConstants.E_REFRESH_TOKEN_SALT).setText(refreshToken.getSalt());
-            } catch (AuthTokenException e) {
-                throw ServiceException.FAILURE("failed to mint refresh token", e);
+//        if (recoveryCode == null) {
+//            try {
+//                ZimbraJWToken refreshToken = (ZimbraJWToken) AuthProvider.getAuthToken(acct, Usage.REFRESH, TokenType.JWT);
+//                response.addNonUniqueElement(AccountConstants.E_REFRESH_TOKEN).setText(refreshToken.getEncoded());
+//                response.addNonUniqueElement(AccountConstants.E_REFRESH_TOKEN_SALT).setText(refreshToken.getSalt());
+//            } catch (AuthTokenException e) {
+//                throw ServiceException.FAILURE("failed to mint refresh token", e);
+//            }
+//        }
+
+        // 2. Native OAuth: Attach persistent refresh credentials if requested & permitted
+        if (isNativeOAuthRequested(request, context)) {
+            // Check if login is in a restricted / remediation state
+            boolean isTfaPending = response.getOptionalElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED) != null;
+            boolean isPassChangePending = response.getOptionalElement("passwordChangeRequired") != null
+                    || acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
+            boolean isRecovery = request.getOptionalElement("recoveryCode") != null
+                    || request.getOptionalElement("passwordRecoveryCode") != null
+                    || "true".equalsIgnoreCase(request.getAttribute("recovery", "false"));
+
+            if (!isTfaPending && !isPassChangePending && !isRecovery) {
+                NativeOAuthProvider provider = NativeOAuthRegistry.getProvider();
+                if (provider != null) {
+                    provider.issueRefreshToken(acct, request, response, context);
+                    ZimbraLog.account.info("Auth: Issued Native OAuth refresh credentials for account: %s", acct.getName());
+                } else {
+                    ZimbraLog.account.warn("Auth: %s requested but NativeOAuthProvider is not registered", AUTH_TYPE_ZM_OAUTH2);
+                }
+            } else {
+                ZimbraLog.account.info("Auth: Restricted authentication state for account %s; omitting persistent credentials", acct.getName());
             }
         }
         return response;
