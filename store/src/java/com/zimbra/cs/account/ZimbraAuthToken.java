@@ -24,7 +24,6 @@ import java.util.Random;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.CookieSpecs;
@@ -184,21 +183,24 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         if(expireTime == 0) {
             long lifetime;
             switch (usage) {
-            case ENABLE_TWO_FACTOR_AUTH:
-                lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, DEFAULT_TWO_FACTOR_AUTH_LIFETIME * 1000);
-                break;
-            case TWO_FACTOR_AUTH:
-                lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME * 1000);
-                break;
-            case REFRESH:
-                lifetime = LC.zimbra_native_refresh_token_lifetime.intValue() * 1000L;
-                break;
-            case AUTH:
-            default:
-                lifetime = isAdmin ?
-                        acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000) :
-                        acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
-                break;
+                case ENABLE_TWO_FACTOR_AUTH:
+                    lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthTokenLifetime,
+                            DEFAULT_TWO_FACTOR_AUTH_LIFETIME * 1000);
+                    break;
+                case TWO_FACTOR_AUTH:
+                    lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime,
+                            DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME * 1000);
+                    break;
+                case REFRESH:
+                    lifetime = acct.getNativeOAuthRefreshTokenLifetime();
+                    break;
+                case AUTH:
+                default:
+                    lifetime = isAdmin ?
+                            acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime,
+                                    DEFAULT_AUTH_LIFETIME * 1000) :
+                            acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
+                    break;
             }
             expireTime = System.currentTimeMillis() + lifetime;
         }
