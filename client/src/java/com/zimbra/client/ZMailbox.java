@@ -3509,7 +3509,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             int statusCode = response.getStatusLine().getStatusCode();
 
             if (statusCode == HttpServletResponse.SC_OK) {
-                int memoryThreshold = 1024 * 1024 * LC.zimbra_resturl_export_threshold.intValue(); // 100mb as threshold
+                int memoryThreshold = 1024 * 1024 * LC.zimbra_resturl_export_threshold_mb.intValue(); // 100mb as threshold
                 try (InputStream inputStream = new GetMethodInputStream(response.getEntity().getContent())) {
                     DeferredFileOutputStream dfos = new DeferredFileOutputStream(memoryThreshold,
                             "zmail-resource-", ".tmp", new File(LC.zimbra_tmp_directory.value()));
@@ -3536,6 +3536,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                         response.getStatusLine().getReasonPhrase());
                 throw ServiceException.FAILURE(msg, null);
             }
+        } catch (NumberFormatException e) {
+            String msg = String.format("Invalid value for zimbra_resturl_export_threshold LC. " +
+                    "Must be a positive integer representing the mega byte limit.");
+            throw ZClientException.PARSE_ERROR(msg, e);
         } catch (IOException | HttpException e) {
             String msg = String.format("Unable to get resource from '%s' : %s", uri, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);

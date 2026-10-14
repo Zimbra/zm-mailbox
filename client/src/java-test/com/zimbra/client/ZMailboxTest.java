@@ -57,17 +57,17 @@ public class ZMailboxTest {
 
     @Before
     public void setUp() {
-        originalThreshold = LC.zimbra_resturl_export_threshold.intValue();
+        originalThreshold = LC.zimbra_resturl_export_threshold_mb.intValue();
     }
 
     @After
     public void tearDown() {
-        LC.zimbra_resturl_export_threshold.setDefault(originalThreshold);
+        LC.zimbra_resturl_export_threshold_mb.setDefault(originalThreshold);
     }
 
     @Test
     public void testGetResourceReturnsInMemoryStreamForSmallPayload() throws Exception {
-        LC.zimbra_resturl_export_threshold.setDefault(1);
+        LC.zimbra_resturl_export_threshold_mb.setDefault(1);
 
         byte[] payload = "small payload".getBytes(StandardCharsets.UTF_8);
         Object mailbox = newSpyMailbox();
