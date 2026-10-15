@@ -2384,6 +2384,24 @@ public class ZAttrProvisioning {
         public boolean isOnly() { return this == only;}
     }
 
+    public static enum SamlSpSigningAlgorithm {
+        SHA1("SHA1"),
+        SHA256("SHA256"),
+        SHA512("SHA512");
+        private String mValue;
+        private SamlSpSigningAlgorithm(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static SamlSpSigningAlgorithm fromString(String s) throws ServiceException {
+            for (SamlSpSigningAlgorithm value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSHA1() { return this == SHA1;}
+        public boolean isSHA256() { return this == SHA256;}
+        public boolean isSHA512() { return this == SHA512;}
+    }
+
     public static enum ScheduledTaskRetryPolicy {
         constant("constant"),
         linear("linear"),
@@ -17023,6 +17041,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=4163)
     public static final String A_zimbraSamlSpEntityId = "zimbraSamlSpEntityId";
+
+    /**
+     * Algorithm used to sign SP-generated SAML requests. Inherits the global
+     * configuration when unset on the domain. Defaults to SHA256 when no
+     * value is configured.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public static final String A_zimbraSamlSpSigningAlgorithm = "zimbraSamlSpSigningAlgorithm";
 
     /**
      * Certificate used to verify signed SAML SP requests
