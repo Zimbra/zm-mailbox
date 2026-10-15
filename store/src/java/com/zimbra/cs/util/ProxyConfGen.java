@@ -1293,7 +1293,7 @@ class ModernCSPHeaderVar extends ProxyConfVar {
     static final String NONCE_TOKEN = "{{nonce}}";
     // Must match the placeholder in the Modern UI HTML template.
     static final String NONCE_PLACEHOLDER = "__CSP_NONCE__";
-    // sub_filter cannot rewrite compressed upstream responses, so Modern UI requests ask for identity encoding.
+    // sub_filter cannot rewrite compressed upstream responses, so HTML page requests ask for identity encoding.
     private static final String ACCEPT_ENCODING_PASSTHROUGH = "set $zimbra_modern_ae $http_accept_encoding;";
 
     private final boolean domainValues;
@@ -1347,12 +1347,25 @@ class ModernCSPHeaderVar extends ProxyConfVar {
         StringBuilder sb = new StringBuilder();
         sb.append("set $zimbra_modern_csp \"\";\n");
         sb.append(ACCEPT_ENCODING_PASSTHROUGH).append("\n");
+        if (nonceEnabled) {
+            sb.append("set $zimbra_modern_nav \"\";\n");
+        }
         sb.append("if ($uri ~ ^/modern(?:/|$)) {\n");
         sb.append("    set $zimbra_modern_csp \"").append(nginxPolicy).append("\";\n");
         if (nonceEnabled) {
-            sb.append("    set $zimbra_modern_ae \"\";\n");
+            sb.append("    set $zimbra_modern_nav \"m\";\n");
         }
         sb.append("}\n");
+        if (nonceEnabled) {
+            // nginx has no "&&", so combine the path and Accept checks in one variable. Only page loads need
+            // identity encoding; scripts, styles and images keep their compression.
+            sb.append("if ($http_accept ~* text/html) {\n");
+            sb.append("    set $zimbra_modern_nav \"$zimbra_modern_nav:h\";\n");
+            sb.append("}\n");
+            sb.append("if ($zimbra_modern_nav = \"m:h\") {\n");
+            sb.append("    set $zimbra_modern_ae \"\";\n");
+            sb.append("}\n");
+        }
         sb.append("add_header ").append(headerName).append(" $zimbra_modern_csp always;");
         if (nonceEnabled) {
             sb.append("\nsub_filter '").append(NONCE_PLACEHOLDER).append("' '$request_id';");
