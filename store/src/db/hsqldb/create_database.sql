@@ -305,6 +305,7 @@ CREATE TABLE *${DATABASE_NAME}.cred_store (
 
    -- ROPC owner
    ropc_token_id               BIGINT DEFAULT NULL,
+   client_instance_id          VARCHAR(64) DEFAULT NULL,
    client_label                VARCHAR(128) DEFAULT NULL,
 
    -- ZMG owner (utf8 to match zimbra.zmg_devices.reg_id)
@@ -336,6 +337,7 @@ CREATE TABLE *${DATABASE_NAME}.cred_store (
 
    PRIMARY KEY (id),
 
+   UNIQUE KEY uk_cred_ropc_instance (ropc_token_id, client_instance_id),
    UNIQUE KEY uk_cred_zmg (reg_id),
    UNIQUE KEY uk_cred_rt_hash (refresh_token_hash),
 
