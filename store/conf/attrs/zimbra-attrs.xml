@@ -10785,4 +10785,11 @@ TODO: delete them permanently from here
     <globalConfigValue>SHA256</globalConfigValue>
   </attr>
 
+  <attr id="4171" name="zimbraNativeMobileAppMinVersionSupported" type="astring" cardinality="single"
+        optionalIn="globalConfig" immutable="1" since="10.1.22">
+    <desc>Minimum supported native mobile app versions, stored as JSON. Required platform keys are iOS and android. Each platform must contain a minVersion string in major.minor.patch format.</desc>
+    <globalConfigValue>{"iOS":{"minVersion":"1.0.0"},"android":{"minVersion":"1.0.0"}}</globalConfigValue>
+    <globalConfigValueUpgrade>{"iOS":{"minVersion":"1.0.0"},"android":{"minVersion":"1.0.0"}}</globalConfigValueUpgrade>
+  </attr>
+
 </attrs>

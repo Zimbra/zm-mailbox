@@ -54240,6 +54240,88 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @return zimbraNativeMobileAppMinVersionSupported, or "{\"iOS\":{\"minVersion\":\"1.0.0\"},\"android\":{\"minVersion\":\"1.0.0\"}}" if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public String getNativeMobileAppMinVersionSupported() {
+        return getAttr(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, "{\"iOS\":{\"minVersion\":\"1.0.0\"},\"android\":{\"minVersion\":\"1.0.0\"}}", true);
+    }
+
+    /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @param zimbraNativeMobileAppMinVersionSupported new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void setNativeMobileAppMinVersionSupported(String zimbraNativeMobileAppMinVersionSupported) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, zimbraNativeMobileAppMinVersionSupported);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @param zimbraNativeMobileAppMinVersionSupported new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> setNativeMobileAppMinVersionSupported(String zimbraNativeMobileAppMinVersionSupported, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, zimbraNativeMobileAppMinVersionSupported);
+        return attrs;
+    }
+
+    /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void unsetNativeMobileAppMinVersionSupported() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> unsetNativeMobileAppMinVersionSupported(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 10.1.0. deprecated in favor for new realtime license
      * attributes. Orig desc: A signed activation key that authorizes this
      * installation.
