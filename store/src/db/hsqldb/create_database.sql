@@ -273,7 +273,7 @@ CREATE TABLE *{DATABASE_NAME}.watch (
    CONSTRAINT pk_watch PRIMARY KEY (mailbox_id, target, item_id)
   );
 
-CREATE TABLE *${DATABASE_NAME}.ropc_token_store (
+CREATE TABLE *{DATABASE_NAME}.ropc_token_store (
     id            BIGINT AUTO_INCREMENT NOT NULL,
     username      VARCHAR(255) NOT NULL,
     domain_name   VARCHAR(255) DEFAULT NULL,
@@ -295,9 +295,9 @@ CREATE TABLE *${DATABASE_NAME}.ropc_token_store (
     INDEX idx_back_channel_logout   (username),
     INDEX idx_device_lookup         (device_id, username),
     INDEX idx_latest_session_lookup (username, created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
-CREATE TABLE *${DATABASE_NAME}.cred_store (
+CREATE TABLE *{DATABASE_NAME}.cred_store (
    id                          BIGINT AUTO_INCREMENT NOT NULL,
 
    -- [APP] owner_type determines which owner block is populated
@@ -337,12 +337,12 @@ CREATE TABLE *${DATABASE_NAME}.cred_store (
 
    PRIMARY KEY (id),
 
-   UNIQUE KEY uk_cred_ropc_instance (ropc_token_id, client_instance_id),
+   UNIQUE KEY uk_cred_mailbox_client_instance (mailbox_id, client_instance_id),
    UNIQUE KEY uk_cred_zmg (reg_id),
    UNIQUE KEY uk_cred_rt_hash (refresh_token_hash),
 
    CONSTRAINT fk_cred_ropc FOREIGN KEY (ropc_token_id)
-       REFERENCES $group.ropc_token_store (id) ON DELETE CASCADE,
+          REFERENCES *{DATABASE_NAME}.ropc_token_store (id) ON DELETE CASCADE,
 
    -- SET NULL, not CASCADE: the revoked tombstone must outlive the device row
    CONSTRAINT fk_cred_zmg FOREIGN KEY (reg_id)
@@ -358,4 +358,4 @@ CREATE TABLE *${DATABASE_NAME}.cred_store (
    INDEX i_cred_idp             (auth_provider, idp_id),
    INDEX i_cred_id_token_lookup (id_token(255)),
    INDEX i_cred_owner_created (owner_type, created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+);
