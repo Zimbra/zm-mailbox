@@ -33206,6 +33206,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Value for postconf sender_dependent_relayhost_maps
+     *
+     * @return zimbraMtaSenderDependentRelayhostMaps, or null if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public String getMtaSenderDependentRelayhostMaps() {
+        return getAttr(Provisioning.A_zimbraMtaSenderDependentRelayhostMaps, null, true);
+    }
+
+    /**
+     * Value for postconf sender_dependent_relayhost_maps
+     *
+     * @param zimbraMtaSenderDependentRelayhostMaps new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void setMtaSenderDependentRelayhostMaps(String zimbraMtaSenderDependentRelayhostMaps) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSenderDependentRelayhostMaps, zimbraMtaSenderDependentRelayhostMaps);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf sender_dependent_relayhost_maps
+     *
+     * @param zimbraMtaSenderDependentRelayhostMaps new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> setMtaSenderDependentRelayhostMaps(String zimbraMtaSenderDependentRelayhostMaps, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSenderDependentRelayhostMaps, zimbraMtaSenderDependentRelayhostMaps);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf sender_dependent_relayhost_maps
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void unsetMtaSenderDependentRelayhostMaps() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSenderDependentRelayhostMaps, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf sender_dependent_relayhost_maps
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> unsetMtaSenderDependentRelayhostMaps(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSenderDependentRelayhostMaps, "");
+        return attrs;
+    }
+
+    /**
      * Value for postconf sendmail_path
      *
      * @return zimbraMtaSendmailPath, or "/opt/zimbra/common/sbin/sendmail" if unset

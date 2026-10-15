@@ -12477,6 +12477,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaSenderCanonicalMaps = "zimbraMtaSenderCanonicalMaps";
 
     /**
+     * Value for postconf sender_dependent_relayhost_maps
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public static final String A_zimbraMtaSenderDependentRelayhostMaps = "zimbraMtaSenderDependentRelayhostMaps";
+
+    /**
      * Value for postconf sendmail_path
      *
      * @since ZCS 8.5.0
