@@ -1600,6 +1600,11 @@ public final class LC {
     // Falls back to 60 minutes if parsing fails
     public static final KnownKey csrf_filter_domain_allowed_ref_hosts_cache_expiry_mins = KnownKey.newKey(60);
 
+    // Maximum HTTP response body libzmpush will buffer from FCM/OAuth, in bytes
+    // Guards mailboxd against an endpoint that streams without end; real responses are a few hundred bytes
+    // Falls back to the library default (65536) if the value is missing, zero or not a number
+    public static final KnownKey mobile_push_max_response_bytes = KnownKey.newKey(64 * 1024);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
