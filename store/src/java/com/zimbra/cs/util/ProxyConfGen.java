@@ -1290,6 +1290,12 @@ class AddHeadersVar extends ProxyConfVar {
 }
 
 class ModernCSPHeaderVar extends ProxyConfVar {
+    static final String NONCE_TOKEN = "{{nonce}}";
+    // Must match the placeholder in the Modern UI HTML template.
+    static final String NONCE_PLACEHOLDER = "__CSP_NONCE__";
+    // sub_filter cannot rewrite compressed upstream responses, so Modern UI requests ask for identity encoding.
+    private static final String ACCEPT_ENCODING_PASSTHROUGH = "set $zimbra_modern_ae $http_accept_encoding;";
+
     private final boolean domainValues;
     private final String domainMode;
     private final String domainPolicy;
@@ -1324,7 +1330,8 @@ class ModernCSPHeaderVar extends ProxyConfVar {
             policy = "";
         }
         if ("off".equals(mode) || policy.trim().isEmpty()) {
-            mValue = "";
+            // The location blocks reference $zimbra_modern_ae, so it must be defined even when CSP is off.
+            mValue = ACCEPT_ENCODING_PASSTHROUGH;
             return;
         }
         if (!"report-only".equals(mode) && !"enforce".equals(mode)) {
@@ -1335,11 +1342,23 @@ class ModernCSPHeaderVar extends ProxyConfVar {
         }
         String headerName = "report-only".equals(mode)
                 ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
-        mValue = "set $zimbra_modern_csp \"\";\n" +
-                "if ($uri ~ ^/modern(?:/|$)) {\n" +
-                "    set $zimbra_modern_csp \"" + escapeNginxString(policy) + "\";\n" +
-                "}\n" +
-                "add_header " + headerName + " $zimbra_modern_csp always;";
+        boolean nonceEnabled = policy.contains(NONCE_TOKEN);
+        String nginxPolicy = escapeNginxString(policy).replace(NONCE_TOKEN, "$request_id");
+        StringBuilder sb = new StringBuilder();
+        sb.append("set $zimbra_modern_csp \"\";\n");
+        sb.append(ACCEPT_ENCODING_PASSTHROUGH).append("\n");
+        sb.append("if ($uri ~ ^/modern(?:/|$)) {\n");
+        sb.append("    set $zimbra_modern_csp \"").append(nginxPolicy).append("\";\n");
+        if (nonceEnabled) {
+            sb.append("    set $zimbra_modern_ae \"\";\n");
+        }
+        sb.append("}\n");
+        sb.append("add_header ").append(headerName).append(" $zimbra_modern_csp always;");
+        if (nonceEnabled) {
+            sb.append("\nsub_filter '").append(NONCE_PLACEHOLDER).append("' '$request_id';");
+            sb.append("\nsub_filter_once off;");
+        }
+        mValue = sb.toString();
     }
 
     private String escapeNginxString(String value) {

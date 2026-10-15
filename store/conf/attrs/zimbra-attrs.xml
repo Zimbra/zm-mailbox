@@ -8907,11 +8907,13 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="4171" name="zimbraReverseProxyModernCSPPolicy" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" requiresRestart="nginxproxy" since="10.1.22">
-  <globalConfigValue>manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';</globalConfigValue>
-  <globalConfigValueUpgrade>manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';</globalConfigValueUpgrade>
+  <globalConfigValue>manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';</globalConfigValue>
+  <globalConfigValueUpgrade>manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';</globalConfigValueUpgrade>
   <desc>
     Content Security Policy directives applied to the Modern UI by the reverse proxy.
     Used when zimbraReverseProxyModernCSP is report-only or enforce; do not include a header name.
+    The token {{nonce}} is replaced with a per-response nonce, and the proxy also writes that nonce into
+    the Modern UI HTML. Place it inside quotes, e.g. 'nonce-{{nonce}}', followed by a non-word character.
   </desc>
 </attr>
 
