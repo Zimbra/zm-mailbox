@@ -61,7 +61,6 @@ import com.zimbra.cs.account.Provisioning.AuthMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
-import com.zimbra.cs.account.ZimbraJWToken;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.twofactor.AppSpecificPasswords;
 import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
@@ -80,9 +79,6 @@ import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.SoapServlet;
-import com.zimbra.cs.service.account.NativeOAuthProvider;
-import com.zimbra.cs.service.account.NativeOAuthRegistry;
 
 /**
  * @author schemers
@@ -155,7 +151,7 @@ public class Auth extends AccountDocumentHandler {
 
         Element refreshTokenEl = request.getOptionalElement("refreshToken");
         if (refreshTokenEl != null) {
-            NativeOAuthProvider provider = NativeOAuthRegistry.getProvider();
+            com.zimbra.cs.service.account.OAuthProvider provider = com.zimbra.cs.service.account.OAuthRegistry.getProvider();
             if (provider != null) {
                 return provider.handleRefresh(acct, request, context);
             } else {
@@ -498,9 +494,13 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
+        com.zimbra.cs.service.account.OAuthProvider provider = com.zimbra.cs.service.account.OAuthRegistry.getProvider();
+        boolean isNativeOAuth = isNativeOAuthRequested(request, context) && provider != null;
         AuthToken at = null;
         if (recoveryCode != null) {
             at = AuthProvider.getAuthToken(acct, Usage.RESET_PASSWORD, tokenType);
+        } else if (isNativeOAuth) {
+            at = provider.issueToken(acct, Usage.AUTH, request, null, context);
         } else {
             at = expires == 0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
         }
@@ -540,10 +540,7 @@ public class Auth extends AccountDocumentHandler {
 //                throw ServiceException.FAILURE("failed to mint refresh token", e);
 //            }
 //        }
-
-        // 2. Native OAuth: Attach persistent refresh credentials if requested & permitted
         if (isNativeOAuthRequested(request, context)) {
-            // Check if login is in a restricted / remediation state
             boolean isTfaPending = response.getOptionalElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED) != null;
             boolean isPassChangePending = response.getOptionalElement("passwordChangeRequired") != null
                     || acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
@@ -552,15 +549,17 @@ public class Auth extends AccountDocumentHandler {
                     || "true".equalsIgnoreCase(request.getAttribute("recovery", "false"));
 
             if (!isTfaPending && !isPassChangePending && !isRecovery) {
-                NativeOAuthProvider provider = NativeOAuthRegistry.getProvider();
                 if (provider != null) {
-                    provider.issueRefreshToken(acct, request, response, context);
-                    ZimbraLog.account.info("Auth: Issued Native OAuth refresh credentials for account: %s", acct.getName());
+                    provider.issueToken(acct, Usage.REFRESH, request, response, context);
+                    ZimbraLog.account.info("Auth: Issued Native OAuth refresh credentials for account: %s",
+                            acct.getName());
                 } else {
-                    ZimbraLog.account.warn("Auth: %s requested but NativeOAuthProvider is not registered", AUTH_TYPE_ZM_OAUTH2);
+                    ZimbraLog.account.warn("Auth: %s requested but NativeOAuthProvider is not registered",
+                            AUTH_TYPE_ZM_OAUTH2);
                 }
             } else {
-                ZimbraLog.account.info("Auth: Restricted authentication state for account %s; omitting persistent credentials", acct.getName());
+                ZimbraLog.account.info("Auth: Restricted authentication state for account %s;" +
+                        " omitting persistent credentials", acct.getName());
             }
         }
         return response;
