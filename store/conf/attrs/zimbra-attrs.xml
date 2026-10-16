@@ -8914,6 +8914,7 @@ TODO: delete them permanently from here
     Used when zimbraReverseProxyModernCSP is report-only or enforce; do not include a header name.
     The token {{nonce}} is replaced with a per-response nonce, and the proxy also writes that nonce into
     the Modern UI HTML. Place it inside quotes, e.g. 'nonce-{{nonce}}', followed by a non-word character.
+    The nonce needs an nginx built with http_sub_module; without it the nonce source is dropped from the policy.
   </desc>
 </attr>
 

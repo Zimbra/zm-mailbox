@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1296,6 +1298,48 @@ class ModernCSPHeaderVar extends ProxyConfVar {
     // sub_filter cannot rewrite compressed upstream responses, so HTML page requests ask for identity encoding.
     private static final String ACCEPT_ENCODING_PASSTHROUGH = "set $zimbra_modern_ae $http_accept_encoding;";
 
+    private static Boolean subFilterSupported;
+
+    /**
+     * Returns whether the local nginx was built with http_sub_module. Without it, a generated sub_filter
+     * directive makes nginx refuse to load its configuration, so the nonce rules must not be emitted.
+     */
+    static synchronized boolean isSubFilterSupported() {
+        if (subFilterSupported == null) {
+            subFilterSupported = detectSubFilterSupport();
+        }
+        return subFilterSupported;
+    }
+
+    private static boolean detectSubFilterSupport() {
+        Process process = null;
+        try {
+            process = new ProcessBuilder(LC.zimbra_home.value() + "/common/sbin/nginx", "-V")
+                    .redirectErrorStream(true).start();
+            StringBuilder output = new StringBuilder();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append('\n');
+            }
+            process.waitFor(10, TimeUnit.SECONDS);
+            return output.indexOf("http_sub_module") >= 0;
+        } catch (IOException e) {
+            mLog.warn("Unable to determine whether nginx supports sub_filter: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            if (process != null) {
+                process.destroy();
+            }
+        }
+        return false;
+    }
+
+    private static String removeNonceSource(String policy) {
+        return policy.replaceAll("\\s*'nonce-" + Pattern.quote(NONCE_TOKEN) + "'", "").replace(NONCE_TOKEN, "");
+    }
+
     private final boolean domainValues;
     private final String domainMode;
     private final String domainPolicy;
@@ -1342,7 +1386,12 @@ class ModernCSPHeaderVar extends ProxyConfVar {
         }
         String headerName = "report-only".equals(mode)
                 ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
-        boolean nonceEnabled = policy.contains(NONCE_TOKEN);
+        boolean nonceEnabled = policy.contains(NONCE_TOKEN) && isSubFilterSupported();
+        if (policy.contains(NONCE_TOKEN) && !nonceEnabled) {
+            mLog.warn("nginx was built without http_sub_module, so the Modern UI CSP nonce is disabled and "
+                    + "inline scripts such as the zimlet loader will be blocked by an enforced policy");
+            policy = removeNonceSource(policy);
+        }
         String nginxPolicy = escapeNginxString(policy).replace(NONCE_TOKEN, "$request_id");
         StringBuilder sb = new StringBuilder();
         sb.append("set $zimbra_modern_csp \"\";\n");
