@@ -2366,6 +2366,24 @@ public class ZAttrProvisioning {
         public boolean isRedirect() { return this == redirect;}
     }
 
+    public static enum ReverseProxyModernCSP {
+        off("off"),
+        report_only("report-only"),
+        enforce("enforce");
+        private String mValue;
+        private ReverseProxyModernCSP(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ReverseProxyModernCSP fromString(String s) throws ServiceException {
+            for (ReverseProxyModernCSP value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOff() { return this == off;}
+        public boolean isReport_only() { return this == report_only;}
+        public boolean isEnforce() { return this == enforce;}
+    }
+
     public static enum ReverseProxyPop3StartTlsMode {
         on("on"),
         off("off"),
@@ -16446,6 +16464,29 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyMailPop3sEnabled = "zimbraReverseProxyMailPop3sEnabled";
 
     /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public static final String A_zimbraReverseProxyModernCSP = "zimbraReverseProxyModernCSP";
+
+    /**
+     * Content Security Policy directives applied to the Modern UI by the
+     * reverse proxy. Used when zimbraReverseProxyModernCSP is report-only or
+     * enforce; do not include a header name. The token {{nonce}} is replaced
+     * with a per-response nonce, and the proxy also writes that nonce into
+     * the Modern UI HTML. Place it inside quotes, e.g.
+     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public static final String A_zimbraReverseProxyModernCSPPolicy = "zimbraReverseProxyModernCSPPolicy";
+
+    /**
      * whether NGINX mail proxy will pass upstream server errors back to the
      * downstream email clients
      *
@@ -16530,22 +16571,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1973)
     public static final String A_zimbraReverseProxyResponseHeaders = "zimbraReverseProxyResponseHeaders";
-
-    /**
-     * Controls whether the reverse proxy reports or enforces CSP for the Modern UI.
-      *
-      * @since ZCS 10.1.22
-     */
-     @ZAttr(id=4170)
-    public static final String A_zimbraReverseProxyModernCSP = "zimbraReverseProxyModernCSP";
-
-    /**
-     * CSP directives applied to the Modern UI by the reverse proxy.
-      *
-      * @since ZCS 10.1.22
-     */
-     @ZAttr(id=4171)
-    public static final String A_zimbraReverseProxyModernCSPPolicy = "zimbraReverseProxyModernCSPPolicy";
 
     /**
      * Time interval after which NGINX will fail over to the next route
