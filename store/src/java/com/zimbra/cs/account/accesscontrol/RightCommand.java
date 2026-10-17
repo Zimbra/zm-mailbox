@@ -1332,7 +1332,7 @@ public class RightCommand {
                             (revoking?"revoke":"grant"), right.getName()));
                 }
 
-                ParticallyDenied.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
+                PartiallyDenied.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
             }
         }
 
