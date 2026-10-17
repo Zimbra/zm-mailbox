@@ -318,7 +318,7 @@ public class GalSyncAccountUtil {
 				String folderName = cl.getOptionValue('f');
 				String pollingInterval = cl.getOptionValue('p');
 				String mailHost = cl.getOptionValue('s');
-				if (acctName == null || mailHost == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
+				if (acctName == null || mailHost == null || domain == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
 					usage();
 				for (Element account : cli.createGalSyncAccount(acctName, dsName, domain, type, folderName, pollingInterval, mailHost).listElements(AdminConstants.A_ACCOUNT))
 					System.out.println(account.getAttribute(AdminConstants.A_NAME)+"\t"+account.getAttribute(AdminConstants.A_ID));
@@ -330,7 +330,7 @@ public class GalSyncAccountUtil {
 	            type = cl.getOptionValue('t');
 	            folderName = cl.getOptionValue('f');
 	            pollingInterval = cl.getOptionValue('p');
-	            if (acctName == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
+	            if (acctName == null || domain == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
 	                usage();
 	            for (Element account : cli.addGalSyncDataSource(acctName, dsName, domain, type, folderName, pollingInterval).listElements(AdminConstants.A_ACCOUNT))
 	                System.out.println(account.getAttribute(AdminConstants.A_NAME)+"\t"+account.getAttribute(AdminConstants.A_ID));
