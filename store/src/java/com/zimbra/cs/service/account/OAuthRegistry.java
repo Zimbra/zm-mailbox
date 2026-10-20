@@ -1,7 +1,6 @@
 package com.zimbra.cs.service.account;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.service.account.OAuthProvider;
 
 /**
  * Thread-safe singleton registry for NativeOAuthProvider.

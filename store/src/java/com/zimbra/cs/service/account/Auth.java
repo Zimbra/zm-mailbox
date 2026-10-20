@@ -80,23 +80,21 @@ import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import static com.zimbra.cs.account.AuthTokenUtil.getOrigAuthData;
+
 /**
  * @author schemers
  */
 public class Auth extends AccountDocumentHandler {
 
     public static final String AUTH_TYPE_ZM_OAUTH2 = "ZM_OAUTH2_1.0";
-    public static final String HEADER_AUTH_TYPE = "Auth-Type";
-    public static final String HEADER_X_ZIMBRA_AUTH_TYPE = "X-Zimbra-Auth-Type";
 
-    private boolean isNativeOAuthRequested(Element request, Map<String, Object> context) {
-        // 1. Check HTTP Header
+    public static final String HEADER_AUTH_TYPE = "Auth-Type";
+
+    public boolean isOAuthRequested(Element request, Map<String, Object> context) {
         HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (httpRequest != null) {
             String headerVal = httpRequest.getHeader(HEADER_AUTH_TYPE);
-            if (headerVal == null) {
-                headerVal = httpRequest.getHeader(HEADER_X_ZIMBRA_AUTH_TYPE);
-            }
             if (AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
                 return true;
             }
@@ -105,12 +103,10 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
-        // 2. Check XML attribute on <AuthRequest authType="ZM_OAUTH2_1.0">
         String authTypeAttr = request.getAttribute("authType", null);
         if (AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(authTypeAttr)) {
             return true;
         }
-
         return false;
     }
 
@@ -432,7 +428,7 @@ public class Auth extends AccountDocumentHandler {
         }
 
         com.zimbra.cs.service.account.OAuthProvider provider = com.zimbra.cs.service.account.OAuthRegistry.getProvider();
-        boolean isNativeOAuth = isNativeOAuthRequested(request, context) && provider != null;
+        boolean isNativeOAuth = isOAuthRequested(request, context) && provider != null;
         AuthToken at = null;
         if (recoveryCode != null) {
             at = AuthProvider.getAuthToken(acct, Usage.RESET_PASSWORD, tokenType);
@@ -461,7 +457,7 @@ public class Auth extends AccountDocumentHandler {
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
         AuthListener.invokeOnSuccess(acct);
         Element response = doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
-        if (isNativeOAuthRequested(request, context)) {
+        if (isOAuthRequested(request, context)) {
             boolean isTfaPending = response.getOptionalElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED) != null;
             boolean isPassChangePending = response.getOptionalElement("passwordChangeRequired") != null
                     || acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
@@ -597,8 +593,12 @@ public class Auth extends AccountDocumentHandler {
             Map<String, Object> context, Account acct, boolean csrfSupport, TrustedDeviceToken td, String deviceId)
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-        at.encodeAuthResp(response, false);
-
+        boolean isOAuthRequested = isOAuthRequested(request, context);
+        if (isOAuthRequested) {
+            response.addNonUniqueElement(AccountConstants.A_ACCESS_TOKEN).setText(getOrigAuthData(at));
+        } else {
+            at.encodeAuthResp(response, false);
+        }
         /*
          * bug 67078
          * also return auth token cookie in http header
