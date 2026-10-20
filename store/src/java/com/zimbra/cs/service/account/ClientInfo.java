@@ -45,6 +45,11 @@ public class ClientInfo extends AccountDocumentHandler {
         Domain domain = Provisioning.getInstance().get(req.getDomain());
 
         Element parent =  zsc.createElement(AccountConstants.CLIENT_INFO_RESPONSE);
+        ToXML.encodeAttr(
+                parent,
+                Provisioning.A_zimbraNativeMobileAppMinVersionSupported,
+                Provisioning.getInstance().getConfig()
+                        .getNativeMobileAppMinVersionSupported());
         if (domain != null) {
             String webClientLogoutURL = domain.getWebClientLogoutURL();
             ToXML.encodeAttr(parent, Provisioning.A_zimbraFeatureResetPasswordStatus, domain.getFeatureResetPasswordStatusAsString());
