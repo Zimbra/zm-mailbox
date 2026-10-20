@@ -19,7 +19,11 @@ package com.zimbra.cs.service.account;
 import java.util.Arrays;
 import java.util.Map;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.service.WebClientLogoffUrlRegistry;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.BuildInfo;
 import org.apache.commons.lang.StringUtils;
 
 import com.zimbra.common.service.ServiceException;
@@ -45,11 +49,10 @@ public class ClientInfo extends AccountDocumentHandler {
         Domain domain = Provisioning.getInstance().get(req.getDomain());
 
         Element parent =  zsc.createElement(AccountConstants.CLIENT_INFO_RESPONSE);
-        ToXML.encodeAttr(
-                parent,
-                Provisioning.A_zimbraNativeMobileAppMinVersionSupported,
-                Provisioning.getInstance().getConfig()
-                        .getNativeMobileAppMinVersionSupported());
+        String serverVersion = BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION;
+        parent.addAttribute(AccountConstants.E_VERSION, serverVersion, Element.Disposition.CONTENT);
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraNativeMobileAppMinVersionSupported,
+                Provisioning.getInstance().getConfig().getNativeMobileAppMinVersionSupported());
         if (domain != null) {
             String webClientLogoutURL = domain.getWebClientLogoutURL();
             ToXML.encodeAttr(parent, Provisioning.A_zimbraFeatureResetPasswordStatus, domain.getFeatureResetPasswordStatusAsString());
