@@ -86,6 +86,7 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxLock;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodNotSpecifiedException;
 import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodTooLongException;
@@ -1097,10 +1098,63 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     private void addItem(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
-            FolderDigestInfo digestInfo,
-            Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData id,
-            ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
-    throws ServiceException {
+                         FolderDigestInfo digestInfo, Map<Integer, Integer> idMap, int[] ids,
+                         Set<MailItem.Type> types, Resolve r, ItemData id,
+                         ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
+            throws ServiceException {
+        Mailbox mbox = fldr.getMailbox();
+        int maxRetries = LC.zimbra_archive_formatter_max_maintenance_retries.intValue();
+        long sleepMs = LC.zimbra_archive_formatter_maintenance_retry_sleep_ms.longValue();
+
+        for (int attempt = 0; ; attempt++) {
+            boolean locked = false;
+            boolean retry = false;
+            try {
+                mbox.lock.lock(); // May wait up to zimbra_mailbox_lock_timeout.
+                locked = true;
+
+                if (mbox.getMaintenance() != null) {
+                    // No archive bytes have been consumed on this attempt.
+                    retry = true;
+                } else {
+                    // Keep the lock across the WHOLE operation, including stream reads.
+                    addItemLocked(context, fldr, fmap, digestInfo, idMap, ids,
+                            types, r, id, ais, aie, errs);
+                    return;
+                }
+            } catch (MailboxLock.LockFailedException e) {
+                // Only retry if acquisition failed. Do not retry an operation that
+                // started and may have consumed the archive entry.
+                if (locked) {
+                    throw e;
+                }
+                retry = true;
+            } finally {
+                if (locked) {
+                    mbox.lock.release();
+                }
+            }
+
+            if (!retry || attempt >= maxRetries) {
+                throw MailServiceException.MAINTENANCE(mbox.getId(),
+                        "archive import could not acquire an available mailbox");
+            }
+            try {
+                Thread.sleep(sleepMs); // Lock has been released.
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw ServiceException.FAILURE(
+                        "Interrupted waiting to import archive item " + id.path, e);
+            }
+        }
+    }
+
+    private void addItemLocked(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
+                               FolderDigestInfo digestInfo,
+                               Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData id,
+                               ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
+            throws ServiceException {
+        int attempt = 0;
         try {
             Mailbox mbox = fldr.getMailbox();
             MailItem mi = MailItem.constructItem(mbox, id.ud);
@@ -1525,11 +1579,12 @@ public abstract class ArchiveFormatter extends Formatter {
                             getTagNames(id), null);
                 }
             }
+        } catch (MailServiceException.MailboxInMaintenanceException e) {
+            throw e;
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.QUOTA_EXCEEDED) {
                 throw e;
-            } else if (r != Resolve.Skip ||
-                e.getCode() != MailServiceException.ALREADY_EXISTS) {
+            } else if (r != Resolve.Skip || e.getCode() != MailServiceException.ALREADY_EXISTS) {
                 addError(errs, e);
             }
         } catch (Exception e) {
