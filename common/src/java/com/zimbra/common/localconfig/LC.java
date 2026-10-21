@@ -1605,6 +1605,11 @@ public final class LC {
     // Falls back to the library default (65536) if the value is missing, zero or not a number
     public static final KnownKey mobile_push_max_response_bytes = KnownKey.newKey(64 * 1024);
 
+    // Total FCM send attempts per device, including the first; 1 disables retrying
+    // Only transient FCM failures (429, 503) are retried; a 400 is never repeated
+    // Clamped to [1..5]; falls back to 2 if the value is not a number
+    public static final KnownKey mobile_push_max_attempts = KnownKey.newKey(2);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
