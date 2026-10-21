@@ -9,7 +9,9 @@ public final class OAuthRegistry {
 
     private static volatile OAuthProvider provider = null;
 
-    private OAuthRegistry() {}
+    private OAuthRegistry() {
+
+    }
 
     public static void registerProvider(OAuthProvider p) {
         provider = p;
