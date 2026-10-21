@@ -12985,6 +12985,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMyoneloginSamlSigningCert = "zimbraMyoneloginSamlSigningCert";
 
     /**
+     * Number of days for which data should be retained in mobile device.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public static final String A_zimbraNativeMobileAppLocalDataRetentionDays = "zimbraNativeMobileAppLocalDataRetentionDays";
+
+    /**
+     * Maximum stored data in mobile device.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public static final String A_zimbraNativeMobileAppMaxLocalDataSize = "zimbraNativeMobileAppMaxLocalDataSize";
+
+    /**
      * Minimum supported native mobile app versions, stored as JSON. Required
      * platform keys are iOS and android. Each platform must contain a
      * minVersion string in major.minor.patch format.
