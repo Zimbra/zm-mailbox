@@ -1,3 +1,4 @@
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -14,27 +15,22 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.cs.service.account;
-
-import java.util.Arrays;
-import java.util.Map;
-
-import com.zimbra.common.account.Key;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.service.WebClientLogoffUrlRegistry;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.BuildInfo;
-import org.apache.commons.lang.StringUtils;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.WebClientLogoffUrlRegistry;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.ClientInfoRequest;
-
+import java.util.Arrays;
+import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * ClientInfo returns domain attributes that may interest a client.
