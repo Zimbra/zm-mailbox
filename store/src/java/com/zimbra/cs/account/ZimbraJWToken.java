@@ -66,6 +66,10 @@ public class ZimbraJWToken extends AuthToken {
         this(acct, expires, false, null, null, Usage.AUTH);
     }
 
+    public ZimbraJWToken(Account acct, long expires, Usage usage) {
+        this(acct, expires, false, null, null, usage);
+    }
+
     public ZimbraJWToken(Account acct, Usage usage) {
         this(acct, 0, false, null, null, usage);
     }

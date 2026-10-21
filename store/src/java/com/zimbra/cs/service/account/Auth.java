@@ -22,6 +22,7 @@ package com.zimbra.cs.service.account;
 
 import io.jsonwebtoken.Claims;
 
+import java.com.zimbra.common.soap.OAuthConstants;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -89,10 +90,6 @@ import static com.zimbra.cs.account.AuthTokenUtil.getOrigAuthData;
  */
 public class Auth extends AccountDocumentHandler {
 
-    public static final String AUTH_TYPE_ZM_OAUTH2 = "ZM_OAUTH2_1.0";
-
-    public static final String HEADER_AUTH_TYPE = "Auth-Type";
-
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -129,7 +126,7 @@ public class Auth extends AccountDocumentHandler {
         }
 
         Element refreshTokenEl = request.getOptionalElement("refreshToken");
-        if (refreshTokenEl != null && acct.isNativeOAuthPersistentSessionEnabled()) {
+        if (refreshTokenEl != null && isOAuthRequested(request, context, acct)) {
             OAuthProvider provider = OAuthRegistry.getProvider();
             if (provider != null) {
                 return provider.handleRefresh(acct, request, context);
@@ -455,7 +452,7 @@ public class Auth extends AccountDocumentHandler {
                             acct.getName());
                 } else {
                     ZimbraLog.account.warn("Auth: %s requested but NativeOAuthProvider is not registered",
-                            AUTH_TYPE_ZM_OAUTH2);
+                            OAuthConstants.AUTH_TYPE_ZM_OAUTH2);
                 }
             } else {
                 ZimbraLog.account.info("Auth: Restricted authentication state for account %s;" +
@@ -578,7 +575,7 @@ public class Auth extends AccountDocumentHandler {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         boolean isOAuthRequested = isOAuthRequested(request, context, acct);
         if (isOAuthRequested) {
-            response.addNonUniqueElement(AccountConstants.OAUTH_ACCESS_TOKEN).setText(getOrigAuthData(at));
+            response.addNonUniqueElement(OAuthConstants.OAUTH_ACCESS_TOKEN).setText(getOrigAuthData(at));
         } else {
             at.encodeAuthResp(response, false);
         }
@@ -684,17 +681,17 @@ public class Auth extends AccountDocumentHandler {
         }
         HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (httpRequest != null) {
-            String headerVal = httpRequest.getHeader(HEADER_AUTH_TYPE);
-            if (AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
+            String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
+            if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
                 return true;
             }
-            if ("true".equalsIgnoreCase(httpRequest.getHeader(AUTH_TYPE_ZM_OAUTH2))) {
+            if ("true".equalsIgnoreCase(httpRequest.getHeader(OAuthConstants.AUTH_TYPE_ZM_OAUTH2))) {
                 return true;
             }
         }
 
         String authTypeAttr = request.getAttribute("authType", null);
-        if (AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(authTypeAttr)) {
+        if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(authTypeAttr)) {
             return true;
         }
         return false;
