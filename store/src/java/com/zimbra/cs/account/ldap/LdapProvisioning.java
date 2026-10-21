@@ -592,6 +592,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             Account acct = (Account) entry;
             validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE,
                     acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct, isRestoring);
+        } else if (entry instanceof Domain) {
+            Domain domain = (Domain) entry;
+            validate(ProvisioningValidator.MODIFY_DOMAIN_CHECK_COS_AND_FEATURE,
+                    domain.getName(), attrs, domain, isRestoring);
         }
 
         // validating the cos attributes while modifying

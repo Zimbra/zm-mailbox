@@ -2645,6 +2645,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
         static final String DELETE_COS = "deleteCos";
         static final String DELETE_COS_SUCCEEDED = "deleteCosSucceeded";
 
+        static final String MODIFY_DOMAIN_CHECK_COS_AND_FEATURE = "modifyDomainCheckCosAndFeature";
+
         void validate(Provisioning prov, String action, Object... args) throws ServiceException;
         void refresh();
     }
