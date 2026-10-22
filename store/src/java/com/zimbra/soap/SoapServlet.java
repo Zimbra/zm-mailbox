@@ -356,7 +356,7 @@ public class SoapServlet extends ZimbraServlet {
             return LC.soap_response_buffer_size.intValue();
     }
 
-    // ZCS-20285: path to the error-code element within an already-built Fault, mirroring the
+    // Path to the error-code element within an already-built Fault, mirroring the
     // existing ZIMBRA_ERROR_ELEMENT precedent (SoapProtocol.updateArgumentsForRemoteFault) -
     // Fault/Detail/Error/Code, walked from the Fault element itself.
     private static final String[] FAULT_CODE_PATH = new String[] { "Detail", "Error", "Code" };
