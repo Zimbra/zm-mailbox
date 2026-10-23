@@ -32716,6 +32716,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @return zimbraMfaIdpHardReauthInDays, or -1 if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public int getMfaIdpHardReauthInDays() {
+        return getIntAttr(Provisioning.A_zimbraMfaIdpHardReauthInDays, -1, true);
+    }
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @param zimbraMfaIdpHardReauthInDays new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public void setMfaIdpHardReauthInDays(int zimbraMfaIdpHardReauthInDays) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpHardReauthInDays, Integer.toString(zimbraMfaIdpHardReauthInDays));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @param zimbraMfaIdpHardReauthInDays new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public Map<String,Object> setMfaIdpHardReauthInDays(int zimbraMfaIdpHardReauthInDays, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpHardReauthInDays, Integer.toString(zimbraMfaIdpHardReauthInDays));
+        return attrs;
+    }
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public void unsetMfaIdpHardReauthInDays() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpHardReauthInDays, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public Map<String,Object> unsetMfaIdpHardReauthInDays(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpHardReauthInDays, "");
+        return attrs;
+    }
+
+    /**
      * Attribute to allow IP/IP Range to access email for ActiveSync
      * protocol.
      *
