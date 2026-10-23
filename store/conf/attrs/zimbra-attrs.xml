@@ -10777,4 +10777,12 @@ TODO: delete them permanently from here
     <desc>Secret nonce for an in-progress SAML test. Format: {nonce} notAfter={timestamp}</desc>
 </attr>
 
+  <attr id="4170" name="zimbraSamlSpSigningAlgorithm" type="enum" value="SHA1,SHA256,SHA512"
+        cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="10.1.22" callback="SamlTestReset">
+    <desc>
+      Algorithm used to sign SP-generated SAML requests. Inherits the global configuration when unset on the domain. Defaults to SHA256 when no value is configured.
+    </desc>
+    <globalConfigValue>SHA256</globalConfigValue>
+  </attr>
+
 </attrs>
