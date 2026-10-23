@@ -54240,6 +54240,232 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Number of days for which data should be retained in mobile device.
+     *
+     * @return zimbraNativeMobileAppLocalDataRetentionDays, or 30 if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public int getNativeMobileAppLocalDataRetentionDays() {
+        return getIntAttr(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, 30, true);
+    }
+
+    /**
+     * Number of days for which data should be retained in mobile device.
+     *
+     * @param zimbraNativeMobileAppLocalDataRetentionDays new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public void setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of days for which data should be retained in mobile device.
+     *
+     * @param zimbraNativeMobileAppLocalDataRetentionDays new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public Map<String,Object> setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
+        return attrs;
+    }
+
+    /**
+     * Number of days for which data should be retained in mobile device.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public void unsetNativeMobileAppLocalDataRetentionDays() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of days for which data should be retained in mobile device.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public Map<String,Object> unsetNativeMobileAppLocalDataRetentionDays(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum stored data in mobile device.
+     *
+     * @return zimbraNativeMobileAppMaxLocalDataSize, or 10240 if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public int getNativeMobileAppMaxLocalDataSize() {
+        return getIntAttr(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, 10240, true);
+    }
+
+    /**
+     * Maximum stored data in mobile device.
+     *
+     * @param zimbraNativeMobileAppMaxLocalDataSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public void setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum stored data in mobile device.
+     *
+     * @param zimbraNativeMobileAppMaxLocalDataSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public Map<String,Object> setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum stored data in mobile device.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public void unsetNativeMobileAppMaxLocalDataSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum stored data in mobile device.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public Map<String,Object> unsetNativeMobileAppMaxLocalDataSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
+        return attrs;
+    }
+
+    /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @return zimbraNativeMobileAppMinVersionSupported, or "{\"iOS\":{\"minVersion\":\"1.0.0\"},\"android\":{\"minVersion\":\"1.0.0\"}}" if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public String getNativeMobileAppMinVersionSupported() {
+        return getAttr(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, "{\"iOS\":{\"minVersion\":\"1.0.0\"},\"android\":{\"minVersion\":\"1.0.0\"}}", true);
+    }
+
+    /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @param zimbraNativeMobileAppMinVersionSupported new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void setNativeMobileAppMinVersionSupported(String zimbraNativeMobileAppMinVersionSupported) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, zimbraNativeMobileAppMinVersionSupported);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @param zimbraNativeMobileAppMinVersionSupported new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> setNativeMobileAppMinVersionSupported(String zimbraNativeMobileAppMinVersionSupported, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, zimbraNativeMobileAppMinVersionSupported);
+        return attrs;
+    }
+
+    /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void unsetNativeMobileAppMinVersionSupported() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum supported native mobile app versions, stored as JSON. Required
+     * platform keys are iOS and android. Each platform must contain a
+     * minVersion string in major.minor.patch format.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> unsetNativeMobileAppMinVersionSupported(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNativeMobileAppMinVersionSupported, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 10.1.0. deprecated in favor for new realtime license
      * attributes. Orig desc: A signed activation key that authorizes this
      * installation.
