@@ -22,6 +22,7 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 
 import java.util.HashMap;
@@ -78,11 +79,11 @@ public class Config extends ZAttrConfig {
     }
 
     public String getFCMDeviceJSON() {
-        return getAttr("zimbraFCMDeviceJSON", null);
+        return getAttr(ZAttrProvisioning.A_zimbraMobileAppFCMDeviceDetails);
     }
 
     public String getFCMServerJSON() {
-        return getAttr("zimbraFCMServerJSON", null);
+        return getAttr(ZAttrProvisioning.A_zimbraMobileAppFCMServerDetails);
     }
 
 }
