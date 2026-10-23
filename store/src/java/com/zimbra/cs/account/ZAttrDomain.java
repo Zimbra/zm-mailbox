@@ -19486,6 +19486,237 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Number of IdP MFA authentication failures after which new
+     * authentication attempts are temporarily blocked.
+     *
+     * @return zimbraMfaIdpAuthFailCount, or 10 if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4180)
+    public int getMfaIdpAuthFailCount() {
+        return getIntAttr(Provisioning.A_zimbraMfaIdpAuthFailCount, 10, true);
+    }
+
+    /**
+     * Number of IdP MFA authentication failures after which new
+     * authentication attempts are temporarily blocked.
+     *
+     * @param zimbraMfaIdpAuthFailCount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4180)
+    public void setMfaIdpAuthFailCount(int zimbraMfaIdpAuthFailCount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpAuthFailCount, Integer.toString(zimbraMfaIdpAuthFailCount));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of IdP MFA authentication failures after which new
+     * authentication attempts are temporarily blocked.
+     *
+     * @param zimbraMfaIdpAuthFailCount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4180)
+    public Map<String,Object> setMfaIdpAuthFailCount(int zimbraMfaIdpAuthFailCount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpAuthFailCount, Integer.toString(zimbraMfaIdpAuthFailCount));
+        return attrs;
+    }
+
+    /**
+     * Number of IdP MFA authentication failures after which new
+     * authentication attempts are temporarily blocked.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4180)
+    public void unsetMfaIdpAuthFailCount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpAuthFailCount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of IdP MFA authentication failures after which new
+     * authentication attempts are temporarily blocked.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4180)
+    public Map<String,Object> unsetMfaIdpAuthFailCount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpAuthFailCount, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @return zimbraMfaIdpHardReauthInDays, or 60 if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public int getMfaIdpHardReauthInDays() {
+        return getIntAttr(Provisioning.A_zimbraMfaIdpHardReauthInDays, 60, true);
+    }
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @param zimbraMfaIdpHardReauthInDays new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public void setMfaIdpHardReauthInDays(int zimbraMfaIdpHardReauthInDays) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpHardReauthInDays, Integer.toString(zimbraMfaIdpHardReauthInDays));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @param zimbraMfaIdpHardReauthInDays new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public Map<String,Object> setMfaIdpHardReauthInDays(int zimbraMfaIdpHardReauthInDays, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpHardReauthInDays, Integer.toString(zimbraMfaIdpHardReauthInDays));
+        return attrs;
+    }
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public void unsetMfaIdpHardReauthInDays() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpHardReauthInDays, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public Map<String,Object> unsetMfaIdpHardReauthInDays(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpHardReauthInDays, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of rejected credential signatures retained per user in
+     * the IdP MFA suppression cache.
+     *
+     * @return zimbraMfaIdpSuppressionCacheSize, or 5 if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4181)
+    public int getMfaIdpSuppressionCacheSize() {
+        return getIntAttr(Provisioning.A_zimbraMfaIdpSuppressionCacheSize, 5, true);
+    }
+
+    /**
+     * Maximum number of rejected credential signatures retained per user in
+     * the IdP MFA suppression cache.
+     *
+     * @param zimbraMfaIdpSuppressionCacheSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4181)
+    public void setMfaIdpSuppressionCacheSize(int zimbraMfaIdpSuppressionCacheSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpSuppressionCacheSize, Integer.toString(zimbraMfaIdpSuppressionCacheSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of rejected credential signatures retained per user in
+     * the IdP MFA suppression cache.
+     *
+     * @param zimbraMfaIdpSuppressionCacheSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4181)
+    public Map<String,Object> setMfaIdpSuppressionCacheSize(int zimbraMfaIdpSuppressionCacheSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpSuppressionCacheSize, Integer.toString(zimbraMfaIdpSuppressionCacheSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of rejected credential signatures retained per user in
+     * the IdP MFA suppression cache.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4181)
+    public void unsetMfaIdpSuppressionCacheSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpSuppressionCacheSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of rejected credential signatures retained per user in
+     * the IdP MFA suppression cache.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4181)
+    public Map<String,Object> unsetMfaIdpSuppressionCacheSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaIdpSuppressionCacheSize, "");
+        return attrs;
+    }
+
+    /**
      * Allowed mobile device list for ActiveSync/ABQ
      *
      * @return zimbraMobileAllowedDevices, or empty array if unset
