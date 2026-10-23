@@ -18144,6 +18144,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Interval, in days, between cleanup runs for expired IdP MFA
+     * authentication data. Mailbox restart is required to apply a change.
+     *
+     * @return zimbraMFAIdpDbCleanupIntervalDays, or 7 if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public int getMFAIdpDbCleanupIntervalDays() {
+        return getIntAttr(Provisioning.A_zimbraMFAIdpDbCleanupIntervalDays, 7, true);
+    }
+
+    /**
+     * Interval, in days, between cleanup runs for expired IdP MFA
+     * authentication data. Mailbox restart is required to apply a change.
+     *
+     * @param zimbraMFAIdpDbCleanupIntervalDays new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public void setMFAIdpDbCleanupIntervalDays(int zimbraMFAIdpDbCleanupIntervalDays) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMFAIdpDbCleanupIntervalDays, Integer.toString(zimbraMFAIdpDbCleanupIntervalDays));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interval, in days, between cleanup runs for expired IdP MFA
+     * authentication data. Mailbox restart is required to apply a change.
+     *
+     * @param zimbraMFAIdpDbCleanupIntervalDays new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public Map<String,Object> setMFAIdpDbCleanupIntervalDays(int zimbraMFAIdpDbCleanupIntervalDays, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMFAIdpDbCleanupIntervalDays, Integer.toString(zimbraMFAIdpDbCleanupIntervalDays));
+        return attrs;
+    }
+
+    /**
+     * Interval, in days, between cleanup runs for expired IdP MFA
+     * authentication data. Mailbox restart is required to apply a change.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public void unsetMFAIdpDbCleanupIntervalDays() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMFAIdpDbCleanupIntervalDays, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Interval, in days, between cleanup runs for expired IdP MFA
+     * authentication data. Mailbox restart is required to apply a change.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public Map<String,Object> unsetMFAIdpDbCleanupIntervalDays(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMFAIdpDbCleanupIntervalDays, "");
+        return attrs;
+    }
+
+    /**
      * URL for accessing the machine learning service. First part of the URL
      * before the first colon identifies the implementation Factory. Only the
      * &quot;zimbra&quot; prefix is currently supported.

@@ -10820,6 +10820,42 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageIdDedupeCacheTimeout = "zimbraMessageIdDedupeCacheTimeout";
 
     /**
+     * Number of IdP MFA authentication failures after which new
+     * authentication attempts are temporarily blocked.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4173)
+    public static final String A_zimbraMfaIdpAuthFailCount = "zimbraMfaIdpAuthFailCount";
+
+    /**
+     * Interval, in days, between cleanup runs for expired IdP MFA
+     * authentication data. Mailbox restart is required to apply a change.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4172)
+    public static final String A_zimbraMFAIdpDbCleanupIntervalDays = "zimbraMFAIdpDbCleanupIntervalDays";
+
+    /**
+     * Maximum age, in days, of IdP MFA authentication data before full
+     * reauthentication is required.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public static final String A_zimbraMfaIdpHardReauthInDays = "zimbraMfaIdpHardReauthInDays";
+
+    /**
+     * Maximum number of rejected credential signatures retained per user in
+     * the IdP MFA suppression cache.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4174)
+    public static final String A_zimbraMfaIdpSuppressionCacheSize = "zimbraMfaIdpSuppressionCacheSize";
+
+    /**
      * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
