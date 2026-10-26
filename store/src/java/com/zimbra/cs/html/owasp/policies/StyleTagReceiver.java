@@ -20,6 +20,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.owasp.html.HtmlStreamEventReceiver;
 import org.owasp.validator.html.AntiSamy;
@@ -39,6 +40,10 @@ public class StyleTagReceiver implements HtmlStreamEventReceiver {
     private static Policy policy = null;
     private final HtmlStreamEventReceiver wrapped;
     private boolean inStyleTag;
+
+    private static final Pattern LEADING_HTML_COMMENT_OPEN = Pattern.compile("^\\s*<!--");
+
+    private static final Pattern TRAILING_HTML_COMMENT_CLOSE = Pattern.compile("-->\\s*$");
 
     static {
         final String FS = File.separator;
@@ -87,8 +92,9 @@ public class StyleTagReceiver implements HtmlStreamEventReceiver {
             String sanitizedStyle = "";
             if (policy != null) {
                 try {
+                    String toScan = stripWrappingHtmlComment(text);
                     sanitizedStyle = as
-                        .scan(STYLE_OPENING_TAG + text + STYLE_CLOSING_TAG, policy, AntiSamy.DOM)
+                        .scan(STYLE_OPENING_TAG + toScan + STYLE_CLOSING_TAG, policy, AntiSamy.DOM)
                         .getCleanHTML();
                     sanitizedStyle = sanitizedStyle.replace(STYLE_OPENING_TAG, "")
                         .replace(STYLE_CLOSING_TAG, "");
@@ -104,5 +110,28 @@ public class StyleTagReceiver implements HtmlStreamEventReceiver {
         } else {
             wrapped.text(text);
         }
+    }
+
+    /**
+     * Removes only an outer <!-- ... --> wrapper around "style" content (as written by
+     * Outlook/Word). NekoHTML in AntiSamy otherwise parses it as a Comment node, which
+     * processCommentNode() deletes (preserveComments=false), dropping all CSS.
+     * Markers in the middle are left alone so no new text can be stitched together.
+     * @param css the CSS text to strip
+     * @return the CSS text with outer comment markers removed, or the original
+     * text if no outer comment markers were found
+     */
+    static String stripWrappingHtmlComment(String css) {
+        if (css == null) {
+            return "";
+        }
+        String s = css;
+        String prev;
+        do {
+            prev = s;
+            s = LEADING_HTML_COMMENT_OPEN.matcher(s).replaceFirst("");
+            s = TRAILING_HTML_COMMENT_CLOSE.matcher(s).replaceFirst("");
+        } while (!s.equals(prev));
+        return s;
     }
 }
