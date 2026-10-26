@@ -1336,10 +1336,6 @@ class ModernCSPHeaderVar extends ProxyConfVar {
         return false;
     }
 
-    private static String removeNonceSource(String policy) {
-        return policy.replaceAll("\\s*'nonce-" + Pattern.quote(NONCE_TOKEN) + "'", "").replace(NONCE_TOKEN, "");
-    }
-
     private final boolean domainValues;
     private final String domainMode;
     private final String domainPolicy;
@@ -1386,11 +1382,13 @@ class ModernCSPHeaderVar extends ProxyConfVar {
         }
         String headerName = "report-only".equals(mode)
                 ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
-        boolean nonceEnabled = policy.contains(NONCE_TOKEN) && isSubFilterSupported();
-        if (policy.contains(NONCE_TOKEN) && !nonceEnabled) {
-            mLog.warn("nginx was built without http_sub_module, so the Modern UI CSP nonce is disabled and "
-                    + "inline scripts such as the zimlet loader will be blocked by an enforced policy");
-            policy = removeNonceSource(policy);
+        boolean nonceEnabled = policy.contains(NONCE_TOKEN);
+        if (nonceEnabled && !isSubFilterSupported()) {
+            // A header without the nonce would block the zimlet loader, so send none until nginx is upgraded.
+            mLog.error("SECURITY: nginx was built without http_sub_module, so the Modern UI Content Security Policy is NOT being sent "
+                    + "and /modern is unprotected. Upgrade zimbra-nginx to a build with http_sub_module and regenerate the proxy configuration.");
+            mValue = ACCEPT_ENCODING_PASSTHROUGH;
+            return;
         }
         String nginxPolicy = escapeNginxString(policy).replace(NONCE_TOKEN, "$request_id");
         StringBuilder sb = new StringBuilder();
