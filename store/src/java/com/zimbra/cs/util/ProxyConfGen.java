@@ -1308,6 +1308,7 @@ class ModernCSPHeaderVar extends ProxyConfVar {
         if (subFilterSupported == null) {
             subFilterSupported = detectSubFilterSupport();
         }
+
         return subFilterSupported;
     }
 
@@ -1316,13 +1317,16 @@ class ModernCSPHeaderVar extends ProxyConfVar {
         try {
             process = new ProcessBuilder(LC.zimbra_home.value() + "/common/sbin/nginx", "-V")
                     .redirectErrorStream(true).start();
+
             StringBuilder output = new StringBuilder();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
             String line;
             while ((line = reader.readLine()) != null) {
                 output.append(line).append('\n');
             }
             process.waitFor(10, TimeUnit.SECONDS);
+            
             return output.indexOf("http_sub_module") >= 0;
         } catch (IOException e) {
             mLog.warn("Unable to determine whether nginx supports sub_filter: " + e.getMessage());
@@ -1333,6 +1337,7 @@ class ModernCSPHeaderVar extends ProxyConfVar {
                 process.destroy();
             }
         }
+
         return false;
     }
 
@@ -1363,26 +1368,33 @@ class ModernCSPHeaderVar extends ProxyConfVar {
         String mode = domainValues ? domainMode : configSource.getAttr(mAttribute, "off");
         String policy = domainValues ? domainPolicy :
                 configSource.getAttr(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "");
+
         if (mode == null) {
             mode = "off";
         }
+
         if (policy == null) {
             policy = "";
         }
+
         if ("off".equals(mode) || policy.trim().isEmpty()) {
             // The location blocks reference $zimbra_modern_ae, so it must be defined even when CSP is off.
             mValue = ACCEPT_ENCODING_PASSTHROUGH;
             return;
         }
+
         if (!"report-only".equals(mode) && !"enforce".equals(mode)) {
             throw new ProxyConfException("Unsupported Modern UI CSP mode: " + mode);
         }
+
         if (policy.contains("\r") || policy.contains("\n")) {
             throw new ProxyConfException("Modern UI CSP must not contain line breaks");
         }
+
         String headerName = "report-only".equals(mode)
                 ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
         boolean nonceEnabled = policy.contains(NONCE_TOKEN);
+
         if (nonceEnabled && !isSubFilterSupported()) {
             // A header without the nonce would block the zimlet loader, so send none until nginx is upgraded.
             mLog.error("SECURITY: nginx was built without http_sub_module, so the Modern UI Content Security Policy is NOT being sent "
@@ -1390,7 +1402,9 @@ class ModernCSPHeaderVar extends ProxyConfVar {
             mValue = ACCEPT_ENCODING_PASSTHROUGH;
             return;
         }
+
         String nginxPolicy = escapeNginxString(policy).replace(NONCE_TOKEN, "$request_id");
+        
         StringBuilder sb = new StringBuilder();
         sb.append("set $zimbra_modern_csp \"\";\n");
         sb.append(ACCEPT_ENCODING_PASSTHROUGH).append("\n");
@@ -1418,6 +1432,7 @@ class ModernCSPHeaderVar extends ProxyConfVar {
             sb.append("\nsub_filter '").append(NONCE_PLACEHOLDER).append("' '$request_id';");
             sb.append("\nsub_filter_once off;");
         }
+
         mValue = sb.toString();
     }
 
@@ -2146,8 +2161,8 @@ class DomainAttrItem {
     public String clientCertMode;
     public String clientCertCa;
     public String[] rspHeaders;
-        public String modernCSPMode;
-        public String modernCSPPolicy;
+    public String modernCSPMode;
+    public String modernCSPPolicy;
 
     public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk,
             String ccm, String cca, String[] rhdr, String cspMode, String cspPolicy) {
