@@ -16475,11 +16475,14 @@ public class ZAttrProvisioning {
 
     /**
      * Content Security Policy directives applied to the Modern UI by the
-     * reverse proxy. Used when zimbraReverseProxyModernCSP is report-only or
+     * mailbox (the attribute name predates this; the reverse proxy does not
+     * use it). Used when zimbraReverseProxyModernCSP is report-only or
      * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the proxy also writes that nonce into
+     * with a per-response nonce, and the mailbox also writes that nonce into
      * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character.
+     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
+     * from a Modern UI build without the nonce placeholder get no policy.
+     * Changes apply within about a minute, without a restart.
      *
      * @since ZCS 10.1.22
      */

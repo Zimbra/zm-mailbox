@@ -22681,11 +22681,14 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Content Security Policy directives applied to the Modern UI by the
-     * reverse proxy. Used when zimbraReverseProxyModernCSP is report-only or
+     * mailbox (the attribute name predates this; the reverse proxy does not
+     * use it). Used when zimbraReverseProxyModernCSP is report-only or
      * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the proxy also writes that nonce into
+     * with a per-response nonce, and the mailbox also writes that nonce into
      * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character.
+     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
+     * from a Modern UI build without the nonce placeholder get no policy.
+     * Changes apply within about a minute, without a restart.
      *
      * @return zimbraReverseProxyModernCSPPolicy, or "manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';" if unset
      *
@@ -22698,11 +22701,14 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Content Security Policy directives applied to the Modern UI by the
-     * reverse proxy. Used when zimbraReverseProxyModernCSP is report-only or
+     * mailbox (the attribute name predates this; the reverse proxy does not
+     * use it). Used when zimbraReverseProxyModernCSP is report-only or
      * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the proxy also writes that nonce into
+     * with a per-response nonce, and the mailbox also writes that nonce into
      * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character.
+     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
+     * from a Modern UI build without the nonce placeholder get no policy.
+     * Changes apply within about a minute, without a restart.
      *
      * @param zimbraReverseProxyModernCSPPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22718,11 +22724,14 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Content Security Policy directives applied to the Modern UI by the
-     * reverse proxy. Used when zimbraReverseProxyModernCSP is report-only or
+     * mailbox (the attribute name predates this; the reverse proxy does not
+     * use it). Used when zimbraReverseProxyModernCSP is report-only or
      * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the proxy also writes that nonce into
+     * with a per-response nonce, and the mailbox also writes that nonce into
      * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character.
+     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
+     * from a Modern UI build without the nonce placeholder get no policy.
+     * Changes apply within about a minute, without a restart.
      *
      * @param zimbraReverseProxyModernCSPPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22739,11 +22748,14 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Content Security Policy directives applied to the Modern UI by the
-     * reverse proxy. Used when zimbraReverseProxyModernCSP is report-only or
+     * mailbox (the attribute name predates this; the reverse proxy does not
+     * use it). Used when zimbraReverseProxyModernCSP is report-only or
      * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the proxy also writes that nonce into
+     * with a per-response nonce, and the mailbox also writes that nonce into
      * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character.
+     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
+     * from a Modern UI build without the nonce placeholder get no policy.
+     * Changes apply within about a minute, without a restart.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -22758,11 +22770,14 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Content Security Policy directives applied to the Modern UI by the
-     * reverse proxy. Used when zimbraReverseProxyModernCSP is report-only or
+     * mailbox (the attribute name predates this; the reverse proxy does not
+     * use it). Used when zimbraReverseProxyModernCSP is report-only or
      * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the proxy also writes that nonce into
+     * with a per-response nonce, and the mailbox also writes that nonce into
      * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character.
+     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
+     * from a Modern UI build without the nonce placeholder get no policy.
+     * Changes apply within about a minute, without a restart.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
