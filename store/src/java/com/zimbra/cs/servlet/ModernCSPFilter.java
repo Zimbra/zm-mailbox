@@ -231,7 +231,7 @@ public class ModernCSPFilter implements Filter {
         }
         if (settings == null || !settings.isEnabled()) {
             chain.doFilter(request, response);
-        } else if (path.equals(MODERN_PATH) || path.endsWith("/") || path.endsWith(".html")) {
+        } else if (isDocumentPath(path)) {
             serveDocument(req, resp, chain, settings);
         } else {
             resp.setHeader(settings.headerName(), settings.policyWithoutNonce());
@@ -291,6 +291,14 @@ public class ModernCSPFilter implements Filter {
         byte[] bytes = new byte[NONCE_BYTES];
         random.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    /** True for the HTML page and for application routes such as /modern/mail/inbox, which serve the same page. */
+    static boolean isDocumentPath(String path) {
+        if (path.equals(MODERN_PATH) || path.endsWith("/") || path.endsWith(".html")) {
+            return true;
+        }
+        return path.substring(path.lastIndexOf('/') + 1).indexOf('.') < 0;
     }
 
     private static String pathOf(HttpServletRequest req) {
@@ -385,6 +393,7 @@ public class ModernCSPFilter implements Filter {
         private ServletOutputStream stream;
         private PrintWriter writer;
         private int status = HttpServletResponse.SC_OK;
+        private String contentType;
         private boolean handled;
         private boolean encoded;
 
@@ -404,9 +413,10 @@ public class ModernCSPFilter implements Filter {
             return handled;
         }
 
-        /** True for a 200 response whose body is not content-encoded, so the placeholder can be replaced. */
+        /** True for a 200 HTML response whose body is not content-encoded, so the placeholder can be replaced. */
         boolean isPlainSuccess() {
-            return status == HttpServletResponse.SC_OK && !encoded;
+            return status == HttpServletResponse.SC_OK && !encoded && contentType != null
+                    && contentType.toLowerCase(Locale.ROOT).startsWith("text/html");
         }
 
         private static boolean owned(String name) {
@@ -414,6 +424,9 @@ public class ModernCSPFilter implements Filter {
         }
 
         private void noteEncoding(String name, String value) {
+            if ("content-type".equalsIgnoreCase(name)) {
+                contentType = value;
+            }
             if ("content-encoding".equalsIgnoreCase(name) && value != null && !"identity".equalsIgnoreCase(value)) {
                 encoded = true;
             }
@@ -461,6 +474,12 @@ public class ModernCSPFilter implements Filter {
         public void setStatus(int sc) {
             status = sc;
             super.setStatus(sc);
+        }
+
+        @Override
+        public void setContentType(String type) {
+            contentType = type;
+            super.setContentType(type);
         }
 
         @Override
@@ -550,6 +569,7 @@ public class ModernCSPFilter implements Filter {
         public void reset() {
             buffer.reset();
             status = HttpServletResponse.SC_OK;
+            contentType = null;
             encoded = false;
             super.reset();
         }

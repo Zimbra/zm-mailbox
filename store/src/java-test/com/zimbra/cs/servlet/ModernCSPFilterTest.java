@@ -158,6 +158,42 @@ public class ModernCSPFilterTest {
     }
 
     @Test
+    public void applicationRoutesAreHandledLikeTheDocument() throws Exception {
+        Result r = get(filterFor("enforce", POLICY), "/modern/mail/inbox", file(NEW_UI));
+
+        Matcher body = NONCE_IN_BODY.matcher(r.bodyText());
+        Matcher header = NONCE_IN_HEADER.matcher(r.header("Content-Security-Policy"));
+        assertTrue(body.find());
+        assertTrue(header.find());
+        assertEquals(body.group(1), header.group(1));
+        assertNull(r.seenByServlet.get("Accept-Encoding"));
+    }
+
+    @Test
+    public void routeLikePathsThatAreNotHtmlAreLeftAlone() throws Exception {
+        Result r = get(filterFor("enforce", POLICY), "/modern/LICENSE", new Servlet() {
+            @Override
+            public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
+                response.setContentType("application/octet-stream");
+                response.getOutputStream().write("__CSP_NONCE__".getBytes(StandardCharsets.UTF_8));
+            }
+        });
+
+        assertEquals("__CSP_NONCE__", r.bodyText());
+        assertNull(r.header("Content-Security-Policy"));
+    }
+
+    @Test
+    public void documentPathsAreRoutesAndHtmlButNotFiles() {
+        assertTrue(ModernCSPFilter.isDocumentPath("/modern"));
+        assertTrue(ModernCSPFilter.isDocumentPath("/modern/"));
+        assertTrue(ModernCSPFilter.isDocumentPath("/modern/index.html"));
+        assertTrue(ModernCSPFilter.isDocumentPath("/modern/mail/inbox"));
+        assertFalse(ModernCSPFilter.isDocumentPath("/modern/scripts/app.js"));
+        assertFalse(ModernCSPFilter.isDocumentPath("/modern/css/site.css"));
+    }
+
+    @Test
     public void nonceIsRandomAndAtLeast128Bits() throws Exception {
         ModernCSPFilter filter = filterFor("enforce", POLICY);
         String firstHeader = get(filter, "/modern/", file(NEW_UI)).header("Content-Security-Policy");
