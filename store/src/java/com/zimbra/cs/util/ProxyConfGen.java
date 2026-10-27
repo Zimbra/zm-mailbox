@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -39,7 +38,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1291,146 +1289,6 @@ class AddHeadersVar extends ProxyConfVar {
     }
 }
 
-class ModernCSPHeaderVar extends ProxyConfVar {
-    static final String NONCE_TOKEN = "{{nonce}}";
-    // Must match the placeholder in the Modern UI HTML template.
-    static final String NONCE_PLACEHOLDER = "__CSP_NONCE__";
-    // sub_filter cannot rewrite compressed upstream responses, so HTML page requests ask for identity encoding.
-    private static final String ACCEPT_ENCODING_PASSTHROUGH = "set $zimbra_modern_ae $http_accept_encoding;";
-
-    private static Boolean subFilterSupported;
-
-    /**
-     * Returns whether the local nginx was built with http_sub_module. Without it, a generated sub_filter
-     * directive makes nginx refuse to load its configuration, so the nonce rules must not be emitted.
-     */
-    static synchronized boolean isSubFilterSupported() {
-        if (subFilterSupported == null) {
-            subFilterSupported = detectSubFilterSupport();
-        }
-        return subFilterSupported;
-    }
-
-    private static boolean detectSubFilterSupport() {
-        Process process = null;
-        try {
-            process = new ProcessBuilder(LC.zimbra_home.value() + "/common/sbin/nginx", "-V")
-                    .redirectErrorStream(true).start();
-            StringBuilder output = new StringBuilder();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append('\n');
-            }
-            process.waitFor(10, TimeUnit.SECONDS);
-            return output.indexOf("http_sub_module") >= 0;
-        } catch (IOException e) {
-            mLog.warn("Unable to determine whether nginx supports sub_filter: " + e.getMessage());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } finally {
-            if (process != null) {
-                process.destroy();
-            }
-        }
-        return false;
-    }
-
-    private final boolean domainValues;
-    private final String domainMode;
-    private final String domainPolicy;
-
-    public ModernCSPHeaderVar() {
-        super("web.modern.csp.header", Provisioning.A_zimbraReverseProxyModernCSP, "off",
-                ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,
-                "Content Security Policy header for the Modern UI path");
-        domainValues = false;
-        domainMode = null;
-        domainPolicy = null;
-    }
-
-    public ModernCSPHeaderVar(String mode, String policy) {
-        super("web.modern.csp.header", null, "",
-                ProxyConfValueType.STRING, ProxyConfOverride.NONE,
-                "Content Security Policy header for the Modern UI path");
-        domainValues = true;
-        domainMode = mode;
-        domainPolicy = policy;
-    }
-
-    @Override
-    public void update() throws ServiceException, ProxyConfException {
-        String mode = domainValues ? domainMode : configSource.getAttr(mAttribute, "off");
-        String policy = domainValues ? domainPolicy :
-                configSource.getAttr(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "");
-        if (mode == null) {
-            mode = "off";
-        }
-        if (policy == null) {
-            policy = "";
-        }
-        if ("off".equals(mode) || policy.trim().isEmpty()) {
-            // The location blocks reference $zimbra_modern_ae, so it must be defined even when CSP is off.
-            mValue = ACCEPT_ENCODING_PASSTHROUGH;
-            return;
-        }
-        if (!"report-only".equals(mode) && !"enforce".equals(mode)) {
-            throw new ProxyConfException("Unsupported Modern UI CSP mode: " + mode);
-        }
-        if (policy.contains("\r") || policy.contains("\n")) {
-            throw new ProxyConfException("Modern UI CSP must not contain line breaks");
-        }
-        String headerName = "report-only".equals(mode)
-                ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
-        boolean nonceEnabled = policy.contains(NONCE_TOKEN);
-        if (nonceEnabled && !isSubFilterSupported()) {
-            // A header without the nonce would block the zimlet loader, so send none until nginx is upgraded.
-            mLog.error("SECURITY: nginx was built without http_sub_module, so the Modern UI Content Security Policy is NOT being sent "
-                    + "and /modern is unprotected. Upgrade zimbra-nginx to a build with http_sub_module and regenerate the proxy configuration.");
-            mValue = ACCEPT_ENCODING_PASSTHROUGH;
-            return;
-        }
-        String nginxPolicy = escapeNginxString(policy).replace(NONCE_TOKEN, "$request_id");
-        StringBuilder sb = new StringBuilder();
-        sb.append("set $zimbra_modern_csp \"\";\n");
-        sb.append(ACCEPT_ENCODING_PASSTHROUGH).append("\n");
-        if (nonceEnabled) {
-            sb.append("set $zimbra_modern_nav \"\";\n");
-        }
-        sb.append("if ($uri ~ ^/modern(?:/|$)) {\n");
-        sb.append("    set $zimbra_modern_csp \"").append(nginxPolicy).append("\";\n");
-        if (nonceEnabled) {
-            sb.append("    set $zimbra_modern_nav \"m\";\n");
-        }
-        sb.append("}\n");
-        if (nonceEnabled) {
-            // nginx has no "&&", so combine the path and Accept checks in one variable. Only page loads need
-            // identity encoding; scripts, styles and images keep their compression.
-            sb.append("if ($http_accept ~* text/html) {\n");
-            sb.append("    set $zimbra_modern_nav \"$zimbra_modern_nav:h\";\n");
-            sb.append("}\n");
-            sb.append("if ($zimbra_modern_nav = \"m:h\") {\n");
-            sb.append("    set $zimbra_modern_ae \"\";\n");
-            sb.append("}\n");
-        }
-        sb.append("add_header ").append(headerName).append(" $zimbra_modern_csp always;");
-        if (nonceEnabled) {
-            sb.append("\nsub_filter '").append(NONCE_PLACEHOLDER).append("' '$request_id';");
-            sb.append("\nsub_filter_once off;");
-        }
-        mValue = sb.toString();
-    }
-
-    private String escapeNginxString(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("$", "\\$");
-    }
-
-    @Override
-    public String format(Object o) {
-        return (String) o;
-    }
-}
-
 class ImapCapaVar extends ProxyConfVar {
 
     public ImapCapaVar() {
@@ -2146,11 +2004,9 @@ class DomainAttrItem {
     public String clientCertMode;
     public String clientCertCa;
     public String[] rspHeaders;
-        public String modernCSPMode;
-        public String modernCSPPolicy;
 
     public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk,
-            String ccm, String cca, String[] rhdr, String cspMode, String cspPolicy) {
+            String ccm, String cca, String[] rhdr) {
         this.domainName = dn;
         this.virtualHostname = vhn;
         this.virtualIPAddress = vip;
@@ -2159,8 +2015,6 @@ class DomainAttrItem {
         this.clientCertMode = ccm;
         this.clientCertCa = cca;
         this.rspHeaders = rhdr;
-        this.modernCSPMode = cspMode;
-        this.modernCSPPolicy = cspPolicy;
     }
 }
 
@@ -2171,7 +2025,7 @@ class DomainAttrItem {
  */
 class DomainAttrExceptionItem extends DomainAttrItem {
     public DomainAttrExceptionItem(ProxyConfException e) {
-        super(null, null, null, null, null, null, null, null, null, null);
+        super(null, null, null, null, null, null, null, null);
         this.exception = e;
     }
 
@@ -2484,8 +2338,6 @@ public class ProxyConfGen
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertCA);
         attrsNeeded.add(Provisioning.A_zimbraWebClientLoginURL);
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyResponseHeaders);
-        attrsNeeded.add(Provisioning.A_zimbraReverseProxyModernCSP);
-        attrsNeeded.add(Provisioning.A_zimbraReverseProxyModernCSPPolicy);
 
         final List<DomainAttrItem> result = new ArrayList<DomainAttrItem>();
 
@@ -2509,15 +2361,11 @@ public class ProxyConfGen
                     .getAttr(Provisioning.A_zimbraReverseProxyClientCertCA);
                 String[] rspHeaders = entry
                     .getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
-                String cspMode = entry.getAttr(Provisioning.A_zimbraReverseProxyModernCSP);
-                String cspPolicy = entry.getAttr(Provisioning.A_zimbraReverseProxyModernCSPPolicy);
 
                 // no need to check whether clientCertMode or clientCertCA == null,
 
                 if (virtualHostnames.length == 0 || ( certificate == null &&
-                                privateKey == null && clientCertMode == null && clientCertCA == null &&
-                                ("off".equals(cspMode) || ProxyConfUtil.isEmptyString(cspMode)) &&
-                                ProxyConfUtil.isEmptyString(cspPolicy) ) ) {
+                                privateKey == null && clientCertMode == null && clientCertCA == null ) ) {
 
                     return; // ignore the items that don't have virtual host
                             // name, cert or key. Those domains will use the
@@ -2552,7 +2400,7 @@ public class ProxyConfGen
                     }
                     result.add(new DomainAttrItem(domainName,
                             virtualHostnames[i], vip, certificate, privateKey,
-                            clientCertMode, clientCertCA, rspHeaders, cspMode, cspPolicy));
+                            clientCertMode, clientCertCA, rspHeaders));
                 }
             }
         };
@@ -2961,8 +2809,6 @@ public class ProxyConfGen
         }
         mDomainConfVars.put("web.add.headers.vhost", new AddHeadersVar("web.add.headers.vhost", rhdr,
                 "add_header directive for vhost web proxy"));
-        mDomainConfVars.put("web.modern.csp.header",
-            new ModernCSPHeaderVar(item.modernCSPMode, item.modernCSPPolicy));
 
         mLog.debug("Updating Default Domain Variable Map");
         try {
@@ -3272,7 +3118,6 @@ public class ProxyConfGen
         }
         mConfVars.put("web.add.headers.default", new AddHeadersVar("web.add.headers.default", rhdr,
                 "add_header directive for default web proxy"));
-        mConfVars.put("web.modern.csp.header", new ModernCSPHeaderVar());
     }
 
     /* update the default variable map from the active configuration */
