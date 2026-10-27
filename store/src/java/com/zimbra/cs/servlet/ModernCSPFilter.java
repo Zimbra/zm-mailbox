@@ -64,10 +64,6 @@ import com.zimbra.cs.account.Provisioning;
  * every {@code __CSP_NONCE__} placeholder with a fresh random nonce, puts the same nonce in the {@code {{nonce}}}
  * token of the policy, and sends the header. Other responses under {@code /modern} get the policy without the nonce
  * source.
- *
- * <p>If the document has no placeholder (an older Modern UI build) no header is sent, because a policy that needs a
- * nonce would block the zimlet loader. The filter never blocks a request: when it cannot read its settings it logs an
- * error and serves the page without a policy.
  */
 public class ModernCSPFilter implements Filter {
 
@@ -114,28 +110,21 @@ public class ModernCSPFilter implements Filter {
         }
 
         /**
-         * Validates the attribute values.
+         * Builds the settings from the attribute values, which the attribute definitions already validate.
          *
-         * @return the settings, or {@link #DISABLED} when CSP is off, the policy is empty, or a value is invalid
+         * @return the settings, or {@link #DISABLED} when CSP is off or the policy is empty
          */
         static Settings of(String mode, String policy) {
-            if (mode == null || "off".equals(mode) || policy == null || policy.trim().isEmpty()) {
+            if (policy == null || policy.trim().isEmpty()) {
                 return DISABLED;
             }
-            String name;
             if ("enforce".equals(mode)) {
-                name = "Content-Security-Policy";
-            } else if ("report-only".equals(mode)) {
-                name = "Content-Security-Policy-Report-Only";
-            } else {
-                ZimbraLog.misc.error("Unsupported Modern UI CSP mode '%s'; /modern is served without a CSP", mode);
-                return DISABLED;
+                return new Settings("Content-Security-Policy", policy.trim());
             }
-            if (policy.indexOf('\r') >= 0 || policy.indexOf('\n') >= 0) {
-                ZimbraLog.misc.error("The Modern UI CSP policy contains line breaks; /modern is served without a CSP");
-                return DISABLED;
+            if ("report-only".equals(mode)) {
+                return new Settings("Content-Security-Policy-Report-Only", policy.trim());
             }
-            return new Settings(name, policy.trim());
+            return DISABLED;
         }
 
         boolean isEnabled() {
@@ -255,21 +244,17 @@ public class ModernCSPFilter implements Filter {
         if (buffered.isHandled()) {
             return;
         }
-        byte[] body = buffered.body();
-        byte[] out = body;
+        byte[] out = buffered.body();
         String policy = null;
         boolean unique = false;
         if (buffered.isPlainSuccess()) {
-            if (!settings.usesNonce()) {
-                policy = settings.policyWithoutNonce();
-            } else {
+            if (settings.usesNonce()) {
                 String nonce = newNonce();
-                byte[] replaced = replaceAll(body, PLACEHOLDER_BYTES, nonce.getBytes(StandardCharsets.US_ASCII));
-                if (replaced != null) {
-                    out = replaced;
-                    policy = settings.policyWithNonce(nonce);
-                    unique = true;
-                }
+                out = replaceAll(out, PLACEHOLDER_BYTES, nonce.getBytes(StandardCharsets.US_ASCII));
+                policy = settings.policyWithNonce(nonce);
+                unique = true;
+            } else {
+                policy = settings.policyWithoutNonce();
             }
         }
         if (policy != null) {
@@ -313,7 +298,7 @@ public class ModernCSPFilter implements Filter {
         return params >= 0 ? path.substring(0, params) : path;
     }
 
-    /** Replaces every occurrence of {@code target}; returns null when there is none. */
+    /** Replaces every occurrence of {@code target}; returns {@code source} itself when there is none. */
     static byte[] replaceAll(byte[] source, byte[] target, byte[] replacement) {
         ByteArrayOutputStream result = new ByteArrayOutputStream(source.length + 64);
         int found = 0;
@@ -328,7 +313,7 @@ public class ModernCSPFilter implements Filter {
                 i++;
             }
         }
-        return found == 0 ? null : result.toByteArray();
+        return found == 0 ? source : result.toByteArray();
     }
 
     private static boolean matchesAt(byte[] source, byte[] target, int offset) {

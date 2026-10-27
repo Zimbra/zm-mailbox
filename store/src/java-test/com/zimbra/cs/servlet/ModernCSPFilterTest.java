@@ -227,12 +227,13 @@ public class ModernCSPFilterTest {
     }
 
     @Test
-    public void olderUiWithoutPlaceholderGetsNoPolicy() throws Exception {
-        String oldUi = "<html><body>old</body></html>";
-        Result r = get(filterFor("enforce", POLICY), "/modern/", file(oldUi));
+    public void documentWithoutPlaceholderStillGetsThePolicyAndIsNotCached() throws Exception {
+        String page = "<html><body>no placeholder</body></html>";
+        Result r = get(filterFor("enforce", POLICY), "/modern/", file(page));
 
-        assertNull(r.header("Content-Security-Policy"));
-        assertEquals(oldUi, r.bodyText());
+        assertTrue(NONCE_IN_HEADER.matcher(r.header("Content-Security-Policy")).find());
+        assertEquals(page, r.bodyText());
+        assertEquals("no-store", r.header("Cache-Control"));
     }
 
     @Test
@@ -348,21 +349,24 @@ public class ModernCSPFilterTest {
     }
 
     @Test
-    public void invalidSettingsDisableThePolicy() {
-        assertFalse(ModernCSPFilter.Settings.of("block", POLICY).isEnabled());
-        assertFalse(ModernCSPFilter.Settings.of("enforce", "default-src 'self'\r\nX-Evil: 1").isEnabled());
+    public void settingsAreDisabledForOffNullModeAndBlankPolicy() {
+        assertFalse(ModernCSPFilter.Settings.of("off", POLICY).isEnabled());
         assertFalse(ModernCSPFilter.Settings.of(null, POLICY).isEnabled());
+        assertFalse(ModernCSPFilter.Settings.of("enforce", null).isEnabled());
+        assertFalse(ModernCSPFilter.Settings.of("enforce", "   ").isEnabled());
         assertTrue(ModernCSPFilter.Settings.of("enforce", POLICY).isEnabled());
+        assertTrue(ModernCSPFilter.Settings.of("report-only", POLICY).isEnabled());
     }
 
     @Test
-    public void replaceAllReturnsNullWhenNothingMatches() {
-        byte[] none = ModernCSPFilter.replaceAll("abc".getBytes(StandardCharsets.US_ASCII),
-                "x".getBytes(StandardCharsets.US_ASCII), "y".getBytes(StandardCharsets.US_ASCII));
+    public void replaceAllReturnsTheSourceWhenNothingMatches() {
+        byte[] source = "abc".getBytes(StandardCharsets.US_ASCII);
+        byte[] none = ModernCSPFilter.replaceAll(source, "x".getBytes(StandardCharsets.US_ASCII),
+                "y".getBytes(StandardCharsets.US_ASCII));
         byte[] two = ModernCSPFilter.replaceAll("axbxc".getBytes(StandardCharsets.US_ASCII),
                 "x".getBytes(StandardCharsets.US_ASCII), "yy".getBytes(StandardCharsets.US_ASCII));
 
-        assertNull(none);
+        assertArrayEquals(source, none);
         assertEquals("ayybyyc", new String(two, StandardCharsets.US_ASCII));
     }
 
