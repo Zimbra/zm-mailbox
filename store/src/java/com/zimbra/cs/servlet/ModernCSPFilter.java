@@ -59,7 +59,7 @@ import com.zimbra.cs.account.Provisioning;
 /**
  * Adds the Content Security Policy of the Modern UI, including a per-response script nonce.
  *
- * <p>The policy comes from {@code zimbraReverseProxyModernCSP} and {@code zimbraReverseProxyModernCSPPolicy}, read for
+ * <p>The policy comes from {@code zimbraModernCSP} and {@code zimbraModernCSPPolicy}, read for
  * the virtual host of the request with the global value as the fallback. For the HTML document the filter replaces
  * every {@code __CSP_NONCE__} placeholder with a fresh random nonce, puts the same nonce in the {@code {{nonce}}}
  * token of the policy, and sends the header. Other responses under {@code /modern} get the policy without the nonce
@@ -190,8 +190,8 @@ public class ModernCSPFilter implements Filter {
                     source = domain;
                 }
             }
-            return Settings.of(source.getAttr(Provisioning.A_zimbraReverseProxyModernCSP, true),
-                    source.getAttr(Provisioning.A_zimbraReverseProxyModernCSPPolicy, true));
+            return Settings.of(source.getAttr(Provisioning.A_zimbraModernCSP, true),
+                    source.getAttr(Provisioning.A_zimbraModernCSPPolicy, true));
         }
     }
 

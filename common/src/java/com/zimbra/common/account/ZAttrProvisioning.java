@@ -882,6 +882,24 @@ public class ZAttrProvisioning {
         public boolean isSsl() { return this == ssl;}
     }
 
+    public static enum ModernCSP {
+        off("off"),
+        report_only("report-only"),
+        enforce("enforce");
+        private String mValue;
+        private ModernCSP(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ModernCSP fromString(String s) throws ServiceException {
+            for (ModernCSP value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOff() { return this == off;}
+        public boolean isReport_only() { return this == report_only;}
+        public boolean isEnforce() { return this == enforce;}
+    }
+
     public static enum MtaAlwaysAddMissingHeaders {
         yes("yes"),
         no("no");
@@ -2364,24 +2382,6 @@ public class ZAttrProvisioning {
         public boolean isBoth() { return this == both;}
         public boolean isMixed() { return this == mixed;}
         public boolean isRedirect() { return this == redirect;}
-    }
-
-    public static enum ReverseProxyModernCSP {
-        off("off"),
-        report_only("report-only"),
-        enforce("enforce");
-        private String mValue;
-        private ReverseProxyModernCSP(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static ReverseProxyModernCSP fromString(String s) throws ServiceException {
-            for (ReverseProxyModernCSP value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isOff() { return this == off;}
-        public boolean isReport_only() { return this == report_only;}
-        public boolean isEnforce() { return this == enforce;}
     }
 
     public static enum ReverseProxyPop3StartTlsMode {
@@ -11681,6 +11681,31 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileTombstoneEnabled = "zimbraMobileTombstoneEnabled";
 
     /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public static final String A_zimbraModernCSP = "zimbraModernCSP";
+
+    /**
+     * Content Security Policy directives applied to the Modern UI by the
+     * mailbox. Used when zimbraModernCSP is report-only or enforce; do not
+     * include a header name. The token {{nonce}} is replaced with a per-
+     * response nonce, and the mailbox also writes that nonce into the Modern
+     * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
+     * followed by a non-word character. Pages from a Modern UI build without
+     * the nonce placeholder get no policy. Changes apply within about a
+     * minute, without a restart.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public static final String A_zimbraModernCSPPolicy = "zimbraModernCSPPolicy";
+
+    /**
      * Whether to enable/disable the modern web client option on the login
      * screen. Default value is FALSE, which makes the modern client option
      * available.
@@ -16462,32 +16487,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1624)
     public static final String A_zimbraReverseProxyMailPop3sEnabled = "zimbraReverseProxyMailPop3sEnabled";
-
-    /**
-     * Controls Content Security Policy for the Modern UI path (/modern and
-     * its subpaths). off disables CSP, report-only reports violations in the
-     * browser console without blocking, and enforce blocks violations.
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public static final String A_zimbraReverseProxyModernCSP = "zimbraReverseProxyModernCSP";
-
-    /**
-     * Content Security Policy directives applied to the Modern UI by the
-     * mailbox (the attribute name predates this; the reverse proxy does not
-     * use it). Used when zimbraReverseProxyModernCSP is report-only or
-     * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the mailbox also writes that nonce into
-     * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
-     * from a Modern UI build without the nonce placeholder get no policy.
-     * Changes apply within about a minute, without a restart.
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public static final String A_zimbraReverseProxyModernCSPPolicy = "zimbraReverseProxyModernCSPPolicy";
 
     /**
      * whether NGINX mail proxy will pass upstream server errors back to the

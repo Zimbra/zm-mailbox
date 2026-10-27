@@ -39253,6 +39253,260 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * <p>Valid values: [off, report-only, enforce]
+     *
+     * @return zimbraModernCSP, or ZAttrProvisioning.ModernCSP.enforce if unset and/or has invalid value
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public ZAttrProvisioning.ModernCSP getModernCSP() {
+        try { String v = getAttr(Provisioning.A_zimbraModernCSP, true, true); return v == null ? ZAttrProvisioning.ModernCSP.enforce : ZAttrProvisioning.ModernCSP.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ModernCSP.enforce; }
+    }
+
+    /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * <p>Valid values: [off, report-only, enforce]
+     *
+     * @return zimbraModernCSP, or "enforce" if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public String getModernCSPAsString() {
+        return getAttr(Provisioning.A_zimbraModernCSP, "enforce", true);
+    }
+
+    /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * <p>Valid values: [off, report-only, enforce]
+     *
+     * @param zimbraModernCSP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void setModernCSP(ZAttrProvisioning.ModernCSP zimbraModernCSP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSP, zimbraModernCSP.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * <p>Valid values: [off, report-only, enforce]
+     *
+     * @param zimbraModernCSP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> setModernCSP(ZAttrProvisioning.ModernCSP zimbraModernCSP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSP, zimbraModernCSP.toString());
+        return attrs;
+    }
+
+    /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * <p>Valid values: [off, report-only, enforce]
+     *
+     * @param zimbraModernCSP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void setModernCSPAsString(String zimbraModernCSP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSP, zimbraModernCSP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * <p>Valid values: [off, report-only, enforce]
+     *
+     * @param zimbraModernCSP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> setModernCSPAsString(String zimbraModernCSP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSP, zimbraModernCSP);
+        return attrs;
+    }
+
+    /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * <p>Valid values: [off, report-only, enforce]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public void unsetModernCSP() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSP, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls Content Security Policy for the Modern UI path (/modern and
+     * its subpaths). off disables CSP, report-only reports violations in the
+     * browser console without blocking, and enforce blocks violations.
+     *
+     * <p>Valid values: [off, report-only, enforce]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4170)
+    public Map<String,Object> unsetModernCSP(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSP, "");
+        return attrs;
+    }
+
+    /**
+     * Content Security Policy directives applied to the Modern UI by the
+     * mailbox. Used when zimbraModernCSP is report-only or enforce; do not
+     * include a header name. The token {{nonce}} is replaced with a per-
+     * response nonce, and the mailbox also writes that nonce into the Modern
+     * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
+     * followed by a non-word character. Pages from a Modern UI build without
+     * the nonce placeholder get no policy. Changes apply within about a
+     * minute, without a restart.
+     *
+     * @return zimbraModernCSPPolicy, or "manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';" if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public String getModernCSPPolicy() {
+        return getAttr(Provisioning.A_zimbraModernCSPPolicy, "manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';", true);
+    }
+
+    /**
+     * Content Security Policy directives applied to the Modern UI by the
+     * mailbox. Used when zimbraModernCSP is report-only or enforce; do not
+     * include a header name. The token {{nonce}} is replaced with a per-
+     * response nonce, and the mailbox also writes that nonce into the Modern
+     * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
+     * followed by a non-word character. Pages from a Modern UI build without
+     * the nonce placeholder get no policy. Changes apply within about a
+     * minute, without a restart.
+     *
+     * @param zimbraModernCSPPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void setModernCSPPolicy(String zimbraModernCSPPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSPPolicy, zimbraModernCSPPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Content Security Policy directives applied to the Modern UI by the
+     * mailbox. Used when zimbraModernCSP is report-only or enforce; do not
+     * include a header name. The token {{nonce}} is replaced with a per-
+     * response nonce, and the mailbox also writes that nonce into the Modern
+     * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
+     * followed by a non-word character. Pages from a Modern UI build without
+     * the nonce placeholder get no policy. Changes apply within about a
+     * minute, without a restart.
+     *
+     * @param zimbraModernCSPPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> setModernCSPPolicy(String zimbraModernCSPPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSPPolicy, zimbraModernCSPPolicy);
+        return attrs;
+    }
+
+    /**
+     * Content Security Policy directives applied to the Modern UI by the
+     * mailbox. Used when zimbraModernCSP is report-only or enforce; do not
+     * include a header name. The token {{nonce}} is replaced with a per-
+     * response nonce, and the mailbox also writes that nonce into the Modern
+     * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
+     * followed by a non-word character. Pages from a Modern UI build without
+     * the nonce placeholder get no policy. Changes apply within about a
+     * minute, without a restart.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void unsetModernCSPPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSPPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Content Security Policy directives applied to the Modern UI by the
+     * mailbox. Used when zimbraModernCSP is report-only or enforce; do not
+     * include a header name. The token {{nonce}} is replaced with a per-
+     * response nonce, and the mailbox also writes that nonce into the Modern
+     * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
+     * followed by a non-word character. Pages from a Modern UI build without
+     * the nonce placeholder get no policy. Changes apply within about a
+     * minute, without a restart.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> unsetModernCSPPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraModernCSPPolicy, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable/disable the modern web client option on the login
      * screen. Default value is FALSE, which makes the modern client option
      * available.
@@ -65183,265 +65437,6 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyMailPop3sEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyMailPop3sEnabled, "");
-        return attrs;
-    }
-
-    /**
-     * Controls Content Security Policy for the Modern UI path (/modern and
-     * its subpaths). off disables CSP, report-only reports violations in the
-     * browser console without blocking, and enforce blocks violations.
-     *
-     * <p>Valid values: [off, report-only, enforce]
-     *
-     * @return zimbraReverseProxyModernCSP, or ZAttrProvisioning.ReverseProxyModernCSP.enforce if unset and/or has invalid value
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public ZAttrProvisioning.ReverseProxyModernCSP getReverseProxyModernCSP() {
-        try { String v = getAttr(Provisioning.A_zimbraReverseProxyModernCSP, true, true); return v == null ? ZAttrProvisioning.ReverseProxyModernCSP.enforce : ZAttrProvisioning.ReverseProxyModernCSP.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyModernCSP.enforce; }
-    }
-
-    /**
-     * Controls Content Security Policy for the Modern UI path (/modern and
-     * its subpaths). off disables CSP, report-only reports violations in the
-     * browser console without blocking, and enforce blocks violations.
-     *
-     * <p>Valid values: [off, report-only, enforce]
-     *
-     * @return zimbraReverseProxyModernCSP, or "enforce" if unset
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public String getReverseProxyModernCSPAsString() {
-        return getAttr(Provisioning.A_zimbraReverseProxyModernCSP, "enforce", true);
-    }
-
-    /**
-     * Controls Content Security Policy for the Modern UI path (/modern and
-     * its subpaths). off disables CSP, report-only reports violations in the
-     * browser console without blocking, and enforce blocks violations.
-     *
-     * <p>Valid values: [off, report-only, enforce]
-     *
-     * @param zimbraReverseProxyModernCSP new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public void setReverseProxyModernCSP(ZAttrProvisioning.ReverseProxyModernCSP zimbraReverseProxyModernCSP) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, zimbraReverseProxyModernCSP.toString());
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Controls Content Security Policy for the Modern UI path (/modern and
-     * its subpaths). off disables CSP, report-only reports violations in the
-     * browser console without blocking, and enforce blocks violations.
-     *
-     * <p>Valid values: [off, report-only, enforce]
-     *
-     * @param zimbraReverseProxyModernCSP new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public Map<String,Object> setReverseProxyModernCSP(ZAttrProvisioning.ReverseProxyModernCSP zimbraReverseProxyModernCSP, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, zimbraReverseProxyModernCSP.toString());
-        return attrs;
-    }
-
-    /**
-     * Controls Content Security Policy for the Modern UI path (/modern and
-     * its subpaths). off disables CSP, report-only reports violations in the
-     * browser console without blocking, and enforce blocks violations.
-     *
-     * <p>Valid values: [off, report-only, enforce]
-     *
-     * @param zimbraReverseProxyModernCSP new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public void setReverseProxyModernCSPAsString(String zimbraReverseProxyModernCSP) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, zimbraReverseProxyModernCSP);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Controls Content Security Policy for the Modern UI path (/modern and
-     * its subpaths). off disables CSP, report-only reports violations in the
-     * browser console without blocking, and enforce blocks violations.
-     *
-     * <p>Valid values: [off, report-only, enforce]
-     *
-     * @param zimbraReverseProxyModernCSP new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public Map<String,Object> setReverseProxyModernCSPAsString(String zimbraReverseProxyModernCSP, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, zimbraReverseProxyModernCSP);
-        return attrs;
-    }
-
-    /**
-     * Controls Content Security Policy for the Modern UI path (/modern and
-     * its subpaths). off disables CSP, report-only reports violations in the
-     * browser console without blocking, and enforce blocks violations.
-     *
-     * <p>Valid values: [off, report-only, enforce]
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public void unsetReverseProxyModernCSP() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Controls Content Security Policy for the Modern UI path (/modern and
-     * its subpaths). off disables CSP, report-only reports violations in the
-     * browser console without blocking, and enforce blocks violations.
-     *
-     * <p>Valid values: [off, report-only, enforce]
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4170)
-    public Map<String,Object> unsetReverseProxyModernCSP(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, "");
-        return attrs;
-    }
-
-    /**
-     * Content Security Policy directives applied to the Modern UI by the
-     * mailbox (the attribute name predates this; the reverse proxy does not
-     * use it). Used when zimbraReverseProxyModernCSP is report-only or
-     * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the mailbox also writes that nonce into
-     * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
-     * from a Modern UI build without the nonce placeholder get no policy.
-     * Changes apply within about a minute, without a restart.
-     *
-     * @return zimbraReverseProxyModernCSPPolicy, or "manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';" if unset
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public String getReverseProxyModernCSPPolicy() {
-        return getAttr(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';", true);
-    }
-
-    /**
-     * Content Security Policy directives applied to the Modern UI by the
-     * mailbox (the attribute name predates this; the reverse proxy does not
-     * use it). Used when zimbraReverseProxyModernCSP is report-only or
-     * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the mailbox also writes that nonce into
-     * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
-     * from a Modern UI build without the nonce placeholder get no policy.
-     * Changes apply within about a minute, without a restart.
-     *
-     * @param zimbraReverseProxyModernCSPPolicy new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public void setReverseProxyModernCSPPolicy(String zimbraReverseProxyModernCSPPolicy) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSPPolicy, zimbraReverseProxyModernCSPPolicy);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Content Security Policy directives applied to the Modern UI by the
-     * mailbox (the attribute name predates this; the reverse proxy does not
-     * use it). Used when zimbraReverseProxyModernCSP is report-only or
-     * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the mailbox also writes that nonce into
-     * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
-     * from a Modern UI build without the nonce placeholder get no policy.
-     * Changes apply within about a minute, without a restart.
-     *
-     * @param zimbraReverseProxyModernCSPPolicy new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public Map<String,Object> setReverseProxyModernCSPPolicy(String zimbraReverseProxyModernCSPPolicy, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSPPolicy, zimbraReverseProxyModernCSPPolicy);
-        return attrs;
-    }
-
-    /**
-     * Content Security Policy directives applied to the Modern UI by the
-     * mailbox (the attribute name predates this; the reverse proxy does not
-     * use it). Used when zimbraReverseProxyModernCSP is report-only or
-     * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the mailbox also writes that nonce into
-     * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
-     * from a Modern UI build without the nonce placeholder get no policy.
-     * Changes apply within about a minute, without a restart.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public void unsetReverseProxyModernCSPPolicy() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Content Security Policy directives applied to the Modern UI by the
-     * mailbox (the attribute name predates this; the reverse proxy does not
-     * use it). Used when zimbraReverseProxyModernCSP is report-only or
-     * enforce; do not include a header name. The token {{nonce}} is replaced
-     * with a per-response nonce, and the mailbox also writes that nonce into
-     * the Modern UI HTML. Place it inside quotes, e.g.
-     * &#039;nonce-{{nonce}}&#039;, followed by a non-word character. Pages
-     * from a Modern UI build without the nonce placeholder get no policy.
-     * Changes apply within about a minute, without a restart.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4171)
-    public Map<String,Object> unsetReverseProxyModernCSPPolicy(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "");
         return attrs;
     }
 
