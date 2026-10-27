@@ -20293,9 +20293,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * include a header name. The token {{nonce}} is replaced with a per-
      * response nonce, and the mailbox also writes that nonce into the Modern
      * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
-     * followed by a non-word character. Pages from a Modern UI build without
-     * the nonce placeholder get no policy. Changes apply within about a
-     * minute, without a restart.
+     * followed by a non-word character. Changes apply within about a minute,
+     * without a restart.
      *
      * @return zimbraModernCSPPolicy, or "manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';" if unset
      *
@@ -20312,9 +20311,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * include a header name. The token {{nonce}} is replaced with a per-
      * response nonce, and the mailbox also writes that nonce into the Modern
      * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
-     * followed by a non-word character. Pages from a Modern UI build without
-     * the nonce placeholder get no policy. Changes apply within about a
-     * minute, without a restart.
+     * followed by a non-word character. Changes apply within about a minute,
+     * without a restart.
      *
      * @param zimbraModernCSPPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20334,9 +20332,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * include a header name. The token {{nonce}} is replaced with a per-
      * response nonce, and the mailbox also writes that nonce into the Modern
      * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
-     * followed by a non-word character. Pages from a Modern UI build without
-     * the nonce placeholder get no policy. Changes apply within about a
-     * minute, without a restart.
+     * followed by a non-word character. Changes apply within about a minute,
+     * without a restart.
      *
      * @param zimbraModernCSPPolicy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20357,9 +20354,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * include a header name. The token {{nonce}} is replaced with a per-
      * response nonce, and the mailbox also writes that nonce into the Modern
      * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
-     * followed by a non-word character. Pages from a Modern UI build without
-     * the nonce placeholder get no policy. Changes apply within about a
-     * minute, without a restart.
+     * followed by a non-word character. Changes apply within about a minute,
+     * without a restart.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -20378,9 +20374,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * include a header name. The token {{nonce}} is replaced with a per-
      * response nonce, and the mailbox also writes that nonce into the Modern
      * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
-     * followed by a non-word character. Pages from a Modern UI build without
-     * the nonce placeholder get no policy. Changes apply within about a
-     * minute, without a restart.
+     * followed by a non-word character. Changes apply within about a minute,
+     * without a restart.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

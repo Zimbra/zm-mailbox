@@ -8914,7 +8914,6 @@ TODO: delete them permanently from here
     Used when zimbraModernCSP is report-only or enforce; do not include a header name.
     The token {{nonce}} is replaced with a per-response nonce, and the mailbox also writes that nonce into
     the Modern UI HTML. Place it inside quotes, e.g. 'nonce-{{nonce}}', followed by a non-word character.
-    Pages from a Modern UI build without the nonce placeholder get no policy.
     Changes apply within about a minute, without a restart.
   </desc>
 </attr>

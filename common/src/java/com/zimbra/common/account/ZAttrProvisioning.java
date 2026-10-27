@@ -11696,9 +11696,8 @@ public class ZAttrProvisioning {
      * include a header name. The token {{nonce}} is replaced with a per-
      * response nonce, and the mailbox also writes that nonce into the Modern
      * UI HTML. Place it inside quotes, e.g. &#039;nonce-{{nonce}}&#039;,
-     * followed by a non-word character. Pages from a Modern UI build without
-     * the nonce placeholder get no policy. Changes apply within about a
-     * minute, without a restart.
+     * followed by a non-word character. Changes apply within about a minute,
+     * without a restart.
      *
      * @since ZCS 10.1.22
      */
