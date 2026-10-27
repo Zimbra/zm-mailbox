@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.servlet;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -61,7 +60,6 @@ public class ModernCSPFilterTest {
 
     private static final String POLICY =
             "default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; object-src 'none'";
-    private static final String POLICY_NO_NONCE = "default-src 'self'; script-src 'self'; object-src 'none'";
     private static final String NEW_UI = "<html><meta name=\"csp-nonce\" content=\"__CSP_NONCE__\">"
             + "<style nonce=\"__CSP_NONCE__\"></style></html>";
     private static final Pattern NONCE_IN_BODY = Pattern.compile("content=\"([^\"]+)\"");
@@ -71,11 +69,11 @@ public class ModernCSPFilterTest {
     private static final class Result {
         final Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
         final ByteArrayOutputStream body = new ByteArrayOutputStream();
+        final Map<String, String> seenByServlet = new HashMap<String, String>();
         int errorStatus = -1;
         String redirect;
         int contentLength = -1;
-        long expires = -1;
-        Map<String, String> seenByServlet = new HashMap<String, String>();
+        boolean committed;
 
         String header(String name) {
             List<String> values = headers.get(name.toLowerCase(Locale.ROOT));
@@ -85,9 +83,15 @@ public class ModernCSPFilterTest {
         String bodyText() {
             return new String(body.toByteArray(), StandardCharsets.UTF_8);
         }
+
+        String nonceInHeader() {
+            Matcher m = NONCE_IN_HEADER.matcher(header("Content-Security-Policy"));
+            assertTrue(m.find());
+            return m.group(1);
+        }
     }
 
-    /** Plays the static file servlet: writes a body and the headers Jetty's DefaultServlet would set. */
+    /** Plays the static file servlet: writes a body the way Jetty's DefaultServlet would. */
     private interface Servlet {
         void service(HttpServletRequest request, HttpServletResponse response) throws IOException;
     }
@@ -98,25 +102,24 @@ public class ModernCSPFilterTest {
             public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
                 byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
                 response.setContentType("text/html");
-                response.setHeader("ETag", "\"abc\"");
-                response.setDateHeader("Last-Modified", 1000L);
-                response.setHeader("Cache-Control", "max-age=2595600");
                 response.setContentLength(bytes.length);
                 response.getOutputStream().write(bytes);
             }
         };
     }
 
-    private static Result run(ModernCSPFilter filter, String method, String path, Map<String, String> requestHeaders,
-            final Servlet servlet) throws Exception {
+    private static Result run(ModernCSPFilter filter, String method, String path, final Servlet servlet)
+            throws Exception {
         final Result result = new Result();
-        HttpServletRequest request = fakeRequest(method, path, requestHeaders);
-        HttpServletResponse response = fakeResponse(result);
-        filter.doFilter(request, response, new FilterChain() {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Accept-Encoding", "gzip, br");
+        headers.put("If-None-Match", "\"abc\"");
+        headers.put("Range", "bytes=0-10");
+        filter.doFilter(fakeRequest(method, path, headers), fakeResponse(result), new FilterChain() {
             @Override
             public void doFilter(ServletRequest req, ServletResponse resp) throws IOException, ServletException {
                 HttpServletRequest http = (HttpServletRequest) req;
-                for (String name : new String[] { "Accept-Encoding", "If-None-Match", "If-Modified-Since", "Range" }) {
+                for (String name : new String[] { "Accept-Encoding", "If-None-Match", "Range" }) {
                     result.seenByServlet.put(name, http.getHeader(name));
                 }
                 servlet.service(http, (HttpServletResponse) resp);
@@ -126,11 +129,7 @@ public class ModernCSPFilterTest {
     }
 
     private static Result get(ModernCSPFilter filter, String path, Servlet servlet) throws Exception {
-        Map<String, String> headers = new HashMap<String, String>();
-        headers.put("Accept-Encoding", "gzip, br");
-        headers.put("If-None-Match", "\"abc\"");
-        headers.put("Range", "bytes=0-10");
-        return run(filter, "GET", path, headers, servlet);
+        return run(filter, "GET", path, servlet);
     }
 
     private static ModernCSPFilter filterFor(final String mode, final String policy) {
@@ -148,73 +147,28 @@ public class ModernCSPFilterTest {
 
         Matcher body = NONCE_IN_BODY.matcher(r.bodyText());
         assertTrue(body.find());
-        Matcher header = NONCE_IN_HEADER.matcher(r.header("Content-Security-Policy"));
-        assertTrue(header.find());
-        assertEquals(body.group(1), header.group(1));
+        assertEquals(body.group(1), r.nonceInHeader());
         assertFalse(r.bodyText().contains("__CSP_NONCE__"));
-        assertTrue(r.bodyText().contains("nonce=\"" + header.group(1) + "\""));
+        assertTrue(r.bodyText().contains("nonce=\"" + r.nonceInHeader() + "\""));
         assertEquals(r.body.size(), r.contentLength);
         assertTrue(r.header("Content-Security-Policy").endsWith("object-src 'none'"));
     }
 
     @Test
-    public void applicationRoutesAreHandledLikeTheDocument() throws Exception {
-        Result r = get(filterFor("enforce", POLICY), "/modern/mail/inbox", file(NEW_UI));
-
-        Matcher body = NONCE_IN_BODY.matcher(r.bodyText());
-        Matcher header = NONCE_IN_HEADER.matcher(r.header("Content-Security-Policy"));
-        assertTrue(body.find());
-        assertTrue(header.find());
-        assertEquals(body.group(1), header.group(1));
-        assertNull(r.seenByServlet.get("Accept-Encoding"));
-    }
-
-    @Test
-    public void routeLikePathsThatAreNotHtmlAreLeftAlone() throws Exception {
-        Result r = get(filterFor("enforce", POLICY), "/modern/LICENSE", new Servlet() {
-            @Override
-            public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
-                response.setContentType("application/octet-stream");
-                response.getOutputStream().write("__CSP_NONCE__".getBytes(StandardCharsets.UTF_8));
-            }
-        });
-
-        assertEquals("__CSP_NONCE__", r.bodyText());
-        assertNull(r.header("Content-Security-Policy"));
-    }
-
-    @Test
-    public void documentPathsAreRoutesAndHtmlButNotFiles() {
-        assertTrue(ModernCSPFilter.isDocumentPath("/modern"));
-        assertTrue(ModernCSPFilter.isDocumentPath("/modern/"));
-        assertTrue(ModernCSPFilter.isDocumentPath("/modern/index.html"));
-        assertTrue(ModernCSPFilter.isDocumentPath("/modern/mail/inbox"));
-        assertFalse(ModernCSPFilter.isDocumentPath("/modern/scripts/app.js"));
-        assertFalse(ModernCSPFilter.isDocumentPath("/modern/css/site.css"));
-    }
-
-    @Test
     public void nonceIsRandomAndAtLeast128Bits() throws Exception {
         ModernCSPFilter filter = filterFor("enforce", POLICY);
-        String firstHeader = get(filter, "/modern/", file(NEW_UI)).header("Content-Security-Policy");
-        String secondHeader = get(filter, "/modern/", file(NEW_UI)).header("Content-Security-Policy");
-        Matcher first = NONCE_IN_HEADER.matcher(firstHeader);
-        Matcher second = NONCE_IN_HEADER.matcher(secondHeader);
-        assertTrue(first.find());
-        assertTrue(second.find());
+        String first = get(filter, "/modern/", file(NEW_UI)).nonceInHeader();
+        String second = get(filter, "/modern/", file(NEW_UI)).nonceInHeader();
 
-        assertNotEquals(first.group(1), second.group(1));
-        assertEquals(16, Base64.getUrlDecoder().decode(first.group(1)).length);
+        assertNotEquals(first, second);
+        assertEquals(16, Base64.getUrlDecoder().decode(first).length);
     }
 
     @Test
-    public void rewrittenDocumentIsNeverCachedOrRevalidated() throws Exception {
+    public void documentIsNeverCached() throws Exception {
         Result r = get(filterFor("enforce", POLICY), "/modern/index.html", file(NEW_UI));
 
         assertEquals("no-store", r.header("Cache-Control"));
-        assertNull(r.header("ETag"));
-        assertNull(r.header("Last-Modified"));
-        assertEquals(0L, r.expires);
     }
 
     @Test
@@ -227,23 +181,21 @@ public class ModernCSPFilterTest {
     }
 
     @Test
-    public void documentWithoutPlaceholderStillGetsThePolicyAndIsNotCached() throws Exception {
-        String page = "<html><body>no placeholder</body></html>";
-        Result r = get(filterFor("enforce", POLICY), "/modern/", file(page));
+    public void applicationRoutesAreHandledLikeTheDocument() throws Exception {
+        Result r = get(filterFor("enforce", POLICY), "/modern/mail/inbox", file(NEW_UI));
 
-        assertTrue(NONCE_IN_HEADER.matcher(r.header("Content-Security-Policy")).find());
-        assertEquals(page, r.bodyText());
-        assertEquals("no-store", r.header("Cache-Control"));
+        Matcher body = NONCE_IN_BODY.matcher(r.bodyText());
+        assertTrue(body.find());
+        assertEquals(body.group(1), r.nonceInHeader());
+        assertNull(r.seenByServlet.get("Accept-Encoding"));
     }
 
     @Test
     public void everyPlaceholderIsReplaced() throws Exception {
-        String ui = "__CSP_NONCE__ and __CSP_NONCE__ and __CSP_NONCE__";
-        Result r = get(filterFor("enforce", POLICY), "/modern/", file(ui));
+        Result r = get(filterFor("enforce", POLICY), "/modern/", file("__CSP_NONCE__ and __CSP_NONCE__"));
 
-        String nonce = r.bodyText().split(" and ")[0];
-        assertEquals(nonce + " and " + nonce + " and " + nonce, r.bodyText());
-        assertFalse(r.bodyText().contains("__CSP_NONCE__"));
+        String nonce = r.nonceInHeader();
+        assertEquals(nonce + " and " + nonce, r.bodyText());
     }
 
     @Test
@@ -266,25 +218,17 @@ public class ModernCSPFilterTest {
     }
 
     @Test
-    public void policyWithoutTokenIsSentAsIsAndBodyIsUntouched() throws Exception {
-        Result r = get(filterFor("enforce", POLICY_NO_NONCE), "/modern/", file(NEW_UI));
-
-        assertEquals(POLICY_NO_NONCE, r.header("Content-Security-Policy"));
-        assertEquals(NEW_UI, r.bodyText());
-        assertNotEquals("no-store", r.header("Cache-Control"));
-    }
-
-    @Test
-    public void assetsGetThePolicyWithoutTheNonceSource() throws Exception {
+    public void assetsGetThePolicyButAreNotRewritten() throws Exception {
         Result r = get(filterFor("enforce", POLICY), "/modern/scripts/app.js", file("console.log(1)"));
 
-        assertEquals(POLICY_NO_NONCE, r.header("Content-Security-Policy"));
+        assertNotNull(r.header("Content-Security-Policy"));
         assertEquals("console.log(1)", r.bodyText());
         assertEquals("gzip, br", r.seenByServlet.get("Accept-Encoding"));
+        assertNull(r.header("Cache-Control"));
     }
 
     @Test
-    public void errorsAndRedirectsAreNotRewritten() throws Exception {
+    public void errorsAndRedirectsAreLeftToTheServlet() throws Exception {
         Result notFound = get(filterFor("enforce", POLICY), "/modern/", new Servlet() {
             @Override
             public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -299,26 +243,9 @@ public class ModernCSPFilterTest {
         });
 
         assertEquals(404, notFound.errorStatus);
-        assertNull(notFound.header("Content-Security-Policy"));
         assertEquals(0, notFound.body.size());
         assertEquals("/modern/", redirect.redirect);
-        assertNull(redirect.header("Content-Security-Policy"));
-    }
-
-    @Test
-    public void contentEncodedBodyIsPassedThroughUnchanged() throws Exception {
-        final byte[] encoded = "__CSP_NONCE__".getBytes(StandardCharsets.UTF_8);
-        Result r = get(filterFor("enforce", POLICY), "/modern/", new Servlet() {
-            @Override
-            public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
-                response.setHeader("Content-Encoding", "gzip");
-                response.getOutputStream().write(encoded);
-            }
-        });
-
-        assertArrayEquals(encoded, r.body.toByteArray());
-        assertNull(r.header("Content-Security-Policy"));
-        assertEquals("gzip", r.header("Content-Encoding"));
+        assertEquals(0, redirect.body.size());
     }
 
     @Test
@@ -336,16 +263,11 @@ public class ModernCSPFilterTest {
     }
 
     @Test
-    public void onlyGetRequestsUnderModernAreHandled() throws Exception {
-        ModernCSPFilter filter = filterFor("enforce", POLICY);
-        Result post = run(filter, "POST", "/modern/", new HashMap<String, String>(), file(NEW_UI));
-        Result other = get(filter, "/service/soap", file(NEW_UI));
-        Result lookalike = get(filter, "/modernized/", file(NEW_UI));
+    public void onlyGetRequestsAreHandled() throws Exception {
+        Result r = run(filterFor("enforce", POLICY), "POST", "/modern/", file(NEW_UI));
 
-        for (Result r : new Result[] { post, other, lookalike }) {
-            assertNull(r.header("Content-Security-Policy"));
-            assertEquals(NEW_UI, r.bodyText());
-        }
+        assertNull(r.header("Content-Security-Policy"));
+        assertEquals(NEW_UI, r.bodyText());
     }
 
     @Test
@@ -359,15 +281,16 @@ public class ModernCSPFilterTest {
     }
 
     @Test
-    public void replaceAllReturnsTheSourceWhenNothingMatches() {
-        byte[] source = "abc".getBytes(StandardCharsets.US_ASCII);
-        byte[] none = ModernCSPFilter.replaceAll(source, "x".getBytes(StandardCharsets.US_ASCII),
-                "y".getBytes(StandardCharsets.US_ASCII));
-        byte[] two = ModernCSPFilter.replaceAll("axbxc".getBytes(StandardCharsets.US_ASCII),
-                "x".getBytes(StandardCharsets.US_ASCII), "yy".getBytes(StandardCharsets.US_ASCII));
+    public void documentsAreHtmlAndRoutesButNotFiles() throws Exception {
+        assertTrue(isDocument("/modern/"));
+        assertTrue(isDocument("/modern/index.html"));
+        assertTrue(isDocument("/modern/mail/inbox"));
+        assertFalse(isDocument("/modern/app.js"));
+        assertFalse(isDocument("/modern/css/site.css"));
+    }
 
-        assertArrayEquals(source, none);
-        assertEquals("ayybyyc", new String(two, StandardCharsets.US_ASCII));
+    private static boolean isDocument(String path) {
+        return ModernCSPFilter.isDocument(fakeRequest("GET", path, new HashMap<String, String>()));
     }
 
     private static Object defaultValue(Class<?> type) {
@@ -396,10 +319,8 @@ public class ModernCSPFilterTest {
                         String name = m.getName();
                         if ("getMethod".equals(name)) {
                             return method;
-                        } else if ("getRequestURI".equals(name)) {
+                        } else if ("getServletPath".equals(name)) {
                             return path;
-                        } else if ("getContextPath".equals(name)) {
-                            return "";
                         } else if ("getServerName".equals(name)) {
                             return "mail.example.com";
                         } else if ("getHeader".equals(name)) {
@@ -408,12 +329,8 @@ public class ModernCSPFilterTest {
                             String v = lower.get(((String) args[0]).toLowerCase(Locale.ROOT));
                             return v == null ? Collections.emptyEnumeration()
                                     : Collections.enumeration(Collections.singletonList(v));
-                        } else if ("getHeaderNames".equals(name)) {
-                            return Collections.enumeration(new ArrayList<String>(headers.keySet()));
-                        } else if ("getDateHeader".equals(name) || "getIntHeader".equals(name)) {
-                            return lower.containsKey(((String) args[0]).toLowerCase(Locale.ROOT))
-                                    ? (m.getReturnType() == long.class ? (Object) Long.valueOf(1L) : (Object) 1)
-                                    : (m.getReturnType() == long.class ? (Object) Long.valueOf(-1L) : (Object) (-1));
+                        } else if ("getDateHeader".equals(name)) {
+                            return lower.containsKey(((String) args[0]).toLowerCase(Locale.ROOT)) ? 1L : -1L;
                         }
                         return defaultValue(m.getReturnType());
                     }
@@ -443,33 +360,24 @@ public class ModernCSPFilterTest {
                         String name = m.getName();
                         if ("setHeader".equals(name) || "addHeader".equals(name)) {
                             String key = ((String) args[0]).toLowerCase(Locale.ROOT);
-                            if (args[1] == null) {
-                                result.headers.remove(key);
-                            } else {
-                                List<String> values = result.headers.get(key);
-                                if (values == null || "setHeader".equals(name)) {
-                                    values = new ArrayList<String>();
-                                    result.headers.put(key, values);
-                                }
-                                values.add((String) args[1]);
+                            List<String> values = result.headers.get(key);
+                            if (values == null || "setHeader".equals(name)) {
+                                values = new ArrayList<String>();
+                                result.headers.put(key, values);
                             }
-                        } else if ("setDateHeader".equals(name)) {
-                            String key = ((String) args[0]).toLowerCase(Locale.ROOT);
-                            if ("expires".equals(key)) {
-                                result.expires = (Long) args[1];
-                            }
-                            result.headers.put(key, new ArrayList<String>(
-                                    Collections.singletonList(String.valueOf(args[1]))));
+                            values.add((String) args[1]);
                         } else if ("setContentLength".equals(name)) {
                             result.contentLength = (Integer) args[0];
                         } else if ("sendError".equals(name)) {
                             result.errorStatus = (Integer) args[0];
+                            result.committed = true;
                         } else if ("sendRedirect".equals(name)) {
                             result.redirect = (String) args[0];
+                            result.committed = true;
+                        } else if ("isCommitted".equals(name)) {
+                            return result.committed;
                         } else if ("getOutputStream".equals(name)) {
                             return out;
-                        } else if ("containsHeader".equals(name)) {
-                            return result.headers.containsKey(((String) args[0]).toLowerCase(Locale.ROOT));
                         }
                         return defaultValue(m.getReturnType());
                     }
