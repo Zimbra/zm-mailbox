@@ -183,21 +183,24 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         if(expireTime == 0) {
             long lifetime;
             switch (usage) {
-            case ENABLE_TWO_FACTOR_AUTH:
-                lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, DEFAULT_TWO_FACTOR_AUTH_LIFETIME * 1000);
-                break;
-            case TWO_FACTOR_AUTH:
-                lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME * 1000);
-                break;
-            case REFRESH:
-                lifetime = acct.getNativeOAuthRefreshTokenLifetime();
-                break;
-            case AUTH:
-            default:
-                lifetime = isAdmin ?
-                        acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000) :
-                        acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
-                break;
+                case ENABLE_TWO_FACTOR_AUTH:
+                    lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthTokenLifetime,
+                            DEFAULT_TWO_FACTOR_AUTH_LIFETIME * 1000);
+                    break;
+                case TWO_FACTOR_AUTH:
+                    lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime,
+                            DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME * 1000);
+                    break;
+                case REFRESH:
+                    lifetime = acct.getNativeOAuthRefreshTokenLifetime();
+                    break;
+                case AUTH:
+                default:
+                    lifetime = isAdmin ?
+                            acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime,
+                                    DEFAULT_AUTH_LIFETIME * 1000) :
+                            acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
+                    break;
             }
             expireTime = System.currentTimeMillis() + lifetime;
         }

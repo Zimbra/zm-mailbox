@@ -21,20 +21,16 @@
 package com.zimbra.cs.service.account;
 
 import io.jsonwebtoken.Claims;
-
 import java.com.zimbra.common.soap.OAuthConstants;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang.StringUtils;
-
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
@@ -80,9 +76,6 @@ import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.cs.service.account.OAuthProvider;
-import com.zimbra.cs.service.account.OAuthRegistry;
-
 import static com.zimbra.cs.account.AuthTokenUtil.getOrigAuthData;
 
 /**
@@ -676,7 +669,8 @@ public class Auth extends AccountDocumentHandler {
 
     public boolean isOAuthRequested(Element request, Map<String, Object> context, Account acc) {
 
-        if (acc == null || !acc.isNativeOAuthPersistentSessionEnabled()) {
+        if (acc == null || !acc.isNativeOAuthPersistentSessionEnabled()
+                || acc.getNativeOAuthRefreshTokenLifetime() <= 0) {
             return false;
         }
         HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
