@@ -1,3 +1,4 @@
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -14,23 +15,22 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.cs.service.account;
-
-import java.util.Arrays;
-import java.util.Map;
-
-import com.zimbra.cs.service.WebClientLogoffUrlRegistry;
-import org.apache.commons.lang.StringUtils;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.WebClientLogoffUrlRegistry;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.ClientInfoRequest;
-
+import java.util.Arrays;
+import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * ClientInfo returns domain attributes that may interest a client.
@@ -45,6 +45,10 @@ public class ClientInfo extends AccountDocumentHandler {
         Domain domain = Provisioning.getInstance().get(req.getDomain());
 
         Element parent =  zsc.createElement(AccountConstants.CLIENT_INFO_RESPONSE);
+        String serverVersion = BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION;
+        parent.addAttribute(AccountConstants.E_VERSION, serverVersion, Element.Disposition.CONTENT);
+        ToXML.encodeAttr(parent, Provisioning.A_zimbraNativeMobileAppMinVersionSupported,
+                Provisioning.getInstance().getConfig().getNativeMobileAppMinVersionSupported());
         if (domain != null) {
             String webClientLogoutURL = domain.getWebClientLogoutURL();
             ToXML.encodeAttr(parent, Provisioning.A_zimbraFeatureResetPasswordStatus, domain.getFeatureResetPasswordStatusAsString());

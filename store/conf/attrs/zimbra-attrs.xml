@@ -10819,4 +10819,23 @@ TODO: delete them permanently from here
     <desc>Flag to check whether push notification is enabled for a particular user.</desc>
 </attr>
 
+  <attr id="4175" name="zimbraNativeMobileAppMinVersionSupported" type="astring" cardinality="single"
+        optionalIn="globalConfig" immutable="1" since="10.1.22">
+    <desc>Minimum supported native mobile app versions, stored as JSON. Required platform keys are iOS and android. Each platform must contain a minVersion string in major.minor.patch format.</desc>
+    <globalConfigValue>{"iOS":{"minVersion":"1.0.0"},"android":{"minVersion":"1.0.0"}}</globalConfigValue>
+    <globalConfigValueUpgrade>{"iOS":{"minVersion":"1.0.0"},"android":{"minVersion":"1.0.0"}}</globalConfigValueUpgrade>
+  </attr>
+
+  <attr id="4176" name="zimbraNativeMobileAppLocalDataRetentionDays" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
+    <globalConfigValue>30</globalConfigValue>
+    <defaultCOSValue>30</defaultCOSValue>
+    <desc>Number of days for which data should be retained in mobile device.</desc>
+  </attr>
+
+  <attr id="4177" name="zimbraNativeMobileAppMaxLocalDataSize" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
+    <globalConfigValue>10240</globalConfigValue>
+    <defaultCOSValue>10240</defaultCOSValue>
+    <desc>Maximum stored data in mobile device.</desc>
+  </attr>
+
 </attrs>
