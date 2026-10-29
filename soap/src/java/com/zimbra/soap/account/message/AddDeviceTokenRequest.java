@@ -42,6 +42,36 @@ public class AddDeviceTokenRequest {
     private String deviceToken;
 
     /**
+     * @zm-api-field-tag device-id
+     * @zm-api-field-description Stable client generated identifier of the device installation.
+     * Together with the mailbox it uniquely identifies a registration.
+     */
+    @XmlElement(name = "deviceId", required = true)
+    private String deviceId;
+
+    /**
+     * @zm-api-field-tag device-type
+     * @zm-api-field-description Type of the device. Valid values: {@code MOBILE}, {@code DESKTOP}.
+     */
+    @XmlElement(name = "deviceType", required = true)
+    private String deviceType;
+
+    /**
+     * @zm-api-field-tag push-provider
+     * @zm-api-field-description Push notification provider that issued the token.
+     * Valid values: {@code FCM}. {@code APNS}, {@code WNS} and {@code WEBPUSH} are reserved.
+     */
+    @XmlElement(name = "pushProvider", required = true)
+    private String pushProvider;
+
+    /**
+     * @zm-api-field-tag app-id
+     * @zm-api-field-description Bundle or package identifier of the application registering the token.
+     */
+    @XmlElement(name = "appId", required = true)
+    private String appId;
+
+    /**
      * @zm-api-field-tag app-version
      * @zm-api-field-description Version of the mobile application registering the token.
      */
@@ -71,6 +101,38 @@ public class AddDeviceTokenRequest {
 
     public void setDeviceToken(String deviceToken) {
         this.deviceToken = deviceToken;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public String getDeviceType() {
+        return deviceType;
+    }
+
+    public void setDeviceType(String deviceType) {
+        this.deviceType = deviceType;
+    }
+
+    public String getPushProvider() {
+        return pushProvider;
+    }
+
+    public void setPushProvider(String pushProvider) {
+        this.pushProvider = pushProvider;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
     }
 
     public String getAppVersion() {
