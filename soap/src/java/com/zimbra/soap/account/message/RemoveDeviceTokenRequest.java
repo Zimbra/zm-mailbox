@@ -41,11 +41,25 @@ public class RemoveDeviceTokenRequest {
     @XmlElement(name = "deviceToken", required = true)
     private String deviceToken;
 
+    /**
+     * @zm-api-field-tag device-id
+     * @zm-api-field-description Identifier of the device installation to remove. When present the registration
+     * is removed by mailbox and device id. When absent the registration is removed by mailbox and token, for
+     * clients that do not yet send a device id.
+     */
+    @XmlElement(name = "deviceId", required = false)
+    private String deviceId;
+
     public RemoveDeviceTokenRequest() {
     }
 
     public RemoveDeviceTokenRequest(String deviceToken) {
         this.deviceToken = deviceToken;
+    }
+
+    public RemoveDeviceTokenRequest(String deviceToken, String deviceId) {
+        this.deviceToken = deviceToken;
+        this.deviceId = deviceId;
     }
 
     public String getDeviceToken() {
@@ -54,5 +68,13 @@ public class RemoveDeviceTokenRequest {
 
     public void setDeviceToken(String deviceToken) {
         this.deviceToken = deviceToken;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 }
