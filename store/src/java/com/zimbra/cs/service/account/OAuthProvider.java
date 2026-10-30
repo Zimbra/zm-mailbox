@@ -49,4 +49,11 @@ public interface OAuthProvider {
      */
     Element handleRefresh(Account acct, Element request, Map<String, Object> context)
             throws ServiceException;
+
+    /**
+     * Handles native OAuth refresh-token revocation at logout.
+     * The account is obtained from the authenticated SOAP context.
+     */
+    void handleLogout(Account acct, Element request, Map<String, Object> context)
+            throws ServiceException;
 }

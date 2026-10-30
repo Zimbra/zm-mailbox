@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.ZmBoolean;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  * @zm-api-command-auth-required true
@@ -60,6 +61,33 @@ public class EndSessionRequest {
      */
     @XmlAttribute(name=AccountConstants.A_SESSION_ID /* sessionId */, required=false)
     private String sessionId;
+
+    @XmlElement(name=AccountConstants.E_REFRESH_TOKEN, required=false)
+    private String refreshToken;
+
+    /**
+     * @zm-api-field-tag refresh-token-salt
+     * @zm-api-field-description ZCS-20285: salt for refreshToken - required alongside it for
+     *     revocation to be possible.
+     */
+    @XmlElement(name=AccountConstants.E_REFRESH_TOKEN_SALT, required=false)
+    private String refreshTokenSalt;
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public String getRefreshTokenSalt() {
+        return refreshTokenSalt;
+    }
+
+    public void setRefreshTokenSalt(String refreshTokenSalt) {
+        this.refreshTokenSalt = refreshTokenSalt;
+    }
 
     public void setLogOff (boolean logoff) {
         this.logoff = ZmBoolean.fromBool(logoff);

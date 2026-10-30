@@ -661,4 +661,10 @@ public class AccountConstants {
     public static final String E_TWO_FACTOR_AUTH_METHOD_ENABLED = "zimbraTwoFactorAuthMethodEnabled";
     public static final String E_PREF_PRIMARY_TWO_FACTOR_AUTH_METHOD = "zimbraPrefPrimaryTwoFactorAuthMethod";
     public static final String E_PREF_PASSWORD_RECOVERY_ADDRESS = "zimbraPrefPasswordRecoveryAddress";
+
+    // oauth
+
+    public static final String E_REFRESH_TOKEN = "refreshToken";
+    public static final String E_REFRESH_TOKEN_SALT = "refreshTokenSalt";
+
 }
