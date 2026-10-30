@@ -246,6 +246,8 @@ public class DavElements {
     public static final String P_WRITE_CONTENT = "write-content";
     public static final String P_WRITE_PROPERTIES = "write-properties";
 
+    public static final String P_CODE = "code";
+
     public static final String ORGANIZER        = "ORGANIZER";
     public static final String ORGANIZER_HREF   = "X-ORGANIZER-HREF";
     public static final String ORGANIZER_MAILTO = "X-ORGANIZER-MAILTO";
@@ -414,6 +416,8 @@ public class DavElements {
     public static final QName E_WRITE_ACL = QName.get(P_WRITE_ACL, WEBDAV_NS);
     public static final QName E_WRITE_CONTENT  = QName.get(P_WRITE_CONTENT, WEBDAV_NS);
     public static final QName E_WRITE_PROPERTIES  = QName.get(P_WRITE_PROPERTIES, WEBDAV_NS);
+
+    public static final QName E_CODE = QName.get(P_CODE, WEBDAV_NS);
 
     // errors
     public static final QName E_CANNOT_MODIFY_PROTECTED_PROPERTY = QName.get("cannot-modify-protected-property", WEBDAV_NS);

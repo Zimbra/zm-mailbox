@@ -60,6 +60,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -284,10 +285,37 @@ public class DavServlet extends ZimbraServlet {
         ZimbraLog.dav.debug(hdrs.toString());
     }
 
-    private void sendError(HttpServletResponse resp, int statusCode, String logMsg, Exception e, Level level)
-    throws IOException {
+    private void sendError(HttpServletRequest req, HttpServletResponse resp, int statusCode,
+            String logMsg, Exception e, Level level) throws IOException {
         try {
-            resp.sendError(statusCode);
+            resp.setStatus(statusCode);
+            resp.setContentType(DavProtocol.DAV_CONTENT_TYPE);
+
+            if (statusCode == HttpServletResponse.SC_UNAUTHORIZED) {
+                // RFC 7235 — WWW-Authenticate must be sent when status code is 401
+                resp.setHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+            }
+
+            // build RFC 4918 compliant <D:error> body
+            Document errorDoc = org.dom4j.DocumentHelper.createDocument();
+            Element errorEl = errorDoc.addElement(DavElements.E_ERROR);
+
+            String statusText = DavResponse.sStatusTextMap.get(statusCode);
+            if (!StringUtil.isNullOrEmpty(statusText)) {
+                errorEl.addElement(DavElements.E_STATUS).setText(statusText);
+            }
+
+            if (!StringUtil.isNullOrEmpty(logMsg)) {
+                errorEl.addElement(DavElements.E_RESPONSEDESCRIPTION).setText(logMsg);
+            }
+
+            if (e instanceof ServiceException) {
+                String code = ((ServiceException) e).getCode();
+                if (!StringUtil.isNullOrEmpty(code)) {
+                    errorEl.addElement(DavElements.E_CODE).setText(code);
+                }
+            }
+            DomUtil.writeDocumentToStream(errorDoc, resp.getOutputStream());
             if (ZimbraLog.dav.isEnabledFor(level)) {
                 if (e == null) {
                     ZimbraLog.dav.log(level, "%s.  Sending HTTP Error - StatusCode %s", logMsg, statusCode);
@@ -309,8 +337,9 @@ public class DavServlet extends ZimbraServlet {
         }
     }
 
-    private void sendError(HttpServletResponse resp, int statusCode, String logMsg, Exception e) throws IOException {
-        sendError(resp, statusCode, logMsg, e, Level.error);
+    private void sendError(HttpServletRequest req, HttpServletResponse resp,
+            int statusCode, String logMsg, Exception e) throws IOException {
+        sendError(req, resp, statusCode, logMsg, e, Level.error);
     }
 
     @Override
@@ -322,7 +351,8 @@ public class DavServlet extends ZimbraServlet {
         //bug fix - send 400 for Range requests
         String rangeHeader = req.getHeader(DavProtocol.HEADER_RANGE);
         if (null != rangeHeader){
-            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Range header not supported", null, Level.debug);
+            sendError(req, resp, HttpServletResponse.SC_BAD_REQUEST,
+                    "Range header not supported", null, Level.debug);
             return;
         }
 
@@ -330,7 +360,8 @@ public class DavServlet extends ZimbraServlet {
         ZimbraLog.dav.debug("Allowable request types %s", rtype);
 
         if (rtype == RequestType.none) {
-            sendError(resp, HttpServletResponse.SC_NOT_ACCEPTABLE, "Not an allowed request type", null, Level.debug);
+            sendError(req, resp, HttpServletResponse.SC_NOT_ACCEPTABLE,
+                    "Not an allowed request type", null, Level.debug);
             return;
         }
 
@@ -339,11 +370,10 @@ public class DavServlet extends ZimbraServlet {
         DavContext ctxt;
         try {
             AuthToken at = AuthProvider.getAuthToken(req, false);
-            if (at != null && (at.isExpired() || !at.isRegistered())) {
-                at = null;
-            }
             if (at != null && (rtype == RequestType.both || rtype == RequestType.authtoken)) {
-                authUser = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
+                // enforce Usage.AUTH to prevent MFA bypass via tfa usage tokens
+                authUser = AuthProvider.validateAuthToken(Provisioning.getInstance(),
+                        at, true, AuthToken.Usage.AUTH);
             } else if (at == null && (rtype == RequestType.both || rtype == RequestType.password)) {
                 AuthUtil.AuthResult result = AuthUtil.basicAuthRequest(req, resp, true, this);
                 if (result.sendErrorCalled) {
@@ -354,24 +384,32 @@ public class DavServlet extends ZimbraServlet {
             }
             if (authUser == null) {
                 try {
-                    sendError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed", null, Level.debug);
+                    sendError(req, resp, HttpServletResponse.SC_UNAUTHORIZED,
+                            "Authentication failed", null, Level.debug);
                 } catch (Exception e) {}
                 return;
             }
             ZimbraLog.addToContext(ZimbraLog.C_ANAME, authUser.getName());
             ctxt = new DavContext(req, resp, authUser);
         } catch (AuthTokenException e) {
-            sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error getting authenticated user", e);
+            sendError(req, resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "error getting authenticated user", e);
             return;
         } catch (ServiceException e) {
-            sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error getting authenticated user", e);
+            if (ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
+                sendError(req, resp, HttpServletResponse.SC_UNAUTHORIZED, "auth credentials have expired", e);
+                return;
+            }
+            sendError(req, resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "error getting authenticated user", e);
             return;
         }
 
         DavMethod method = sMethods.get(req.getMethod());
         if (method == null) {
             setAllowHeader(resp);
-            sendError(resp, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Not an allowed method", null, Level.debug);
+            sendError(req, resp, HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                    "Not an allowed method", null, Level.debug);
             return;
         }
 
@@ -427,20 +465,22 @@ public class DavServlet extends ZimbraServlet {
                     if (e.getCause() != null)
                         ZimbraLog.dav.debug("exception: ", e.getCause());
                 } else {
-                        sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                                "error handling method "+method.getName(), e);
+                    sendError(req, resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            "error handling method " + method.getName(), e);
                 }
             } catch (IllegalStateException ise) {
                 ZimbraLog.dav.debug("can't write error msg", ise);
             }
         } catch (MailServiceException.NoSuchItemException nsie) {
-            sendError(resp, HttpServletResponse.SC_NOT_FOUND, ctxt.getUri()+" not found", null, Level.info);
+            sendError(req, resp, HttpServletResponse.SC_NOT_FOUND,
+                    ctxt.getUri() + " not found", null, Level.info);
             return;
         } catch (ServiceException e) {
-            sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error handling method "+method.getName(), e);
+            sendError(req, resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "error handling method " + method.getName(), e);
         } catch (Exception e) {
             try {
-                sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                sendError(req, resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         "error handling method "+method.getName(), e);
             } catch (Exception ex) {}
         } finally {
