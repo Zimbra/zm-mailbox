@@ -29,6 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -56,6 +57,23 @@ public class EndSession extends AccountDocumentHandler {
         boolean clearAllSessions = req.isClearAllSoapSessions();
         boolean excludeCurrrentSession = req.isExcludeCurrentSession();
         Account account = getAuthenticatedAccount(zsc);
+
+        // ZCS-20936
+        String logoutRefreshToken = req.getRefreshToken();
+        String logoutRefreshTokenSalt = req.getRefreshTokenSalt();
+
+        if (!StringUtil.isNullOrEmpty(logoutRefreshToken)
+                && !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt)) {
+            OAuthProvider provider = OAuthRegistry.getProvider();
+            if (provider == null) {
+                ZimbraLog.account.warn(
+                        "EndSession: Native OAuth logout requested "
+                                + "but NativeOAuthProvider is not registered");
+                throw ServiceException.FAILURE(
+                        "Native OAuth provider is not available", null);
+            }
+            provider.handleLogout(account, request, context);
+        }
 
         if (clearAllSessions) {
             String currentSessionId = null;
