@@ -3509,9 +3509,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             int statusCode = response.getStatusLine().getStatusCode();
 
             if (statusCode == HttpServletResponse.SC_OK) {
-                int memoryThreshold = 1024 * 1024 * LC.zimbra_resturl_export_threshold_mb.intValue(); // 100mb as threshold
+                long memoryThreshold = 1024L * 1024L * LC.zimbra_resturl_export_threshold_mb.longValue(); // 100mb as threshold
                 try (InputStream inputStream = new GetMethodInputStream(response.getEntity().getContent())) {
-                    DeferredFileOutputStream dfos = new DeferredFileOutputStream(memoryThreshold,
+                    DeferredFileOutputStream dfos = new DeferredFileOutputStream((int)
+                            Math.min(memoryThreshold, Integer.MAX_VALUE),
                             "zmail-resource-", ".tmp", new File(LC.zimbra_tmp_directory.value()));
                     byte[] buffer = new byte[8192];
                     int bytesRead;
@@ -3537,15 +3538,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 throw ServiceException.FAILURE(msg, null);
             }
         } catch (NumberFormatException e) {
-            String msg = String.format("Invalid value for zimbra_resturl_export_threshold LC. " +
+            String msg = String.format("Invalid value for zimbra_resturl_export_threshold_mb LC. " +
                     "Must be a positive integer representing the mega byte limit.");
             throw ZClientException.PARSE_ERROR(msg, e);
         } catch (IOException | HttpException e) {
             String msg = String.format("Unable to get resource from '%s' : %s", uri, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
         } catch (OutOfMemoryError e) {
-            String msg = String.format("zimbra_resturl_export_threshold localconfig is greater than mailbox " +
-                    "size to be exported", uri, e.getMessage());
+            String msg = "Export failed with OutOfMemoryError for " + uri + " : " + e.getMessage() +
+                    ". Consider lowering zimbra_resturl_export_threshold_mb.";
             throw ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED(msg, e);
         } finally {
             // connection is already fully drained by the time we get here (success or failure),
