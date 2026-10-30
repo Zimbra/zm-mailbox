@@ -30,7 +30,7 @@ public interface OAuthProvider {
      * Generic token issuance for Native OAuth flows.
      *
      * @param acct      Target Zimbra account
-     * @param usage     Usage.AUTH (access token) or Usage.REFRESH_TOKEN (refresh token)
+     * @param usage     Usage.AUTH (access token) or Usage.REFRESH (refresh token)
      * @param request   Incoming SOAP AuthRequest element
      * @param response  SOAP response element (can be null when minting pre-response access token)
      * @param context   SOAP context map
@@ -48,5 +48,14 @@ public interface OAuthProvider {
      * @return Element containing the new token and related information
      */
     Element handleRefresh(Account acct, Element request, Map<String, Object> context)
+            throws ServiceException;
+
+    /**
+     * Handles native OAuth refresh-token revocation at logout.
+     * The account is obtained from the authenticated SOAP context.
+     *
+     * @param request   Incoming SOAP AuthRequest element
+     */
+    void handleLogout(Element request)
             throws ServiceException;
 }
