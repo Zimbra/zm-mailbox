@@ -66,6 +66,10 @@ public class ZimbraJWToken extends AuthToken {
         this(acct, expires, false, null, null, Usage.AUTH);
     }
 
+    public ZimbraJWToken(Account acct, long expires, Usage usage) {
+        this(acct, expires, false, null, null, usage);
+    }
+
     public ZimbraJWToken(Account acct, Usage usage) {
         this(acct, 0, false, null, null, usage);
     }
@@ -74,7 +78,9 @@ public class ZimbraJWToken extends AuthToken {
             AuthMech authMech, Usage usage) {
         long expireTime = expires;
         if(expireTime == 0) {
-            long lifetime = acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
+            long lifetime = Usage.REFRESH.equals(usage)
+                    ? acct.getNativeOAuthRefreshTokenLifetime()
+                    : acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
             issuedAt = System.currentTimeMillis();
             expireTime = issuedAt + lifetime;
         }
@@ -87,16 +93,20 @@ public class ZimbraJWToken extends AuthToken {
         if (body.getExpiration() != null) {
             map.put(AuthTokenProperties.C_EXP, String.valueOf(body.getExpiration().getTime()));
         }
-        if ((boolean) body.get(AuthTokenProperties.C_ADMIN)) {
+        // ZCS-20285: Boolean.TRUE.equals(...) rather than an unboxing (boolean) cast - a
+        // claim that's absent or not a Boolean (e.g. a token decoded from a source that
+        // never set it) must be treated as false, not throw a NullPointerException/
+        // ClassCastException out of this constructor.
+        if (Boolean.TRUE.equals(body.get(AuthTokenProperties.C_ADMIN))) {
             map.put(AuthTokenProperties.C_ADMIN, "1");
         }
-        if ((boolean) body.get(AuthTokenProperties.C_DOMAIN)) {
+        if (Boolean.TRUE.equals(body.get(AuthTokenProperties.C_DOMAIN))) {
             map.put(AuthTokenProperties.C_DOMAIN, "1");
         }
-        if ((boolean) body.get(AuthTokenProperties.C_DLGADMIN)) {
+        if (Boolean.TRUE.equals(body.get(AuthTokenProperties.C_DLGADMIN))) {
             map.put(AuthTokenProperties.C_DLGADMIN, "1");
         }
-        if ((boolean) body.get(AuthTokenProperties.C_CSRF)) {
+        if (Boolean.TRUE.equals(body.get(AuthTokenProperties.C_CSRF))) {
             map.put(AuthTokenProperties.C_CSRF, "1");
         }
         populateMap(map, body, AuthTokenProperties.C_AID);
@@ -190,6 +200,12 @@ public class ZimbraJWToken extends AuthToken {
     @Override
     public boolean isRegistered() {
         return true;
+    }
+
+    // ZCS-20285: only populated for a freshly-minted token (set inside getEncoded()); a token
+    // rehydrated from Claims via getJWToken() never has this - callers must not need it there.
+    public String getSalt() {
+        return salt;
     }
 
     @Override
