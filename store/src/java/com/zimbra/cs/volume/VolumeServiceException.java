@@ -24,6 +24,7 @@ public final class VolumeServiceException extends ServiceException {
 
     public static final String BAD_CURRVOL_CONFIG                           = "volume.BAD_CURRVOL_CONFIG";
     public static final String NO_SUCH_VOLUME                               = "volume.NO_SUCH_VOLUME";
+    public static final String EMPTY_NULL_VOLUME                            = "volume.EMPTY_NULL";
     public static final String NO_SUCH_PATH                                 = "volume.NO_SUCH_PATH";
     public static final String ALREADY_EXISTS                               = "volume.ALREADY_EXISTS";
     public static final String ID_OUT_OF_RANGE                              = "volume.ID_OUT_OF_RANGE";
@@ -48,6 +49,17 @@ public final class VolumeServiceException extends ServiceException {
     public static final String BAD_VOLUME_STORE_MANAGER_CLASS               = "volume.STORE_MANAGER_CLASS";
     public static final String BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD  = "volume.BAD_USE_IN_FREQUENT_ACCESS_THRESHOLD";
     public static final String BAD_VOLUME_GLOBAL_BUCKET_ID                  = "volume.BAD_GLOBAL_BUCKET_ID";
+    public static final String BAD_VOLUME_PROXY_PORT                        = "volume.BAD_PROXY_PORT";
+    public static final String BAD_VOLUME_ACCOUNT_PORT                      = "volume.BAD_ACCOUNT_PORT";
+    public static final String BAD_VOLUME_URL                               = "volume.BAD_URL";
+    public static final String BAD_VOLUME_ACCOUNT                           = "volume.BAD_ACCOUNT";
+    public static final String BAD_VOLUME_NAME_SPACE                        = "volume.BAD_NAME_SPACE";
+    public static final String BAD_VOLUME_NAME_FORMAT                       = "volume.BAD_NAME_FORMAT";
+    public static final String BAD_VOLUME_MGBITS                            = "volume.BAD_MGBITS";
+    public static final String BAD_VOLUME_MBITS                             = "volume.BAD_NAME_MBITS";
+    public static final String BAD_VOLUME_FGBITS                            = "volume.BAD_FGBITS";
+    public static final String BAD_VOLUME_FBITS                             = "volume.BAD_FBITS";
+
 
     private VolumeServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -64,6 +76,10 @@ public final class VolumeServiceException extends ServiceException {
 
     public static VolumeServiceException NO_SUCH_VOLUME(int id) {
         return new VolumeServiceException("no such volume: " + id, NO_SUCH_VOLUME, SENDERS_FAULT, null);
+    }
+
+    public static VolumeServiceException EMPTY_NULL_VOLUME() {
+        return new VolumeServiceException("Volume can't be 0 or empty", EMPTY_NULL_VOLUME, SENDERS_FAULT, null);
     }
 
     public static VolumeServiceException NO_SUCH_PATH(String path) {
