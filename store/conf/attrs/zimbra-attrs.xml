@@ -10797,4 +10797,14 @@ TODO: delete them permanently from here
   <desc>Maximum number of rejected credential signatures retained per user in the IdP MFA suppression cache.</desc>
 </attr>
 
+<attr id="4185" name="zimbraMfaWebhookSecret" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="10.1.22">
+  <desc>Secret used for MFA webhook authentication.Single-valued attribute storing only the webhook secret value.
+  </desc>
+</attr>
+
+<attr id="4186" name="zimbraMfaWebhookSecretKey" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="10.1.22">
+  <globalConfigValue>Authorization</globalConfigValue>
+  <desc>HTTP header name used for MFA webhook secret authentication. Defaults to Authorization.</desc>
+</attr>
+
 </attrs>
