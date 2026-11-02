@@ -10856,6 +10856,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMfaIdpSuppressionCacheSize = "zimbraMfaIdpSuppressionCacheSize";
 
     /**
+     * Secret key used to authenticate idp back channel webhook requests.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public static final String A_zimbraMfaWebhookSecret = "zimbraMfaWebhookSecret";
+
+    /**
+     * Key used for authentication of
+     */
+    @ZAttr(id=4187)
+    public static final String A_zimbraMfaWebhookSecretKey = "zimbraMfaWebhookSecretKey";
+
+    /**
      * interface address on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
