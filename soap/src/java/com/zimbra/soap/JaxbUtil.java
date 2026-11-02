@@ -1,4 +1,3 @@
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -106,6 +105,7 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.DiscoverRightsResponse.class,
             com.zimbra.soap.account.message.DistributionListActionRequest.class,
             com.zimbra.soap.account.message.DistributionListActionResponse.class,
+            com.zimbra.soap.account.message.ExchangeAuthRequest.class,
             com.zimbra.soap.account.message.EnableTwoFactorAuthRequest.class,
             com.zimbra.soap.account.message.EnableTwoFactorAuthResponse.class,
             com.zimbra.soap.account.message.EndSessionRequest.class,
