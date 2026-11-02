@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -41,6 +42,7 @@ import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.EndSessionRequest;
 
+
 /**
  * End the current session immediately cleaning up all resources used by the session
  * including the notification buffer and logging the session out from IM if applicable
@@ -57,24 +59,6 @@ public class EndSession extends AccountDocumentHandler {
         boolean clearAllSessions = req.isClearAllSoapSessions();
         boolean excludeCurrrentSession = req.isExcludeCurrentSession();
         Account account = getAuthenticatedAccount(zsc);
-
-        // ZCS-20936
-        String logoutRefreshToken = req.getRefreshToken();
-        String logoutRefreshTokenSalt = req.getRefreshTokenSalt();
-
-        if (!StringUtil.isNullOrEmpty(logoutRefreshToken)
-                && !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt)) {
-            OAuthProvider provider = OAuthRegistry.getProvider();
-            if (provider == null) {
-                ZimbraLog.account.warn(
-                        "EndSession: Native OAuth logout requested "
-                                + "but NativeOAuthProvider is not registered");
-                throw ServiceException.FAILURE(
-                        "Native OAuth provider is not available", null);
-            }
-            provider.handleLogout(account, request, context);
-        }
-
         if (clearAllSessions) {
             String currentSessionId = null;
             if (excludeCurrrentSession && zsc.hasSession()) {
@@ -116,7 +100,41 @@ public class EndSession extends AccountDocumentHandler {
                 }
             }
         }
-
+        // ZCS-20936
+        String logoutRefreshToken = req.getRefreshToken();
+        String logoutRefreshTokenSalt = req.getRefreshTokenSalt();
+        String deviceId = req.getDeviceId();
+        if (account != null && isLogoutRequested(context, account)) {
+            boolean hasAllRequiredParams = !StringUtil.isNullOrEmpty(deviceId)
+                    && !StringUtil.isNullOrEmpty(logoutRefreshToken)
+                    && !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt);
+            if (hasAllRequiredParams) {
+                try {
+                    OAuthProvider provider = OAuthRegistry.getProvider();
+                    if (provider != null) {
+                        provider.handleLogout(account, request, context);
+                    } else {
+                        ZimbraLog.account.warn(
+                                "EndSession: Native OAuth logout requested but OAuthProvider is not registered; "
+                                        + "skipping device token revocation");
+                    }
+                } catch (Exception e) {
+                    // Non-fatal: Log the error, but do NOT abort EndSession
+                    ZimbraLog.account.error(
+                            "EndSession: Failed to revoke Native OAuth refresh token for account: %s",
+                            account.getName(), e);
+                }
+            } else {
+                // Log when an OAuth client called EndSession but missed one of the mandatory parameters
+                ZimbraLog.account.warn(
+                        "EndSession: Native OAuth logout requested for account %s, but missing mandatory parameters "
+                                + "(deviceId=%s, hasRefreshToken=%s, hasSalt=%s)",
+                        account.getName(),
+                        deviceId,
+                        !StringUtil.isNullOrEmpty(logoutRefreshToken),
+                        !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt));
+            }
+        }
         Element response = zsc.createElement(AccountConstants.END_SESSION_RESPONSE);
         return response;
     }
@@ -133,6 +151,24 @@ public class EndSession extends AccountDocumentHandler {
             }
             endSession(session);
         }
+    }
+    private boolean isLogoutRequested(Map<String, Object> context, Account acc) {
+        if (acc == null || !acc.isNativeOAuthPersistentSessionEnabled()) {
+            return false;
+        }
+        if (context != null) {
+            HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            if (httpRequest != null) {
+                String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
+                if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
+                    return true;
+                }
+                if ("true".equalsIgnoreCase(httpRequest.getHeader(OAuthConstants.AUTH_TYPE_ZM_OAUTH2))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }
