@@ -37527,6 +37527,160 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Secret used for MFA webhook authentication
+     * Single-valued attribute storing only the webhook secret value.
+     *
+     * @return MfaWebhookSecret, or null if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public String getMfaWebhookSecret() {
+        return getAttr(Provisioning.A_zimbraMfaWebhookSecret, null, true);
+    }
+
+    /**
+     * Secret used for MFA webhook authentication
+     * Single-valued attribute storing only the webhook secret value.
+     *
+     *  @param zimbraMfaWebhookSecret new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public void setMfaWebhookSecret(String zimbraMfaWebhookSecret) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaWebhookSecret, zimbraMfaWebhookSecret);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Secret used for MFA webhook authentication
+     * Single-valued attribute storing only the webhook secret value.
+     *
+     * @param zimbraMfaWebhookSecret new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public Map<String,Object> setMfaWebhookSecret(String zimbraMfaWebhookSecret, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaWebhookSecret, zimbraMfaWebhookSecret);
+        return attrs;
+    }
+
+    /**
+     * Secret used for MFA webhook authentication
+     * Single-valued attribute storing only the webhook secret value.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public void unsetMfaWebhookSecret() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaWebhookSecret, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Secret used for MFA webhook authentication
+     * Single-valued attribute storing only the webhook secret value.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public Map<String,Object> unsetMfaWebhookSecret(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaWebhookSecret, "");
+        return attrs;
+    }
+
+    /**
+     * HTTP header name used for MFA webhook secret authentication.
+     * Defaults to Authorization.
+     *
+     * @return MfaWebhookSecretKey, or null if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4187)
+    public String getMfaWebhookSecretKey() {
+        return getAttr(Provisioning.A_zimbraMfaWebhookSecretKey, "Authorization", true);
+    }
+
+    /**
+     * HTTP header name used for MFA webhook secret authentication.
+     * Defaults to Authorization.
+     *
+     * @param zimbraMfaWebhookSecretKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4187)
+    public void setMfaWebhookSecretKey(String zimbraMfaWebhookSecretKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaWebhookSecretKey, zimbraMfaWebhookSecretKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP header name used for MFA webhook secret authentication.
+     * Defaults to Authorization.
+     *
+     * @param zimbraMfaWebhookSecretKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4187)
+    public Map<String,Object> setMfaWebhookSecretKey(String zimbraMfaWebhookSecretKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaWebhookSecretKey, zimbraMfaWebhookSecretKey);
+        return attrs;
+    }
+
+    /**
+     * HTTP header name used for MFA webhook secret authentication.
+     * Defaults to Authorization.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4187)
+    public void unsetMfaWebhookSecretKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaWebhookSecretKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP header name used for MFA webhook secret authentication.
+     * Defaults to Authorization.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4187)
+    public Map<String,Object> unsetMfaWebhookSecretKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMfaWebhookSecretKey, "");
+        return attrs;
+    }
+
+    /**
      * port number on which milter server should listen
      *
      * <p>Use getMilterBindPortAsString to access value as a string.
