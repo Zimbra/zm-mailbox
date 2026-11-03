@@ -116,13 +116,13 @@ public class EndSession extends AccountDocumentHandler {
             if (isOAuthLogoutAttempt) {
                 // All 3 parameters are strictly required for OAuth logout
                 if (!hasDeviceId) {
-                    throw ServiceException.AUTH_REQUIRED("deviceId is required for native OAuth device logout");
+                    throw ServiceException.AUTH_REQUIRED("deviceId is required for  OAuth device logout");
                 }
                 if (!hasRefreshToken) {
-                    throw ServiceException.AUTH_REQUIRED("refreshToken is required for native OAuth device logout");
+                    throw ServiceException.AUTH_REQUIRED("refreshToken is required for  OAuth device logout");
                 }
                 if (!hasSalt) {
-                    throw ServiceException.AUTH_REQUIRED("refreshTokenSalt is required for native OAuth device logout");
+                    throw ServiceException.AUTH_REQUIRED("refreshTokenSalt is required for  OAuth device logout");
                 }
                 // All 3 present: proceed with OAuth token revocation
                 try {
@@ -131,14 +131,14 @@ public class EndSession extends AccountDocumentHandler {
                         provider.handleLogout(account, request, context);
                     } else {
                         ZimbraLog.account.warn(
-                                "EndSession: Native OAuth logout requested but OAuthProvider is not registered; "
+                                "EndSession:  OAuth logout requested but OAuthProvider is not registered; "
                                         + "skipping device token revocation");
                     }
                 } catch (Exception e) {
                     ZimbraLog.account.error(
-                            "EndSession: Failed to revoke Native OAuth refresh token for account: %s",
+                            "EndSession: Failed to revoke  OAuth refresh token for account: %s",
                             account.getName(), e);
-                    throw ServiceException.FAILURE("Failed to revoke native OAuth session", e);
+                    throw ServiceException.FAILURE("Failed to revoke  OAuth session", e);
                 }
             } else {
                 // Normal web / desktop client logout - no OAuth params sent
