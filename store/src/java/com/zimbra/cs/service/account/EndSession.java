@@ -41,6 +41,8 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.EndSessionRequest;
+import com.zimbra.common.soap.OAuthConstants;
+import com.zimbra.common.service.ServiceException;
 
 
 /**
@@ -105,10 +107,24 @@ public class EndSession extends AccountDocumentHandler {
         String logoutRefreshTokenSalt = req.getRefreshTokenSalt();
         String deviceId = req.getDeviceId();
         if (account != null && isLogoutRequested(context, account)) {
-            boolean hasAllRequiredParams = !StringUtil.isNullOrEmpty(deviceId)
-                    && !StringUtil.isNullOrEmpty(logoutRefreshToken)
-                    && !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt);
-            if (hasAllRequiredParams) {
+            boolean hasRefreshToken = !StringUtil.isNullOrEmpty(logoutRefreshToken);
+            boolean hasSalt = !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt);
+            boolean hasDeviceId = !StringUtil.isNullOrEmpty(deviceId);
+            // Check if the client is attempting an OAuth logout
+            // (Either sent at least one OAuth parameter, or sent the mobile authType header)
+            boolean isOAuthLogoutAttempt = hasDeviceId || hasRefreshToken || hasSalt;
+            if (isOAuthLogoutAttempt) {
+                // All 3 parameters are strictly required for OAuth logout
+                if (!hasDeviceId) {
+                    throw ServiceException.AUTH_REQUIRED("deviceId is required for native OAuth device logout");
+                }
+                if (!hasRefreshToken) {
+                    throw ServiceException.AUTH_REQUIRED("refreshToken is required for native OAuth device logout");
+                }
+                if (!hasSalt) {
+                    throw ServiceException.AUTH_REQUIRED("refreshTokenSalt is required for native OAuth device logout");
+                }
+                // All 3 present: proceed with OAuth token revocation
                 try {
                     OAuthProvider provider = OAuthRegistry.getProvider();
                     if (provider != null) {
@@ -119,20 +135,14 @@ public class EndSession extends AccountDocumentHandler {
                                         + "skipping device token revocation");
                     }
                 } catch (Exception e) {
-                    // Non-fatal: Log the error, but do NOT abort EndSession
                     ZimbraLog.account.error(
                             "EndSession: Failed to revoke Native OAuth refresh token for account: %s",
                             account.getName(), e);
+                    throw ServiceException.FAILURE("Failed to revoke native OAuth session", e);
                 }
             } else {
-                // Log when an OAuth client called EndSession but missed one of the mandatory parameters
-                ZimbraLog.account.warn(
-                        "EndSession: Native OAuth logout requested for account %s, but missing mandatory parameters "
-                                + "(deviceId=%s, hasRefreshToken=%s, hasSalt=%s)",
-                        account.getName(),
-                        deviceId,
-                        !StringUtil.isNullOrEmpty(logoutRefreshToken),
-                        !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt));
+                // Normal web / desktop client logout - no OAuth params sent
+                ZimbraLog.account.debug("EndSession: Standard web session logout for account %s", account.getName());
             }
         }
         Element response = zsc.createElement(AccountConstants.END_SESSION_RESPONSE);
