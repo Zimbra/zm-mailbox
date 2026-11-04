@@ -1150,6 +1150,20 @@ public final class AdminConstants {
     public static final QName GET_ADDRESS_LIST_INFO_REQUEST = QName.get(E_GET_ADDRESS_LIST_INFO_REQUEST, NAMESPACE);
     public static final QName GET_ADDRESS_LIST_INFO_RESPONSE = QName.get(E_GET_ADDRESS_LIST_INFO_RESPONSE, NAMESPACE);
 
+    // OAuth2 session listing
+    public static final String E_GET_OAUTH2_ACTIVE_SESSIONS_REQUEST = "GetOAuth2ActiveSessionsRequest";
+    public static final String E_GET_OAUTH2_ACTIVE_SESSIONS_RESPONSE = "GetOAuth2ActiveSessionsResponse";
+    public static final QName GET_OAUTH2_ACTIVE_SESSIONS_REQUEST = QName.get(E_GET_OAUTH2_ACTIVE_SESSIONS_REQUEST, NAMESPACE);
+    public static final QName GET_OAUTH2_ACTIVE_SESSIONS_RESPONSE = QName.get(E_GET_OAUTH2_ACTIVE_SESSIONS_RESPONSE, NAMESPACE);
+
+    public static final String E_MOBILE_DEVICE = "mobileDevice";
+    public static final String A_OAUTH2_TOTAL = "total";
+    public static final String A_OAUTH2_ACCOUNT_ID = "accountId";
+    public static final String A_OAUTH2_DEVICE_ID = "deviceId";
+    public static final String A_OAUTH2_DEVICE_NAME = "deviceName";
+    public static final String A_OAUTH2_CREATED = "created";
+    public static final String A_OAUTH2_LAST_USED = "lastUsed";
+    public static final String A_OAUTH2_USER_NAME = "userName";
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -1729,5 +1743,4 @@ public final class AdminConstants {
     public static final String E_LICENSE_CACHE_SOAP_SERVICE_RESPONSE = "LicenseCacheSoapServiceResponse";
     public static final QName LICENSE_CACHE_SOAP_SERVICE_REQUEST = QName.get(E_LICENSE_CACHE_SOAP_SERVICE_REQUEST, NAMESPACE);
     public static final QName LICENSE_CACHE_SOAP_SERVICE_RESPONSE = QName.get(E_LICENSE_CACHE_SOAP_SERVICE_RESPONSE, NAMESPACE);
-
 }
