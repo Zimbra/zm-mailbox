@@ -5942,8 +5942,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             } catch (ServiceException e) {
                 if (!allowFallback || authMech.isZimbraAuth())
                     throw e;
-                ZimbraLog.account.warn(authMech.getMechanism() + " auth for domain " +
-                    domain.getName() + " failed, fall back to zimbra default auth mechanism", e);
+                String msg = authMech.getMechanism() + " auth for domain " +
+                        domain.getName() + " failed, falling back to zimbra auth";
+                if (ZimbraLog.account.isDebugEnabled()) {
+                    ZimbraLog.account.debug(msg, e);
+                } else {
+                    ZimbraLog.account.warn(msg);
+                }
             }
 
             // fall back to zimbra default auth
