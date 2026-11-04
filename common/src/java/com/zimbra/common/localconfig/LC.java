@@ -1597,6 +1597,9 @@ public final class LC {
     // Falls back to 60 minutes if parsing fails
     public static final KnownKey csrf_filter_domain_allowed_ref_hosts_cache_expiry_mins = KnownKey.newKey(60);
 
+    // Content type not supported by convertd
+    public static final KnownKey convertd_unsupported_mime_type = KnownKey.newKey("application/pdf");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
