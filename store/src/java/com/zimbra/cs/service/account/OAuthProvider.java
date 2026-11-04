@@ -22,6 +22,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.Usage;
+import com.zimbra.soap.ZimbraSoapContext;
+
 import java.util.Map;
 
 public interface OAuthProvider {
@@ -47,6 +49,6 @@ public interface OAuthProvider {
      * @param context   SOAP context map
      * @return Element containing the new token and related information
      */
-    Element handleRefresh(Account acct, Element request, Map<String, Object> context)
+    Element handleRefresh(ZimbraSoapContext zcs, Account acct, Element request, Map<String, Object> context)
             throws ServiceException;
 }
