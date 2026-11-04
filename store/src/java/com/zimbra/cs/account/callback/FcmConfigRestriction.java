@@ -17,11 +17,13 @@
 
 package com.zimbra.cs.account.callback;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.AttributeCallback;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Entry;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.soap.admin.type.CacheEntryType;
+
 import java.util.Map;
 
 public class FcmConfigRestriction extends AttributeCallback {
@@ -43,6 +45,31 @@ public class FcmConfigRestriction extends AttributeCallback {
 
     @Override
     public void postModify(CallbackContext context, String attrName, Entry entry) {
-        // No post-modify actions required
+        // once per modify batch
+        if (context.isDoneAndSetIfNot(FcmConfigRestriction.class)) {
+            return;
+        }
+        if (entry == null) {
+            return;
+        }
+        try {
+            final CacheEntryType type;
+            final Provisioning.CacheEntry[] entries;
+            if (entry instanceof Domain) {
+                type = CacheEntryType.domain;
+                entries = new Provisioning.CacheEntry[] {
+                        new Provisioning.CacheEntry(Key.CacheEntryBy.id, ((Domain) entry).getId()) };
+            } else if (entry instanceof Config) {
+                type = CacheEntryType.config; // global config takes no entry selector
+                entries = null;
+            } else {
+                return; // attrs only live on domain/globalConfig
+            }
+            SoapProvisioning sp = SoapProvisioning.getAdminInstance();
+            sp.flushCache(type.name(), entries, true /* allServers */, false /* imapDaemons */);
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("FCM config restriction: failed to flush %s cache across servers", entry.getLabel(),
+                    e);
+        }
     }
 }
