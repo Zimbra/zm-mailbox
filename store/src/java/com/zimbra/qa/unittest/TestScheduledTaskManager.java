@@ -140,6 +140,31 @@ public class TestScheduledTaskManager {
         checkNumPersistedTasks(0);
     }
 
+    @Test
+    public void testCancelDoesNotAffectOtherMailbox() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME + "-2");
+        Mailbox mbox2 = TestUtil.getMailbox(TestUtil.createAccount(USER_NAME + "-2").getName());
+        try {
+            // same task name (TestTask.TASK_NAME) in two mailboxes
+            for (Mailbox m : new Mailbox[] { mbox, mbox2 }) {
+                TestTask t = new TestTask();
+                t.setExecTime(new Date(System.currentTimeMillis() + Constants.MILLIS_PER_HOUR));
+                t.setMailboxId(m.getId());
+                ScheduledTaskManager.schedule(t);
+            }
+            checkNumPersistedTasks(2);
+
+            ScheduledTaskManager.cancel(TestTask.class.getName(), TASK_NAME, mbox.getId(), false);
+
+            // before the fix, 0: the task of mbox2 was deleted as well
+            checkNumPersistedTasks(1);
+            assertEquals(1, DbScheduledTask.getTasks(TestTask.class.getName(), mbox2.getId()).size());
+        } finally {
+            ScheduledTaskManager.cancel(TestTask.class.getName(), TASK_NAME, mbox2.getId(), true);
+            TestUtil.deleteAccount(USER_NAME + "-2");
+        }
+    }
+
     @After
     public void tearDown() throws Exception {
         if (mbox != null) {
