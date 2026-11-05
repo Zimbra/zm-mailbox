@@ -24,14 +24,15 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.service.util.OAuthUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -51,12 +52,60 @@ public class EndSession extends AccountDocumentHandler {
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         EndSessionRequest req = JaxbUtil.elementToJaxb(request);
+        Account account = getAuthenticatedAccount(zsc);
+
+        // ZCS-20936
+        Element refreshTokenEl = request.getOptionalElement("refreshToken");
+        Element refreshTokenSaltEl = request.getOptionalElement("refreshTokenSalt");
+        Element deviceInfoEl = request.getOptionalElement("deviceInfo");
+        String deviceId = null;
+        if(deviceInfoEl!=null){
+             deviceId = deviceInfoEl.getAttribute("deviceId", null);
+        }
+        String logoutRefreshToken = refreshTokenEl != null ? refreshTokenEl.getText() : null;
+        String logoutRefreshTokenSalt = refreshTokenSaltEl != null ? refreshTokenSaltEl.getText() : null;
+
+        if (account != null && account.isNativeOAuthPersistentSessionEnabled() && OAuthUtil.isOAuthRequested(request, context)) {
+            boolean hasRefreshToken = !StringUtil.isNullOrEmpty(logoutRefreshToken);
+            boolean hasSalt = !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt);
+            boolean hasDeviceId = !StringUtil.isNullOrEmpty(deviceId);
+            // Check if the client is attempting an OAuth logout
+            // (Either sent at least one OAuth parameter, or sent the mobile authType header)
+            boolean isOAuthLogoutAttempt = hasDeviceId || hasRefreshToken || hasSalt;
+            if (isOAuthLogoutAttempt) {
+                // All 3 parameters are strictly required for OAuth logout
+                if (!hasDeviceId) {
+                    throw ServiceException.INVALID_REQUEST("deviceId is required for OAuth device logout", null);
+                }
+                if (!hasRefreshToken) {
+                    throw ServiceException.INVALID_REQUEST("refreshToken is required for OAuth device logout", null);
+                }
+                if (!hasSalt) {
+                    throw ServiceException.INVALID_REQUEST("refreshTokenSalt is required for OAuth device logout",null);
+                }
+                // All 3 present: proceed with OAuth token revocation
+                try {
+                    OAuthProvider provider = OAuthRegistry.getProvider();
+                    if (provider != null) {
+                        provider.handleLogout(account, request, context);
+                    } else {
+                        ZimbraLog.account.error(
+                                "EndSession:  OAuth logout requested but OAuthProvider is not registered; "
+                                        + "skipping device token revocation");
+                        throw ServiceException.INVALID_REQUEST("OAuth provider is not registered", null);
+                    }
+                } catch (Exception e) {
+                    ZimbraLog.account.error(
+                            "EndSession: Failed to revoke OAuth refresh token for account: %s",
+                            account.getName(), e);
+                    throw ServiceException.FAILURE("Failed to revoke OAuth session", e);
+                }
+            }
+        }
         String sessionId = req.getSessionId();
         boolean clearCookies = req.isLogOff();
         boolean clearAllSessions = req.isClearAllSoapSessions();
         boolean excludeCurrrentSession = req.isExcludeCurrentSession();
-        Account account = getAuthenticatedAccount(zsc);
-
         if (clearAllSessions) {
             String currentSessionId = null;
             if (excludeCurrrentSession && zsc.hasSession()) {
@@ -98,7 +147,6 @@ public class EndSession extends AccountDocumentHandler {
                 }
             }
         }
-
         Element response = zsc.createElement(AccountConstants.END_SESSION_RESPONSE);
         return response;
     }

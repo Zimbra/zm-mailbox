@@ -49,6 +49,9 @@ public class NativeOAuthRefreshTokenLifetime extends AttributeCallback{
         if ("0".equals(value) || "0d".equals(value)) {
             return;
         }
+        if (value == null || value.isEmpty()) {
+            throw ServiceException.INVALID_REQUEST(attrName + " cannot be null or empty", null);
+        }
         Matcher m = WITH_UNIT.matcher(value);
         if (!m.matches()) {
             throw AccountServiceException.INVALID_ATTR_VALUE(attrName + " must be 0/0d or a non-negative "

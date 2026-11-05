@@ -23,5 +23,5 @@ public class OAuthConstants {
 
     public static final String AUTH_TYPE_ZM_OAUTH2 = "ZM_OAUTH2_1.0";
 
-    public static final String HEADER_AUTH_TYPE = "Auth-Type";
+    public static final String HEADER_AUTH_TYPE = "authType";
 }
