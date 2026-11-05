@@ -147,7 +147,7 @@ public abstract class AuthMechanism {
             boolean useFallback = false;
             if (authMechStr.contains(IDP_ROPC)) {
                 ZimbraCustomAuth handler = ZimbraCustomAuth.getHandler(IDP_ROPC);
-                useFallback = (handler == null || !handler.supportsContext(context));
+                useFallback = handler != null && !handler.supportsContext(context);
             }
 
             if (!useFallback) {
