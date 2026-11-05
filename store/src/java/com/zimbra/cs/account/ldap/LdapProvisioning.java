@@ -5947,7 +5947,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 if (ZimbraLog.account.isDebugEnabled()) {
                     ZimbraLog.account.debug(msg, e);
                 } else {
-                    ZimbraLog.account.warn(msg + ": " + e.getMessage());
+                    ZimbraLog.account.warn(msg);
                 }
             }
 
