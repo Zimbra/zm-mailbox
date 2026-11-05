@@ -18,7 +18,6 @@
 package com.zimbra.soap.account.message;
 
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
@@ -62,44 +61,6 @@ public class EndSessionRequest {
     @XmlAttribute(name=AccountConstants.A_SESSION_ID /* sessionId */, required=false)
     private String sessionId;
 
-    /**
-     * @zm-api-field-tag refresh-token
-     * @zm-api-field-description Native OAuth refresh token to be revoked
-     */
-    @XmlElement(name=AccountConstants.E_REFRESH_TOKEN, required=false)
-    private String refreshToken;
-
-    /**
-     * @zm-api-field-tag refresh-token-salt
-     * @zm-api-field-description ZCS-20936: salt for refreshToken - required alongside it for
-     *     revocation to be possible.
-     */
-    @XmlElement(name=AccountConstants.E_REFRESH_TOKEN_SALT, required=false)
-    private String refreshTokenSalt;
-
-    /**
-     * @zm-api-field-tag device-id
-     * @zm-api-field-description Client device identifier for native OAuth session revocation
-     */
-    @XmlElement(name=AccountConstants.E_DEVICE_ID, required=false)
-    private String deviceId;
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    public String getRefreshTokenSalt() {
-        return refreshTokenSalt;
-    }
-
-    public void setRefreshTokenSalt(String refreshTokenSalt) {
-        this.refreshTokenSalt = refreshTokenSalt;
-    }
-
     public void setLogOff (boolean logoff) {
         this.logoff = ZmBoolean.fromBool(logoff);
     }
@@ -136,14 +97,6 @@ public class EndSessionRequest {
      */
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
-    }
-
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
     }
 
 }

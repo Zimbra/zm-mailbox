@@ -22,10 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -34,6 +32,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.service.util.OAuthUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -41,9 +40,6 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.EndSessionRequest;
-import com.zimbra.common.soap.OAuthConstants;
-import com.zimbra.common.service.ServiceException;
-
 
 /**
  * End the current session immediately cleaning up all resources used by the session
@@ -56,11 +52,76 @@ public class EndSession extends AccountDocumentHandler {
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         EndSessionRequest req = JaxbUtil.elementToJaxb(request);
+        Account account = getAuthenticatedAccount(zsc);
+
+        // ZCS-20936
+        Element refreshTokenEl = request.getOptionalElement("refreshToken");
+        Element refreshTokenSaltEl = request.getOptionalElement("refreshTokenSalt");
+        Element deviceInfoEl = request.getOptionalElement("deviceInfo");
+        String deviceId = null;
+        if(deviceInfoEl!=null){
+             deviceId = deviceInfoEl.getAttribute("deviceId", null);
+        }
+        String logoutRefreshToken = refreshTokenEl != null ? refreshTokenEl.getText() : null;
+        String logoutRefreshTokenSalt = refreshTokenSaltEl != null ? refreshTokenSaltEl.getText() : null;
+
+        if (OAuthUtil.isOAuthRequested(request, context, account)) {
+            boolean hasRefreshToken = !StringUtil.isNullOrEmpty(logoutRefreshToken);
+            boolean hasSalt = !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt);
+            boolean hasDeviceId = !StringUtil.isNullOrEmpty(deviceId);
+            // Check if the client is attempting an OAuth logout
+            // (Either sent at least one OAuth parameter, or sent the mobile authType header)
+            boolean isOAuthLogoutAttempt = hasDeviceId || hasRefreshToken || hasSalt;
+            if (isOAuthLogoutAttempt) {
+                // All 3 parameters are strictly required for OAuth logout
+                if (!hasDeviceId) {
+                    throw ServiceException.INVALID_REQUEST("deviceId is required for OAuth device logout", null);
+                }
+                if (!hasRefreshToken) {
+                    throw ServiceException.INVALID_REQUEST("refreshToken is required for OAuth device logout", null);
+                }
+                if (!hasSalt) {
+                    throw ServiceException.INVALID_REQUEST("refreshTokenSalt is required for OAuth device logout",null);
+                }
+                // All 3 present: proceed with OAuth token revocation
+                try {
+                    OAuthProvider provider = OAuthRegistry.getProvider();
+                    if (provider != null) {
+                        provider.handleLogout(account, request, context);
+                    } else {
+                        ZimbraLog.account.error(
+                                "EndSession:  OAuth logout requested but OAuthProvider is not registered; "
+                                        + "skipping device token revocation");
+                        throw ServiceException.INVALID_REQUEST("OAuth provider is not registered", null);
+                    }
+                    // Deregister the current access token so it cannot be reused
+                    AuthToken at = zsc.getAuthToken();
+                    if (at != null) {
+                        try {
+                            at.deRegister();
+                            ZimbraLog.account.info(
+                                    "EndSession: Successfully deregistered access token for account: %s, deviceId: %s",
+                                    account.getName(), deviceId);
+                        } catch (AuthTokenException e) {
+                            ZimbraLog.account.warn(
+                                    "EndSession: Failed to deregister access token for account: %s",
+                                    account.getName(), e);
+                            // Optionally throw or continue if you want refresh token revocation to still count
+                            throw ServiceException.FAILURE("Failed to de-register access token", e);
+                        }
+                    }
+                } catch (Exception e) {
+                    ZimbraLog.account.error(
+                            "EndSession: Failed to revoke OAuth refresh token for account: %s",
+                            account.getName(), e);
+                    throw ServiceException.FAILURE("Failed to revoke OAuth session", e);
+                }
+            }
+        }
         String sessionId = req.getSessionId();
         boolean clearCookies = req.isLogOff();
         boolean clearAllSessions = req.isClearAllSoapSessions();
         boolean excludeCurrrentSession = req.isExcludeCurrentSession();
-        Account account = getAuthenticatedAccount(zsc);
         if (clearAllSessions) {
             String currentSessionId = null;
             if (excludeCurrrentSession && zsc.hasSession()) {
@@ -102,49 +163,6 @@ public class EndSession extends AccountDocumentHandler {
                 }
             }
         }
-        // ZCS-20936
-        String logoutRefreshToken = req.getRefreshToken();
-        String logoutRefreshTokenSalt = req.getRefreshTokenSalt();
-        String deviceId = req.getDeviceId();
-        if (account != null && isLogoutRequested(context, account)) {
-            boolean hasRefreshToken = !StringUtil.isNullOrEmpty(logoutRefreshToken);
-            boolean hasSalt = !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt);
-            boolean hasDeviceId = !StringUtil.isNullOrEmpty(deviceId);
-            // Check if the client is attempting an OAuth logout
-            // (Either sent at least one OAuth parameter, or sent the mobile authType header)
-            boolean isOAuthLogoutAttempt = hasDeviceId || hasRefreshToken || hasSalt;
-            if (isOAuthLogoutAttempt) {
-                // All 3 parameters are strictly required for OAuth logout
-                if (!hasDeviceId) {
-                    throw ServiceException.AUTH_REQUIRED("deviceId is required for  OAuth device logout");
-                }
-                if (!hasRefreshToken) {
-                    throw ServiceException.AUTH_REQUIRED("refreshToken is required for  OAuth device logout");
-                }
-                if (!hasSalt) {
-                    throw ServiceException.AUTH_REQUIRED("refreshTokenSalt is required for  OAuth device logout");
-                }
-                // All 3 present: proceed with OAuth token revocation
-                try {
-                    OAuthProvider provider = OAuthRegistry.getProvider();
-                    if (provider != null) {
-                        provider.handleLogout(account, request, context);
-                    } else {
-                        ZimbraLog.account.warn(
-                                "EndSession:  OAuth logout requested but OAuthProvider is not registered; "
-                                        + "skipping device token revocation");
-                    }
-                } catch (Exception e) {
-                    ZimbraLog.account.error(
-                            "EndSession: Failed to revoke  OAuth refresh token for account: %s",
-                            account.getName(), e);
-                    throw ServiceException.FAILURE("Failed to revoke  OAuth session", e);
-                }
-            } else {
-                // Normal web / desktop client logout - no OAuth params sent
-                ZimbraLog.account.debug("EndSession: Standard web session logout for account %s", account.getName());
-            }
-        }
         Element response = zsc.createElement(AccountConstants.END_SESSION_RESPONSE);
         return response;
     }
@@ -161,24 +179,6 @@ public class EndSession extends AccountDocumentHandler {
             }
             endSession(session);
         }
-    }
-    private boolean isLogoutRequested(Map<String, Object> context, Account acc) {
-        if (acc == null || !acc.isNativeOAuthPersistentSessionEnabled()) {
-            return false;
-        }
-        if (context != null) {
-            HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            if (httpRequest != null) {
-                String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
-                if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
-                    return true;
-                }
-                if ("true".equalsIgnoreCase(httpRequest.getHeader(OAuthConstants.AUTH_TYPE_ZM_OAUTH2))) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
 }
