@@ -21,19 +21,14 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.OAuthConstants;
-import com.zimbra.cs.account.Account;
 import com.zimbra.soap.SoapServlet;
 
 public final class OAuthUtil {
     private OAuthUtil() {
 
     }
-    public static boolean isOAuthRequested(Element request, Map<String, Object> context, Account acc) {
+    public static boolean isOAuthRequested(Element request, Map<String, Object> context) {
 
-        if (acc == null || !acc.isNativeOAuthPersistentSessionEnabled()
-                || acc.getNativeOAuthRefreshTokenLifetime() <= 0) {
-            return false;
-        }
         HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (httpRequest != null) {
             String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);

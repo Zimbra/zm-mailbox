@@ -65,7 +65,7 @@ public class EndSession extends AccountDocumentHandler {
         String logoutRefreshToken = refreshTokenEl != null ? refreshTokenEl.getText() : null;
         String logoutRefreshTokenSalt = refreshTokenSaltEl != null ? refreshTokenSaltEl.getText() : null;
 
-        if (OAuthUtil.isOAuthRequested(request, context, account)) {
+        if (account != null && account.isNativeOAuthPersistentSessionEnabled() && OAuthUtil.isOAuthRequested(request, context)) {
             boolean hasRefreshToken = !StringUtil.isNullOrEmpty(logoutRefreshToken);
             boolean hasSalt = !StringUtil.isNullOrEmpty(logoutRefreshTokenSalt);
             boolean hasDeviceId = !StringUtil.isNullOrEmpty(deviceId);
@@ -93,22 +93,6 @@ public class EndSession extends AccountDocumentHandler {
                                 "EndSession:  OAuth logout requested but OAuthProvider is not registered; "
                                         + "skipping device token revocation");
                         throw ServiceException.INVALID_REQUEST("OAuth provider is not registered", null);
-                    }
-                    // Deregister the current access token so it cannot be reused
-                    AuthToken at = zsc.getAuthToken();
-                    if (at != null) {
-                        try {
-                            at.deRegister();
-                            ZimbraLog.account.info(
-                                    "EndSession: Successfully deregistered access token for account: %s, deviceId: %s",
-                                    account.getName(), deviceId);
-                        } catch (AuthTokenException e) {
-                            ZimbraLog.account.warn(
-                                    "EndSession: Failed to deregister access token for account: %s",
-                                    account.getName(), e);
-                            // Optionally throw or continue if you want refresh token revocation to still count
-                            throw ServiceException.FAILURE("Failed to de-register access token", e);
-                        }
                     }
                 } catch (Exception e) {
                     ZimbraLog.account.error(
