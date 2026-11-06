@@ -8721,6 +8721,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGlobalExternalStoreConfig = "zimbraGlobalExternalStoreConfig";
 
     /**
+     * Global Zimbra deployment version
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4190)
+    public static final String A_zimbraGlobalVersion = "zimbraGlobalVersion";
+
+    /**
      * zimbraId of the main dynamic group for the dynamic group unit
      */
     @ZAttr(id=325)
