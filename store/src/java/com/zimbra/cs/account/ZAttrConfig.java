@@ -23083,6 +23083,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Global Zimbra deployment version
+     *
+     * @return zimbraGlobalVersion, or null if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public String getGlobalVersion() {
+        return getAttr(Provisioning.A_zimbraGlobalVersion, null, true);
+    }
+
+    /**
+     * Global Zimbra deployment version
+     *
+     * @param zimbraGlobalVersion new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public void setGlobalVersion(String zimbraGlobalVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGlobalVersion, zimbraGlobalVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Global Zimbra deployment version
+     *
+     * @param zimbraGlobalVersion new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public Map<String,Object> setGlobalVersion(String zimbraGlobalVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGlobalVersion, zimbraGlobalVersion);
+        return attrs;
+    }
+
+    /**
+     * Global Zimbra deployment version
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public void unsetGlobalVersion() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGlobalVersion, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Global Zimbra deployment version
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4186)
+    public Map<String,Object> unsetGlobalVersion(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGlobalVersion, "");
+        return attrs;
+    }
+
+    /**
      * LDAP attribute to HAB Group Member attribute mapping
      *
      * @return zimbraHABMemberLdapAttrMap, or empty array if unset
