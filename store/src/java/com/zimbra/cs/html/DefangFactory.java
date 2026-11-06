@@ -1,3 +1,4 @@
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -14,14 +15,14 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.cs.html;
 
 import com.google.common.base.Splitter;
-import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.html.owasp.OwaspDefang;
-
+import com.zimbra.cs.mime.MimeTypeNormalizer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,26 +70,27 @@ public class DefangFactory {
      * @return
      */
     public static BrowserDefang getDefanger(String contentType){
-        if(contentType == null) {
+        String normalizedContentType = MimeTypeNormalizer.normalize(contentType);
+        if (null == normalizedContentType) {
             return noopDefang;
         }
-        String contentTypeLowerCase = contentType.toLowerCase();
+        String contentTypeLowerCase = normalizedContentType.toLowerCase();
         boolean isOwaspEnabled = LC.zimbra_use_owasp_html_sanitizer.booleanValue();
-        if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) && isOwaspEnabled) {
+        if (contentTypeLowerCase.equals(MimeConstants.CT_TEXT_HTML) && isOwaspEnabled) {
             return owaspDefang;
         }
-        if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) ||
-            contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_DOC) ||
-            contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_SLIDES) ||
-            contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_SPREADSHEET)) {
+        if (contentTypeLowerCase.equals(MimeConstants.CT_TEXT_HTML) ||
+            contentTypeLowerCase.equals(MimeConstants.CT_APPLICATION_ZIMBRA_DOC) ||
+            contentTypeLowerCase.equals(MimeConstants.CT_APPLICATION_ZIMBRA_SLIDES) ||
+            contentTypeLowerCase.equals(MimeConstants.CT_APPLICATION_ZIMBRA_SPREADSHEET)) {
             return htmlDefang;
         }
 
-        if(contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML) ||
-           contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_XHTML) ||
-           contentTypeLowerCase.startsWith(MimeConstants.CT_IMAGE_SVG) ||
-           contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_XML_LEGACY) ||
-                isDefangXmlContentType(contentType)) {
+        if(contentTypeLowerCase.equals(MimeConstants.CT_TEXT_XML) ||
+           contentTypeLowerCase.equals(MimeConstants.CT_APPLICATION_XHTML) ||
+           contentTypeLowerCase.equals(MimeConstants.CT_IMAGE_SVG) ||
+           contentTypeLowerCase.equals(MimeConstants.CT_TEXT_XML_LEGACY) ||
+                isDefangXmlContentType(normalizedContentType)) {
             return xhtmlDefang;
         }
         return noopDefang;
