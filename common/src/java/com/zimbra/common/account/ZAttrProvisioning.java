@@ -7454,6 +7454,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMobileAppEnabled = "zimbraFeatureMobileAppEnabled";
 
     /**
+     * Whether push notifications are turned on for the Zimbra native
+     * mobile app. Push notifications are sent only when this and
+     * zimbraFeatureNativeMobileAppEnabled are both TRUE for the account.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public static final String A_zimbraFeatureMobileAppPushNotificationsEnabled = "zimbraFeatureMobileAppPushNotificationsEnabled";
+
+    /**
      * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Whether to enable Zimbra Mobile Gateway feature
      *
