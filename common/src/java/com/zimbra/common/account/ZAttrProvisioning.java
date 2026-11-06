@@ -17049,7 +17049,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4185)
     public static final String A_zimbraSamlSpSigningAlgorithm = "zimbraSamlSpSigningAlgorithm";
 
     /**
