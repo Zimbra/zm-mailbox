@@ -56669,6 +56669,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Deployment-wide patch release version stored in global config (seeded
+     * by zmsetup and maintained by patch packages)
+     *
+     * @return zimbraPatchVersion, or "10.1.18" if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public String getPatchVersion() {
+        return getAttr(Provisioning.A_zimbraPatchVersion, "10.1.18", true);
+    }
+
+    /**
+     * Deployment-wide patch release version stored in global config (seeded
+     * by zmsetup and maintained by patch packages)
+     *
+     * @param zimbraPatchVersion new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void setPatchVersion(String zimbraPatchVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPatchVersion, zimbraPatchVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deployment-wide patch release version stored in global config (seeded
+     * by zmsetup and maintained by patch packages)
+     *
+     * @param zimbraPatchVersion new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> setPatchVersion(String zimbraPatchVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPatchVersion, zimbraPatchVersion);
+        return attrs;
+    }
+
+    /**
+     * Deployment-wide patch release version stored in global config (seeded
+     * by zmsetup and maintained by patch packages)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public void unsetPatchVersion() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPatchVersion, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deployment-wide patch release version stored in global config (seeded
+     * by zmsetup and maintained by patch packages)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public Map<String,Object> unsetPatchVersion(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPatchVersion, "");
+        return attrs;
+    }
+
+    /**
      * Whether to bind to port on startup irrespective of whether the server
      * is enabled. Useful when port to bind is privileged and must be bound
      * early.

@@ -13536,6 +13536,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPasswordRecoveryMaxAttempts = "zimbraPasswordRecoveryMaxAttempts";
 
     /**
+     * Deployment-wide patch release version stored in global config (seeded
+     * by zmsetup and maintained by patch packages)
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4171)
+    public static final String A_zimbraPatchVersion = "zimbraPatchVersion";
+
+    /**
      * phonetic company name
      *
      * @since ZCS 7.0.0

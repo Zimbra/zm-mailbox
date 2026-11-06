@@ -10785,4 +10785,9 @@ TODO: delete them permanently from here
     <globalConfigValue>SHA256</globalConfigValue>
   </attr>
 
+  <attr id="4171" name="zimbraPatchVersion" type="string" cardinality="single" optionalIn="globalConfig" since="10.1.22">
+    <desc>Deployment-wide patch release version stored in global config (seeded by zmsetup and maintained by patch packages)</desc>
+    <globalConfigValue>10.1.18</globalConfigValue>
+  </attr>
+
 </attrs>
