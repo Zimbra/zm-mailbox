@@ -10785,4 +10785,8 @@ TODO: delete them permanently from here
     <globalConfigValue>SHA256</globalConfigValue>
   </attr>
 
+<attr id="4186" name="zimbraGlobalVersion" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="10.1.22">
+    <desc>Global Zimbra deployment version</desc>
+</attr>
+
 </attrs>
