@@ -194,34 +194,35 @@ public class DbScheduledTask {
         }
     }
 
-    public static void deleteTask(String className, String taskName) throws ServiceException {
+    public static void deleteTask(String className, String taskName, int mailboxId) throws ServiceException {
         DbConnection conn = null;
         try {
             conn = DbPool.getConnection();
-            deleteTask(conn, className, taskName);
+            deleteTask(conn, className, taskName, mailboxId);
             conn.commit();
         } finally {
             DbPool.quietClose(conn);
         }
     }
 
-    public static void deleteTask(DbConnection conn, String className, String taskName)
+    public static void deleteTask(DbConnection conn, String className, String taskName, int mailboxId)
     throws ServiceException {
 
-        ZimbraLog.scheduler.debug("Deleting scheduled task from the database.  className=%s, taskName=%s",
-            className, taskName);
+        ZimbraLog.scheduler.debug("Deleting scheduled task from the database.  className=%s, taskName=%s, mailboxId=%d",
+            className, taskName, mailboxId);
 
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(
                 "DELETE FROM " + TABLE_SCHEDULED_TASK  +
-                " WHERE class_name = ? AND name = ?");
+                " WHERE class_name = ? AND name = ? AND mailbox_id = ?");
             stmt.setString(1, className);
             stmt.setString(2, taskName);
+            stmt.setInt(3, mailboxId);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to delete scheduled task: className=" +
-                className+ ", taskName=" + taskName, e);
+                className+ ", taskName=" + taskName + ", mailboxId=" + mailboxId, e);
         } finally {
             DbPool.closeStatement(stmt);
         }
