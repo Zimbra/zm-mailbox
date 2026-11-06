@@ -26443,7 +26443,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4185)
     public ZAttrProvisioning.SamlSpSigningAlgorithm getSamlSpSigningAlgorithm() {
         try { String v = getAttr(Provisioning.A_zimbraSamlSpSigningAlgorithm, true, true); return v == null ? ZAttrProvisioning.SamlSpSigningAlgorithm.SHA256 : ZAttrProvisioning.SamlSpSigningAlgorithm.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.SamlSpSigningAlgorithm.SHA256; }
     }
@@ -26459,7 +26459,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4185)
     public String getSamlSpSigningAlgorithmAsString() {
         return getAttr(Provisioning.A_zimbraSamlSpSigningAlgorithm, "SHA256", true);
     }
@@ -26476,7 +26476,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4185)
     public void setSamlSpSigningAlgorithm(ZAttrProvisioning.SamlSpSigningAlgorithm zimbraSamlSpSigningAlgorithm) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, zimbraSamlSpSigningAlgorithm.toString());
@@ -26496,7 +26496,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4185)
     public Map<String,Object> setSamlSpSigningAlgorithm(ZAttrProvisioning.SamlSpSigningAlgorithm zimbraSamlSpSigningAlgorithm, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, zimbraSamlSpSigningAlgorithm.toString());
@@ -26515,7 +26515,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4185)
     public void setSamlSpSigningAlgorithmAsString(String zimbraSamlSpSigningAlgorithm) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, zimbraSamlSpSigningAlgorithm);
@@ -26535,7 +26535,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4185)
     public Map<String,Object> setSamlSpSigningAlgorithmAsString(String zimbraSamlSpSigningAlgorithm, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, zimbraSamlSpSigningAlgorithm);
@@ -26553,7 +26553,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4185)
     public void unsetSamlSpSigningAlgorithm() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, "");
@@ -26572,7 +26572,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4185)
     public Map<String,Object> unsetSamlSpSigningAlgorithm(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSamlSpSigningAlgorithm, "");
