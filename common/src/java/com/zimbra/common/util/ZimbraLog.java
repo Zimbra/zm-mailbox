@@ -493,6 +493,11 @@ public final class ZimbraLog {
     public static final Log smLog = LogFactory.getLog("zimbra.storemanagers");
 
     /**
+     * the "zimbra.pushnotification" logger. For mobile push notification operations.
+     */
+    public static final Log pushnotification = LogFactory.getLog("zimbra.pushnotification");
+
+    /**
      * Maps the log category name to its description.
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
@@ -604,6 +609,7 @@ public final class ZimbraLog {
         descriptions.put(addresslist.getCategory(), "Addresslist operations");
         descriptions.put(gql.getCategory(), "GraphQL operations");
         descriptions.put(smLog.getCategory(), "Generic Store managers");
+        descriptions.put(pushnotification.getCategory(), "Mobile push notification operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 
