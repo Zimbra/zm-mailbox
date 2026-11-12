@@ -29,19 +29,31 @@ public class ExchangeAuth extends Auth {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         final ZimbraSoapContext zsc = getZimbraSoapContext(context);
         final Provisioning prov = Provisioning.getInstance();
+        final ZcoExchangeCredentialService service = ZcoExchangeCredentialService.getInstance();
+
+        if (!checkPasswordSecurity(context)) {
+            throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
+        }
 
         final String credential = request.getAttribute(AccountConstants.E_CREDENTIAL, null);
         final String verifier = request.getAttribute(AccountConstants.E_VERIFIER, null);
-        final Account requested = resolveRequestedAccount(prov, request);
-
         final Account account;
+
         try {
-            account = ZcoExchangeCredentialService.getInstance().redeem(credential, verifier, requested);
+            service.checkFormat(credential, verifier);
+            final Account requested = resolveRequestedAccount(prov, request);
+            account = service.redeem(credential, verifier, requested);
         } catch (AuthFailedServiceException e) {
             AuthListener.invokeOnException(e);
             throw e;
         }
         AccountUtil.addAccountToLogContext(prov, account.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+
+        try {
+            prov.accountAuthed(account);
+        } catch (ServiceException e) {
+            ZimbraLog.security.warn("ZCO exchange: unable to record last logon for account=%s", account.getId(), e);
+        }
 
         // Session token is minted only now, after the credential has been redeemed
         final AuthToken at = AuthProvider.getAuthToken(account);
@@ -50,8 +62,15 @@ public class ExchangeAuth extends Auth {
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
 
         AuthListener.invokeOnSuccess(account);
-        ZimbraLog.security.info("ZCO exchange succeeded: account=%s src=%s", account.getId(),
-                context.get(SoapEngine.ORIG_REQUEST_IP));
+
+        String src = (String) context.get(SoapEngine.ORIG_REQUEST_IP);
+        if (src == null || src.isEmpty()) {
+            src = (String) context.get(SoapEngine.REQUEST_IP);
+        }
+
+        ZimbraLog.security.info("ZCO exchange succeeded: account=%s key=%s src=%s", account.getId(),
+                ZcoExchangeCredentialService.auditKey(credential), src);
+
         return doResponse(request, at, zsc, context, account, false, null, null);
     }
 

@@ -87,11 +87,45 @@ public final class ZcoExchangeCredentialService {
         return handle;
     }
 
-    public Account redeem(String handle, String verifier, Account requested) throws ServiceException {
+    /**
+     * Returns the short form of the record key for a credential, as written to audit lines (design §8).
+     * It is the same value that {@code rejected()} logs, so success and rejection lines can be matched.
+     * Call it only with a credential that has passed the format check.
+     *
+     * @param handle the issued credential handle
+     * @return 8-character hex prefix of sha256(handle)
+     */
+    public static String auditKey(String handle) {
+        return shortKey(CREDENTIAL_KEY_PREFIX + sha256Hex(handle));
+    }
+
+    /**
+     * Returns the first 8 hex characters after the {@code cred:} prefix.
+     *
+     * @param key the full store key (e.g. cred:&lt;sha256Hex&gt;)
+     * @return 8-character hex prefix of the key
+     */
+    private static String shortKey(String key) {
+        final int start = key.indexOf(':') + 1;
+        return key.substring(start, start + 8);
+    }
+
+    /**
+     * Rejects a malformed credential or verifier before any directory or store lookup (design §8 step 1).
+     *
+     * @param handle the credential handle to validate
+     * @param verifier the verifier string to validate
+     * @throws ServiceException if either handle or verifier format is invalid
+     */
+    public void checkFormat(String handle, String verifier) throws ServiceException {
         if (handle == null || !HANDLE.matcher(handle).matches()
                 || verifier == null || !B64URL_43.matcher(verifier).matches()) {
             throw rejected("malformed", null);
         }
+    }
+
+    public Account redeem(String handle, String verifier, Account requested) throws ServiceException {
+        checkFormat(handle, verifier);
         final ZcoCredentialStore store = storeProvider.get();
         final String key = CREDENTIAL_KEY_PREFIX + sha256Hex(handle);
 
@@ -156,8 +190,7 @@ public final class ZcoExchangeCredentialService {
     }
 
     private static AuthFailedServiceException rejected(String reason, String key) {
-        ZimbraLog.security.warn("ZCO exchange rejected: reason=%s key=%s", reason,
-                key == null ? "-" : key.substring(key.indexOf(':') + 1, key.indexOf(':') + 9));
+        ZimbraLog.security.warn("ZCO exchange rejected: reason=%s key=%s", reason, key == null ? "-" : shortKey(key));
         return AuthFailedServiceException.AUTH_FAILED("ZCO exchange failed");
     }
 
