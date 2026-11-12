@@ -24803,13 +24803,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * Maximum age, in days, of IdP MFA authentication data before full
      * reauthentication is required.
      *
-     * @return zimbraMfaIdpHardReauthInDays, or -1 if unset
+     * @return zimbraMfaIdpHardReauthInDays, or 60 if unset
      *
      * @since ZCS 10.1.22
      */
     @ZAttr(id=4178)
     public int getMfaIdpHardReauthInDays() {
-        return getIntAttr(Provisioning.A_zimbraMfaIdpHardReauthInDays, -1, true);
+        return getIntAttr(Provisioning.A_zimbraMfaIdpHardReauthInDays, 60, true);
     }
 
     /**
