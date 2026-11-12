@@ -379,6 +379,13 @@ public final class DbMailbox {
             sTables.add(DbImapFolder.TABLE_IMAP_FOLDER);
             sTables.add(DbImapMessage.TABLE_IMAP_MESSAGE);
             sTables.add(DbDataSource.TABLE_DATA_SOURCE_ITEM);
+            // ZCS-21706: these tables used to be cleaned by "ON DELETE CASCADE" from
+            // zimbra.mailbox (event, purged_*) or not at all (watch). The mboxgroup ->
+            // zimbra.mailbox foreign keys are dropped, so they must be deleted here.
+            sTables.add(DbDataSource.TABLE_PURGED_CONVERSATIONS);
+            sTables.add(DbDataSource.TABLE_PURGED_MESSAGES);
+            sTables.add(DbEvent.TABLE_EVENT);
+            sTables.add(DbEvent.TABLE_WATCH);
         };
 
     private static void dropMailboxFromGroup(DbConnection conn, Mailbox mbox)

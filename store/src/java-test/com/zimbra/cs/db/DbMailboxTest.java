@@ -93,4 +93,41 @@ public class DbMailboxTest {
         Assert.assertTrue(ids.contains("2"));
     }
 
+    /**
+     * ZCS-21706: the mboxgroup -> zimbra.mailbox foreign keys were dropped, so nothing in the
+     * database cleans up a mailbox's rows any more. Every mailbox-group table that has a
+     * mailbox_id column must therefore be in {@link DbMailbox#sTables}, which
+     * dropMailboxFromGroup() uses to delete a mailbox's rows. A new table that is not added
+     * there would silently leak rows on every account delete.
+     */
+    @Test
+    public void everyMailboxGroupTableIsClearedOnDelete() throws Exception {
+        Set<String> cleared = new java.util.HashSet<String>();
+        for (String t : DbMailbox.sTables) {
+            cleared.add(t.toLowerCase());
+        }
+        java.sql.PreparedStatement stmt = connection.prepareStatement(
+                "SELECT table_name FROM information_schema.columns WHERE table_schema = ? AND column_name = 'MAILBOX_ID'");
+        java.sql.ResultSet rs = null;
+        List<String> missing = new java.util.ArrayList<String>();
+        int checked = 0;
+        try {
+            stmt.setString(1, DbMailbox.getDatabaseName(1).toUpperCase());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                checked++;
+                String table = rs.getString(1).toLowerCase();
+                if (!cleared.contains(table)) {
+                    missing.add(table);
+                }
+            }
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        Assert.assertTrue("no mailbox-group tables found", checked > 0);
+        Assert.assertTrue("mailbox-group tables not deleted on mailbox delete (add them to DbMailbox.sTables): " + missing,
+                missing.isEmpty());
+    }
+
 }
