@@ -74,31 +74,33 @@ public class ExchangeAuth extends Auth {
         return doResponse(request, at, zsc, context, account, false, null, null);
     }
 
-    private static Account resolveRequestedAccount(Provisioning prov, Element request) {
-        try {
-            final Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
-            if (acctEl == null) {
-                return null;
-            }
-            String value = acctEl.getText();
-            final AccountBy by = AccountBy.fromString(acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name()));
-            if (value == null || value.isEmpty()) {
-                return null;
-            }
-            if (by == AccountBy.name) {
-                final Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
-                final String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
-                if (virtualHost != null && value.indexOf('@') == -1) {
-                    final Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
-                    if (d != null) {
-                        value = value + "@" + d.getName();
-                    }
-                }
-            }
-            return prov.get(by, value);
-        } catch (ServiceException e) {
-            ZimbraLog.security.warn("ZCO exchange: account element did not resolve");
+    private static Account resolveRequestedAccount(Provisioning prov, Element request) throws ServiceException {
+        final Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
+        if (acctEl == null) {
             return null;
         }
+        String value = acctEl.getText();
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        final AccountBy by;
+        try {
+            by = AccountBy.fromString(acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name()));
+        } catch (ServiceException e) {
+            ZimbraLog.security.warn("ZCO exchange: invalid account selector");
+            return null;
+        }
+        if (by == AccountBy.name) {
+            final Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
+            final String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+            if (virtualHost != null && value.indexOf('@') == -1) {
+                final Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
+                if (d != null) {
+                    value = value + "@" + d.getName();
+                }
+            }
+        }
+        // LDAP errors propagate as service.FAILURE, and nothing is burned
+        return prov.get(by, value);
     }
 }
