@@ -85,7 +85,17 @@ public class Auth extends AccountDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Element refreshTokenEl = request.getOptionalElement("refreshToken");
+        if (refreshTokenEl != null && hasOAuthHeader(request, context)) {
+            OAuthProvider provider = OAuthRegistry.getProvider();
+            if (provider != null) {
+                return provider.handleRefresh(zsc, request);
+            }
+            ZimbraLog.account.warn("OAuth: Refresh requested but NativeOAuthProvider is not registered");
+            throw ServiceException.FAILURE("OAuth provider is not available", null);
+        }
         Provisioning prov = Provisioning.getInstance();
 
         // Look up the specified account.  It is optional in the <authToken> case.
@@ -116,28 +126,6 @@ public class Auth extends AccountDocumentHandler {
                 }
             }
             acct = prov.get(acctBy, acctValue);
-        }
-
-        Element refreshTokenEl = request.getOptionalElement("refreshToken");
-        if (refreshTokenEl != null && isOAuthRequested(request, context, acct)) {
-            OAuthProvider provider = OAuthRegistry.getProvider();
-            boolean isPassChangePending = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
-            boolean isRecovery = request.getOptionalElement("recoveryCode") != null
-                    || request.getOptionalElement("passwordRecoveryCode") != null
-                    || "true".equalsIgnoreCase(request.getAttribute("recovery", "false"));
-            if (isPassChangePending || isRecovery) {
-                ZimbraLog.account.info(
-                        "OAuth: Skipping token refresh for account %s (passwordChangePending=%s, recovery=%s)",
-                        acct.getName(), isPassChangePending, isRecovery
-                );
-                throw AuthFailedServiceException.AUTH_FAILED("OAuth: account is pending password change or " +
-                        "recovery, cannot refresh token");
-            } else if (provider != null) {
-                return provider.handleRefresh(zsc, acct, request, context);
-            } else {
-                ZimbraLog.account.warn("NativeAuth: Refresh requested but NativeOAuthProvider is not registered");
-                throw ServiceException.FAILURE("Native OAuth provider is not available", null);
-            }
         }
 
         ZimbraExtensionNotification.notifyExtension("com.zimbra.cs.service.account.Auth:validate", request, context);
@@ -684,6 +672,10 @@ public class Auth extends AccountDocumentHandler {
                 || acc.getOAuthRefreshTokenLifetime() <= 0) {
             return false;
         }
+        return hasOAuthHeader(request, context);
+    }
+
+    private boolean hasOAuthHeader(Element request, Map<String, Object> context) {
         HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (httpRequest != null) {
             String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
