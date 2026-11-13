@@ -20,7 +20,10 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.OAuthConstants;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.soap.SoapServlet;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -31,7 +34,10 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.Test;
 import org.objenesis.ObjenesisStd;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class OAuthRequestDetectionTest {
 
@@ -85,6 +91,59 @@ public class OAuthRequestDetectionTest {
     @Test
     public void nullAccountIsNotAnOAuthRequest() {
         assertFalse(auth.isOAuthRequested(authRequest(), new HashMap<String, Object>(), null));
+    }
+
+    @Test
+    public void refreshWithoutAccountRoutesToProviderForEachOAuthSignal() throws Exception {
+        final Element response = new XMLElement(AccountConstants.AUTH_RESPONSE);
+        final Element[] capturedRequest = new Element[1];
+        OAuthProvider previous = OAuthRegistry.getProvider();
+        OAuthRegistry.registerProvider(new OAuthProvider() {
+            @Override
+            public AuthToken issueToken(Account account, Usage usage, Element req, Element resp,
+                    Map<String, Object> context) {
+                throw new AssertionError("Unexpected token issuance");
+            }
+
+            @Override
+            public Element handleRefresh(Element req) {
+                capturedRequest[0] = req;
+                return response;
+            }
+        });
+        try {
+            Element request = authRequest();
+            request.addElement("refreshToken").setText("test-token");
+            assertSame(response, auth.handle(request,
+                    contextWithHeader(OAuthConstants.HEADER_AUTH_TYPE, OAuthConstants.AUTH_TYPE_ZM_OAUTH2)));
+            assertSame(request, capturedRequest[0]);
+            assertSame(response, auth.handle(request, contextWithHeader(OAuthConstants.AUTH_TYPE_ZM_OAUTH2, "true")));
+            assertSame(request, capturedRequest[0]);
+            request.addAttribute("authType", OAuthConstants.AUTH_TYPE_ZM_OAUTH2);
+            assertSame(response, auth.handle(request, new HashMap<String, Object>()));
+            assertSame(request, capturedRequest[0]);
+        } finally {
+            OAuthRegistry.registerProvider(previous);
+        }
+    }
+
+    @Test
+    public void refreshWithoutProviderFailsExplicitly() throws Exception {
+        OAuthProvider previous = OAuthRegistry.getProvider();
+        OAuthRegistry.registerProvider(null);
+        try {
+            Element request = authRequest();
+            request.addAttribute("authType", OAuthConstants.AUTH_TYPE_ZM_OAUTH2);
+            request.addElement("refreshToken").setText("test-token");
+            try {
+                auth.handle(request, new HashMap<String, Object>());
+                fail("Expected failure when OAuth provider is unavailable");
+            } catch (ServiceException e) {
+                assertEquals(ServiceException.FAILURE, e.getCode());
+            }
+        } finally {
+            OAuthRegistry.registerProvider(previous);
+        }
     }
 
     private static TestAccount enabledAccount() {

@@ -85,6 +85,16 @@ public class Auth extends AccountDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        Element refreshTokenEl = request.getOptionalElement("refreshToken");
+        if (refreshTokenEl != null && hasOAuthHeader(request, context)) {
+            OAuthProvider provider = OAuthRegistry.getProvider();
+            if (provider != null) {
+                return provider.handleRefresh(request);
+            }
+            ZimbraLog.account.warn("NativeAuth: Refresh requested but NativeOAuthProvider is not registered");
+            throw ServiceException.FAILURE("Native OAuth provider is not available", null);
+        }
+
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
@@ -116,17 +126,6 @@ public class Auth extends AccountDocumentHandler {
                 }
             }
             acct = prov.get(acctBy, acctValue);
-        }
-
-        Element refreshTokenEl = request.getOptionalElement("refreshToken");
-        if (refreshTokenEl != null && isOAuthRequested(request, context, acct)) {
-            OAuthProvider provider = OAuthRegistry.getProvider();
-            if (provider != null) {
-                return provider.handleRefresh(acct, request, context);
-            } else {
-                ZimbraLog.account.warn("NativeAuth: Refresh requested but NativeOAuthProvider is not registered");
-                throw ServiceException.FAILURE("Native OAuth provider is not available", null);
-            }
         }
 
         ZimbraExtensionNotification.notifyExtension("com.zimbra.cs.service.account.Auth:validate", request, context);
@@ -673,6 +672,10 @@ public class Auth extends AccountDocumentHandler {
                 || acc.getNativeOAuthRefreshTokenLifetime() <= 0) {
             return false;
         }
+        return hasOAuthHeader(request, context);
+    }
+
+    private boolean hasOAuthHeader(Element request, Map<String, Object> context) {
         HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         if (httpRequest != null) {
             String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);

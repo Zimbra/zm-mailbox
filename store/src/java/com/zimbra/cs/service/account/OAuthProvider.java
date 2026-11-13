@@ -42,11 +42,8 @@ public interface OAuthProvider {
     /**
      * Handles refresh token exchange flow.
      *
-     * @param acct      Target Zimbra account
      * @param request   Incoming SOAP AuthRequest element
-     * @param context   SOAP context map
      * @return Element containing the new token and related information
      */
-    Element handleRefresh(Account acct, Element request, Map<String, Object> context)
-            throws ServiceException;
+    Element handleRefresh(Element request) throws ServiceException;
 }
