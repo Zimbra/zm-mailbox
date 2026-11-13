@@ -153,6 +153,8 @@ public final class LocalConfigCLI {
         loadExtensionLC("com.zimbra.cs.voice.VoiceLC");
         // Load known keys from MFA extension if available
         loadExtensionLC("com.zimbra.mfa.config.MfaLC");
+        // Load known keys from ZimbraOAuth if available
+        loadExtensionLC("com.zimbra.oauth.config.OAuthLC");
 
         // info/docs for supported keys
         if (cl.hasOption("i")) {
