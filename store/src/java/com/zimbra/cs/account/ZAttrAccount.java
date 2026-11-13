@@ -19062,6 +19062,88 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether push notifications are turned on for the Zimbra native
+     * mobile app. Push notifications are sent only when this and
+     * zimbraFeatureNativeMobileAppEnabled are both TRUE for the account.
+     *
+     * @return zimbraFeatureMobileAppPushNotificationsEnabled, or false if unset
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public boolean isFeatureMobileAppPushNotificationsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMobileAppPushNotificationsEnabled, false, true);
+    }
+
+    /**
+     * Whether push notifications are turned on for the Zimbra native
+     * mobile app. Push notifications are sent only when this and
+     * zimbraFeatureNativeMobileAppEnabled are both TRUE for the account.
+     *
+     * @param zimbraFeatureMobileAppPushNotificationsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public void setFeatureMobileAppPushNotificationsEnabled(boolean zimbraFeatureMobileAppPushNotificationsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileAppPushNotificationsEnabled, zimbraFeatureMobileAppPushNotificationsEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether push notifications are turned on for the Zimbra native
+     * mobile app. Push notifications are sent only when this and
+     * zimbraFeatureNativeMobileAppEnabled are both TRUE for the account.
+     *
+     * @param zimbraFeatureMobileAppPushNotificationsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public Map<String,Object> setFeatureMobileAppPushNotificationsEnabled(boolean zimbraFeatureMobileAppPushNotificationsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileAppPushNotificationsEnabled, zimbraFeatureMobileAppPushNotificationsEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether push notifications are turned on for the Zimbra native
+     * mobile app. Push notifications are sent only when this and
+     * zimbraFeatureNativeMobileAppEnabled are both TRUE for the account.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public void unsetFeatureMobileAppPushNotificationsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileAppPushNotificationsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether push notifications are turned on for the Zimbra native
+     * mobile app. Push notifications are sent only when this and
+     * zimbraFeatureNativeMobileAppEnabled are both TRUE for the account.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4178)
+    public Map<String,Object> unsetFeatureMobileAppPushNotificationsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileAppPushNotificationsEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 10.1.0. unfinished feature removed. Orig desc:
      * Whether to enable Zimbra Mobile Gateway feature
      *

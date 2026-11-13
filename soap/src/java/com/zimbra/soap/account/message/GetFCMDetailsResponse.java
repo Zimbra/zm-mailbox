@@ -38,11 +38,26 @@ public class GetFCMDetailsResponse {
     @XmlElement(name = "deviceConfig", required = true)
     private String deviceConfig;
 
+    /**
+     * @zm-api-field-tag push-status
+     * @zm-api-field-description Push state of the authenticated account: {@code ENABLED} when the mobile app is
+     * licensed, enabled for the account and push notifications are turned on, or {@code PUSH_DISABLED} when the
+     * account is licensed and entitled but push notifications are turned off. Not licensed and not entitled
+     * accounts receive a fault instead of a response.
+     */
+    @XmlElement(name = "pushStatus", required = false)
+    private String pushStatus;
+
     public GetFCMDetailsResponse() {
     }
 
     public GetFCMDetailsResponse(String deviceConfig) {
         this.deviceConfig = deviceConfig;
+    }
+
+    public GetFCMDetailsResponse(String deviceConfig, String pushStatus) {
+        this.deviceConfig = deviceConfig;
+        this.pushStatus = pushStatus;
     }
 
     public String getDeviceConfig() {
@@ -51,5 +66,13 @@ public class GetFCMDetailsResponse {
 
     public void setDeviceConfig(String deviceConfig) {
         this.deviceConfig = deviceConfig;
+    }
+
+    public String getPushStatus() {
+        return pushStatus;
+    }
+
+    public void setPushStatus(String pushStatus) {
+        this.pushStatus = pushStatus;
     }
 }
