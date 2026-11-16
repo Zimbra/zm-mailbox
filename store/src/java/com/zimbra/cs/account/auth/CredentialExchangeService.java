@@ -1,12 +1,4 @@
-package com.zimbra.cs.account.auth.zco;
-
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.function.Supplier;
-import java.util.regex.Pattern;
+package com.zimbra.cs.account.auth;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
@@ -16,44 +8,60 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.memcached.MemcachedConnector;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
-public final class ZcoExchangeCredentialService {
+public final class CredentialExchangeService {
 
     public static final String CREDENTIAL_PREFIX = "zcx1.";
-    public static final String AUDIENCE = "zco";
+
+    public static final String AUDIENCE = "loopback";
+
     public static final long CREDENTIAL_LIFETIME_MS = 5 * 60 * 1000L; // 5 min TTL
+
     public static final long AUTHN_REQUEST_LIFETIME_MS = 10 * 60 * 1000L; // 10 min TTL
 
     private static final String CREDENTIAL_KEY_PREFIX = "cred:";
+
     private static final String AUTHN_KEY_PREFIX = "authn:";
+
     private static final String RECORD_VERSION = "v1";
 
     private static final Pattern HANDLE = Pattern.compile("^zcx1\\.[A-Za-z0-9_-]{43}$");
+
     private static final Pattern B64URL_43 = Pattern.compile("^[A-Za-z0-9_-]{43}$");
+
     private static final Pattern NONCE = Pattern.compile("^[A-Za-z0-9_-]{16}$");
+
     private static final Pattern SAML_ID = Pattern.compile("^[A-Za-z0-9_.:-]{1,256}$");
 
-    private static final ZcoExchangeCredentialService INSTANCE =
-            new ZcoExchangeCredentialService(new DefaultStoreProvider());
+    private static final CredentialExchangeService INSTANCE =
+            new CredentialExchangeService(new DefaultStoreProvider());
 
     private final SecureRandom random = new SecureRandom();
-    private final Supplier<ZcoCredentialStore> storeProvider;
 
-    ZcoExchangeCredentialService(Supplier<ZcoCredentialStore> storeProvider) {
+    private final Supplier<CredentialStore> storeProvider;
+
+    CredentialExchangeService(Supplier<CredentialStore> storeProvider) {
         this.storeProvider = storeProvider;
     }
 
-    public static ZcoExchangeCredentialService getInstance() {
+    public static CredentialExchangeService getInstance() {
         return INSTANCE;
     }
 
     public void recordAuthnRequest(String nonce, String authnRequestId) throws ServiceException {
         if (nonce == null || !NONCE.matcher(nonce).matches()
                 || authnRequestId == null || !SAML_ID.matcher(authnRequestId).matches()) {
-            throw ServiceException.INVALID_REQUEST("invalid ZCO AuthnRequest record", null);
+            throw ServiceException.INVALID_REQUEST("invalid AuthnRequest record", null);
         }
         if (!storeProvider.get().put(AUTHN_KEY_PREFIX + nonce, authnRequestId, AUTHN_REQUEST_LIFETIME_MS)) {
-            throw ServiceException.FAILURE("ZCO exchange store unavailable", null);
+            throw ServiceException.FAILURE("credential exchange store unavailable", null);
         }
     }
 
@@ -61,7 +69,7 @@ public final class ZcoExchangeCredentialService {
         if (nonce == null || !NONCE.matcher(nonce).matches() || inResponseTo == null || inResponseTo.isEmpty()) {
             return false;
         }
-        final ZcoCredentialStore store = storeProvider.get();
+        final CredentialStore store = storeProvider.get();
         final String key = AUTHN_KEY_PREFIX + nonce;
         final String recorded = store.get(key);
         if (recorded == null || !constantTimeEquals(recorded, inResponseTo)) {
@@ -72,7 +80,7 @@ public final class ZcoExchangeCredentialService {
 
     public String issueCredential(Account account, String challenge) throws ServiceException {
         if (account == null || challenge == null || !B64URL_43.matcher(challenge).matches()) {
-            throw ServiceException.INVALID_REQUEST("invalid ZCO challenge", null);
+            throw ServiceException.INVALID_REQUEST("invalid challenge", null);
         }
         final byte[] raw = new byte[32];
         random.nextBytes(raw);
@@ -82,7 +90,7 @@ public final class ZcoExchangeCredentialService {
         final String record = String.join("|", RECORD_VERSION, account.getId(), challenge, AUDIENCE,
                 Long.toString(expiresAt));
         if (!storeProvider.get().put(CREDENTIAL_KEY_PREFIX + sha256Hex(handle), record, CREDENTIAL_LIFETIME_MS)) {
-            throw ServiceException.FAILURE("ZCO exchange store unavailable", null);
+            throw ServiceException.FAILURE("credential exchange store unavailable", null);
         }
         return handle;
     }
@@ -126,7 +134,7 @@ public final class ZcoExchangeCredentialService {
 
     public Account redeem(String handle, String verifier, Account requested) throws ServiceException {
         checkFormat(handle, verifier);
-        final ZcoCredentialStore store = storeProvider.get();
+        final CredentialStore store = storeProvider.get();
         final String key = CREDENTIAL_KEY_PREFIX + sha256Hex(handle);
 
         final String[] rec = parse(store.get(key));
@@ -190,8 +198,9 @@ public final class ZcoExchangeCredentialService {
     }
 
     private static AuthFailedServiceException rejected(String reason, String key) {
-        ZimbraLog.security.warn("ZCO exchange rejected: reason=%s key=%s", reason, key == null ? "-" : shortKey(key));
-        return AuthFailedServiceException.AUTH_FAILED("ZCO exchange failed");
+        ZimbraLog.security.warn("Credential exchange rejected: reason=%s key=%s", reason,
+                key == null ? "-" : shortKey(key));
+        return AuthFailedServiceException.AUTH_FAILED("credential exchange failed");
     }
 
     private static boolean constantTimeEquals(String a, String b) {
@@ -218,19 +227,21 @@ public final class ZcoExchangeCredentialService {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(b);
     }
 
-    private static final class DefaultStoreProvider implements Supplier<ZcoCredentialStore> {
-        private final ZcoCredentialStore memcached = new MemcachedZcoCredentialStore();
-        private final ZcoCredentialStore inMemory = new InMemoryZcoCredentialStore();
+    private static final class DefaultStoreProvider implements Supplier<CredentialStore> {
+        private final CredentialStore memcached = new MemcachedCredentialStore();
+
+        private final CredentialStore inMemory = new InMemoryCredentialStore();
+
         private volatile boolean warned;
 
         @Override
-        public ZcoCredentialStore get() {
+        public CredentialStore get() {
             if (MemcachedConnector.isConnected()) {
                 return memcached;
             }
             if (!warned) {
                 warned = true;
-                ZimbraLog.security.warn("ZCO exchange: memcached is not connected, using the in-memory store. "
+                ZimbraLog.security.warn("Credential exchange: memcached is not connected, using the in-memory store. "
                         + "Single use is only guaranteed on a single node.");
             }
             return inMemory;

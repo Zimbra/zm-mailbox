@@ -31,7 +31,9 @@ public class AccountConstants {
     // auth
     public static final String E_AUTH_REQUEST = "AuthRequest";
     public static final String E_AUTH_RESPONSE = "AuthResponse";
-    public static final String E_EXCHANGE_AUTH_REQUEST = "ExchangeAuthRequest";
+
+    public static final String E_CREDENTIAL_EXCHANGE_AUTH_REQUEST = "CredentialExchangeAuthRequest";
+
     public static final String E_CREDENTIAL = "credential";
     public static final String E_VERIFIER = "verifier";
     public static final String E_CHANGE_PASSWORD_REQUEST = "ChangePasswordRequest";
@@ -191,7 +193,10 @@ public class AccountConstants {
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
     public static final QName AUTH_RESPONSE = QName.get(E_AUTH_RESPONSE, NAMESPACE);
-    public static final QName EXCHANGE_AUTH_REQUEST = QName.get(E_EXCHANGE_AUTH_REQUEST, NAMESPACE);
+
+    public static final QName CREDENTIAL_EXCHANGE_AUTH_REQUEST =
+            QName.get(E_CREDENTIAL_EXCHANGE_AUTH_REQUEST, NAMESPACE);
+
     public static final QName CHANGE_PASSWORD_REQUEST = QName.get(E_CHANGE_PASSWORD_REQUEST, NAMESPACE);
     public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName CLIENT_INFO_REQUEST = QName.get(E_CLIENT_INFO_REQUEST, NAMESPACE);

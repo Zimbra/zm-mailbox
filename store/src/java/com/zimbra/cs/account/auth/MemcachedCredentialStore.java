@@ -1,11 +1,11 @@
-package com.zimbra.cs.account.auth.zco;
+package com.zimbra.cs.account.auth;
 
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.memcached.MemcachedConnector;
 
-final class MemcachedZcoCredentialStore implements ZcoCredentialStore {
+final class MemcachedCredentialStore implements CredentialStore {
 
-    private static final String KEY_PREFIX = "zco-exchange:";
+    private static final String KEY_PREFIX = "cred-exchange:";
 
     @Override
     public boolean put(String key, String value, long ttlMs) {
