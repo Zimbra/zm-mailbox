@@ -13053,40 +13053,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMyoneloginSamlSigningCert = "zimbraMyoneloginSamlSigningCert";
 
     /**
-     * Lifetime of the native OAuth access token issued for native OAuth
-     * sessions. . Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4177)
-    public static final String A_zimbraNativeOAuthAccessTokenLifetime = "zimbraNativeOAuthAccessTokenLifetime";
-
-    /**
-     * Controls whether persistent sessions are enabled for native OAuth
-     * clients.
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4175)
-    public static final String A_zimbraNativeOAuthPersistentSessionEnabled = "zimbraNativeOAuthPersistentSessionEnabled";
-
-    /**
-     * Lifetime of the native OAuth refresh token Values range from 1d to
-     * 365d. A value of 0 or 0d disables persistent sessions for the
-     * applicable scope. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @since ZCS 10.1.22
-     */
-    @ZAttr(id=4176)
-    public static final String A_zimbraNativeOAuthRefreshTokenLifetime = "zimbraNativeOAuthRefreshTokenLifetime";
-
-    /**
      * Deprecated since: 10.1.0. deprecated in favor for new realtime license
      * attributes. Orig desc: A signed activation key that authorizes this
      * installation.
@@ -13313,6 +13279,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOAuthAccessor = "zimbraOAuthAccessor";
 
     /**
+     * Lifetime of the OAuth access token issued for OAuth sessions. . Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4177)
+    public static final String A_zimbraOAuthAccessTokenLifetime = "zimbraOAuthAccessTokenLifetime";
+
+    /**
      * OAuth consumer API scope. It is in the format of apiscope1{separator
      * character}apiscope2:consumer-app-name. The separator between apiscope1
      * and apiscope2 is consumer-app specific
@@ -13339,6 +13317,27 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3025)
     public static final String A_zimbraOAuthConsumerRedirectUri = "zimbraOAuthConsumerRedirectUri";
+
+    /**
+     * Controls whether persistent sessions are enabled for OAuth clients.
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4175)
+    public static final String A_zimbraOAuthPersistentSessionEnabled = "zimbraOAuthPersistentSessionEnabled";
+
+    /**
+     * Lifetime of the OAuth refresh token Values range from 1d to 365d. A
+     * value of 0 or 0d disables persistent sessions for the applicable
+     * scope. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @since ZCS 10.1.22
+     */
+    @ZAttr(id=4176)
+    public static final String A_zimbraOAuthRefreshTokenLifetime = "zimbraOAuthRefreshTokenLifetime";
 
     /**
      * the handler class for the object type

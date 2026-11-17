@@ -79,7 +79,7 @@ public class ZimbraJWToken extends AuthToken {
         long expireTime = expires;
         if(expireTime == 0) {
             long lifetime = Usage.REFRESH.equals(usage)
-                    ? acct.getNativeOAuthRefreshTokenLifetime()
+                    ? acct.getOAuthRefreshTokenLifetime()
                     : acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
             issuedAt = System.currentTimeMillis();
             expireTime = issuedAt + lifetime;
