@@ -16,6 +16,7 @@
  */
 
 package com.zimbra.cs.account.callback;
+
 import com.zimbra.common.util.Constants;
 import java.math.BigInteger;
 import java.util.Map;
@@ -25,10 +26,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
-public class NativeOAuthAccessTokenLifetime extends AttributeCallback  {
-    private static final Pattern WITH_UNIT = Pattern.compile("^(\\d+)(ms|[hms])$", Pattern.CASE_INSENSITIVE);
-    static final long MIN_MILLIS = 5L * Constants.MILLIS_PER_MINUTE;
-    static final long MAX_MILLIS = 24L * Constants.MILLIS_PER_HOUR;
+
+public class OAuthRefreshTokenLifetime extends AttributeCallback{
+
+    private static final Pattern WITH_UNIT = Pattern.compile("^(\\d+)(ms|[dhms])$",Pattern.CASE_INSENSITIVE);
+    static final long MIN_MILLIS = Constants.MILLIS_PER_DAY;
+    static final long MAX_MILLIS = 365L * Constants.MILLIS_PER_DAY;
+
     @SuppressWarnings("rawtypes")
     @Override
     public void preModify(CallbackContext context, String attrName, Object attrValue,
@@ -42,26 +46,27 @@ public class NativeOAuthAccessTokenLifetime extends AttributeCallback  {
         if (value != null) {
             value = value.trim();
         }
+        if ("0".equals(value) || "0d".equals(value)) {
+            return;
+        }
+        if (value == null || value.isEmpty()) {
+            throw ServiceException.INVALID_REQUEST(attrName + " cannot be null or empty", null);
+        }
         Matcher m = WITH_UNIT.matcher(value);
         if (!m.matches()) {
-            throw AccountServiceException.INVALID_ATTR_VALUE(
-                    attrName + " must be a positive duration with unit suffix h, m, s, or ms (e.g. 1h, 30m, 3600s). " + "Days ('d') and unitless values are not allowed; got '" + value + "'",
-                    null);
+            throw AccountServiceException.INVALID_ATTR_VALUE(attrName + " must be 0/0d or a non-negative "
+                    + "duration with a unit suffix (d, h, m, s, ms), e.g. 30d; got '" + value + "'", null);
         }
-        BigInteger durationValue = new BigInteger(m.group(1));
-        if (durationValue.compareTo(BigInteger.ZERO) <= 0) {
-            throw AccountServiceException.INVALID_ATTR_VALUE(attrName + " must be greater than 0; got '" + value + "'",
-                    null);
-        }
-        BigInteger millis = durationValue.multiply(BigInteger.valueOf(unitMillis(m.group(2).toLowerCase())));
+        BigInteger millis = new BigInteger(m.group(1)).multiply(BigInteger.valueOf(unitMillis(m.group(2).toLowerCase())));
         if (millis.compareTo(BigInteger.valueOf(MIN_MILLIS)) < 0
                 || millis.compareTo(BigInteger.valueOf(MAX_MILLIS)) > 0) {
             throw AccountServiceException.INVALID_ATTR_VALUE(attrName
-                    + " must be between 5m and 24h; got '" + value + "'", null);
+                    + " must be between 1d and 365d (or 0/0d to disable); got '" + value + "'", null);
         }
     }
     private static long unitMillis(String unit) {
         switch (unit) {
+            case "d": return Constants.MILLIS_PER_DAY;
             case "h": return Constants.MILLIS_PER_HOUR;
             case "m": return Constants.MILLIS_PER_MINUTE;
             case "s": return Constants.MILLIS_PER_SECOND;
@@ -72,5 +77,3 @@ public class NativeOAuthAccessTokenLifetime extends AttributeCallback  {
     public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }
-
-

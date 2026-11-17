@@ -126,12 +126,12 @@ public class OAuthRequestDetectionTest {
         }
 
         @Override
-        public boolean isNativeOAuthPersistentSessionEnabled() {
+        public boolean isOAuthPersistentSessionEnabled() {
             return persistentSessionEnabled;
         }
 
         @Override
-        public long getNativeOAuthRefreshTokenLifetime() {
+        public long getOAuthRefreshTokenLifetime() {
             return refreshTokenLifetime;
         }
 

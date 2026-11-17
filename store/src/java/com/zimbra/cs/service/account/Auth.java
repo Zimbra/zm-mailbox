@@ -680,8 +680,8 @@ public class Auth extends AccountDocumentHandler {
 
     public boolean isOAuthRequested(Element request, Map<String, Object> context, Account acc) {
 
-        if (acc == null || !acc.isNativeOAuthPersistentSessionEnabled()
-                || acc.getNativeOAuthRefreshTokenLifetime() <= 0) {
+        if (acc == null || !acc.isOAuthPersistentSessionEnabled()
+                || acc.getOAuthRefreshTokenLifetime() <= 0) {
             return false;
         }
         HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
