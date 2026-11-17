@@ -16488,7 +16488,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4171)
     public static final String A_zimbraReverseProxyModernCSP = "zimbraReverseProxyModernCSP";
 
     /**
@@ -16501,7 +16501,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4172)
     public static final String A_zimbraReverseProxyModernCSPPolicy = "zimbraReverseProxyModernCSPPolicy";
 
     /**
