@@ -65197,7 +65197,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4188)
     public ZAttrProvisioning.ReverseProxyModernCSP getReverseProxyModernCSP() {
         try { String v = getAttr(Provisioning.A_zimbraReverseProxyModernCSP, true, true); return v == null ? ZAttrProvisioning.ReverseProxyModernCSP.enforce : ZAttrProvisioning.ReverseProxyModernCSP.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ReverseProxyModernCSP.enforce; }
     }
@@ -65213,7 +65213,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4188)
     public String getReverseProxyModernCSPAsString() {
         return getAttr(Provisioning.A_zimbraReverseProxyModernCSP, "enforce", true);
     }
@@ -65230,7 +65230,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4188)
     public void setReverseProxyModernCSP(ZAttrProvisioning.ReverseProxyModernCSP zimbraReverseProxyModernCSP) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, zimbraReverseProxyModernCSP.toString());
@@ -65250,7 +65250,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4188)
     public Map<String,Object> setReverseProxyModernCSP(ZAttrProvisioning.ReverseProxyModernCSP zimbraReverseProxyModernCSP, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, zimbraReverseProxyModernCSP.toString());
@@ -65269,7 +65269,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4188)
     public void setReverseProxyModernCSPAsString(String zimbraReverseProxyModernCSP) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, zimbraReverseProxyModernCSP);
@@ -65289,7 +65289,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4188)
     public Map<String,Object> setReverseProxyModernCSPAsString(String zimbraReverseProxyModernCSP, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, zimbraReverseProxyModernCSP);
@@ -65307,7 +65307,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4188)
     public void unsetReverseProxyModernCSP() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, "");
@@ -65326,7 +65326,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4188)
     public Map<String,Object> unsetReverseProxyModernCSP(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSP, "");
@@ -65345,7 +65345,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4189)
     public String getReverseProxyModernCSPPolicy() {
         return getAttr(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "manifest-src 'self' blob:; connect-src 'self' wss: https://zimbra.org; default-src 'self'; script-src 'self' 'nonce-{{nonce}}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; form-action 'self';", true);
     }
@@ -65363,7 +65363,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4189)
     public void setReverseProxyModernCSPPolicy(String zimbraReverseProxyModernCSPPolicy) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSPPolicy, zimbraReverseProxyModernCSPPolicy);
@@ -65384,7 +65384,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4189)
     public Map<String,Object> setReverseProxyModernCSPPolicy(String zimbraReverseProxyModernCSPPolicy, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSPPolicy, zimbraReverseProxyModernCSPPolicy);
@@ -65403,7 +65403,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4189)
     public void unsetReverseProxyModernCSPPolicy() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "");
@@ -65423,7 +65423,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4189)
     public Map<String,Object> unsetReverseProxyModernCSPPolicy(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "");

@@ -50,6 +50,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.ReverseProxyModernCSP;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
@@ -1301,7 +1302,8 @@ class ModernCSPHeaderVar extends ProxyConfVar {
     private final String domainPolicy;
 
     public ModernCSPHeaderVar() {
-        super("web.modern.csp.header", Provisioning.A_zimbraReverseProxyModernCSP, "off",
+        super("web.modern.csp.header", Provisioning.A_zimbraReverseProxyModernCSP,
+                ReverseProxyModernCSP.off.toString(),
                 ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,
                 "Content Security Policy header for the Modern UI path");
         domainValues = false;
@@ -1320,19 +1322,20 @@ class ModernCSPHeaderVar extends ProxyConfVar {
 
     @Override
     public void update() throws ServiceException, ProxyConfException {
-        String mode = domainValues ? domainMode : configSource.getAttr(mAttribute, "off");
+        String mode = domainValues ? domainMode
+                : configSource.getAttr(mAttribute, ReverseProxyModernCSP.off.toString());
         String policy = domainValues ? domainPolicy :
                 configSource.getAttr(Provisioning.A_zimbraReverseProxyModernCSPPolicy, "");
 
         if (mode == null) {
-            mode = "off";
+            mode = ReverseProxyModernCSP.off.toString();
         }
 
         if (policy == null) {
             policy = "";
         }
 
-        if ("off".equals(mode) || policy.trim().isEmpty()) {
+        if (ReverseProxyModernCSP.off.toString().equals(mode) || policy.trim().isEmpty()) {
             // The location blocks reference $zimbra_modern_ae, so it must be defined even when CSP is off.
             mValue = ACCEPT_ENCODING_PASSTHROUGH;
             return;
@@ -1342,7 +1345,7 @@ class ModernCSPHeaderVar extends ProxyConfVar {
             throw new ProxyConfException("Modern UI CSP must not contain line breaks");
         }
 
-        String headerName = "report-only".equals(mode)
+        String headerName = ReverseProxyModernCSP.report_only.toString().equals(mode)
                 ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy";
         boolean nonceEnabled = policy.contains(NONCE_TOKEN);
 
@@ -2474,7 +2477,8 @@ public class ProxyConfGen
 
                 if (virtualHostnames.length == 0 || ( certificate == null &&
                                 privateKey == null && clientCertMode == null && clientCertCA == null &&
-                                ("off".equals(cspMode) || ProxyConfUtil.isEmptyString(cspMode)) &&
+                                (ReverseProxyModernCSP.off.toString().equals(cspMode)
+                                        || ProxyConfUtil.isEmptyString(cspMode)) &&
                                 ProxyConfUtil.isEmptyString(cspPolicy) ) ) {
 
                     return; // ignore the items that don't have virtual host
