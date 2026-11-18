@@ -15,7 +15,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package java.com.zimbra.common.soap;
+package com.zimbra.common.soap;
 
 public class OAuthConstants {
 

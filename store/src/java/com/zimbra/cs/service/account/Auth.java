@@ -21,7 +21,6 @@
 package com.zimbra.cs.service.account;
 
 import io.jsonwebtoken.Claims;
-import java.com.zimbra.common.soap.OAuthConstants;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,6 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.OAuthConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
