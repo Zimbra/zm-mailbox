@@ -37741,7 +37741,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4174)
+    @ZAttr(id=4175)
     public boolean isMobilePushNotificationEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraMobilePushNotificationEnabled, false, true);
     }
@@ -37755,7 +37755,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4174)
+    @ZAttr(id=4175)
     public void setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
@@ -37772,7 +37772,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4174)
+    @ZAttr(id=4175)
     public Map<String,Object> setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
@@ -37787,7 +37787,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4174)
+    @ZAttr(id=4175)
     public void unsetMobilePushNotificationEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");
@@ -37803,7 +37803,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4174)
+    @ZAttr(id=4175)
     public Map<String,Object> unsetMobilePushNotificationEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");
@@ -38626,7 +38626,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4176)
+    @ZAttr(id=4177)
     public int getNativeMobileAppLocalDataRetentionDays() {
         return getIntAttr(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, 30, true);
     }
@@ -38639,7 +38639,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4176)
+    @ZAttr(id=4177)
     public void setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
@@ -38655,7 +38655,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4176)
+    @ZAttr(id=4177)
     public Map<String,Object> setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
@@ -38669,7 +38669,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4176)
+    @ZAttr(id=4177)
     public void unsetNativeMobileAppLocalDataRetentionDays() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
@@ -38684,7 +38684,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4176)
+    @ZAttr(id=4177)
     public Map<String,Object> unsetNativeMobileAppLocalDataRetentionDays(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
@@ -38698,7 +38698,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4178)
     public int getNativeMobileAppMaxLocalDataSize() {
         return getIntAttr(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, 10240, true);
     }
@@ -38711,7 +38711,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4178)
     public void setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -38727,7 +38727,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4178)
     public Map<String,Object> setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -38741,7 +38741,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4178)
     public void unsetNativeMobileAppMaxLocalDataSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
@@ -38756,7 +38756,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4178)
     public Map<String,Object> unsetNativeMobileAppMaxLocalDataSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
@@ -62810,7 +62810,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4173)
+    @ZAttr(id=4174)
     public ZAttrProvisioning.PushNotificationDisclosureLevel getPushNotificationDisclosureLevel() {
         try { String v = getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, true, true); return v == null ? null : ZAttrProvisioning.PushNotificationDisclosureLevel.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
@@ -62826,7 +62826,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4173)
+    @ZAttr(id=4174)
     public String getPushNotificationDisclosureLevelAsString() {
         return getAttr(Provisioning.A_zimbraPushNotificationDisclosureLevel, null, true);
     }
@@ -62843,7 +62843,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4173)
+    @ZAttr(id=4174)
     public void setPushNotificationDisclosureLevel(ZAttrProvisioning.PushNotificationDisclosureLevel zimbraPushNotificationDisclosureLevel) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, zimbraPushNotificationDisclosureLevel.toString());
@@ -62863,7 +62863,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4173)
+    @ZAttr(id=4174)
     public Map<String,Object> setPushNotificationDisclosureLevel(ZAttrProvisioning.PushNotificationDisclosureLevel zimbraPushNotificationDisclosureLevel, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, zimbraPushNotificationDisclosureLevel.toString());
@@ -62882,7 +62882,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4173)
+    @ZAttr(id=4174)
     public void setPushNotificationDisclosureLevelAsString(String zimbraPushNotificationDisclosureLevel) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, zimbraPushNotificationDisclosureLevel);
@@ -62902,7 +62902,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4173)
+    @ZAttr(id=4174)
     public Map<String,Object> setPushNotificationDisclosureLevelAsString(String zimbraPushNotificationDisclosureLevel, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, zimbraPushNotificationDisclosureLevel);
@@ -62920,7 +62920,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4173)
+    @ZAttr(id=4174)
     public void unsetPushNotificationDisclosureLevel() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, "");
@@ -62939,7 +62939,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4173)
+    @ZAttr(id=4174)
     public Map<String,Object> unsetPushNotificationDisclosureLevel(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationDisclosureLevel, "");
@@ -62956,7 +62956,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4173)
     public ZAttrProvisioning.PushNotificationPayloadMode getPushNotificationPayloadMode() {
         try { String v = getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, true, true); return v == null ? null : ZAttrProvisioning.PushNotificationPayloadMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
@@ -62971,7 +62971,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4173)
     public String getPushNotificationPayloadModeAsString() {
         return getAttr(Provisioning.A_zimbraPushNotificationPayloadMode, null, true);
     }
@@ -62987,7 +62987,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4173)
     public void setPushNotificationPayloadMode(ZAttrProvisioning.PushNotificationPayloadMode zimbraPushNotificationPayloadMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, zimbraPushNotificationPayloadMode.toString());
@@ -63006,7 +63006,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4173)
     public Map<String,Object> setPushNotificationPayloadMode(ZAttrProvisioning.PushNotificationPayloadMode zimbraPushNotificationPayloadMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, zimbraPushNotificationPayloadMode.toString());
@@ -63024,7 +63024,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4173)
     public void setPushNotificationPayloadModeAsString(String zimbraPushNotificationPayloadMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, zimbraPushNotificationPayloadMode);
@@ -63043,7 +63043,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4173)
     public Map<String,Object> setPushNotificationPayloadModeAsString(String zimbraPushNotificationPayloadMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, zimbraPushNotificationPayloadMode);
@@ -63060,7 +63060,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4173)
     public void unsetPushNotificationPayloadMode() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, "");
@@ -63078,7 +63078,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4173)
     public Map<String,Object> unsetPushNotificationPayloadMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPushNotificationPayloadMode, "");

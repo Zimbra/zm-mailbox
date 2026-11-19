@@ -11054,7 +11054,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4171)
+    @ZAttr(id=4172)
     public static final String A_zimbraMobileAppFCMDeviceDetails = "zimbraMobileAppFCMDeviceDetails";
 
     /**
@@ -11065,7 +11065,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4170)
+    @ZAttr(id=4171)
     public static final String A_zimbraMobileAppFCMServerDetails = "zimbraMobileAppFCMServerDetails";
 
     /**
@@ -11739,7 +11739,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4174)
+    @ZAttr(id=4175)
     public static final String A_zimbraMobilePushNotificationEnabled = "zimbraMobilePushNotificationEnabled";
 
     /**
@@ -13132,7 +13132,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4176)
+    @ZAttr(id=4177)
     public static final String A_zimbraNativeMobileAppLocalDataRetentionDays = "zimbraNativeMobileAppLocalDataRetentionDays";
 
     /**
@@ -13140,7 +13140,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4178)
     public static final String A_zimbraNativeMobileAppMaxLocalDataSize = "zimbraNativeMobileAppMaxLocalDataSize";
 
     /**
@@ -13150,7 +13150,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4176)
     public static final String A_zimbraNativeMobileAppMinVersionSupported = "zimbraNativeMobileAppMinVersionSupported";
 
     /**
@@ -15892,7 +15892,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4173)
+    @ZAttr(id=4174)
     public static final String A_zimbraPushNotificationDisclosureLevel = "zimbraPushNotificationDisclosureLevel";
 
     /**
@@ -15901,7 +15901,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4172)
+    @ZAttr(id=4173)
     public static final String A_zimbraPushNotificationPayloadMode = "zimbraPushNotificationPayloadMode";
 
     /**
