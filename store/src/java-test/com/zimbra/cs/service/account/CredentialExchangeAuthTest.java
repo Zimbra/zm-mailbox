@@ -92,7 +92,7 @@ public class CredentialExchangeAuthTest {
     @Test
     public void redeemsCredentialAndReturnsAuthResponse() throws Exception {
         final Element resp = handle("https", request(issue(alice), VERIFIER, "name", alice.getName(), null));
-        Assert.assertEquals(AccountConstants.AUTH_RESPONSE, resp.getQName());
+        Assert.assertEquals(AccountConstants.CREDENTIAL_EXCHANGE_AUTH_RESPONSE, resp.getQName());
         final Element token = resp.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
         Assert.assertNotNull("AuthResponse carries an authToken", token);
         Assert.assertFalse(token.getText().isEmpty());
@@ -109,13 +109,13 @@ public class CredentialExchangeAuthTest {
     @Test
     public void selectorDefaultsToName() throws Exception {
         final Element resp = handle("https", request(issue(alice), VERIFIER, null, alice.getName(), null));
-        Assert.assertEquals(AccountConstants.AUTH_RESPONSE, resp.getQName());
+        Assert.assertEquals(AccountConstants.CREDENTIAL_EXCHANGE_AUTH_RESPONSE, resp.getQName());
     }
 
     @Test
     public void accountCanBeSelectedById() throws Exception {
         final Element resp = handle("https", request(issue(alice), VERIFIER, "id", alice.getId(), null));
-        Assert.assertEquals(AccountConstants.AUTH_RESPONSE, resp.getQName());
+        Assert.assertEquals(AccountConstants.CREDENTIAL_EXCHANGE_AUTH_RESPONSE, resp.getQName());
     }
 
     @Test
@@ -133,7 +133,7 @@ public class CredentialExchangeAuthTest {
         } finally {
             Provisioning.setInstance(PROV);
         }
-        Assert.assertEquals(AccountConstants.AUTH_RESPONSE, resp.getQName());
+        Assert.assertEquals(AccountConstants.CREDENTIAL_EXCHANGE_AUTH_RESPONSE, resp.getQName());
     }
 
     @Test
@@ -176,7 +176,8 @@ public class CredentialExchangeAuthTest {
             Provisioning.setInstance(PROV);
         }
         final Element resp = handle("https", request(credential, VERIFIER, "name", alice.getName(), null));
-        Assert.assertEquals("the same credential still redeems", AccountConstants.AUTH_RESPONSE, resp.getQName());
+        Assert.assertEquals("the same credential still redeems",
+                AccountConstants.CREDENTIAL_EXCHANGE_AUTH_RESPONSE, resp.getQName());
     }
 
     @Test
@@ -208,7 +209,7 @@ public class CredentialExchangeAuthTest {
         }
         final Element resp = handle("https", request(credential, VERIFIER, "name", alice.getName(), null));
         Assert.assertEquals("the rejected request did not burn the credential",
-                AccountConstants.AUTH_RESPONSE, resp.getQName());
+                AccountConstants.CREDENTIAL_EXCHANGE_AUTH_RESPONSE, resp.getQName());
     }
 
     private Account createAccount(String local) throws ServiceException {

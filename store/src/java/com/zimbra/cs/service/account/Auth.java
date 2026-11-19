@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.dom4j.QName;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -529,7 +530,7 @@ public class Auth extends AccountDocumentHandler {
     protected Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
             Map<String, Object> context, Account acct, boolean csrfSupport, TrustedDeviceToken td, String deviceId)
     throws ServiceException {
-        Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
+        Element response = zsc.createElement(getResponseQName());
         at.encodeAuthResp(response, false);
 
         /*
@@ -625,5 +626,14 @@ public class Auth extends AccountDocumentHandler {
         String aid = at.getAdminAccountId();
         if (aid != null && !aid.equals(id))
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
+    }
+
+    /**
+     * Returns the name of the response element that {@code doResponse} builds.
+     *
+     * @return the response QName
+     */
+    protected QName getResponseQName() {
+        return AccountConstants.AUTH_RESPONSE;
     }
 }
