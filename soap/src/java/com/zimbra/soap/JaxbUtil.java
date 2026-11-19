@@ -106,6 +106,7 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.DistributionListActionRequest.class,
             com.zimbra.soap.account.message.DistributionListActionResponse.class,
             com.zimbra.soap.account.message.CredentialExchangeAuthRequest.class,
+            com.zimbra.soap.account.message.CredentialExchangeAuthResponse.class,
             com.zimbra.soap.account.message.EnableTwoFactorAuthRequest.class,
             com.zimbra.soap.account.message.EnableTwoFactorAuthResponse.class,
             com.zimbra.soap.account.message.EndSessionRequest.class,

@@ -21,6 +21,7 @@ import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import java.util.Map;
 import javax.servlet.ServletRequest;
+import org.dom4j.QName;
 
 public class CredentialExchangeAuth extends Auth {
 
@@ -101,5 +102,10 @@ public class CredentialExchangeAuth extends Auth {
         }
         // LDAP errors propagate as service.FAILURE, and nothing is burned
         return prov.get(by, value);
+    }
+
+    @Override
+    protected QName getResponseQName() {
+        return AccountConstants.CREDENTIAL_EXCHANGE_AUTH_RESPONSE;
     }
 }
