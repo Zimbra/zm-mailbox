@@ -40,6 +40,9 @@ import java.lang.reflect.Modifier;
  */
 public final class LC {
 
+    public static final KnownKey mobile_notification_cache_size_mb = KnownKey.newKey(100);
+
+    public static final KnownKey fcm_server_thread_count = KnownKey.newKey(10);
 
     public static final KnownKey zimbra_minimize_resources = KnownKey.newKey(false);
 
@@ -1596,6 +1599,16 @@ public final class LC {
     // After this duration, a stale entry is evicted and reloaded from LDAP on next access
     // Falls back to 60 minutes if parsing fails
     public static final KnownKey csrf_filter_domain_allowed_ref_hosts_cache_expiry_mins = KnownKey.newKey(60);
+
+    // Maximum HTTP response body libzmpush will buffer from FCM/OAuth, in bytes
+    // Guards mailboxd against an endpoint that streams without end; real responses are a few hundred bytes
+    // Falls back to the library default (65536) if the value is missing, zero or not a number
+    public static final KnownKey mobile_push_max_response_bytes = KnownKey.newKey(64 * 1024);
+
+    // Total FCM send attempts per device, including the first; 1 disables retrying
+    // Only transient FCM failures (429, 503) are retried; a 400 is never repeated
+    // Clamped to [1..5]; falls back to 2 if the value is not a number
+    public static final KnownKey mobile_push_max_attempts = KnownKey.newKey(2);
 
     static {
         // Automatically set the key name with the variable name.

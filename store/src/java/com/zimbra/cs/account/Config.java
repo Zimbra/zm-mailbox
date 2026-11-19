@@ -22,6 +22,7 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 
 import java.util.HashMap;
@@ -75,6 +76,14 @@ public class Config extends ZAttrConfig {
     @SuppressWarnings("unchecked")
     public Map<String, Object> getServerDefaults() {
         return mServerDefaults;
+    }
+
+    public String getFCMDeviceJSON() {
+        return getAttr(ZAttrProvisioning.A_zimbraMobileAppFCMDeviceDetails);
+    }
+
+    public String getFCMServerJSON() {
+        return getAttr(ZAttrProvisioning.A_zimbraMobileAppFCMServerDetails);
     }
 
 }
