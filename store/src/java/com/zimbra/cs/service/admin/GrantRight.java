@@ -56,19 +56,22 @@ public class GrantRight extends RightDocumentHandler {
         RightCommand.grantRight(Provisioning.getInstance(), getAuthenticatedAccount(zsc), erTargSel,
                                 grReq.getGrantee(), modifierInfo.getValue(), rightModifier);
         // Bug 100965 Avoid Cross server delegate admin being broken after initial creation due to stale caches
-        if (com.zimbra.soap.type.TargetType.domain == erTargSel.getType()) {
+        if (com.zimbra.soap.type.TargetType.domain == erTargSel.getType() || com.zimbra.soap.type.TargetType.global == erTargSel.getType()) {
             TargetBy by = erTargSel.getBy();
-            if ((TargetBy.id == by) || (TargetBy.name == by)) {
-                CacheSelector cacheSel = new CacheSelector(true /* allServers */, CacheEntryType.domain.toString());
-                CacheEntrySelector ceSel = new CacheEntrySelector(
-                        (TargetBy.id == erTargSel.getBy()) ? CacheEntryBy.id : CacheEntryBy.name, erTargSel.getValue());
-                cacheSel.addEntry(ceSel);
+            if ((TargetBy.id == by) || (TargetBy.name == by) || (com.zimbra.soap.type.TargetType.global == erTargSel.getType())) {
+                CacheSelector cacheSel = new CacheSelector(true /* allServers */,
+                        (erTargSel.getType() == com.zimbra.soap.type.TargetType.global) ? CacheEntryType.globalgrant.toString() : erTargSel.getType().toString());
+                if (com.zimbra.soap.type.TargetType.domain == erTargSel.getType()) {
+                    CacheEntrySelector ceSel = new CacheEntrySelector(
+                            (TargetBy.id == erTargSel.getBy()) ? CacheEntryBy.id : CacheEntryBy.name, erTargSel.getValue());
+                    cacheSel.addEntry(ceSel);
+                }
                 FlushCacheRequest fcReq = new FlushCacheRequest(cacheSel);
                 try {
                     FlushCache.doFlushCache(this, context, fcReq);
                 } catch (ServiceException se) {
-                    ZimbraLog.acl.info("Problem flushing acl cache for domain %s/%s after granting rights",
-                            erTargSel.getBy(), erTargSel.getValue(), se);
+                    ZimbraLog.acl.warn("Problem flushing acl cache for %s %s/%s after granting rights",
+                            erTargSel.getType().toString(), erTargSel.getBy(), erTargSel.getValue(), se);
                 }
             }
         }
