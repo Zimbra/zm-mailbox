@@ -28,6 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.LoadingCacheUtil;
@@ -55,6 +56,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import static com.zimbra.common.service.ServiceException.AUTH_EXPIRED;
+import static com.zimbra.common.service.ServiceException.AUTH_REQUIRED;
 
 /**
  * The soap service servlet
@@ -368,14 +371,26 @@ public class SoapServlet extends ZimbraServlet {
      * @return boolean value indicating whether the envelope contains an authentication fault
      */
     private boolean isAuthFault(SoapProtocol soapProto, Element envelope) {
-        Element fault = soapProto.getBodyElement(envelope);
-        Element codeEl = fault == null ? null : fault.getPathElement(FAULT_CODE_PATH);
-        if (codeEl == null) {
+        if (soapProto == null || !soapProto.hasFault(envelope)) {
             return false;
         }
-        String code = codeEl.getTextTrim();
-        return ServiceException.AUTH_EXPIRED.equals(code)
-                || ServiceException.AUTH_REQUIRED.equals(code)
+
+        Element fault = soapProto.getBodyElement(envelope);
+        Element error = fault == null ? null : fault.getPathElement(FAULT_CODE_PATH);
+        if (error == null) {
+            return false;
+        }
+
+        Element codeElement = error.getOptionalElement(ZimbraNamespace.E_CODE);
+        String code = codeElement != null
+                ? codeElement.getText()
+                : error.getAttribute(ZimbraNamespace.E_CODE.getName(), null);
+        if (code == null) {
+            return false;
+        }
+
+        code = code.trim();
+        return AUTH_EXPIRED.equals(code) || AUTH_REQUIRED.equals(code)
                 || AccountServiceException.AUTH_FAILED.equals(code);
     }
 
