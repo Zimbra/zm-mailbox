@@ -468,7 +468,7 @@ public class DataSourceManager {
     static void cancelTask(Mailbox mbox, String dsId)
         throws ServiceException {
         ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mbox.getId(), false);
-        DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
+        DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId, mbox.getId());
     }
 
     public static DataSourceTask getTask(Mailbox mbox, String dsId) {
@@ -526,7 +526,7 @@ public class DataSourceManager {
             ZimbraLog.datasource.info(
                 "Data source %s was deleted.  Deleting scheduled task.", dsId);
             ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mboxId, false);
-            DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
+            DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId, mboxId);
             deleteManaged(accountId, dsId);
             return;
         }
@@ -534,7 +534,7 @@ public class DataSourceManager {
             ZimbraLog.datasource.info(
                 "Data source %s is disabled.  Deleting scheduled task.", dsId);
             ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mboxId, false);
-            DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
+            DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId, mboxId);
             return;
         }
 

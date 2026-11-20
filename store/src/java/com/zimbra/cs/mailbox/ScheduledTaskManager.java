@@ -165,7 +165,7 @@ public class ScheduledTaskManager {
                                        int mailboxId, boolean mayInterruptIfRunning)
     throws ServiceException {
         if (conn != null) {
-            DbScheduledTask.deleteTask(conn, className, taskName);
+            DbScheduledTask.deleteTask(conn, className, taskName, mailboxId);
         }
         return (ScheduledTask) sScheduler.cancel(getKey(className, taskName, mailboxId), mayInterruptIfRunning);
     }
@@ -202,7 +202,7 @@ public class ScheduledTaskManager {
 
             try {
                 conn = DbPool.getConnection();
-                DbScheduledTask.deleteTask(conn, task.getClass().getName(), task.getName());
+                DbScheduledTask.deleteTask(conn, task.getClass().getName(), task.getName(), task.getMailboxId());
                 conn.commit();
             } catch (ServiceException e) {
                 ZimbraLog.scheduler.warn("Unable to clean up %s", task, e);
