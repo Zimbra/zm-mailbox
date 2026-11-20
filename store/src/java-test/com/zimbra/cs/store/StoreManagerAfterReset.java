@@ -51,7 +51,17 @@ public class StoreManagerAfterReset extends StoreManager {
     }
 
     @Override
+    public BlobBuilder getBlobBuilder(Volume volume) throws IOException, ServiceException {
+        return null;
+    }
+
+    @Override
     public Blob storeIncoming(InputStream data, boolean storeAsIs) throws IOException, ServiceException {
+        return null;
+    }
+
+    @Override
+    public Blob storeIncoming(InputStream data, boolean storeAsIs, Volume volume) throws IOException, ServiceException {
         return null;
     }
 
@@ -82,6 +92,12 @@ public class StoreManagerAfterReset extends StoreManager {
 
     @Override
     public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException, ServiceException {
+        return null;
+    }
+
+    @Override
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId,
+                                int destRevision, Volume volume) throws IOException, ServiceException {
         return null;
     }
 

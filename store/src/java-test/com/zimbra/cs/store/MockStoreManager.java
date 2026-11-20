@@ -98,7 +98,17 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
+    public BlobBuilder getBlobBuilder(Volume volume) throws IOException, ServiceException {
+        return new MockBlobBuilder();
+    }
+
+    @Override
     public Blob storeIncoming(InputStream data, boolean storeAsIs) throws IOException {
+        return new MockBlob(ByteStreams.toByteArray(data));
+    }
+
+    @Override
+    public Blob storeIncoming(InputStream data, boolean storeAsIs, Volume volume) throws IOException, ServiceException {
         return new MockBlob(ByteStreams.toByteArray(data));
     }
 
@@ -139,6 +149,15 @@ public final class MockStoreManager extends StoreManager {
     public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
         MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
         blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
+        return blob;
+    }
+
+    @Override
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision, Volume volume)
+            throws IOException, ServiceException {
+        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destMsgId, destRevision,
+                src.getLocator(), ((MockStagedBlob) src).content);
+        blobs.put(blobKey(destMbox, destMsgId, destRevision), blob);
         return blob;
     }
 
