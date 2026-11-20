@@ -635,9 +635,15 @@ public class Message extends MailItem {
         AccountAddressMatcher acctMatcher = new AccountAddressMatcher(ownerAcct);
         for (Mountpoint sharedCal : getMailbox().getCalendarMountpoints(getMailbox().getOperationContext(), SortBy.NONE)) {
             if (sharedCal.canAccess(ACL.RIGHT_ACTION)) {
-                String calOwner = Provisioning.getInstance().get(AccountBy.id, sharedCal.getOwnerId()).getName();
-                if (acctMatcher.matches(calOwner)) {
-                    return true;
+                String calOwner;
+                Account calOwnerAcct = Provisioning.getInstance().get(AccountBy.id, sharedCal.getOwnerId());
+                if (calOwnerAcct == null) {
+                    ZimbraLog.account.info("Account ID = %s not present.", sharedCal.getOwnerId());
+                } else {
+                    calOwner = calOwnerAcct.getName();
+                    if (acctMatcher.matches(calOwner)) {
+                        return true;
+                    }
                 }
             }
         }
