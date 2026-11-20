@@ -44,7 +44,7 @@ public class HardRules {
         NOT_EFFECTIVE_DELEGATED_ADMIN_ACCOUNT,
         DELEGATED_ADMIN_CANNOT_ACCESS_GLOBAL_ADMIN;
 
-        public static HardRule ruleVolated(ServiceException e) {
+        public static HardRule ruleViolated(ServiceException e) {
             if (ServiceException.PERM_DENIED.equals(e.getCode())) {
                 List<Argument> args = e.getArgs();
                 if (args != null) {
