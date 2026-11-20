@@ -16,10 +16,11 @@
  */
 package com.zimbra.cs.mailbox.util;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -32,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Scanner;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -147,7 +147,7 @@ public final class MetadataDump {
                     int itemId = Integer.parseInt(itemIdStr);
                     String dir = vol.getBlobDir(mboxId, itemId);
                     String modContent = mMap.get("mod_content");
-                    String blobPath = dir + File.separator + itemIdStr + "-" + modContent + ".msg";
+                    String blobPath = dir + FileSystems.getDefault().getSeparator() + itemIdStr + "-" + modContent + ".msg";
                     ps.println(BLOBPATH_HDR);
                     ps.println(blobPath);
                     ps.println();
@@ -263,23 +263,11 @@ public final class MetadataDump {
         }
     }
 
-    private static String loadFromFile(File file) throws ServiceException {
+    private static String loadFromFile(Path filepath) throws ServiceException {
         try {
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(file);
-                Scanner scan = new Scanner(fis);
-                StringBuilder builder = new StringBuilder();
-                while (scan.hasNextLine()) {
-                    builder.append(scan.nextLine());
-                }
-                return builder.toString();
-            } finally {
-                if (fis != null)
-                    fis.close();
-            }
+            return new String(Files.readAllBytes(filepath));
         } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException while reading from " + file.getAbsolutePath(), e);
+            throw ServiceException.FAILURE("IOException while reading from " + filepath.toAbsolutePath().toString(), e);
         }
     }
 
@@ -340,9 +328,9 @@ public final class MetadataDump {
             // Get data from file.
             String infileName = cl.getOptionValue(OPT_FILE);
             if (infileName != null) {
-                File file = new File(infileName);
-                if (file.exists()) {
-                    String encoded = loadFromFile(file);
+                Path filepath = FileSystems.getDefault().getPath(infileName);
+                if (Files.exists(filepath)) {
+                    String encoded = loadFromFile(filepath);
                     Metadata md = new Metadata(encoded);
                     String pretty = md.prettyPrint();
                     out.println(pretty);
