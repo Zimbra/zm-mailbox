@@ -18,23 +18,20 @@ public final class OAuthUtil {
     }
 
     public static boolean isOAuthRequested(Element request, Map<String, Object> context) {
-        if (context != null) {
-            HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            if (httpRequest != null) {
-                String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
-                if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
-                    return true;
-                }
-                if ("true".equalsIgnoreCase(httpRequest.getHeader(OAuthConstants.AUTH_TYPE_ZM_OAUTH2))) {
-                    return true;
-                }
-            }
-        }
-        if (request != null) {
-            String authTypeAttr = request.getAttribute(OAuthConstants.HEADER_AUTH_TYPE, null);
-            if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(authTypeAttr)) {
+        HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        if (httpRequest != null) {
+            String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
+            if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
                 return true;
             }
+            if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(httpRequest.getHeader("authType"))) {
+                return true;
+            }
+        }
+
+        String authTypeAttr = request.getAttribute("authType", null);
+        if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(authTypeAttr)) {
+            return true;
         }
         return false;
     }
