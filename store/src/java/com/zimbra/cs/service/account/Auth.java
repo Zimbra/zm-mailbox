@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.account;
 
+import com.zimbra.cs.service.util.OAuthUtil;
 import io.jsonwebtoken.Claims;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -87,15 +88,7 @@ public class Auth extends AccountDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element refreshTokenEl = request.getOptionalElement("refreshToken");
-        if (refreshTokenEl != null && hasOAuthHeader(request, context)) {
-            OAuthProvider provider = OAuthRegistry.getProvider();
-            if (provider != null) {
-                return provider.handleRefresh(zsc, request);
-            }
-            ZimbraLog.account.warn("OAuth: Refresh requested but NativeOAuthProvider is not registered");
-            throw ServiceException.FAILURE("OAuth provider is not available", null);
-        }
+
         Provisioning prov = Provisioning.getInstance();
 
         // Look up the specified account.  It is optional in the <authToken> case.
@@ -128,6 +121,27 @@ public class Auth extends AccountDocumentHandler {
             acct = prov.get(acctBy, acctValue);
         }
 
+        boolean isOAuth = OAuthUtil.isOAuthRequested(request, context);
+        if (isOAuth) {
+            Server server = Provisioning.getInstance().getServer(acct);
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            if (server != null && localServer != null && !server.getId().equals(localServer.getId())) {
+                ZimbraLog.account.debug("Proxying OAuth auth request for account=%s to target server=%s",
+                        acct.getName(), server.getName());
+                request.addAttribute("authType", OAuthConstants.AUTH_TYPE_ZM_OAUTH2);
+                return proxyRequest(request, context, server);
+            }
+        }
+
+        Element refreshTokenEl = request.getOptionalElement("refreshToken");
+        if (refreshTokenEl != null && isOAuth) {
+            OAuthProvider provider = OAuthRegistry.getProvider();
+            if (provider != null) {
+                return provider.handleRefresh(zsc, request);
+            }
+            ZimbraLog.account.warn("OAuth: Refresh requested but NativeOAuthProvider is not registered");
+            throw ServiceException.FAILURE("OAuth provider is not available", null);
+        }
         ZimbraExtensionNotification.notifyExtension("com.zimbra.cs.service.account.Auth:validate", request, context);
 
         TrustedDeviceToken trustedToken = null;
@@ -400,7 +414,6 @@ public class Auth extends AccountDocumentHandler {
         }
 
         OAuthProvider provider = OAuthRegistry.getProvider();
-        boolean isOAuth = isOAuthRequested(request, context, acct) && provider != null;
         AuthToken at = null;
         if (recoveryCode != null) {
             at = AuthProvider.getAuthToken(acct, Usage.RESET_PASSWORD, tokenType);
@@ -429,7 +442,7 @@ public class Auth extends AccountDocumentHandler {
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
         AuthListener.invokeOnSuccess(acct);
         Element response = doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
-        if (isOAuthRequested(request, context, acct)) {
+        if (isOAuth) {
             boolean isTfaPending = response.getOptionalElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED) != null;
             boolean isPassChangePending = response.getOptionalElement("passwordChangeRequired") != null
                     || acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
@@ -565,7 +578,7 @@ public class Auth extends AccountDocumentHandler {
             Map<String, Object> context, Account acct, boolean csrfSupport, TrustedDeviceToken td, String deviceId)
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-        boolean isOAuthRequested = isOAuthRequested(request, context, acct);
+        boolean isOAuthRequested = OAuthUtil.isOAuthRequested(request, context);
         if (isOAuthRequested) {
             response.addNonUniqueElement(OAuthConstants.OAUTH_ACCESS_TOKEN).setText(getOrigAuthData(at));
         } else {
@@ -664,33 +677,5 @@ public class Auth extends AccountDocumentHandler {
         String aid = at.getAdminAccountId();
         if (aid != null && !aid.equals(id))
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
-    }
-
-    public boolean isOAuthRequested(Element request, Map<String, Object> context, Account acc) {
-
-        if (acc == null || !acc.isOAuthPersistentSessionEnabled()
-                || acc.getOAuthRefreshTokenLifetime() <= 0) {
-            return false;
-        }
-        return hasOAuthHeader(request, context);
-    }
-
-    private boolean hasOAuthHeader(Element request, Map<String, Object> context) {
-        HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        if (httpRequest != null) {
-            String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
-            if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
-                return true;
-            }
-            if ("true".equalsIgnoreCase(httpRequest.getHeader(OAuthConstants.AUTH_TYPE_ZM_OAUTH2))) {
-                return true;
-            }
-        }
-
-        String authTypeAttr = request.getAttribute("authType", null);
-        if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(authTypeAttr)) {
-            return true;
-        }
-        return false;
     }
 }
