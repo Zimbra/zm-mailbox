@@ -55,6 +55,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import static com.zimbra.common.service.ServiceException.AUTH_EXPIRED;
+import static com.zimbra.common.service.ServiceException.AUTH_REQUIRED;
 
 /**
  * The soap service servlet
@@ -369,14 +371,18 @@ public class SoapServlet extends ZimbraServlet {
      */
     private boolean isAuthFault(SoapProtocol soapProto, Element envelope) {
         Element fault = soapProto.getBodyElement(envelope);
-        Element codeEl = fault == null ? null : fault.getPathElement(FAULT_CODE_PATH);
-        if (codeEl == null) {
+        if (fault == null) {
             return false;
         }
-        String code = codeEl.getTextTrim();
-        return ServiceException.AUTH_EXPIRED.equals(code)
-                || ServiceException.AUTH_REQUIRED.equals(code)
-                || AccountServiceException.AUTH_FAILED.equals(code);
+        Element errorEl = fault.getPathElement(new String[] {"Detail", "Error"});
+        if (errorEl == null) {
+            return false;
+        }
+        Element codeEl = errorEl.getOptionalElement("Code");          // XML
+        String code = codeEl != null ? codeEl.getTextTrim()
+                : errorEl.getAttribute("Code", null);  // JSON
+        return code != null && (AUTH_EXPIRED.equals(code) || AUTH_REQUIRED.equals(code)
+                || AccountServiceException.AUTH_FAILED.equals(code));
     }
 
     private void sendResponse(HttpServletRequest req, HttpServletResponse resp, Element envelope) throws IOException {

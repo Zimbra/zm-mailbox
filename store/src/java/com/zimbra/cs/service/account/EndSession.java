@@ -46,14 +46,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class EndSession extends AccountDocumentHandler {
 
     @Override
-    public boolean needsAuth(Map<String, Object> context) {
-        if (OAuthUtil.isOAuthRequested(null, context)) {
-            return false;
-        }
-        return super.needsAuth(context);
-    }
-
-    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         EndSessionRequest req = JaxbUtil.elementToJaxb(request);
