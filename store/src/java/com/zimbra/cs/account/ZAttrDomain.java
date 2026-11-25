@@ -11923,7 +11923,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraFeatureNativeMobileAppEnabled, or false if unset
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public boolean isFeatureNativeMobileAppEnabled() {
@@ -11936,7 +11936,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraFeatureNativeMobileAppEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public void setFeatureNativeMobileAppEnabled(boolean zimbraFeatureNativeMobileAppEnabled) throws com.zimbra.common.service.ServiceException {
@@ -11952,7 +11952,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public Map<String,Object> setFeatureNativeMobileAppEnabled(boolean zimbraFeatureNativeMobileAppEnabled, Map<String,Object> attrs) {
@@ -11966,7 +11966,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public void unsetFeatureNativeMobileAppEnabled() throws com.zimbra.common.service.ServiceException {
@@ -11981,7 +11981,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public Map<String,Object> unsetFeatureNativeMobileAppEnabled(Map<String,Object> attrs) {

@@ -13897,7 +13897,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraFeatureNativeMobileAppEnabled, or false if unset
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public boolean isFeatureNativeMobileAppEnabled() {
@@ -13910,7 +13910,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraFeatureNativeMobileAppEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public void setFeatureNativeMobileAppEnabled(boolean zimbraFeatureNativeMobileAppEnabled) throws com.zimbra.common.service.ServiceException {
@@ -13926,7 +13926,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public Map<String,Object> setFeatureNativeMobileAppEnabled(boolean zimbraFeatureNativeMobileAppEnabled, Map<String,Object> attrs) {
@@ -13940,7 +13940,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public void unsetFeatureNativeMobileAppEnabled() throws com.zimbra.common.service.ServiceException {
@@ -13955,7 +13955,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public Map<String,Object> unsetFeatureNativeMobileAppEnabled(Map<String,Object> attrs) {
@@ -30782,7 +30782,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public int getNativeMobileAppMaxLocalDataSize() {
         return getIntAttr(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, 10240, true);
     }
@@ -30795,7 +30795,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public void setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -30811,7 +30811,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public Map<String,Object> setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -30825,7 +30825,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public void unsetNativeMobileAppMaxLocalDataSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
@@ -30840,7 +30840,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public Map<String,Object> unsetNativeMobileAppMaxLocalDataSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
