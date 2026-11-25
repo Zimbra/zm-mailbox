@@ -7542,7 +7542,7 @@ public class ZAttrProvisioning {
     /**
      * Flag to check whether Zimbra native mobile app is enabled
      *
-     * @since ZCS 10.1.21
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4164)
     public static final String A_zimbraFeatureNativeMobileAppEnabled = "zimbraFeatureNativeMobileAppEnabled";
@@ -13140,7 +13140,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public static final String A_zimbraNativeMobileAppMaxLocalDataSize = "zimbraNativeMobileAppMaxLocalDataSize";
 
     /**

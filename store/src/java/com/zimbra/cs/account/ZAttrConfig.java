@@ -55031,7 +55031,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public int getNativeMobileAppMaxLocalDataSize() {
         return getIntAttr(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, 10240, true);
     }
@@ -55044,7 +55044,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public void setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -55060,7 +55060,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public Map<String,Object> setNativeMobileAppMaxLocalDataSize(int zimbraNativeMobileAppMaxLocalDataSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, Integer.toString(zimbraNativeMobileAppMaxLocalDataSize));
@@ -55074,7 +55074,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public void unsetNativeMobileAppMaxLocalDataSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");
@@ -55089,7 +55089,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4178)
+    @ZAttr(id=4182)
     public Map<String,Object> unsetNativeMobileAppMaxLocalDataSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppMaxLocalDataSize, "");

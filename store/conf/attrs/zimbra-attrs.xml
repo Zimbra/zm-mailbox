@@ -4593,6 +4593,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     Value is propagated to Jetty configuration.  In the future, other NIO pieces
     (IMAP/POP/LMTP) will also honor this.
   </desc>
+</attr>
 
 <attr id="1003" name="zimbraBackupSkipSearchIndex" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
   <globalConfigValue>FALSE</globalConfigValue>
@@ -10753,7 +10754,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="4164" name="zimbraFeatureNativeMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" callback="NativeMobileAppCallback" since="10.1.21">
+<attr id="4164" name="zimbraFeatureNativeMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,domainInfo,domainAdminModifiable,accountCosDomainInherited" callback="NativeMobileAppCallback" since="10.1.22">
     <defaultCOSValue>FALSE</defaultCOSValue>
     <desc>Flag to check whether Zimbra native mobile app is enabled</desc>
 </attr>
@@ -10891,7 +10892,7 @@ TODO: delete them permanently from here
     <desc>Number of days for which data should be retained in mobile device.</desc>
 </attr>
 
-<attr id="4178" name="zimbraNativeMobileAppMaxLocalDataSize" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
+<attr id="4182" name="zimbraNativeMobileAppMaxLocalDataSize" type="integer" cardinality="single" optionalIn="globalConfig,cos,account" flags="accountInfo,accountInherited" since="10.1.22">
     <globalConfigValue>10240</globalConfigValue>
     <defaultCOSValue>10240</defaultCOSValue>
     <desc>Maximum stored data in mobile device.</desc>

@@ -19,13 +19,17 @@ package com.zimbra.cs.account.callback;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.admin.type.CacheEntryType;
-
 import java.util.Map;
 
+/**
+ * Restricts FCM configuration and refreshes the local cache before invalidating remote caches.
+ */
 public class FcmConfigRestriction extends AttributeCallback {
 
     @Override
@@ -65,8 +69,29 @@ public class FcmConfigRestriction extends AttributeCallback {
             } else {
                 return; // attrs only live on domain/globalConfig
             }
-            SoapProvisioning sp = SoapProvisioning.getAdminInstance();
-            sp.flushCache(type.name(), entries, true /* allServers */, false /* imapDaemons */);
+            Provisioning prov = Provisioning.getInstance();
+            try {
+                prov.flushCache(type, entries);
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("FCM config restriction: failed to refresh local %s cache",
+                        entry.getLabel(), e);
+            }
+            String localServerId = prov.getLocalServer().getId();
+            for (Server server : prov.getAllMailClientServers()) {
+                if (localServerId.equals(server.getId())) {
+                    continue;
+                }
+                try {
+                    String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI, true);
+                    SoapProvisioning sp = new SoapProvisioning();
+                    sp.soapSetURI(adminUrl);
+                    sp.soapZimbraAdminAuthenticate();
+                    sp.flushCache(type.name(), entries, false, false);
+                } catch (ServiceException e) {
+                    ZimbraLog.account.warn("FCM config restriction: failed to flush %s cache on server %s",
+                            entry.getLabel(), server.getName(), e);
+                }
+            }
         } catch (ServiceException e) {
             ZimbraLog.account.warn("FCM config restriction: failed to flush %s cache across servers", entry.getLabel(),
                     e);

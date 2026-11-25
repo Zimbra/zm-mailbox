@@ -14,18 +14,17 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.soap.account;
-
-import javax.xml.bind.annotation.XmlElement;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.GetFCMDetailsResponse;
+import javax.xml.bind.annotation.XmlElement;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Unit test for {@link GetFCMDetailsResponse}, including the optional {@code pushStatus} element.
