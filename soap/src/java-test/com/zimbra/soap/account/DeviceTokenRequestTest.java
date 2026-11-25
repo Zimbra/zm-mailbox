@@ -14,12 +14,8 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.soap.account;
-
-import javax.xml.bind.annotation.XmlElement;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
@@ -27,6 +23,9 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AddDeviceTokenRequest;
 import com.zimbra.soap.account.message.RemoveDeviceTokenRequest;
+import javax.xml.bind.annotation.XmlElement;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Unit test for {@link AddDeviceTokenRequest} and {@link RemoveDeviceTokenRequest}.
@@ -85,8 +84,10 @@ public class DeviceTokenRequestTest {
 
     @Test
     public void removeDeviceTokenRequestWithDeviceIdRoundTrip() throws Exception {
-        RemoveDeviceTokenRequest orig = new RemoveDeviceTokenRequest("fcm-token-123", "device-abc");
-        for (Element.ElementFactory factory : new Element.ElementFactory[] {XMLElement.mFactory, JSONElement.mFactory}) {
+        RemoveDeviceTokenRequest orig = new RemoveDeviceTokenRequest("fcm-token-123",
+                "device-abc");
+        for (Element.ElementFactory factory : new Element.ElementFactory[]
+                {XMLElement.mFactory, JSONElement.mFactory}) {
             RemoveDeviceTokenRequest req = JaxbUtil.elementToJaxb(JaxbUtil.jaxbToElement(orig, factory));
             Assert.assertEquals("deviceToken", "fcm-token-123", req.getDeviceToken());
             Assert.assertEquals("deviceId", "device-abc", req.getDeviceId());
