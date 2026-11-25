@@ -16,6 +16,27 @@
  */
 package com.zimbra.cs.service.account;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.service.util.OAuthUtil;
+import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.SoapServlet;
+import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.account.message.EndSessionRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -23,21 +44,7 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.service.util.OAuthUtil;
-import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SessionCache;
-import com.zimbra.cs.session.SoapSession;
-import com.zimbra.soap.account.message.EndSessionRequest;
-import com.zimbra.soap.JaxbUtil;
-import com.zimbra.soap.SoapServlet;
-import com.zimbra.soap.ZimbraSoapContext;
+import static com.zimbra.common.soap.OAuthConstants.AUTH_TYPE_ZM_OAUTH2;
 
 /**
  * End the current session immediately cleaning up all resources used by the session including the notification buffer
@@ -46,12 +53,32 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class EndSession extends AccountDocumentHandler {
 
     @Override
+    public boolean needsAuth(Map<String, Object> context) {
+        if (OAuthUtil.isOAuthRequested(null, context)) {
+            return false;
+        }
+        return super.needsAuth(context);
+    }
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         EndSessionRequest req = JaxbUtil.elementToJaxb(request);
         Account account;
 
         if (OAuthUtil.isOAuthRequested(request, context)) {
+            Account acct = getRequestedAccount(request);
+
+            if (acct != null) {
+                Server server = Provisioning.getInstance().getServer(acct);
+                Server localServer = Provisioning.getInstance().getLocalServer();
+                if (server != null && localServer != null && !server.getId().equals(localServer.getId())) {
+                    ZimbraLog.account.debug("Proxying OAuth auth request for account=%s to target server=%s",
+                            acct.getName(), server.getName());
+                    zsc.setAuthType(AUTH_TYPE_ZM_OAUTH2);
+                    return proxyRequest(request, context, server);
+                }
+            }
             OAuthProvider provider = OAuthRegistry.getProvider();
             if (provider != null) {
                 provider.handleLogout(request);
@@ -108,6 +135,27 @@ public class EndSession extends AccountDocumentHandler {
         }
         Element response = zsc.createElement(AccountConstants.END_SESSION_RESPONSE);
         return response;
+    }
+
+    private Account getRequestedAccount(Element request) throws ServiceException {
+        Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
+        if (acctEl == null) {
+            return null;
+        }
+        Provisioning prov = Provisioning.getInstance();
+        String acctValue = acctEl.getText();
+        AccountBy acctBy = AccountBy.fromString(acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name()));
+        if (acctBy == AccountBy.name) {
+            Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
+            String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+            if (virtualHost != null && acctValue.indexOf('@') == -1) {
+                Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
+                if (d != null) {
+                    acctValue = acctValue + "@" + d.getName();
+                }
+            }
+        }
+        return prov.get(acctBy, acctValue);
     }
 
     private void clearSession(Session session, String currentSessionId) throws ServiceException {
