@@ -163,6 +163,10 @@ public final class ZimbraSoapContext {
     private Integer mPort;
     private String mVia;
     private String soapRequestId;
+
+    public static final String E_AUTH_TYPE = "authType";
+
+    private String mAuthType;
     private String mNotificationFormat = DEFAULT_NOTIFICATION_FORMAT;
     private String mCurWaitSetID;
     //zdsync: for parsing locally constructed soap requests
@@ -249,6 +253,7 @@ public final class ZimbraSoapContext {
         mPort = zsc.mPort;
         mVia = zsc.mVia;
         soapRequestId = zsc.soapRequestId;
+        mAuthType = zsc.mAuthType;
 
         mRawAuthToken = authToken == null? zsc.mRawAuthToken : authToken.toZAuthToken();
         mAuthToken = authToken == null? zsc.mAuthToken : authToken;
@@ -477,6 +482,13 @@ public final class ZimbraSoapContext {
                 Element reqId = ctxt.getOptionalElement(HeaderConstants.E_SOAP_ID);
                 if (null != reqId) {
                     this.soapRequestId = reqId.getText();
+                }
+            }
+            Element authType = ctxt.getOptionalElement(E_AUTH_TYPE);
+            if (authType != null && !Strings.isNullOrEmpty(authType.getTextTrim())) {
+                mAuthType = authType.getTextTrim();
+                if (context != null) {
+                    context.put(E_AUTH_TYPE, mAuthType);
                 }
             }
         }
@@ -857,6 +869,9 @@ public final class ZimbraSoapContext {
         if (null != soapRequestId) {
             ctxt.addUniqueElement(HeaderConstants.E_SOAP_ID).setText(soapRequestId);
         }
+        if (!Strings.isNullOrEmpty(mAuthType)) {
+            ctxt.addUniqueElement(E_AUTH_TYPE).setText(mAuthType);
+        }
         return ctxt;
     }
 
@@ -1016,6 +1031,14 @@ public final class ZimbraSoapContext {
      */
     public String getVia() {
         return mVia;
+    }
+
+    public String getAuthType() {
+        return mAuthType;
+    }
+
+    public void setAuthType(String authType) {
+        mAuthType = authType;
     }
 
     /**

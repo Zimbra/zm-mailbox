@@ -9,6 +9,7 @@ package com.zimbra.cs.service.util;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.OAuthConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.SoapServlet;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -18,20 +19,36 @@ public final class OAuthUtil {
     }
 
     public static boolean isOAuthRequested(Element request, Map<String, Object> context) {
-        HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        if (httpRequest != null) {
-            String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
-            if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
-                return true;
+        if (context != null) {
+            HttpServletRequest httpRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            if (httpRequest != null) {
+                String headerVal = httpRequest.getHeader(OAuthConstants.HEADER_AUTH_TYPE);
+                if (!StringUtil.isNullOrEmpty(headerVal) &&
+                        OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
+                    return true;
+                }
+                headerVal = httpRequest.getHeader("authType");
+                if (!StringUtil.isNullOrEmpty(headerVal) &&
+                        OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(headerVal)) {
+                    return true;
+                }
+                if ("true".equalsIgnoreCase(httpRequest.getHeader(OAuthConstants.AUTH_TYPE_ZM_OAUTH2))) {
+                    return true;
+                }
             }
-            if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(httpRequest.getHeader("authType"))) {
-                return true;
+            Object contextAuthType = context.get("authType");
+            if (contextAuthType != null) {
+                return contextAuthType instanceof String
+                        && OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase((String) contextAuthType);
             }
         }
-
-        String authTypeAttr = request.getAttribute("authType", null);
-        if (OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(authTypeAttr)) {
-            return true;
+        if (request != null) {
+            String authTypeAttr = request.getAttribute("authType", null);
+            if (!StringUtil.isNullOrEmpty(authTypeAttr)
+                    && OAuthConstants.AUTH_TYPE_ZM_OAUTH2.equalsIgnoreCase(
+                    authTypeAttr)) {
+                return true;
+            }
         }
         return false;
     }
