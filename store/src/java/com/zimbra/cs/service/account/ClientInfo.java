@@ -45,7 +45,12 @@ public class ClientInfo extends AccountDocumentHandler {
         Domain domain = Provisioning.getInstance().get(req.getDomain());
 
         Element parent =  zsc.createElement(AccountConstants.CLIENT_INFO_RESPONSE);
-        String serverVersion = BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION;
+        String serverVersion = Provisioning.getInstance().getConfig().getGlobalVersion();
+        if (StringUtils.isBlank(serverVersion)) {
+            // fall back to the installed build version when no global version is configured.
+            serverVersion = String.format("%s.%s.%s", BuildInfo.MAJORVERSION, BuildInfo.MINORVERSION,
+                    BuildInfo.MICROVERSION);
+        }
         parent.addAttribute(AccountConstants.E_VERSION, serverVersion, Element.Disposition.CONTENT);
         ToXML.encodeAttr(parent, Provisioning.A_zimbraNativeMobileAppMinVersionSupported,
                 Provisioning.getInstance().getConfig().getNativeMobileAppMinVersionSupported());
