@@ -526,7 +526,7 @@ public class Auth extends AccountDocumentHandler {
         return "two-factor authentication setup required. Allowed method:" + Arrays.asList(twoFactorAuthMethodAllowed);
     }
 
-    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
+    protected Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
             Map<String, Object> context, Account acct, boolean csrfSupport, TrustedDeviceToken td, String deviceId)
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
