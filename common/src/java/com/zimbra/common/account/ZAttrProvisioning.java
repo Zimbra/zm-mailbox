@@ -10944,7 +10944,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMfaIdpSuppressionCacheSize = "zimbraMfaIdpSuppressionCacheSize";
 
     /**
-     * Secret key used to authenticate idp back channel webhook requests.
+     * Secret used for MFA webhook authentication.Single-valued attribute
+     * storing only the webhook secret value.
      *
      * @since ZCS 10.1.22
      */
@@ -10952,7 +10953,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMfaWebhookSecret = "zimbraMfaWebhookSecret";
 
     /**
-     * Key used for authentication of
+     * HTTP header name used for MFA webhook secret authentication. Defaults
+     * to Authorization.
+     *
+     * @since ZCS 10.1.22
      */
     @ZAttr(id=4187)
     public static final String A_zimbraMfaWebhookSecretKey = "zimbraMfaWebhookSecretKey";
@@ -11747,7 +11751,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public static final String A_zimbraMobilePushNotificationEnabled = "zimbraMobilePushNotificationEnabled";
 
     /**
@@ -13140,7 +13144,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4185)
     public static final String A_zimbraNativeMobileAppLocalDataRetentionDays = "zimbraNativeMobileAppLocalDataRetentionDays";
 
     /**
@@ -13158,7 +13162,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4176)
+    @ZAttr(id=4184)
     public static final String A_zimbraNativeMobileAppMinVersionSupported = "zimbraNativeMobileAppMinVersionSupported";
 
     /**

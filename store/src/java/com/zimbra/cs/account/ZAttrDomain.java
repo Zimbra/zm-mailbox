@@ -19789,10 +19789,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Secret used for MFA webhook authentication
-     * Single-valued attribute storing only the webhook secret value.
+     * Secret used for MFA webhook authentication.Single-valued attribute
+     * storing only the webhook secret value.
      *
-     * @return MfaWebhookSecret, or null if unset
+     * @return zimbraMfaWebhookSecret, or null if unset
      *
      * @since ZCS 10.1.22
      */
@@ -19802,10 +19802,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Secret used for MFA webhook authentication
-     * Single-valued attribute storing only the webhook secret value.
+     * Secret used for MFA webhook authentication.Single-valued attribute
+     * storing only the webhook secret value.
      *
-     *  @param zimbraMfaWebhookSecret new value
+     * @param zimbraMfaWebhookSecret new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 10.1.22
@@ -19818,8 +19818,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Secret used for MFA webhook authentication
-     * Single-valued attribute storing only the webhook secret value.
+     * Secret used for MFA webhook authentication.Single-valued attribute
+     * storing only the webhook secret value.
      *
      * @param zimbraMfaWebhookSecret new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19835,8 +19835,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Secret used for MFA webhook authentication
-     * Single-valued attribute storing only the webhook secret value.
+     * Secret used for MFA webhook authentication.Single-valued attribute
+     * storing only the webhook secret value.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19850,8 +19850,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Secret used for MFA webhook authentication
-     * Single-valued attribute storing only the webhook secret value.
+     * Secret used for MFA webhook authentication.Single-valued attribute
+     * storing only the webhook secret value.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19866,10 +19866,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * HTTP header name used for MFA webhook secret authentication.
-     * Defaults to Authorization.
+     * HTTP header name used for MFA webhook secret authentication. Defaults
+     * to Authorization.
      *
-     * @return MfaWebhookSecretKey, or null if unset
+     * @return zimbraMfaWebhookSecretKey, or "Authorization" if unset
      *
      * @since ZCS 10.1.22
      */
@@ -19879,8 +19879,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * HTTP header name used for MFA webhook secret authentication.
-     * Defaults to Authorization.
+     * HTTP header name used for MFA webhook secret authentication. Defaults
+     * to Authorization.
      *
      * @param zimbraMfaWebhookSecretKey new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19895,8 +19895,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * HTTP header name used for MFA webhook secret authentication.
-     * Defaults to Authorization.
+     * HTTP header name used for MFA webhook secret authentication. Defaults
+     * to Authorization.
      *
      * @param zimbraMfaWebhookSecretKey new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19912,8 +19912,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * HTTP header name used for MFA webhook secret authentication.
-     * Defaults to Authorization.
+     * HTTP header name used for MFA webhook secret authentication. Defaults
+     * to Authorization.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19927,8 +19927,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * HTTP header name used for MFA webhook secret authentication.
-     * Defaults to Authorization.
+     * HTTP header name used for MFA webhook secret authentication. Defaults
+     * to Authorization.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -20779,7 +20779,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public boolean isMobilePushNotificationEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraMobilePushNotificationEnabled, false, true);
     }
@@ -20793,7 +20793,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public void setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
@@ -20810,7 +20810,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public Map<String,Object> setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
@@ -20825,7 +20825,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public void unsetMobilePushNotificationEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");
@@ -20841,7 +20841,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public Map<String,Object> unsetMobilePushNotificationEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");

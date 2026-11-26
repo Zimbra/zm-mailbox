@@ -37741,7 +37741,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public boolean isMobilePushNotificationEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraMobilePushNotificationEnabled, false, true);
     }
@@ -37755,7 +37755,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public void setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
@@ -37772,7 +37772,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public Map<String,Object> setMobilePushNotificationEnabled(boolean zimbraMobilePushNotificationEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, zimbraMobilePushNotificationEnabled ? TRUE : FALSE);
@@ -37787,7 +37787,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public void unsetMobilePushNotificationEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");
@@ -37803,7 +37803,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4175)
+    @ZAttr(id=4183)
     public Map<String,Object> unsetMobilePushNotificationEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePushNotificationEnabled, "");
@@ -38626,7 +38626,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4185)
     public int getNativeMobileAppLocalDataRetentionDays() {
         return getIntAttr(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, 30, true);
     }
@@ -38639,7 +38639,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4185)
     public void setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
@@ -38655,7 +38655,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4185)
     public Map<String,Object> setNativeMobileAppLocalDataRetentionDays(int zimbraNativeMobileAppLocalDataRetentionDays, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, Integer.toString(zimbraNativeMobileAppLocalDataRetentionDays));
@@ -38669,7 +38669,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4185)
     public void unsetNativeMobileAppLocalDataRetentionDays() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
@@ -38684,7 +38684,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 10.1.22
      */
-    @ZAttr(id=4177)
+    @ZAttr(id=4185)
     public Map<String,Object> unsetNativeMobileAppLocalDataRetentionDays(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNativeMobileAppLocalDataRetentionDays, "");
