@@ -7,7 +7,7 @@
   <property name="dom4j.version" value="2.1.1"/>  
   <property name="log4j.core.version" value="2.17.1" />
   <property name="log4j.api.version" value="2.17.1" />
-  <property name="com.google.guava.version" value="28.1-jre"/>
+  <property name="com.google.guava.version" value="31.1-jre"/>
 <settings defaultResolver="chain-resolver" />
   <caches defaultCacheDir="${dev.home}/.ivy2/cache"/>
   <resolvers>
